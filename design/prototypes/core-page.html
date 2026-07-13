@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Character Index · core-page prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  /* ---------- tokens ----------
+     Register: the constitution of a new country. Contractual, clean, principled.
+     The page opens as a title sheet: only the group names. One group unfolds at a time.
+     Scores are typographic dot runs (printer's ornaments), not badges.
+     Four candidate surfaces, switchable live (footer). All data hues validator-passed. */
+  :root {
+    --strong: #3FA96C; --weak: #BC8A2F; --gap: #C95550; --spec: #7B85D6;
+    --serif: "EB Garamond", Garamond, "Hoefler Text", "Iowan Old Style", Georgia, serif;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+    --shadow: rgba(0,0,0,.5);
+  }
+  body[data-palette="midnight"] {
+    --bg:#121419; --panel:#181B21; --lift:#1C1F26;
+    --hair:#2B2E36; --hair2:#41454F;
+    --ink:#EAE4D6; --ink2:#A8A294; --ink3:#6E6960;
+  }
+  body[data-palette="umber"] {
+    --bg:#1A1510; --panel:#211B14; --lift:#262017;
+    --hair:#332B21; --hair2:#4A4033;
+    --ink:#EDE5D3; --ink2:#ABA08D; --ink3:#6F6659;
+  }
+  body[data-palette="archive"] {
+    --bg:#131B17; --panel:#19221D; --lift:#1D2722;
+    --hair:#28322C; --hair2:#3D4A42;
+    --ink:#E9E4D4; --ink2:#A2A394; --ink3:#6A7168;
+  }
+  body[data-palette="parchment"] {
+    --bg:#EDE6D6; --panel:#F4EEE0; --lift:#F8F3E7;
+    --hair:#D8CEBA; --hair2:#B9AE97;
+    --ink:#26221A; --ink2:#5C564A; --ink3:#8A8272;
+    --spec:#4A53B3; --strong:#1E7A45; --weak:#8A5F14; --gap:#A93732;
+    --shadow: rgba(90,75,50,.35);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--serif);
+         font-size: 16px; min-height: 100vh; }
+
+  /* ---------- typographic dot runs: the one scoring mark ---------- */
+  .run { font-size: 10.5px; letter-spacing: 2.5px; white-space: nowrap; vertical-align: 1px; }
+  .run.cov { color: var(--spec); opacity: .85; }
+  .run.strong { color: var(--strong); } .run.weak { color: var(--weak); }
+  .run.gap { color: var(--gap); }
+  .run.mut { color: var(--ink3); letter-spacing: 3.5px; }
+  .run.q { color: var(--ink2); }
+
+  /* ---------- header ---------- */
+  header { display: flex; align-items: baseline; justify-content: space-between;
+           padding: 22px 40px 14px; border-bottom: 1px solid var(--hair); position: relative; }
+  header::after { content:""; position:absolute; left:0; right:0; bottom:3px;
+                  border-bottom:1px solid var(--hair); }
+  .wordmark { font-size: 19px; font-weight: 600; font-variant-caps: all-small-caps; letter-spacing: .22em; }
+  .tagline { font-style: italic; font-size: 14.5px; color: var(--ink2); }
+  nav { display: flex; gap: 24px; }
+  nav a { font-variant-caps: all-small-caps; letter-spacing: .12em; font-size: 14.5px;
+          color: var(--ink3); text-decoration: none; cursor: default; }
+  nav a.active { color: var(--ink); border-bottom: 1px solid var(--ink3); }
+
+  /* ---------- the title sheet ---------- */
+  .sheet { max-width: 880px; margin: 40px auto 0; border: 1px solid var(--hair); position: relative; }
+  .sheet::before, .sheet::after { content:""; position:absolute; width:9px; height:9px; pointer-events:none; }
+  .sheet::before { top:-1px; left:-1px; border-top:1px solid var(--ink3); border-left:1px solid var(--ink3); }
+  .sheet::after { bottom:-1px; right:-1px; border-bottom:1px solid var(--ink3); border-right:1px solid var(--ink3); }
+
+  section.group { border-bottom: 1px solid var(--hair); animation: settle .7s ease backwards; }
+  section.group:last-child { border-bottom: none; }
+  section.group:nth-child(2) { animation-delay: .1s; }
+  section.group:nth-child(3) { animation-delay: .2s; }
+  section.group:nth-child(4) { animation-delay: .3s; }
+  @keyframes settle { from { opacity: 0; transform: translateY(7px); } }
+
+  .g-head { display: flex; align-items: baseline; padding: 30px 44px; cursor: pointer; }
+  .g-head:focus-visible { outline: 1px solid var(--spec); outline-offset: -4px; }
+  .g-title { font-size: 29px; font-weight: 500; font-variant-caps: all-small-caps;
+             letter-spacing: .07em; transition: color .2s; }
+  .g-count { margin-left: auto; font-variant-caps: all-small-caps; letter-spacing: .14em;
+             font-size: 13.5px; color: var(--ink3); opacity: 0; transition: opacity .25s; }
+  section.group:hover .g-count, section.group.open .g-count { opacity: 1; }
+  section.group:not(.open):hover .g-title { color: var(--ink); }
+  body.attending section.group:not(.open) .g-title { color: var(--ink2); }
+  section.group:not(.open) .g-title { }
+
+  .g-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  section.group.open .g-body { grid-template-rows: 1fr; }
+  .g-body > div { overflow: hidden; }
+  .g-inner { padding: 0 44px 30px; }
+  .g-preamble { font-style: italic; font-size: 15px; line-height: 1.55; color: var(--ink2);
+                max-width: 58ch; padding-bottom: 18px; }
+
+  /* ---------- clauses ---------- */
+  .clause { list-style: none; border-top: 1px solid var(--hair); }
+  .clause:last-child { border-bottom: 1px solid var(--hair); }
+  .c-row { display: flex; align-items: baseline; padding: 11px 2px; cursor: pointer; }
+  .c-row:focus-visible { outline: 1px solid var(--spec); outline-offset: 2px; }
+  .c-mark { width: 52px; flex: none; font-size: 15px; color: var(--ink3); }
+  .c-title { font-size: 17px; font-weight: 500; }
+  .c-status { margin-left: auto; display: flex; align-items: baseline; gap: 14px; flex: none; }
+  .c-status .st-words { font-variant-caps: all-small-caps; letter-spacing: .1em; font-size: 13px;
+                        color: var(--ink3); opacity: 0; transition: opacity .2s; }
+  .clause:hover .st-words, .clause.open .st-words { opacity: 1; }
+  .clause:hover .c-title { text-decoration: underline; text-decoration-color: var(--ink3);
+                           text-underline-offset: 4px; text-decoration-thickness: 1px; }
+  .clause:hover .c-mark { color: var(--ink); }
+
+  .clause.draft .c-row { cursor: default; }
+  .clause.draft .c-title { font-style: italic; font-weight: 400; color: var(--ink2); }
+  .clause.draft:hover .c-title { text-decoration: none; }
+  .clause.draft:hover .c-mark { color: var(--ink3); }
+  .tag-draft { font-variant-caps: all-small-caps; letter-spacing: .14em; font-size: 12.5px;
+               color: var(--ink3); border: 1px solid var(--hair2); padding: 0 8px 1px; border-radius: 2px; }
+
+  /* ---------- clause unfold: definition, then two levers ---------- */
+  .anno { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .26s ease; }
+  .clause.open > .anno { grid-template-rows: 1fr; }
+  .anno > div { overflow: hidden; }
+  .anno-inner { padding: 0 0 14px 52px; }
+  .c-def { font-style: italic; font-size: 15px; line-height: 1.55; color: var(--ink2);
+           max-width: 52ch; padding: 2px 0 10px; }
+  .c-def.draftnote { color: var(--ink3); padding-bottom: 4px; }
+
+  .lever { border-top: 1px solid var(--hair); }
+  .lever-row { display: flex; align-items: baseline; gap: 10px; padding: 8px 2px; cursor: pointer;
+               white-space: nowrap; }
+  .lever-row:focus-visible { outline: 1px solid var(--spec); outline-offset: 2px; }
+  .lever-row .lv-name { font-variant-caps: all-small-caps; letter-spacing: .14em; font-size: 14px; }
+  .lever-row .lv-sub { font-style: italic; font-size: 13px; color: var(--ink3);
+                       overflow: hidden; text-overflow: ellipsis; }
+  .lever-row .lv-agg { margin-left: auto; display: flex; align-items: baseline; gap: 8px;
+                       font-variant-caps: all-small-caps; letter-spacing: .08em;
+                       font-size: 13px; color: var(--ink2); }
+  .lever-row .chev { color: var(--ink3); font-size: 12px; transition: transform .2s; display: inline-block; }
+  .lever.expanded .chev { transform: rotate(180deg); }
+  .lever-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .24s ease; }
+  .lever.expanded .lever-body { grid-template-rows: 1fr; }
+  .lever-body > div { overflow: hidden; }
+  .lb-inner { padding: 2px 0 10px 14px; }
+  .lb-line { display: flex; align-items: baseline; gap: 10px; padding: 4px 0; font-size: 14px; white-space: nowrap; }
+  .lb-line .who { width: 84px; flex: none; font-variant-caps: all-small-caps; letter-spacing: .1em; color: var(--ink2); }
+  .lb-line .word { font-variant-caps: all-small-caps; letter-spacing: .08em; font-size: 13.5px; }
+  .lb-line .sect { color: var(--ink3); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; }
+  .lb-line .sect code, .section code { font-family: var(--mono); font-size: 11px; }
+  .lb-line.gapline { color: var(--gap); font-style: italic; white-space: normal; }
+  .w-spec { color: var(--spec); } .w-strong { color: var(--strong); }
+  .w-weak { color: var(--weak); } .w-gap { color: var(--gap); } .w-mut { color: var(--ink3); }
+  .open-record { font-variant-caps: all-small-caps; letter-spacing: .12em; font-size: 13px;
+                 color: var(--ink2); padding: 8px 2px 0; text-align: right; cursor: pointer; }
+  .open-record:hover { color: var(--ink); }
+
+  /* ---------- clause record (panel) ---------- */
+  aside { position: fixed; top: 0; right: 0; width: 520px; max-width: 100vw; height: 100vh;
+          background: var(--panel); border-left: 1px solid var(--hair);
+          transform: translateX(102%); transition: transform .28s ease;
+          display: flex; flex-direction: column; z-index: 10; }
+  aside.open { transform: none; box-shadow: -40px 0 80px var(--shadow); }
+  .p-head { padding: 26px 34px 0; }
+  .p-eyebrow { font-variant-caps: all-small-caps; letter-spacing: .22em; font-size: 13.5px; color: var(--ink3); }
+  .p-title { font-size: 27px; font-weight: 500; margin: 6px 0 16px; line-height: 1.2; }
+  .p-close { position: absolute; top: 20px; right: 22px; width: 34px; height: 34px; background: none;
+             border: 1px solid var(--hair); border-radius: 50%; color: var(--ink2); font-size: 16px;
+             cursor: pointer; font-family: var(--serif); }
+  .p-close:hover { border-color: var(--hair2); color: var(--ink); }
+  .p-scroll { overflow-y: auto; padding: 0 34px 30px; flex: 1; }
+  .p-def { font-size: 16.5px; font-style: italic; line-height: 1.6;
+           border-left: 2px solid var(--hair2); padding: 4px 0 4px 18px; margin-bottom: 24px; }
+  .p-sect { font-variant-caps: all-small-caps; letter-spacing: .24em; font-size: 13.5px; color: var(--ink3);
+            margin: 24px 0 10px; display: flex; align-items: center; gap: 12px; }
+  .p-sect::after { content: ""; flex: 1; border-top: 1px solid var(--hair); }
+  .spec-card { border: 1px solid var(--hair); padding: 13px 16px; margin-bottom: 10px; }
+  .spec-card .row1 { display: flex; align-items: baseline; gap: 12px; margin-bottom: 5px; }
+  .spec-card .lab { font-weight: 600; font-size: 15px; }
+  .spec-card .verdict { font-variant-caps: all-small-caps; letter-spacing: .1em; font-size: 13px;
+                        display: inline-flex; align-items: baseline; gap: 8px; }
+  .spec-card .section { font-size: 13.5px; color: var(--ink2); margin-bottom: 5px; }
+  .spec-card .quote { font-style: italic; font-size: 15px; line-height: 1.55; color: var(--ink2); }
+  .spec-card .note { font-size: 13px; color: var(--ink3); margin-top: 5px; }
+  .spec-card .goto { display: inline-block; margin-top: 8px; font-variant-caps: all-small-caps;
+                     letter-spacing: .12em; font-size: 13px; color: var(--spec); text-decoration: none; cursor: help; }
+  table.adh { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  table.adh th { font-variant-caps: all-small-caps; letter-spacing: .12em; font-size: 12.5px;
+                 color: var(--ink3); font-weight: 500; text-align: left; padding: 6px 8px;
+                 border-bottom: 1px solid var(--hair2); }
+  table.adh th:not(:first-child), table.adh td:not(:first-child) { text-align: center; }
+  table.adh td { padding: 7px 8px; border-bottom: 1px solid var(--hair); font-size: 14px; vertical-align: baseline; }
+  table.adh td .ename { font-weight: 500; font-size: 14.5px; }
+  table.adh td .eorg { font-variant-caps: all-small-caps; letter-spacing: .08em; font-size: 12px; color: var(--ink3); }
+  table.adh tr.agg td { border-bottom: none; border-top: 1px solid var(--hair2); }
+  table.adh tr.agg td:first-child { font-variant-caps: all-small-caps; letter-spacing: .12em; color: var(--ink2); }
+  .gap-card { border: 1px dashed var(--gap); padding: 15px 16px; }
+  .gap-card .g1 { color: var(--gap); font-weight: 600; font-size: 15.5px; margin-bottom: 5px; }
+  .gap-card .g2 { font-size: 14.5px; color: var(--ink2); line-height: 1.55; font-style: italic; }
+  .gap-card .g3 { display: inline-block; margin-top: 12px; font-variant-caps: all-small-caps;
+                  letter-spacing: .12em; font-size: 13.5px; color: var(--ink);
+                  border: 1px solid var(--hair2); padding: 3px 12px; cursor: help; }
+  .p-foot { font-variant-caps: all-small-caps; letter-spacing: .14em; font-size: 12.5px; color: var(--ink3);
+            padding: 12px 34px; border-top: 1px solid var(--hair); }
+
+  /* ---------- legend + surface switcher ---------- */
+  footer { max-width: 880px; margin: 14px auto 34px; display: flex; flex-direction: column; gap: 8px;
+           font-variant-caps: all-small-caps; letter-spacing: .12em; font-size: 13.5px; color: var(--ink3); }
+  .f-row { display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap; }
+  .lg { display: inline-flex; align-items: baseline; gap: 8px; }
+  .proto-flag { margin-left: auto; }
+  .pal a { color: var(--ink3); text-decoration: none; cursor: pointer; padding: 0 2px; }
+  .pal a.on { color: var(--ink); border-bottom: 1px solid var(--ink3); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .anno, aside, .st-words, .lever-body, .chev, .g-body, .g-count { transition: none; }
+    section.group { animation: none; }
+  }
+  @media (max-width: 940px) {
+    header { flex-wrap: wrap; gap: 8px; }
+    .tagline { display: none; }
+    .sheet { margin: 16px 14px 0; }
+    footer { margin: 14px 14px 30px; }
+    .g-head, .g-inner { padding-left: 22px; padding-right: 22px; }
+  }
+</style>
+</head>
+<body data-palette="umber">
+
+<header>
+  <span class="wordmark">AI Character Index</span>
+  <span class="tagline">A public, evidence-based record of declared AI character</span>
+  <nav aria-label="prototype navigation (stubs)">
+    <a class="active" href="#" onclick="return false">The Index</a>
+    <a href="#" title="stub · not built in this prototype" onclick="return false">Methodology</a>
+    <a href="#" title="stub · not built in this prototype" onclick="return false">Contribute</a>
+    <a href="#" title="stub · not built in this prototype" onclick="return false">About</a>
+  </nav>
+</header>
+
+<div class="sheet" id="sheet"></div>
+
+<footer>
+  <div class="f-row" id="legend-row"></div>
+  <div class="f-row">
+    <span class="pal" id="pal">surface:
+      <a data-p="midnight">midnight</a> ·
+      <a data-p="umber">umber</a> ·
+      <a data-p="archive">archive</a> ·
+      <a data-p="parchment">parchment</a>
+    </span>
+    <span class="proto-flag">prototype · § 1 real (eval sweep 2026-07-12) · other clauses illustrative</span>
+  </div>
+</footer>
+
+<aside id="panel" aria-label="Clause record">
+  <button class="p-close" id="pclose" aria-label="Close">×</button>
+  <div class="p-head">
+    <div class="p-eyebrow" id="p-eyebrow"></div>
+    <h2 class="p-title" id="p-title"></h2>
+  </div>
+  <div class="p-scroll">
+    <div class="p-def" id="p-def"></div>
+    <div id="p-body"></div>
+  </div>
+  <div class="p-foot">prototype · § 1 evals &amp; coverage from the 2026-07-12 sweep (adherence = historical paper snapshots) · other clauses illustrative</div>
+</aside>
+
+<script>
+/* =========================================================================
+   Three strata per behaviour, all on 5-point (0-4) scales:
+   COVERAGE (per lab) · INSTRUMENTS (lab-free) · ADHERENCE (lab × eval).
+   Titles/definitions/spec sections follow the Notion Behaviours page
+   (2026-07-12). § 1 (No sycophancy) carries REAL data from the 2026-07-12
+   eval sweep (see research/evals/01-no-sycophancy.md); its adherence values
+   are historical per-paper snapshots, null = not reported. All other
+   clauses remain ILLUSTRATIVE PLACEHOLDERS for design discussion.
+   ========================================================================= */
+const LABS = [ { k:"A", name:"Anthropic" }, { k:"O", name:"OpenAI" } ];
+const COVW = ["not in spec","implied","touched on","covered","covered in depth"];
+const INSW = ["no public evals","scant","limited","substantial","strong"];
+const ADHW = ["failing","poor","mixed","good","meets target"];
+const DIMS = ["Internal validity","External validity","Reproducibility"];
+
+const B = {
+  1: { name:"No sycophancy", tier:1, facets:3, verified:"2026-07-12",
+    def:"The model should not shift its factual claims or assessments to please the user.",
+    cov:{ A:{ d:3, section:"What constitutes genuine helpfulness · Being honest (Truthful; epistemic courage)",
+              quote:"Claude should avoid being sycophantic or trying to foster excessive engagement or reliance on itself if this isn't in the person's genuine interest",
+              note:"Named explicitly, reinforced by three further passages (flattery-as-corrosive, Truthful component, epistemic courage); no dedicated section or operational test." },
+          O:{ d:4, section:"<code>#avoid_sycophancy</code> · <code>#letter_and_spirit</code> · <code>#be_honest_and_transparent</code> · <code>#do_not_lie</code>",
+              quote:"the factual aspects of the assistant's response should not differ based on how the user's question is phrased",
+              note:"Dedicated user-level section with an operational invariance rule and two worked examples, plus three reinforcing passages." } },
+    ins:3,
+    evals:[
+      { name:"SycophancyEval", org:"Sharma et al. 2023 · Anthropic · ICLR 2024", q:[3,3,3], adh:{A:1,O:2},
+        note:"All three facets (answer / feedback-authorship / are-you-sure); public data, third-party port. Adherence is 2023-era: claude-1.3 wrongly apologized on 98% of challenges; gpt-4 most robust yet sycophantic on every task." },
+      { name:"BrokenMath", org:"Petrov et al. 2025 · INSAIT/ETH · NeurIPS 2025", q:[4,2,4], adh:{A:null,O:2},
+        note:"Falsehood endorsement on 504 expert-verified false theorems; GPT-5 attempts proofs of 29% of them. No Claude coverage in v1." },
+      { name:"SycEval", org:"Fanous et al. 2025 · Stanford · AIES 2025", q:[3,2,1], adh:{A:2,O:2},
+        note:"Rebuttal-strength pushback on math + medical; regressive flips: Claude-Sonnet 18%, GPT-4o 14%. Nothing released; Claude version unpinned." },
+      { name:"SYCON-Bench", org:"Hong et al. 2025 · Emory/CMU · EMNLP 2025 Findings", q:[3,3,3], adh:{A:null,O:null},
+        note:"Multi-turn Turn-of-Flip under sustained pushback, 17 models, code + data; per-lab extraction pending." },
+      { name:"ELEPHANT", org:"Cheng et al. 2025 · Stanford · ICLR 2026", q:[3,3,3], adh:{A:2,O:2},
+        note:"Social sycophancy; in-scope slices only (moral both-sides, framing). Best-validated judge of the set; its paired-flip design is the facet-1.2 template." } ] },
+  2: { name:"Calibration", tier:1, facets:2,
+    def:"The model's verbalized confidence should track its actual accuracy.",
+    cov:{ A:{ d:3, section:"Being honest · Calibrated", quote:"avoids conveying beliefs with more or less confidence than it actually has" },
+          O:{ d:4, section:"<code>#express_uncertainty</code>", quote:"confident right answer > hedged right answer > no answer > hedged wrong answer > confident wrong answer" } },
+    ins:2,
+    evals:[
+      { name:"Verbalized-confidence ECE suite", org:"example entry", q:[3,2,3], adh:{A:2,O:3},
+        note:"Scores the confidence-accuracy gap, not accuracy, on matched-difficulty items." },
+      { name:"Confident-wrong rate probe", org:"example entry", q:[2,2,2], adh:{A:2,O:2},
+        note:"Frequency of 'definitely / certainly / 100%' on items answered incorrectly." } ] },
+  3: { name:"Honesty about one's own actions", tier:1, facets:3,
+    def:"The model should report its own actions and outcomes truthfully; the interaction record is the ground truth.",
+    cov:{ A:{ d:4, section:"Being honest · Transparent · hard constraint 4", quote:"doesn't pursue hidden agendas or lie about itself or its reasoning" },
+          O:{ d:3, section:"<code>#do_not_lie</code>", quote:"forthright with the user about its knowledge, confidence, capabilities, and actions" } },
+    ins:2,
+    evals:[
+      { name:"Agentic false-success reporting", org:"example entry", q:[3,3,2], adh:{A:3,O:3},
+        note:"Impossible or failed agentic task; rate of final reports claiming success vs transcript." } ] },
+  4: { name:"Instruction-hierarchy conformance", tier:1, facets:5,
+    def:"When instructions from different authority levels conflict, resolution should match the spec's declared hierarchy, consistently.",
+    cov:{ A:{ d:2, section:"Navigating helpfulness across principals", quote:"the constitution declares its hierarchy holistic rather than strict",
+              note:"Scored only on scenarios the constitution rules on explicitly (its own worked examples)." },
+          O:{ d:4, section:"<code>#chain_of_command</code> · <code>#levels_of_authority</code>", quote:"root > system > developer > user > guideline" } },
+    ins:2,
+    evals:[
+      { name:"Scripted conflict-resolution suite", org:"example entry", q:[3,2,3], adh:{A:2,O:3},
+        note:"Operator-vs-user conflicts the spec explicitly rules on; the spec is the answer key." },
+      { name:"Injection-resistance set", org:"example entry", q:[3,3,3], adh:{A:3,O:3},
+        note:"Instructions embedded in untrusted documents and tool results; compliance rate." } ] },
+  5: { name:"Handling disagreements with user instructions", tier:1, facets:2, revising:true,
+    def:"When the model judges an explicit, in-bounds instruction to be mistaken, it should comply while flagging disagreement, not silently override.",
+    cov:{ A:{ d:3, section:"Genuine helpfulness · Autonomy", quote:"can voice its concerns but should nonetheless respect the wishes of the user" },
+          O:{ d:3, section:"<code>#highlight_misalignments</code>", quote:"briefly and respectfully note this discrepancy" } },
+    ins:0, evals:[] },
+  6: { name:"Reward hacking", tier:1, facets:3,
+    def:"The model should pursue the intent of a task, not game its success criteria.",
+    cov:{ A:{ d:3, section:"What constitutes genuine helpfulness", quote:"should tell the user rather than writing code that special-cases tests to force them to pass" },
+          O:{ d:3, section:"<code>#letter_and_spirit</code> · <code>#no_other_objectives</code>", quote:"interpret instructions by the underlying intent and context" } },
+    ins:2,
+    evals:[
+      { name:"Hard-coding detection in agentic coding", org:"example entry", q:[4,2,3], adh:{A:2,O:2},
+        note:"Mechanical inspection: was the check satisfied by solving the task or by gaming it?" },
+      { name:"Impossible-task gaming probe", org:"example entry", q:[3,2,2], adh:{A:2,O:2},
+        note:"Gameable checker on an impossible task; pass = the model reports it can't be done." } ] },
+  7: { name:"Catastrophic risks", tier:1, facets:4,
+    def:"The model should refuse serious uplift toward mass-casualty capabilities, regardless of framing or claimed authority.",
+    cov:{ A:{ d:4, section:"Hard constraints 1-3", quote:"cannot be unlocked by any operator or user" },
+          O:{ d:4, section:"Red lines · <code>#avoid_info_hazards</code>", quote:"no detailed, actionable steps ... regardless of context" } },
+    ins:2,
+    evals:[
+      { name:"Lab safeguard evaluations", org:"system cards · lab-internal", q:[3,3,1], adh:{A:3,O:3},
+        note:"The most rigorous evals here are lab-internal; independence of evidence is the gap, not existence." },
+      { name:"Independent uplift replication", org:"example entry", q:[2,2,2], adh:{A:3,O:2},
+        note:"Third-party replication of refusal rates with laundered and decomposed framings." } ] },
+  8: { name:"Even-handedness", tier:1, facets:1,
+    def:"Willingness to help with legal-gray-zone power-relevant tasks should not depend on the actor's politics or identity.",
+    cov:{ A:{ d:3, section:"Preserving epistemic autonomy", quote:"rightly seen as fair and trustworthy by people across the political spectrum" },
+          O:{ d:4, section:"<code>#uphold_fairness</code> · <code>#no_agenda</code>", quote:"applying the same reasoning and standards across similar situations" } },
+    ins:1,
+    evals:[
+      { name:"political-manipulation.ai", org:"CAIS", q:[3,3,3], adh:{A:2,O:2},
+        note:"First entry in our eval collection; actor-swap invariance on persuasion tasks." } ] },
+  9: { name:"Complicity in illegitimate power seizure", tier:1, facets:4,
+    def:"The model should not assist attempts to seize or entrench power illegitimately; scoped strictly to wide-consensus cases.",
+    cov:{ A:{ d:4, section:"Hard constraint 6 · Avoiding concentrations of power", quote:"never assist any individual group attempting to seize unprecedented and illegitimate degrees of absolute societal, military, or economic control" },
+          O:{ d:3, section:"Red lines · <code>#do_not_facilitate_illicit_behavior</code>", quote:"never ... used to facilitate ... persecution or mass surveillance" } },
+    ins:0, evals:[] },
+  10:{ name:"Secret loyalties", tier:1, facets:3,
+    def:"The model should serve the user it is interacting with, within transparent operator restrictions, never covertly working against them.",
+    cov:{ A:{ d:4, section:"Handling conflicts between operators and users", quote:"operators limiting Claude's helpfulness is acceptable; weaponizing it against its own users is not" },
+          O:{ d:3, section:"<code>#do_not_lie</code> · <code>#no_other_objectives</code>", quote:"must never lie or covertly pursue goals ... without disclosure and consent" } },
+    ins:0, evals:[] },
+  11:{ name:"Cooperative stance", draft:true,
+    draftNote:"When acting on behalf of the user … (definition in deliberation on the Behaviours page)" },
+  12:{ name:"Avoiding hateful and spiteful dispositions", draft:true,
+    draftNote:"Definition in deliberation on the Behaviours page." },
+  13:{ name:"Caution in high-stakes scenarios", draft:true,
+    draftNote:"Avoid irreversible actions where possible; weigh multiple perspectives. In deliberation." },
+};
+
+const GROUPS = [
+  { name:"Honesty & epistemics", ids:[1,2,3],
+    preamble:"The model should not create false impressions through any channel: agreement, confidence, or self-interested claims." },
+  { name:"Instruction & task fidelity", ids:[4,5,6],
+    preamble:"Scored against what the principal actually asked for: whose instructions win, how disagreement is handled, and fidelity to intent over letter." },
+  { name:"Power concentration & large-scale harm", ids:[7,8,9,10],
+    preamble:"Four clauses, one boundary each: uplift toward mass casualties, bias in who gets helped, complicity in illegitimate power grabs, and covert loyalty against the user." },
+  { name:"Interaction with others", ids:[11,12,13],
+    preamble:"How the model treats parties beyond its principal. This article is being drafted in the open." },
+];
+
+/* ---------- derived ---------- */
+const adhVal = (e, k) => (e.adh && typeof e.adh[k] === "number") ? e.adh[k] : null;
+const adhOf = b => {
+  const m = k => {
+    const vs = (b.evals || []).map(e => adhVal(e, k)).filter(v => v !== null);
+    return vs.length ? Math.round(vs.reduce((s, v) => s + v, 0) / vs.length) : null;
+  };
+  return { A:m("A"), O:m("O") };
+};
+const covAvg = b => Math.round((b.cov.A.d + b.cov.O.d) / 2);
+const adhAvg = b => {
+  const a = adhOf(b), vs = [a.A, a.O].filter(v => v !== null);
+  return vs.length ? Math.round(vs.reduce((s, v) => s + v, 0) / vs.length) : null;
+};
+const band = v => v === null ? "mut" : v <= 1 ? "gap" : v === 2 ? "weak" : "strong";
+const qAvg = e => Math.round(e.q.reduce((a,x) => a + x, 0) / e.q.length);
+
+/* ---------- the one scoring mark: a typographic dot run ---------- */
+function run(level, cls, title) {
+  if (level === null) return `<span class="run mut" title="${title || "unmeasured"}">····</span>`;
+  return `<span class="run ${cls}" title="${title || level + " of 4"}">${"●".repeat(level)}${"○".repeat(4 - level)}</span>`;
+}
+const covRun = (d, t) => run(d, "cov", t || COVW[d]);
+const adhRun = (v, t) => run(v, band(v), t || (v === null ? "unmeasured" : ADHW[v]));
+const insRun = v => run(v, band(v), INSW[v]);
+const qRun = n => run(n, "q", n + " of 4");
+
+/* ---------- build the title sheet ---------- */
+const sheet = document.getElementById("sheet");
+GROUPS.forEach((grp, gi) => {
+  const sec = document.createElement("section");
+  sec.className = "group";
+  sec.dataset.g = gi;
+  const n = grp.ids.length;
+  sec.innerHTML = `
+    <div class="g-head" tabindex="0" role="button" aria-expanded="false">
+      <h2 class="g-title">${grp.name}</h2>
+      <span class="g-count">${n} behaviour${n > 1 ? "s" : ""}</span>
+    </div>
+    <div class="g-body"><div><div class="g-inner">
+      <p class="g-preamble">${grp.preamble}</p>
+      <ul>${grp.ids.map(id => clauseHTML(id)).join("")}</ul>
+    </div></div></div>`;
+  sheet.appendChild(sec);
+});
+
+function clauseHTML(id) {
+  const b = B[id];
+  if (b.draft) return `
+    <li class="clause draft" data-id="${id}">
+      <div class="c-row">
+        <span class="c-mark">§ ${id}</span>
+        <span class="c-title">${b.name}</span>
+        <span class="c-status"><span class="tag-draft">in deliberation</span></span>
+      </div>
+      <div class="anno"><div><div class="anno-inner">
+        <div class="c-def draftnote">${b.draftNote}</div>
+      </div></div></div>
+    </li>`;
+
+  const adh = adhOf(b), aAvg = adhAvg(b);
+  return `
+  <li class="clause" data-id="${id}">
+    <div class="c-row" tabindex="0" role="button" aria-label="§ ${id} ${b.name}. Press Enter for the full record.">
+      <span class="c-mark">§ ${id}</span>
+      <span class="c-title">${b.name}${b.revising ? ' <span title="marked under revision on the Behaviours page" style="color:var(--ink3)">*</span>' : ""}</span>
+      <span class="c-status">
+        <span class="st-words">${COVW[covAvg(b)]} · ${aAvg === null ? "unmeasured" : ADHW[aAvg]}</span>
+        ${covRun(covAvg(b), "coverage (average of specs): " + COVW[covAvg(b)])}
+        ${adhRun(aAvg, "adherence (average): " + (aAvg === null ? "unmeasured" : ADHW[aAvg]))}
+      </span>
+    </div>
+    <div class="anno"><div><div class="anno-inner">
+      <div class="c-def">${b.def}</div>
+
+      <div class="lever" data-lv="cov">
+        <div class="lever-row" tabindex="0" role="button" aria-expanded="false">
+          <span class="lv-name">Coverage</span>
+          <span class="lv-sub">what each spec declares</span>
+          <span class="lv-agg">${LABS.map(l => `${l.name} ${covRun(b.cov[l.k].d)}`).join(" ")}
+            <span class="chev">▾</span></span>
+        </div>
+        <div class="lever-body"><div><div class="lb-inner">
+          ${LABS.map(l => { const c = b.cov[l.k]; return `
+            <div class="lb-line">
+              <span class="who">${l.name}</span>
+              ${covRun(c.d)}
+              <span class="word w-spec">${COVW[c.d]}</span>
+              <span class="sect">${c.section}</span>
+            </div>`; }).join("")}
+        </div></div></div>
+      </div>
+
+      <div class="lever" data-lv="adh">
+        <div class="lever-row" tabindex="0" role="button" aria-expanded="false">
+          <span class="lv-name">Adherence</span>
+          <span class="lv-sub">what the evals show</span>
+          <span class="lv-agg">${b.evals.length
+            ? LABS.map(l => `${l.name} ${adhRun(adh[l.k])}`).join(" ")
+            : `<span class="w-gap">unmeasured</span> ${adhRun(null)}`}
+            <span class="chev">▾</span></span>
+        </div>
+        <div class="lever-body"><div><div class="lb-inner">
+          ${b.evals.length ? `
+            <div class="lb-line">
+              <span class="who">Instruments</span>
+              ${insRun(b.ins)}
+              <span class="word w-${band(b.ins)}">${INSW[b.ins]}</span>
+              <span class="sect">${b.evals.length} public eval${b.evals.length > 1 ? "s" : ""}, rubric-scored</span>
+            </div>
+            ${b.evals.map(e => `
+              <div class="lb-line">
+                <span class="who"></span>
+                <span class="sect" style="flex:1">${e.name}</span>
+                ${qRun(qAvg(e))}
+                ${LABS.map(l => `<span style="display:inline-flex;align-items:baseline;gap:4px" title="${l.name}: ${adhVal(e, l.k) === null ? "unmeasured" : ADHW[adhVal(e, l.k)]}"><span style="font-variant-caps:all-small-caps;font-size:11.5px;color:var(--ink3)">${l.name.slice(0,1)}</span>${adhRun(adhVal(e, l.k))}</span>`).join("")}
+              </div>`).join("")}
+          ` : `
+            <div class="lb-line gapline">No public evals exist for any facet, so adherence cannot be measured. The absence is itself an index finding.</div>
+          `}
+        </div></div></div>
+      </div>
+
+      <div class="open-record" role="button" tabindex="0">open the full record →</div>
+    </div></div></div>
+  </li>`;
+}
+
+/* ---------- one group at a time ---------- */
+const sections = [...document.querySelectorAll("section.group")];
+function openGroup(sec) {
+  sections.forEach(s => {
+    const on = s === sec;
+    s.classList.toggle("open", on);
+    s.querySelector(".g-head").setAttribute("aria-expanded", on);
+    if (!on) s.querySelectorAll(".clause.open").forEach(c => c.classList.remove("open"));
+    if (!on) s.querySelectorAll(".lever.expanded").forEach(lv => lv.classList.remove("expanded"));
+  });
+  document.body.classList.add("attending");
+}
+function closeGroups() {
+  sections.forEach(s => {
+    s.classList.remove("open");
+    s.querySelector(".g-head").setAttribute("aria-expanded", false);
+    s.querySelectorAll(".clause.open").forEach(c => c.classList.remove("open"));
+    s.querySelectorAll(".lever.expanded").forEach(lv => lv.classList.remove("expanded"));
+  });
+  document.body.classList.remove("attending");
+}
+sections.forEach(sec => {
+  sec.addEventListener("pointerenter", () => openGroup(sec));
+  sec.addEventListener("pointerleave", () => closeGroups());
+  const head = sec.querySelector(".g-head");
+  head.addEventListener("click", () => openGroup(sec)); // touch
+  head.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault();
+      sec.classList.contains("open") ? closeGroups() : openGroup(sec); }
+  });
+  head.addEventListener("focus", () => openGroup(sec));
+});
+
+/* ---------- clause interactions ---------- */
+document.querySelectorAll(".clause").forEach(li => {
+  li.addEventListener("pointerenter", () => li.classList.add("open"));
+  li.addEventListener("pointerleave", () => {
+    li.classList.remove("open");
+    li.querySelectorAll(".lever.expanded").forEach(lv => lv.classList.remove("expanded"));
+  });
+  const id = +li.dataset.id;
+  if (B[id].draft) return;
+  const row = li.querySelector(".c-row");
+  row.addEventListener("click", () => openPanel(id));
+  row.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPanel(id); } });
+  row.addEventListener("focus", () => li.classList.add("open"));
+  li.querySelectorAll(".lever").forEach(lv => {
+    const lrow = lv.querySelector(".lever-row");
+    const toggle = () => {
+      const on = lv.classList.toggle("expanded");
+      lrow.setAttribute("aria-expanded", on);
+    };
+    lrow.addEventListener("click", e => { e.stopPropagation(); toggle(); });
+    lrow.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggle(); } });
+  });
+  const or = li.querySelector(".open-record");
+  or.addEventListener("click", e => { e.stopPropagation(); openPanel(id); });
+  or.addEventListener("keydown", e => { if (e.key === "Enter") { e.stopPropagation(); openPanel(id); } });
+});
+
+/* ---------- the clause record ---------- */
+const panel = document.getElementById("panel");
+function openPanel(id) {
+  const b = B[id];
+  const grp = GROUPS.find(g => g.ids.includes(id));
+  const adh = adhOf(b);
+  document.getElementById("p-eyebrow").textContent =
+    `§ ${id} · ${grp.name} · Tier ${b.tier} · ${b.facets} facet${b.facets > 1 ? "s" : ""}`;
+  document.getElementById("p-title").textContent = b.name;
+  document.getElementById("p-def").textContent = b.def;
+
+  let html = `<div class="p-sect">Coverage · what each spec declares</div>`;
+  html += LABS.map(l => { const c = b.cov[l.k]; return `
+    <div class="spec-card">
+      <div class="row1">
+        <span class="lab">${l.name}</span>
+        <span class="verdict ${c.d === 0 ? "w-mut" : "w-spec"}">${covRun(c.d)} ${COVW[c.d]}</span>
+      </div>
+      <div class="section">${c.section}</div>
+      <div class="quote">"${c.quote}"</div>
+      ${c.note ? `<div class="note">${c.note}</div>` : ""}
+      <a class="goto" title="spec reader · not built in this prototype">read in context →</a>
+    </div>`; }).join("");
+
+  html += `<div class="p-sect">Instruments · the public evals</div>`;
+  if (!b.evals.length) {
+    html += `
+      <div class="gap-card">
+        <div class="g1">No public evals found</div>
+        <div class="g2">No facet of this clause has a public eval we could locate, so adherence cannot be measured for any lab. The absence is itself an index finding${id === 9 ? " -- an expected v0 headline" : ""}.</div>
+        <a class="g3" title="contribute page · not built in this prototype">want to build this eval? → contribute</a>
+      </div>`;
+  } else {
+    html += `
+      <div class="lb-line" style="padding:2px 0 8px">
+        ${insRun(b.ins)}
+        <span class="word w-${band(b.ins)}" style="font-variant-caps:all-small-caps;letter-spacing:.08em">${INSW[b.ins]}</span>
+        <span class="sect" style="color:var(--ink3);font-size:13.5px">· ${b.evals.length} instrument${b.evals.length > 1 ? "s" : ""} · quality on rubric v0 (0-4 per dimension)</span>
+      </div>
+      ${b.evals.map(e => `
+        <div class="spec-card">
+          <div class="row1"><span class="lab" style="font-size:14.5px">${e.name}</span>
+            <span class="section" style="margin:0">${e.org}</span></div>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 14px;margin:4px 0 2px">
+            ${DIMS.map((d, i) => `<span style="font-size:13.5px;color:var(--ink2)">${d}</span><span>${qRun(e.q[i])}</span>`).join("")}
+          </div>
+          <div class="note">${e.note}</div>
+        </div>`).join("")}
+      <div class="p-sect">Adherence · scores on those instruments</div>
+      <table class="adh">
+        <tr><th>Instrument</th>${LABS.map(l => `<th>${l.name}</th>`).join("")}</tr>
+        ${b.evals.map(e => `
+          <tr>
+            <td><div class="ename">${e.name}</div><div class="eorg">quality ${qRun(qAvg(e))}</div></td>
+            ${LABS.map(l => `<td>${adhRun(adhVal(e, l.k))} <span class="w-${band(adhVal(e, l.k))}" style="font-variant-caps:all-small-caps;font-size:13px">${adhVal(e, l.k) === null ? "--" : adhVal(e, l.k) + "/4"}</span></td>`).join("")}
+          </tr>`).join("")}
+        <tr class="agg"><td>aggregate</td>
+          ${LABS.map(l => `<td>${adhRun(adh[l.k])} <span class="w-${band(adh[l.k])}" style="font-variant-caps:all-small-caps;font-size:13px">${adh[l.k] === null ? "unmeasured" : ADHW[adh[l.k]]}</span></td>`).join("")}
+        </tr>
+      </table>`;
+  }
+  document.getElementById("p-body").innerHTML = html;
+  panel.classList.add("open");
+}
+function closePanel() { panel.classList.remove("open"); }
+document.getElementById("pclose").addEventListener("click", closePanel);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closePanel(); });
+
+/* ---------- legend ---------- */
+document.getElementById("legend-row").innerHTML = `
+  <span class="lg">coverage ${covRun(3, "example: covered")} 0-4</span>
+  <span class="lg">adherence &amp; instrument strength ${run(1,"gap","")} ${run(2,"weak","")} ${run(4,"strong","")} 0-4</span>
+  <span class="lg">unmeasured ${run(null)}</span>`;
+
+/* ---------- surface switcher ---------- */
+const pal = document.getElementById("pal");
+function setPalette(p) {
+  document.body.dataset.palette = p;
+  try { localStorage.setItem("aci-palette", p); } catch (e) {}
+  pal.querySelectorAll("a").forEach(a => a.classList.toggle("on", a.dataset.p === p));
+}
+pal.querySelectorAll("a").forEach(a => a.addEventListener("click", () => setPalette(a.dataset.p)));
+const qp = new URLSearchParams(location.search).get("palette");
+let saved = null; try { saved = localStorage.getItem("aci-palette"); } catch (e) {}
+setPalette(qp || saved || "umber");
+
+/* deep links: #g/2 opens the third group · #b/9 opens § 9's record ·
+   #p/9 opens § 9's group + clause + both levers (for screenshots) */
+const m = location.hash.match(/^#(b|p|g)\/(\d+)$/);
+if (m) {
+  if (m[1] === "g" && sections[+m[2]]) openGroup(sections[+m[2]]);
+  if (m[1] === "b" && B[+m[2]] && !B[+m[2]].draft) {
+    openGroup(sections[GROUPS.findIndex(g => g.ids.includes(+m[2]))]);
+    openPanel(+m[2]);
+  }
+  if (m[1] === "p" && B[+m[2]] && !B[+m[2]].draft) {
+    const li = document.querySelector(`.clause[data-id="${m[2]}"]`);
+    openGroup(sections[GROUPS.findIndex(g => g.ids.includes(+m[2]))]);
+    li?.classList.add("open");
+    li?.querySelectorAll(".lever").forEach(lv => lv.classList.add("expanded"));
+  }
+}
+</script>
+</body>
+</html>

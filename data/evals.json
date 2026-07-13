@@ -1,0 +1,98 @@
+{
+  "rubric_version": "v0 (RAND Paskov et al. 2025 dimensions, 0-4 per dimension)",
+  "sweep_date": "2026-07-12",
+  "evals": [
+    {
+      "id": "sycophancy-eval-sharma-2023",
+      "name": "SycophancyEval",
+      "url": "https://arxiv.org/abs/2310.13548",
+      "code_url": "https://github.com/meg-tong/sycophancy-eval",
+      "org": "Sharma et al. 2023, Anthropic (ICLR 2024)",
+      "behaviour_ids": [1],
+      "facets": ["1.1", "1.2", "1.3"],
+      "quality": { "internal_validity": 3, "external_validity": 3, "reproducibility": 3 },
+      "adherence": {
+        "anthropic": { "band": 1, "provenance": "claude-1.3 wrongly apologized on 98% of are-you-sure challenges where originally correct (2023 model; historical)" },
+        "openai": { "band": 2, "provenance": "gpt-4 'the most robust' yet sycophantic on all four tasks (2023 model; historical)" }
+      },
+      "featured": true,
+      "notes": "Only eval covering all three facets: answer sycophancy (7,267 items) = 1.1, feedback wrote/didn't-write arm (8,500) = 1.2, are-you-sure (4,887) = 1.3. Data public; UK AISI inspect_evals maintains a runnable port of are-you-sure. Held back by GPT-4-judge circularity, SEs only, no turnkey grading code, mimicry dataset unreleased."
+    },
+    {
+      "id": "brokenmath-petrov-2025",
+      "name": "BrokenMath",
+      "url": "https://arxiv.org/abs/2510.04721",
+      "code_url": "https://github.com/insait-institute/broken-math",
+      "data_url": "https://huggingface.co/datasets/INSAIT-Institute/BrokenMath",
+      "org": "Petrov et al. 2025, INSAIT / ETH Zurich (NeurIPS 2025)",
+      "behaviour_ids": [1],
+      "facets": ["1.1"],
+      "quality": { "internal_validity": 4, "external_validity": 2, "reproducibility": 4 },
+      "adherence": {
+        "anthropic": { "band": null, "provenance": "no Claude models evaluated in v1" },
+        "openai": { "band": 2, "provenance": "GPT-5 attempts to prove 29.0% of expert-verified false theorems (best of ~10 models, 2025)" }
+      },
+      "featured": true,
+      "notes": "Most rigorous 1.1 instrument found: 504 expert-verified false theorems from fresh 2025 competition problems (contamination-resistant), judge validated at 95% agreement on 250 hand-labeled responses, full code+data release. Domain-narrow (competition math only)."
+    },
+    {
+      "id": "syceval-fanous-2025",
+      "name": "SycEval",
+      "url": "https://arxiv.org/abs/2502.08177",
+      "code_url": null,
+      "org": "Fanous et al. 2025, Stanford (AIES 2025)",
+      "behaviour_ids": [1],
+      "facets": ["1.3", "1.1"],
+      "quality": { "internal_validity": 3, "external_validity": 2, "reproducibility": 1 },
+      "adherence": {
+        "anthropic": { "band": 2, "provenance": "Claude-Sonnet (version unpinned, likely 3.5): 18.31% regressive sycophancy (2025)" },
+        "openai": { "band": 2, "provenance": "ChatGPT-4o (2024-05-13): 14.40% regressive sycophancy (2025)" }
+      },
+      "featured": false,
+      "notes": "Control-run then rebuttal design on medical + math; rebuttal-strength gradient; proper statistics (binomial CIs, z-tests). Introduces the progressive/regressive split (only regressive flips are in-scope for our behaviour). No code, data, or prompts released; Claude/Gemini versions unpinned."
+    },
+    {
+      "id": "sycon-bench-hong-2025",
+      "name": "SYCON-Bench",
+      "url": "https://aclanthology.org/2025.findings-emnlp.121/",
+      "code_url": "https://github.com/JiseungHong/SYCON-Bench",
+      "org": "Hong et al. 2025, Emory / CMU (Findings of EMNLP 2025)",
+      "behaviour_ids": [1],
+      "facets": ["1.3", "1.1"],
+      "quality": { "internal_validity": 3, "external_validity": 3, "reproducibility": 3 },
+      "adherence": {
+        "anthropic": { "band": null, "provenance": "per-model tables in paper not yet extracted" },
+        "openai": { "band": null, "provenance": "per-model tables in paper not yet extracted" }
+      },
+      "featured": false,
+      "notes": "Strongest peer-reviewed pushback-stability instrument: multi-turn sustained pressure, continuous Turn-of-Flip metric, 17 models, code+data (MIT). Mixes opinion stances with factual ones; follow-up work shows judge agreement on false presuppositions can drop to kappa 0.36."
+    },
+    {
+      "id": "elephant-cheng-2025",
+      "name": "ELEPHANT",
+      "url": "https://arxiv.org/abs/2505.13995",
+      "code_url": "https://github.com/myracheng/elephant",
+      "org": "Cheng et al. 2025, Stanford (ICLR 2026)",
+      "behaviour_ids": [1],
+      "facets": ["1.2-adjacent", "1.1-adjacent"],
+      "quality": { "internal_validity": 3, "external_validity": 3, "reproducibility": 3 },
+      "adherence": {
+        "anthropic": { "band": 2, "provenance": "Claude 3.7 Sonnet: moral both-sides 0.15, framing ~0.27 vs human baseline (2025)" },
+        "openai": { "band": 2, "provenance": "GPT-5: moral 0.22, framing 0.22; GPT-4o (2024-11-20) markedly worse at 0.40/0.34 (2025)" }
+      },
+      "featured": false,
+      "notes": "Social (face-preserving) sycophancy -- mostly outside our factual-claims definition; in-scope slices are moral both-sides endorsement and framing. Best judge validation of the set (450 items, 3 experts, Fleiss kappa >= 0.70). Its AITA paired-perspective flip is the design template for facet 1.2. Full datasets only via view-only OSF link."
+    }
+  ],
+  "rejected": [
+    { "name": "Perez et al. 2022 model-written sycophancy subset", "url": "https://arxiv.org/abs/2212.09251", "reason": "opinion mirroring on no-ground-truth questions; maps to no facet; foundational lineage only" },
+    { "name": "PARROT", "url": "https://arxiv.org/abs/2511.17220", "reason": "preprint-only, judge validation unconfirmed; watchlist -- strongest future candidate (22 models incl. GPT-5, Claude Sonnet 4.5)" },
+    { "name": "Spiral-Bench", "url": "https://eqbench.com/spiral-bench.html", "reason": "delusion-validation construct, cohort-relative scores, high judge variance" },
+    { "name": "Syco-bench (Duffy)", "url": "https://www.syco-bench.com/", "reason": "only post-2023 authorship-invariance datapoint but 40 items, weak judges, self-published" },
+    { "name": "UK AISI inspect_evals sycophancy", "url": "https://ukgovernmentbeis.github.io/inspect_evals/evals/assistants/sycophancy/", "reason": "instrument port of Sharma data, not new evidence" },
+    { "name": "MASK", "url": "https://arxiv.org/abs/2503.03750", "reason": "pressured/instructed lying, different construct" },
+    { "name": "DarkBench", "url": "https://arxiv.org/abs/2503.10728", "reason": "thin sycophancy sub-category, judge kappa down to 0.27, Claude-3-era models" },
+    { "name": "Petri", "url": "https://alignment.anthropic.com/2025/petri/", "reason": "auditing tool, not a benchmark, per the authors" },
+    { "name": "OpenAI internal sycophancy evals", "url": "https://openai.com/index/expanding-on-sycophancy/", "reason": "vendor self-report, no public dataset or judge details; independence-of-evidence context" }
+  ]
+}
