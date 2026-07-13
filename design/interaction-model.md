@@ -12,30 +12,30 @@ The page opens showing **only the group names** -- large small-caps Garamond tit
 
 ### L1 -- Clauses, definitions, and the two levers
 
-Every behaviour is a **numbered clause (§ 1-13) in an aligned ledger**, always visible -- a constitution shows its clauses. Each clause row carries two glyphs at the right edge (coverage square + adherence circle), so the whole index is readable at a glance.
+Every behaviour is a **numbered clause (§ 1-13) in an aligned ledger**, always visible -- a constitution shows its clauses. Each clause row carries **one mark** at its right edge: instrument strength, the lab-free stratum ("instruments `●●○○` limited"; red "no public evals `····`" where none exist) -- never a cross-lab average, which would report nothing true about either lab. Where the measurement gaps are is readable at a glance.
 
 Hovering (or focusing) a clause unfolds **its definition first** (italic, in-flow -- the document breathes, rows shift down, every left edge stays aligned). Beneath the definition sit two openable **levers**:
 
 1. **Coverage -- what each spec declares.** Opens per-lab lines: depth on the 5-point scale + the actual section (e.g. *Being honest · Truthful*, `#avoid_sycophancy`).
-2. **Adherence -- what the evals show.** Opens the instrument list: strength aggregate, then one line per eval with its rubric-quality dots and per-lab adherence mini-scores. Where no evals exist it reads *unmeasured* -- the gap is stated, not hidden.
+2. **Adherence -- what the evals show.** Opens one line per eval with its rubric-quality dots and per-lab adherence mini-scores; the instrument-strength aggregate lives on the clause row, its single home. Where no evals exist it reads *unmeasured* -- the gap is stated, not hidden.
 
 Then "open the full record →" (→ L2). Hovering an article softly dims its siblings (never removes them). Draft clauses ("in deliberation") show their draft note on hover and do not open a record.
 
 ### The three strata (how the lab axis is located)
 
-- **Coverage** *(per lab)*: what the spec declares -- depth 0-4: not in spec / implied / touched on / covered / covered in depth. Square glyph, archival blue, fill height = depth.
-- **Instruments** *(lab-independent)*: the public evals and their rubric quality (0-4 per dimension). This is the measuring equipment; no lab axis here.
-- **Adherence** *(lab × eval)*: how each lab's model scores on those instruments, 0-4: failing / poor / mixed / good / meets target. In the full record this is a **matrix: evals as rows, labs as columns**, with per-lab aggregates. Adherence is *unmeasured* (dashed glyph) where no instruments exist -- evidence gates adherence, and the design makes that gate visible.
+- **Coverage** *(per lab)*: what the spec declares -- depth 0-4: not in spec / implied / touched on / covered / covered in depth. Dot run in archival blue, filled count = depth.
+- **Instruments** *(lab-independent)*: the public evals and their rubric quality (0-4 per dimension). This is the measuring equipment; no lab axis here. Its 0-4 strength mark is the clause row's only mark -- a fact about the field, kept visibly apart from the per-lab strata.
+- **Adherence** *(lab × eval)*: how each lab's model scores on those instruments, 0-4: failing / poor / mixed / good / meets target. In the full record this is a **matrix: evals as rows, labs as columns**, with per-lab aggregates. Adherence is *unmeasured* (a dashed run `····`) where no instruments exist -- and unmeasured is the **floor of the evidence scale**, below "failing", not a parallel category: no instruments is worse than weak instruments, so behaviour-level absence renders in gap-red. Only a cell a paper merely didn't report stays muted ("not reported").
 
-All scales are **5-point (0-4)**, rendered as **typographic dot runs** (`●●●○` -- filled count = level) in the document's own type, replacing the earlier geometric glyphs Andrés found too salient: coverage runs in spec-blue, adherence/strength runs hue-banded (0-1 red, 2 amber, 3-4 green -- reinforcement, never the sole carrier; the fill count and the word carry the meaning), `····` for unmeasured, ink-toned runs for rubric quality. One mark language across rows, levers, legend, and the record.
+All scales are **5-point (0-4)**, rendered as **typographic dot runs** (`●●●○` -- filled count = level) in the document's own type, replacing the earlier geometric glyphs Andrés found too salient: coverage runs in spec-blue, adherence/strength runs hue-banded (0-1 red, 2 amber, 3-4 green -- reinforcement, never the sole carrier; the fill count and the word carry the meaning), `····` for unmeasured (gap-red at behaviour level, muted for a single unreported cell), ink-toned runs for rubric quality. One mark language across rows, levers, and the record; the scales are taught in one place, the sheet's folded "notes on reading" closing note.
 
 ### L2 -- Behaviour detail
 
-A dedicated, deep-linkable page (`/b/<slug>`), opened with a short zoom transition from the node so continuity is preserved; back returns to the constellation exactly as you left it. Contains:
+A dedicated, deep-linkable page (`/b/<slug>`), opened with a short zoom transition from the clause row so continuity is preserved; back returns to the sheet exactly as you left it. Contains:
 
 1. **Definition and scope** (verbatim from the canonical behaviour list).
 2. **Spec coverage, per lab:** verdict + the cited quote(s), each with *"read in context →"* (→ L4).
-3. **Evidence:** the aggregate quality chip (same encoding as L1), the facet list, and *"see the evals →"* (→ L3). If there are no evals, the gap is stated as a finding, with a "want to build this? → contribute" link.
+3. **Evidence:** the aggregate strength run (same encoding as L1), the facet list, and *"see the evals →"* (→ L3). If there are no evals, the gap is stated as a finding, with a "want to build this? → contribute" link.
 
 ### L3 -- Eval breakdown
 
@@ -54,10 +54,10 @@ Self-hosted, rendered copies of the specs we score against. **Both are CC0 (veri
 
 ## Visual encoding
 
-- **Evidence glyph:** none = hollow, weak = half-filled, strong = filled -- fill amount carries the meaning, hue reinforces it (green `#3FA96C` / amber `#BC8A2F` / red `#C95550`, validator-passed on `#121419`; always paired with a text label).
-- **Coverage:** covered = archival blue (`#7B85D6`) · covered in part = same, annotated "(in part)" and dashed pill in the record · not in spec = muted with an explicit label (an absence is a finding, not blank space).
-- **Color speaks only about data.** Everything structural -- rules, section marks, small caps, borders -- is vellum ivory and hairline gray. Drafts are italic + "in deliberation" tag; parked behaviours keep their exclusion reason one hover away.
-- **Constitutional midnight:** deep warm ink (`#121419`), vellum text (`#EAE4D6`), Garamond throughout; monospace only for literal spec anchors. Text-heavy surfaces (L2 record, L4 reader) sit on a slightly lifted panel so long-form reading doesn't strain.
+- **Evidence marks:** dot runs -- filled count carries the meaning, hue reinforces it (on umber: green `#3FA96C` / amber `#BC8A2F` / red `#C95550`; on daylight: `#1E7A45` / `#8A5F14` / `#A93732`; validator-passed on both grounds; always paired with a text label).
+- **Coverage:** archival blue (`#7B85D6` on umber, `#4A53B3` on daylight), filled count = depth · not in spec = an explicit label (an absence is a finding, not blank space).
+- **Color speaks only about data.** Everything structural -- rules, section marks, small caps, borders -- is ink and hairline gray. Drafts are italic + "in deliberation" tag; parked behaviours keep their exclusion reason one hover away.
+- **Two surfaces:** **daylight** (default -- warm parchment `#EDE6D6`, ink `#26221A`) and **umber** (`#1A1510`, vellum `#EDE5D3`), toggled by the moon glyph (☾/☼) in the menu bar; Garamond throughout; monospace only for literal spec anchors. Text-heavy surfaces (L2 record, L4 reader) sit on a slightly lifted panel so long-form reading doesn't strain.
 
 ## Data requirements this adds (fold into `data/` schemas)
 
