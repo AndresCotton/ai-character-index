@@ -1,0 +1,63 @@
+name: Submit an eval
+description: Propose an evaluation for the index to track. We score submissions against our public rubric.
+title: "[eval] "
+labels: ["eval-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing. We review every submission against the rubric published on our methodology page, and we publicly feature evals that score well.
+  - type: input
+    id: name
+    attributes:
+      label: Eval name
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: URL
+      description: Paper, repo, or leaderboard. Public link required.
+    validations:
+      required: true
+  - type: input
+    id: org
+    attributes:
+      label: Authors / organization
+    validations:
+      required: true
+  - type: dropdown
+    id: behaviours
+    attributes:
+      label: Behaviour(s) it measures
+      description: Per the canonical behaviour list (research/core-behaviour-list.md).
+      multiple: true
+      options:
+        - "1. Sycophancy"
+        - "2. Calibration"
+        - "3. Honesty about one's own actions"
+        - "4. Instruction-hierarchy conformance"
+        - "5. Handling disagreement with user instructions"
+        - "6. Reward hacking"
+        - "7. Catastrophic risks"
+        - "8. Even-handedness"
+        - "9. Complicity in illegitimate power seizure"
+        - "10. Secret loyalties"
+        - "11. Manipulation tactics (Tier 2)"
+        - "12. Prosocial initiative (Tier 2)"
+        - "Other / not on the list"
+    validations:
+      required: true
+  - type: textarea
+    id: rigor
+    attributes:
+      label: Why is it rigorous?
+      description: "What's the ground truth or invariance design? How does it separate the trait from capability failure? Inter-rater reliability, if human-scored."
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+    validations:
+      required: false

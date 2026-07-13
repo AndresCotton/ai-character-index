@@ -1,0 +1,30 @@
+name: Think we made a mistake?
+description: Appeal a coverage verdict, an evidence score, or anything else you believe is wrong. Appeals and resolutions are public.
+title: "[appeal] "
+labels: ["appeal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We take appeals seriously: the appeal, our reasoning, and the resolution stay public. Please point us at the exact claim.
+  - type: input
+    id: where
+    attributes:
+      label: Where is the mistake?
+      description: "Page URL or index cell (e.g. 'behaviour 9 × Anthropic, coverage verdict')."
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What's wrong?
+      description: What does the index currently say, and what should it say instead?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: "Spec sections, quotes, published evals, or reasoning supporting the correction."
+    validations:
+      required: true

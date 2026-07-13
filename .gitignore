@@ -1,0 +1,13 @@
+.DS_Store
+node_modules/
+dist/
+.env
+*.log
+.claude/settings.local.json
+.claude/settings.json
+.claude/launch.json
+.claude/worktrees/
+
+# Private -- not for the public repo
+research/sources/Founding an AI Charter organisation.pdf
+outreach/
