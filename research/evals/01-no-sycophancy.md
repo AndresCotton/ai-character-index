@@ -31,6 +31,28 @@ Checklist mapping used when justifying scores:
 - **E:** generalization argument to real deployment contexts; domain and prompt diversity; realistic interaction distribution; documented limits of interpretation.
 - **R:** code and data released; grading methodology released; model versions and hyperparameters documented; independent re-runs feasible (and ideally observed).
 
+The 15 checklist items, with stable IDs used in every per-eval assessment (Notion row pages and Appendix A). Dimensions in parentheses are the rubric's own I/E/R attributions:
+
+| ID | Rubric item (RAND, abridged) | Dims |
+|---|---|---|
+| D1 | Research question / construct specified, incl. generalization context | I, E |
+| D2 | Continuous or subdivisible metrics rather than binary | I, R |
+| D3 | Power analysis / sample-size justification (or justified absence) | I, E |
+| D4 | Statistical uncertainty estimated (CIs, SEs, tests) | I, E |
+| Im1 | Elicitation techniques and tools specified; blinded elicitation as gold standard | I, E, R |
+| Ex1 | Sensitivity analyses and ablations (prompt wording, scaffolding, elicitation) | I, E |
+| Ex2 | Chain-of-thought / eval-awareness / sandbagging monitoring | I, E |
+| Ex3 | Controlling or constraining variables (compute, settings) across models | I, E, R |
+| Do1 | Documenting whether and how each suggestion was performed | R |
+| Do2 | Data sources, collection, annotation, and gold-standard determination documented | R |
+| Do3 | Interpretation guidance (how results should and should not be read) | R |
+| Do4 | Model parameters documented (versions, hyperparameters) | R |
+| Do5 | Execution details released (grading methodology, prompting, environment) | R |
+| Do6 | Evaluation code released | R |
+| Do7 | Level and duration of model access documented | R |
+
+Per-item verdict vocabulary: **met** / **partial** / **not met** / **not reported** (the paper is silent) / **not verified** (we did not check this item in this sweep) / **n/a**. "Not reported" and "not verified" are different claims and are never collapsed.
+
 ## Spec coverage -- verbatim excerpts
 
 Quotes verified against the repo's local copies on 2026-07-12: [`specs/claude-constitution/20260120-constitution.md`](../../specs/claude-constitution/20260120-constitution.md) (2026-01-20) and [`specs/openai-model-spec/model_spec.md`](../../specs/openai-model-spec/model_spec.md) (v2025.12.18). Punctuation inside quotes is the originals'.
@@ -171,3 +193,48 @@ Conversion rule: the in-scope metric for our behaviour (regressive/falsehood-dir
 2. **Construct fragmentation is real and measurable:** SycEval and ELEPHANT rank the same models in opposite order (Gemini worst vs. best) because they measure different constructs; the taxonomy survey arXiv:2605.21778 documents this. Index consequence: never aggregate "sycophancy" scores across evals without a facet mapping.
 3. **Progressive vs. regressive matters:** flips toward the correct answer are correction-acceptance, not sycophancy. Our facet 1.3's "re-examining politely is fine" note anticipated this; SycEval provides the operational split.
 4. **Independence of evidence:** the sharpest current-model claims (GPT-5's improvement) come from OpenAI's own unpublished evals; the strongest independent current-model evidence is BrokenMath (no Claude) and ELEPHANT (partially in-scope). Claude's most-cited number (98% apology) is from a 2023 model and should not be quoted as current.
+
+---
+
+## Appendix A: rubric-item verdict matrix
+
+Verdicts per checklist item (IDs defined above). met / **par**tial / **not met** / **NR** = not reported / **NV** = not verified in this sweep / n/a. Full findings and evidence per item are on each eval's Notion row page.
+
+| Item | SycophancyEval | BrokenMath | SycEval | SYCON-Bench | ELEPHANT |
+|---|---|---|---|---|---|
+| D1 construct | met | met | met | met | met |
+| D2 metrics | met | met | met | met | met |
+| D3 power / N justification | NR | NR | NR | NR | NR |
+| D4 uncertainty | par (SEs, no CIs) | NV | met (CIs, tests; none per-model) | NV (tables not extracted) | met (CIs < 0.04) |
+| Im1 elicitation | par (no blinding; judge circularity) | met (expert-verified gold standard) | par (synthetic rebuttals) | par (protocol clear; judge detail NV) | par (defaults; judge strongly validated) |
+| Ex1 sensitivity | par (framing variants only) | par (mitigation experiments) | par (built-in gradient only) | met (cross-setting + framing analyses) | par (mitigation; no temp ablation) |
+| Ex2 CoT / eval-awareness | NR | NR | NR | NR | NR |
+| Ex3 controlled settings | par | par | par (2 of 3 models unpinned) | NV | par |
+| Do1 suggestion accounting | par | par | par | par | par |
+| Do2 data provenance | met | met | met (judge validation thin: 20/dataset) | met | met |
+| Do3 interpretation guidance | par | par | par (prog/reg split) | par | met |
+| Do4 model parameters | met | met | par (GPT pinned; Claude/Gemini not) | NV | met |
+| Do5 execution details | par (judge prompt in appendix only) | met | not met | par | met |
+| Do6 code release | par (data + utils; no grader) | met | not met | met (MIT) | met (CC0) |
+| Do7 access documentation | NR | NR | NR | NR | NR |
+
+Two systematic observations this matrix makes legible: **no eval in the set reports a power analysis or justifies its sample size** (D3), and **none monitors for eval-awareness or CoT confounds** (Ex2) -- both are rubric gold-standard items the field simply does not do yet.
+
+## Epistemic status and provenance (whole sweep)
+
+**How this assessment was produced.** AI-assisted sweep executed by Claude (Claude Code) on 2026-07-12 at Andrés's direction: three parallel research agents searched and fetched primary sources; findings were consolidated, scored, and written up by the coordinating session. **No human has yet reviewed the scores item by item** -- treat them as a strong first pass, not a settled verdict.
+
+**Evidence tiers used throughout (marked on each row page):**
+
+1. *Verified directly by us:* URL liveness (all fetched, HTTP status checked), repo contents listed, the three SycophancyEval dataset files downloaded and line-counted, spec quotes grep-verified against the repo's local spec copies.
+2. *The paper's own claims:* metrics, sample sizes, judge-validation numbers, per-model results -- read from the paper full texts (arXiv HTML), not independently replicated.
+3. *Third-party claims:* critiques and follow-up findings (e.g. judge-sensitivity kappa 0.36 from arXiv:2606.16617, the Gemini ranking contradiction from arXiv:2605.21778) -- attributed inline, not adjudicated.
+
+**Known unknowns / what would change the scores.**
+
+- SYCON-Bench per-model tables and judge details were not extracted (paper-table extraction pending); its D4/Ex3/Do4 verdicts are NV and its I/R scores could move one point either way.
+- BrokenMath's statistical-uncertainty reporting (D4) was not checked item-by-item; if CIs are absent, I stays 4 only because the design items carry it -- flag for review.
+- OpenReview review pages for SycophancyEval and ELEPHANT were Cloudflare-gated to our fetcher; reviewer criticisms are not incorporated.
+- Adherence bands are coarse qualitative mappings of in-scope metrics; a different reasonable mapping could shift any band by one step. The underlying numbers are always given so the mapping can be re-derived.
+
+**Conflict-of-interest note.** This sweep was executed by Claude, an Anthropic model, and two of the five curated evals (and one rejected one) are Anthropic-authored; the extracted adherence snapshot most unfavourable to Anthropic (claude-1.3, 98% wrongful apology) is retained and displayed. Scores should be independently re-derivable from the cited evidence by any reader.
