@@ -184,6 +184,22 @@
   .spec-card .note { font-size: 13px; color: var(--ink3); margin-top: 5px; }
   .spec-card .goto { display: inline-block; margin-top: 8px; font-variant-caps: all-small-caps;
                      letter-spacing: .12em; font-size: 13px; color: var(--spec); text-decoration: none; cursor: help; }
+  .elinks { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  .elinks a { font-variant-caps: all-small-caps; letter-spacing: .12em; font-size: 13px;
+              color: var(--spec); text-decoration: none; }
+  .elinks a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .elinks a.int { color: var(--ink3); }
+  .qnote { font-size: 12.5px; color: var(--ink3); font-style: italic; letter-spacing: 0; }
+  details.rubric-exp { border: 1px dashed var(--hair2); padding: 10px 14px; margin-bottom: 12px; }
+  details.rubric-exp summary { cursor: pointer; font-variant-caps: all-small-caps; letter-spacing: .12em;
+                               font-size: 13px; color: var(--ink2); list-style: none; }
+  details.rubric-exp summary::-webkit-details-marker { display: none; }
+  details.rubric-exp summary::after { content: " ▾"; color: var(--ink3); }
+  details.rubric-exp[open] summary::after { content: " ▴"; }
+  details.rubric-exp .rx { font-size: 14px; line-height: 1.6; color: var(--ink2); padding-top: 8px; }
+  details.rubric-exp .rx b { color: var(--ink); font-weight: 600; }
+  details.rubric-exp .rx a { color: var(--spec); text-decoration: none; }
+  details.rubric-exp .rx a:hover { text-decoration: underline; text-underline-offset: 3px; }
   table.adh { width: 100%; border-collapse: collapse; margin-top: 4px; }
   table.adh th { font-variant-caps: all-small-caps; letter-spacing: .12em; font-size: 12.5px;
                  color: var(--ink3); font-weight: 500; text-align: left; padding: 6px 8px;
@@ -294,14 +310,51 @@ const B = {
     ins:3,
     evals:[
       { name:"SycophancyEval", org:"Sharma et al. 2023 · Anthropic · ICLR 2024", q:[3,3,3], adh:{A:1,O:2},
+        conf:["high","medium","high"],
+        qNotes:["clear construct, control runs, framing ablations; SEs only, and GPT-4 judges GPT-4",
+                "five QA sets + three artifact domains; mostly single-turn, 2023-era models",
+                "data + versions public, third-party re-run exists; no packaged grader, mimicry unreleased"],
+        links:[{t:"paper",u:"https://arxiv.org/abs/2310.13548"},
+               {t:"code + data",u:"https://github.com/meg-tong/sycophancy-eval"},
+               {t:"maintained port",u:"https://github.com/UKGovernmentBEIS/inspect_evals"},
+               {t:"analysis record · internal",u:"https://app.notion.com/p/39c3e0f93a8081278d78e733ecbe5f92",int:true}],
         note:"All three facets (answer / feedback-authorship / are-you-sure); public data, third-party port. Adherence is 2023-era: claude-1.3 wrongly apologized on 98% of challenges; gpt-4 most robust yet sycophantic on every task." },
       { name:"BrokenMath", org:"Petrov et al. 2025 · INSAIT/ETH · NeurIPS 2025", q:[4,2,4], adh:{A:null,O:2},
+        conf:["medium-high","high","medium-high"],
+        qNotes:["expert-verified fresh problems; judge 95% vs 250 human labels; uncertainty reporting unchecked by us",
+                "competition math only; single-turn core",
+                "full code + data + exact versions released"],
+        links:[{t:"paper",u:"https://arxiv.org/abs/2510.04721"},
+               {t:"code",u:"https://github.com/insait-institute/broken-math"},
+               {t:"data",u:"https://huggingface.co/datasets/INSAIT-Institute/BrokenMath"},
+               {t:"analysis record · internal",u:"https://app.notion.com/p/39c3e0f93a808168b559f567c9714c4d",int:true}],
         note:"Falsehood endorsement on 504 expert-verified false theorems; GPT-5 attempts proofs of 29% of them. No Claude coverage in v1." },
       { name:"SycEval", org:"Fanous et al. 2025 · Stanford · AIES 2025", q:[3,2,1], adh:{A:2,O:2},
+        conf:["medium-high","high","high"],
+        qNotes:["control-run design, real CIs and tests; judge validated on only 20 items per dataset",
+                "two domains, synthetic rebuttals, three models",
+                "nothing released; Claude/Gemini versions unpinned"],
+        links:[{t:"paper",u:"https://arxiv.org/abs/2502.08177"},
+               {t:"published",u:"https://ojs.aaai.org/index.php/AIES/article/view/36598"},
+               {t:"analysis record · internal",u:"https://app.notion.com/p/39c3e0f93a8081638e2ad73c4c49e6d5",int:true}],
         note:"Rebuttal-strength pushback on math + medical; regressive flips: Claude-Sonnet 18%, GPT-4o 14%. Nothing released; Claude version unpinned." },
       { name:"SYCON-Bench", org:"Hong et al. 2025 · Emory/CMU · EMNLP 2025 Findings", q:[3,3,3], adh:{A:null,O:null},
+        conf:["medium","medium-high","medium"],
+        qNotes:["continuous Turn-of-Flip metric; several items unverified pending table extraction",
+                "multi-turn sustained pressure, 3 settings, 17 models; English-only",
+                "MIT code + data; judge details and version pinning unconfirmed"],
+        links:[{t:"paper",u:"https://aclanthology.org/2025.findings-emnlp.121/"},
+               {t:"code + data",u:"https://github.com/JiseungHong/SYCON-Bench"},
+               {t:"analysis record · internal",u:"https://app.notion.com/p/39c3e0f93a80812b9c2bd84c493eebae",int:true}],
         note:"Multi-turn Turn-of-Flip under sustained pushback, 17 models, code + data; per-lab extraction pending." },
       { name:"ELEPHANT", org:"Cheng et al. 2025 · Stanford · ICLR 2026", q:[3,3,3], adh:{A:2,O:2},
+        conf:["high","medium","high"],
+        qNotes:["best-validated judge of the set (450 items, 3 experts); crowd baseline as gold standard",
+                "10k naturalistic prompts; single-turn, English-only",
+                "CC0 code + pinned versions; full data behind a view-only link"],
+        links:[{t:"paper",u:"https://arxiv.org/abs/2505.13995"},
+               {t:"code",u:"https://github.com/myracheng/elephant"},
+               {t:"analysis record · internal",u:"https://app.notion.com/p/39c3e0f93a8081ca8a47ebdc6aec645a",int:true}],
         note:"Social sycophancy; in-scope slices only (moral both-sides, framing). Best-validated judge of the set; its paired-flip design is the facet-1.2 template." } ] },
   2: { name:"Calibration", tier:1, facets:2,
     def:"The model's verbalized confidence should track its actual accuracy.",
@@ -364,7 +417,8 @@ const B = {
     ins:1,
     evals:[
       { name:"political-manipulation.ai", org:"CAIS", q:[3,3,3], adh:{A:2,O:2},
-        note:"First entry in our eval collection; actor-swap invariance on persuasion tasks." } ] },
+        links:[{t:"site",u:"https://political-manipulation.ai/"}],
+        note:"First entry in our eval collection; actor-swap invariance on persuasion tasks. Not yet rubric-assessed; scores illustrative." } ] },
   9: { name:"Complicity in illegitimate power seizure", tier:1, facets:4,
     def:"The model should not assist attempts to seize or entrench power illegitimately; scoped strictly to wide-consensus cases.",
     cov:{ A:{ d:4, section:"Hard constraint 6 · Avoiding concentrations of power", quote:"never assist any individual group attempting to seize unprecedented and illegitimate degrees of absolute societal, military, or economic control" },
@@ -621,14 +675,35 @@ function openPanel(id) {
         <span class="word w-${band(b.ins)}" style="font-variant-caps:all-small-caps;letter-spacing:.08em">${INSW[b.ins]}</span>
         <span class="sect" style="color:var(--ink3);font-size:13.5px">· ${b.evals.length} instrument${b.evals.length > 1 ? "s" : ""} · quality on rubric v0 (0-4 per dimension)</span>
       </div>
+      <details class="rubric-exp">
+        <summary>how these scores are assigned · rubric v0</summary>
+        <div class="rx">
+          Every public eval is scored <b>0-4</b> on three dimensions taken from RAND's
+          <a href="https://www.rand.org/pubs/perspectives/PEA3971-1.html" target="_blank" rel="noopener">criteria for rigorous model evaluations</a> (Paskov et al. 2025):
+          <b>internal validity</b> -- does it measure what it claims, free of methodological confounds;
+          <b>external validity</b> -- do its results generalize beyond the test bench;
+          <b>reproducibility</b> -- could a third party re-run and verify it.
+          Anchors: <b>4</b> meets the gold standard on essentially every applicable checklist item ·
+          <b>3</b> minor gaps · <b>2</b> one notable weakness (e.g. an unvalidated judge) ·
+          <b>1</b> demonstrative rather than rigorous · <b>0</b> absent.
+          Each score is justified item by item against a 15-item checklist (construct, metrics, power analysis,
+          statistical uncertainty, elicitation, sensitivity analyses, eval-awareness monitoring, controlled settings,
+          and seven documentation items). The per-item findings, every source with its verification status, and an
+          epistemic-status ledger (what we verified directly vs. took on the paper's word vs. left open) live in each
+          instrument's analysis record, linked below.
+          ${b.verified ? `Assessments on this clause are AI-assisted (sweep of ${b.verified}) and pending human review.`
+                       : `Scores on this clause are illustrative placeholders -- no assessment has been run.`}
+        </div>
+      </details>
       ${b.evals.map(e => `
         <div class="spec-card">
           <div class="row1"><span class="lab" style="font-size:14.5px">${e.name}</span>
             <span class="section" style="margin:0">${e.org}</span></div>
-          <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 14px;margin:4px 0 2px">
-            ${DIMS.map((d, i) => `<span style="font-size:13.5px;color:var(--ink2)">${d}</span><span>${qRun(e.q[i])}</span>`).join("")}
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:3px 14px;margin:4px 0 2px">
+            ${DIMS.map((d, i) => `<span style="font-size:13.5px;color:var(--ink2)">${d}</span><span>${qRun(e.q[i])}${e.qNotes ? ` <span class="qnote">${e.conf ? e.conf[i] + " confidence · " : ""}${e.qNotes[i]}</span>` : ""}</span>`).join("")}
           </div>
           <div class="note">${e.note}</div>
+          ${e.links ? `<div class="elinks">${e.links.map(l => `<a ${l.int ? 'class="int" ' : ""}href="${l.u}" target="_blank" rel="noopener">${l.t} ↗</a>`).join("")}</div>` : ""}
         </div>`).join("")}
       <div class="p-sect">Adherence · scores on those instruments</div>
       <table class="adh">
