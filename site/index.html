@@ -33,8 +33,10 @@
     --shadow: rgba(0,0,0,.5);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body { background: var(--bg); color: var(--ink); font-family: var(--serif);
          font-size: 16px; min-height: 100vh; }
+  .g-head, .c-row, .lever-row, .open-record, .mode, .p-close, summary { touch-action: manipulation; }
 
   /* ---------- typographic dot runs: the one scoring mark ---------- */
   .run { font-size: 10.5px; letter-spacing: 2.5px; white-space: nowrap; vertical-align: 1px; }
@@ -56,7 +58,8 @@
   nav a { font-variant-caps: all-small-caps; letter-spacing: .12em; font-size: 14.5px;
           color: var(--ink3); text-decoration: none; cursor: default; }
   nav a.active { color: var(--ink); border-bottom: 1px solid var(--ink3); }
-  .mode { background: none; border: none; padding: 0; font-family: var(--serif); font-size: 17px;
+  .mode { background: none; border: none; padding: 6px 10px; margin: -6px -10px;
+          font-family: var(--serif); font-size: 17px;
           line-height: 1; color: var(--ink3); cursor: pointer; }
   .mode:hover { color: var(--ink); }
   .mode:focus-visible { outline: 1px solid var(--spec); outline-offset: 2px; }
@@ -129,8 +132,8 @@
   .lever-row:focus-visible { outline: 1px solid var(--spec); outline-offset: 2px; }
   .lever-row .lv-name { font-variant-caps: all-small-caps; letter-spacing: .14em; font-size: 14px; }
   .lever-row .lv-sub { font-style: italic; font-size: 13px; color: var(--ink3);
-                       overflow: hidden; text-overflow: ellipsis; }
-  .lever-row .lv-agg { margin-left: auto; display: flex; align-items: baseline; gap: 8px;
+                       overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .lever-row .lv-agg { margin-left: auto; flex: none; display: flex; align-items: baseline; gap: 8px;
                        font-variant-caps: all-small-caps; letter-spacing: .08em;
                        font-size: 13px; color: var(--ink2); }
   .lever-row .chev { color: var(--ink3); font-size: 12px; transition: transform .2s; display: inline-block; }
@@ -142,7 +145,7 @@
   .lb-line { display: flex; align-items: baseline; gap: 10px; padding: 4px 0; font-size: 14px; white-space: nowrap; }
   .lb-line .who { width: 84px; flex: none; font-variant-caps: all-small-caps; letter-spacing: .1em; color: var(--ink2); }
   .lb-line .word { font-variant-caps: all-small-caps; letter-spacing: .08em; font-size: 13.5px; }
-  .lb-line .sect { color: var(--ink3); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; }
+  .lb-line .sect { color: var(--ink3); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
   .lb-line .sect code, .section code { font-family: var(--mono); font-size: 11px; }
   .lb-line.gapline { color: var(--gap); font-style: italic; white-space: normal; }
   .adh-matrix { display: grid; grid-template-columns: 1fr max-content max-content;
@@ -178,7 +181,8 @@
   .open-record:hover { color: var(--ink); }
 
   /* ---------- clause record (panel) ---------- */
-  aside { position: fixed; top: 0; right: 0; width: 520px; max-width: 100vw; height: 100vh;
+  aside { position: fixed; top: 0; right: 0; width: 520px; max-width: 100vw;
+          height: 100vh; height: 100dvh;
           background: var(--panel); border-left: 1px solid var(--hair);
           transform: translateX(102%); transition: transform .28s ease;
           display: flex; flex-direction: column; z-index: 10; }
@@ -277,6 +281,27 @@
     .sheet { margin: 16px 14px 0; }
     footer { margin: 14px 14px 30px; }
     .g-head, .g-inner, details.read-note summary, .rn-table { padding-left: 22px; padding-right: 22px; }
+  }
+  @media (max-width: 700px) {
+    header { padding: 16px 18px 12px; }
+    nav { flex-wrap: wrap; gap: 8px 18px; }
+    .g-head { padding: 24px 18px; }
+    .g-inner { padding: 0 18px 26px; }
+    details.read-note summary, .rn-table { padding-left: 18px; padding-right: 18px; }
+    .c-mark { width: 40px; }
+    .anno-inner { padding-left: 0; }
+    .open-record { padding: 12px 2px 4px; }
+    .adh-matrix { grid-template-columns: max-content max-content; gap: 4px 22px; }
+    .adh-matrix > span:first-child { display: none; }
+    .adh-matrix .am-name { grid-column: 1 / -1; margin-top: 8px; white-space: normal; }
+    .rn-table { grid-template-columns: max-content 1fr; }
+    .rn-table .rn-what { grid-column: 1 / -1; margin-top: -4px; }
+    .rn-table .rn-anchors { grid-column: 1 / -1; margin-top: -6px; margin-bottom: 6px; }
+    .p-head { padding: 24px 20px 0; }
+    .p-scroll { padding: 0 20px 26px; }
+    .p-foot { padding: 10px 20px; }
+    table.adh th, table.adh td { padding-left: 4px; padding-right: 4px; }
+    body.panel-open { overflow: hidden; }
   }
 </style>
 </head>
@@ -713,11 +738,21 @@ function closeGroups() {
   });
   document.body.classList.remove("attending");
 }
+/* Touch has no hover, so hover reveals become first-tap reveals.
+   Hover handlers are gated to mouse pointers; taps drive explicit toggles.
+   State is captured at pointerdown because tap-focus can mutate it before click. */
+let lastPointer = matchMedia("(hover: none)").matches ? "touch" : "mouse";
+document.addEventListener("pointerdown", e => { lastPointer = e.pointerType || lastPointer; }, true);
+
 sections.forEach(sec => {
-  sec.addEventListener("pointerenter", () => openGroup(sec));
-  sec.addEventListener("pointerleave", () => closeGroups());
+  sec.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") openGroup(sec); });
+  sec.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") closeGroups(); });
   const head = sec.querySelector(".g-head");
-  head.addEventListener("click", () => openGroup(sec)); // touch
+  let wasOpen = false;
+  head.addEventListener("pointerdown", () => { wasOpen = sec.classList.contains("open"); });
+  head.addEventListener("click", () => {
+    if (lastPointer === "touch" && wasOpen) closeGroups(); else openGroup(sec);
+  });
   head.addEventListener("keydown", e => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault();
       sec.classList.contains("open") ? closeGroups() : openGroup(sec); }
@@ -727,15 +762,34 @@ sections.forEach(sec => {
 
 /* ---------- clause interactions ---------- */
 document.querySelectorAll(".clause").forEach(li => {
-  li.addEventListener("pointerenter", () => li.classList.add("open"));
-  li.addEventListener("pointerleave", () => {
+  li.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") li.classList.add("open"); });
+  li.addEventListener("pointerleave", e => {
+    if (e.pointerType !== "mouse") return;
     li.classList.remove("open");
     li.querySelectorAll(".lever.expanded").forEach(lv => lv.classList.remove("expanded"));
   });
   const id = +li.dataset.id;
-  if (B[id].draft) return;
+  const unfold = () => {
+    li.closest(".g-inner").querySelectorAll(".clause.open").forEach(c => {
+      if (c === li) return;
+      c.classList.remove("open");
+      c.querySelectorAll(".lever.expanded").forEach(lv => lv.classList.remove("expanded"));
+    });
+    li.classList.add("open");
+  };
   const row = li.querySelector(".c-row");
-  row.addEventListener("click", () => openPanel(id));
+  let rowWasOpen = false;
+  row.addEventListener("pointerdown", () => { rowWasOpen = li.classList.contains("open"); });
+  if (B[id].draft) {
+    row.addEventListener("click", () => {
+      if (lastPointer !== "touch") return;
+      rowWasOpen ? li.classList.remove("open") : unfold();
+    });
+    return;
+  }
+  row.addEventListener("click", () => {
+    if (lastPointer === "touch" && !rowWasOpen) unfold(); else openPanel(id);
+  });
   row.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPanel(id); } });
   row.addEventListener("focus", () => li.classList.add("open"));
   li.querySelectorAll(".lever").forEach(lv => {
@@ -842,8 +896,9 @@ function openPanel(id) {
   }
   document.getElementById("p-body").innerHTML = html;
   panel.classList.add("open");
+  document.body.classList.add("panel-open");
 }
-function closePanel() { panel.classList.remove("open"); }
+function closePanel() { panel.classList.remove("open"); document.body.classList.remove("panel-open"); }
 document.getElementById("pclose").addEventListener("click", closePanel);
 document.addEventListener("keydown", e => { if (e.key === "Escape") closePanel(); });
 
