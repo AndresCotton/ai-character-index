@@ -9,6 +9,7 @@
     "deploy:site": "wrangler pages deploy site --project-name ai-character-index"
   },
   "devDependencies": {
+    "playwright-core": "^1.61.1",
     "wrangler": "^4.110.0"
   }
 }
