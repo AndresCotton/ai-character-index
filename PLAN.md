@@ -82,7 +82,7 @@ Five small JSON files, one concern each. Schemas live in `data/schema/`; CI enfo
 |---|---|---|
 | `behaviours.json` | behaviour (the 12) | id, name, tier, category, definition, facets[] (id, eval question, setup, metric, pass criterion), status (active/parked), parked_reason |
 | `labs.json` | lab | id, name, spec title + version + date + URL, has_published_spec |
-| `coverage.json` | behaviour × lab | verdict (covered / partial / not-in-spec), citations[] (section anchor + quote), verified_against_version, verified_date |
+| `coverage.json` | behaviour × lab | verdict (covered / partial / not-in-spec), citations[] (locator per `specs/CITATION.md` + verbatim quote, resolvable by `engine/spec-cite/cite.py`; CI re-resolves every locator against `specs/` so a spec update that moves text fails loudly), verified_against_version, verified_date |
 | `evals.json` | eval | id, name, URL, org, behaviour/facet ids[], quality (per rubric: validity, reproducibility...), featured, notes |
 | `meta.json` | -- | site-wide: last sync date, data version, methodology version |
 
@@ -255,6 +255,7 @@ Share MVP with the model-character community (per the vision doc); iterate on fe
 │   └── schema/           JSON schemas, enforced in CI
 ├── engine/               what keeps it alive
 │   ├── spec-watch/       pull-latest.sh (works today)
+│   ├── spec-cite/        cite.py -- resolves/verifies spec citations (works today)
 │   └── notion-sync/      Notion → data/ (Phase 3)
 ├── site/                 the static site (Phase 1)
 ├── design/               aesthetics: fonts, palette, references

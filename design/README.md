@@ -24,3 +24,5 @@ This closes the v0 design sprint. Typography (Garamond throughout), the data pal
 Reference sites for the genre (screenshots welcome here): AI Lab Watch (the model for the genre), METR (neutral-evaluator tone), Epoch AI (data-forward credibility), [Our World in Data's food-trade interactive](https://ourworldindata.org/how-does-food-get-traded-around-the-world) (the hover → drill grammar we adopted).
 
 - `2026-07-02-index-pipeline-mockup.png` -- screenshot of the v0 HTML mockup's pipeline diagram (behaviours → model spec → evidence quality). The visual encoding it established (tile border = spec coverage, fill = evidence strength, lens toggle) is the starting point for the matrix design.
+
+#TODO At some point for spec coverage we should have a sepparated page for each spec. At the left side of the page, the user can select a behaviour of the list and then all the parts of the spec that address the selected behaviour should be hilighted both in the spec an in the navigation bar on the left (like when we do "command+F" of a specific word). It should be easy for the user to navigate, expanding and colapsing text.

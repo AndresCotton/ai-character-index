@@ -12,6 +12,19 @@ The automation that keeps the index alive. Design in [PLAN.md §1.2](../PLAN.md)
 
 Requires an authenticated `gh` CLI. In Phase 3 this becomes a weekly GitHub Action that opens a PR when a spec changed, plus an issue listing which behaviours cite the changed sections and need re-verification.
 
+## spec-cite/ (works today)
+
+`cite.py` resolves and verifies the precise spec citations defined in [`specs/CITATION.md`](../specs/CITATION.md) (`spec@version › section › ¶paragraph › sentence`). Every quote stored anywhere in the project (Notion Spec Coverage DB, sweep write-ups, `data/coverage.json`) must be the output of `resolve` for a pinned locator:
+
+```sh
+python3 engine/spec-cite/cite.py outline model-spec              # section tree + anchors
+python3 engine/spec-cite/cite.py show "constitution > Being honest"   # numbered ¶/s
+python3 engine/spec-cite/cite.py resolve "model-spec@2025-12-18 > #avoid_sycophancy > ¶2 s1"
+python3 engine/spec-cite/cite.py find model-spec "some remembered phrase"   # text → locator
+```
+
+In Phase 1, CI re-resolves every locator in `data/coverage.json` against `specs/`, so a spec update that moves text fails loudly instead of silently; combined with spec-watch, this is what keeps coverage claims verifiable over time.
+
 ## notion-sync/ (Phase 3)
 
 Will pull the Notion databases (Evals by Behaviour; later Behaviours and Coverage) via the official Notion API, normalize into [`data/`](../data/), and open a PR when anything changed. Merging that PR is the push-to-production step -- no unreviewed change ever reaches the site.
