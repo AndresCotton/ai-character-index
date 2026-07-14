@@ -1,5 +1,7 @@
 # site/
 
-The public static site. Empty until Phase 1 (see [PLAN.md §6](../PLAN.md)).
+The public static site.
+
+**Current state (v0):** `index.html` is a snapshot of the design prototype ([`design/prototypes/core-page.html`](../design/prototypes/core-page.html)), served via Cloudflare Pages so the page is reachable while the real site is built. Update it by re-copying the prototype and pushing. It will be replaced by the Phase 1 build below (see [PLAN.md §6](../PLAN.md)).
 
 Planned stack: Astro + TypeScript, static output, one small JS island for the interactive index matrix. Renders exclusively from [`data/`](../data/) at build time. Page map and layout sketches in [PLAN.md §3](../PLAN.md); aesthetics discussion in [`design/`](../design/).
