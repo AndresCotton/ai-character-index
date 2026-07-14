@@ -145,6 +145,14 @@
   .lb-line .sect { color: var(--ink3); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; }
   .lb-line .sect code, .section code { font-family: var(--mono); font-size: 11px; }
   .lb-line.gapline { color: var(--gap); font-style: italic; white-space: normal; }
+  .adh-matrix { display: grid; grid-template-columns: 1fr max-content max-content;
+                gap: 5px 26px; align-items: baseline; padding: 4px 0 2px; }
+  .adh-matrix .am-h { font-variant-caps: all-small-caps; letter-spacing: .12em; font-size: 12.5px;
+                      color: var(--ink3); border-bottom: 1px solid var(--hair); padding-bottom: 4px; }
+  .adh-matrix .am-name { font-size: 14.5px; color: var(--ink2);
+                         overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .adh-matrix .am-cell { display: inline-flex; align-items: baseline; gap: 7px; }
+  .adh-matrix .am-word { font-variant-caps: all-small-caps; letter-spacing: .08em; font-size: 13px; }
 
   /* ---------- spec citation ledger (specs/CITATION.md) ---------- */
   .cites { margin: 3px 0 14px 94px; display: grid; gap: 11px; white-space: normal; }
@@ -666,13 +674,13 @@ function clauseHTML(id) {
         </div>
         <div class="lever-body"><div><div class="lb-inner">
           ${b.evals.length ? `
-            ${b.evals.map(e => `
-              <div class="lb-line">
-                <span class="who"></span>
-                <span class="sect" style="flex:1">${e.name}</span>
-                ${qRun(qAvg(e))}
-                ${LABS.map(l => `<span style="display:inline-flex;align-items:baseline;gap:4px" title="${l.name}: ${adhVal(e, l.k) === null ? "not reported" : ADHW[adhVal(e, l.k)]}"><span style="font-variant-caps:all-small-caps;font-size:11.5px;color:var(--ink3)">${l.name.slice(0,1)}</span>${cellRun(adhVal(e, l.k))}</span>`).join("")}
-              </div>`).join("")}
+            <div class="adh-matrix">
+              <span class="am-h">instrument</span>${LABS.map(l => `<span class="am-h">${l.name}</span>`).join("")}
+              ${b.evals.map(e => `
+                <span class="am-name">${e.name}</span>
+                ${LABS.map(l => { const v = adhVal(e, l.k); return `<span class="am-cell">${cellRun(v)}<span class="am-word w-${v === null ? "mut" : band(v)}">${v === null ? "not reported" : ADHW[v]}</span></span>`; }).join("")}
+              `).join("")}
+            </div>
           ` : `
             <div class="lb-line gapline">No public evals exist for any facet, so adherence cannot be measured. The absence is itself an index finding.</div>
           `}

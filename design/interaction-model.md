@@ -17,7 +17,7 @@ Every behaviour is a **numbered clause (§ 1-13) in an aligned ledger**, always 
 Hovering (or focusing) a clause unfolds **its definition first** (italic, in-flow -- the document breathes, rows shift down, every left edge stays aligned). Beneath the definition sit two openable **levers**:
 
 1. **Coverage -- what each spec declares.** Opens per-lab lines: depth on the 5-point scale + the actual section (e.g. *Being honest · Truthful*, `#avoid_sycophancy`).
-2. **Adherence -- what the evals show.** Opens one line per eval with its rubric-quality dots and per-lab adherence mini-scores; the instrument-strength aggregate lives on the clause row, its single home. Where no evals exist it reads *unmeasured* -- the gap is stated, not hidden.
+2. **Adherence -- what the evals show.** Opens a small labelled matrix -- instrument | Anthropic | OpenAI -- every cell a run **with its word** (`●○○○` poor; a cell a paper didn't report reads muted "not reported"). Per-eval rubric quality does not appear here (its home is the full record), and the instrument-strength aggregate lives on the clause row. Where no evals exist it reads *unmeasured* -- the gap is stated, not hidden.
 
 Then "open the full record →" (→ L2). Hovering an article softly dims its siblings (never removes them). Draft clauses ("in deliberation") show their draft note on hover and do not open a record.
 
