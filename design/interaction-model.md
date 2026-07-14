@@ -45,6 +45,24 @@ Progressive disclosure inside the L2 page (the "subtitles" level): one row per e
 
 Self-hosted, rendered copies of the specs we score against. **Both are CC0 (verified 2026-07-12: OpenAI Model Spec and the Claude constitution), so hosting annotated copies is legally clean.** Arriving from a behaviour highlights the cited passages and pins a sticky *"← back to \<behaviour\>"* chip. Every citation anywhere in the index links to a stable anchor here. This is the feature that makes every verdict checkable in one click.
 
+#### Spec-reader variation -- the annotated folio
+
+The reader is an L4 variation of the founding-document system, not a separate visual language. It uses EB Garamond throughout; the canonical daylight (`bg` / `panel` / `lift`) and umber surfaces; archival blue for coverage; amber only for adjacent/boundary passages; gap red for the currently focused find marker; hairline rules and small caps for structure. Long-form text sits on `lift`.
+
+- **Default = Focus highlights.** Sections with mapped passages remain open; sections without them collapse to compact, clickable heading rows. Heading nesting is respected, and mapped example blocks remain indivisible. “Expand all” restores the literal full document. In split view this state belongs to each document independently.
+- **Passage tint tokens (L4 only).** Core passage: a low-chroma tint derived from archival blue (`#E3E4F2` daylight / `#34384F` umber); current core passage: the stronger tint (`#CDD1ED` / `#444B73`). Adjacent passages use the neutral panel tint and an amber edge. Text, labels, and borders continue to carry meaning, so the tints are never the only signal.
+- **Find rail.** Each document has a full-height right-edge track, analogous to browser find markers. Blue ticks = core passages; amber ticks = adjacent/boundary passages; the current tick becomes wider and gap-red. Every tick is a keyboard-focusable button with a passage-role label. The global previous/next controls traverse the same anchors.
+- **Reader chrome.** Lab/version, coverage depth, focus/full-document control, and the two-mark legend live in the document header. Split mode duplicates this chrome rather than creating a cross-lab aggregate. Absence is explicit: a zero-passage document states that no mapped passages exist and that this is an index finding.
+
+#### Contextual reading-room modal
+
+From a behaviour record, “read in context” and “compare both specs” open the same L4 reader in a large modal rather than navigating away by default. This preserves the open group, clause, record scroll position, and the user's place in the evidence review. The modal is an integration surface only: it embeds the canonical reader with URL state (`behavior`, `spec`, `compare`, `embedded`) and never duplicates passage rendering or navigation.
+
+- The modal fills most of the viewport, becomes edge-to-edge on mobile, and retains one quiet header with the reading context, a direct “open full reader” link, and close.
+- Focus moves to the close control on open and returns to the exact invoking control on close. Focus stays inside while open; Escape works both from the modal chrome and from inside the embedded reader.
+- Backdrop click closes. The page beneath is inert, remains visually present, and resumes unchanged.
+- The embedded presentation removes only redundant global navigation and the behaviour list. Spec switching, compare mode, focus/expand controls, passage rails, keyboard passage navigation, and source links remain the reader's own implementation.
+
 ## Interaction rules (what keeps it coherent)
 
 - Hover previews, click commits, back ascends. No exceptions, so the grammar becomes muscle memory.
