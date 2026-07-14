@@ -1,41 +1,75 @@
 ---
 name: behaviour-sweep
-description: Run a full evidence sweep for one behaviour of the AI Character Index -- find pre-existing evals, score them on the rubric, complete the Notion page (evals block + verbatim spec-coverage excerpts), persist in the repo, and update the core-page prototype. Use when asked to "sweep" a behaviour or complete its evidence/coverage sections.
+description: Run a full evidence sweep for one behaviour of the AI Character Index as a staged pipeline with human-verified gates -- discover pre-existing evals, curate, score on the rubric, extract spec coverage, publish to Notion/repo/prototype, and audit. Use when asked to "sweep" a behaviour or complete its evidence/coverage sections.
 ---
 
-# Behaviour sweep
+# Behaviour sweep (orchestrator)
 
-Repeatable procedure, established by the No Sycophancy sweep of 2026-07-12 (reference output: `research/evals/01-no-sycophancy.md`). Argument: one behaviour from `research/core-behaviour-list.md` (its number, name, definition, and facets).
+Staged pipeline established by the No Sycophancy sweep of 2026-07-12 and split into
+stage skills on 2026-07-13. Argument: one behaviour from
+`research/core-behaviour-list.md` (its number NN, name, definition, and facets).
 
-## Fixed IDs and locations
+Each stage is its own skill, produces a documented artifact, and ends at a **gate**:
+a checklist the human verifies before the next stage may start. Read the stage skill
+when you reach its stage -- this file only sequences them.
 
-| Thing | Where |
-|---|---|
-| Notion "Behaviours to track" page (per-behaviour toggles live here) | page `3983e0f9-3a80-8122-9a0a-fcdd70d1d1d2` |
-| Notion "Evals by Behaviour" DB | data source `collection://834f8131-3166-4691-b191-52af08b9dde2` (has 0-4 number columns "Internal validity (0-4)", "External validity (0-4)", "Reproducibility (0-4)") |
-| Notion "Evals Rubric" (RAND-based) | page `3963e0f9-3a80-8114-88a3-c25f4c0bacd4` |
-| Notion "Spec Coverage by Behaviour" DB | data source `collection://c291b16b-f3d6-4522-8256-28e1e87b760c` -- one row per behaviour x spec; properties Verdict, "Depth (0-4)", References (compact locators), Spec version, Verified against local copy; row page body = verbatim excerpts |
-| Local spec copies (ground truth for all quotes) | `specs/claude-constitution/20260120-constitution.md` (2026-01-20), `specs/openai-model-spec/model_spec.md` (v2025.12.18) |
-| Spec citation convention + resolver | `specs/CITATION.md`; `engine/spec-cite/cite.py` (`find` / `show` / `resolve`) -- every stored quote must be resolver output for a pinned locator |
-| Canonical write-up per behaviour | `research/evals/NN-<slug>.md` |
-| Data seeds | `data/evals.json`, `data/coverage.json`, `data/labs.json` |
-| Prototype | `design/prototypes/core-page.html` -- `B[NN]` object; 0-4 scales; `adh` may be `null` (rendering tolerates it) |
+## Stages and gates
 
-## Procedure
+| # | Skill | Output artifact | Gate |
+|---|---|---|---|
+| 1 | `1-sweep-discover` | `register.md`, `1-dossiers.md` | G1: evidence base is real and complete |
+| 2 | `2-sweep-curate` | `2-curation.md`, dispositions final | G2: curation is legible; the human owns the set |
+| 3 | `3-sweep-score` | `3-scores.md` | G3: scores are auditable |
+| 4 | `4-sweep-spec-coverage` | `4-spec-coverage.md` | G4: quotes are mechanical, not remembered |
+| 5 | `5-sweep-publish` | three surfaces + `research/evals/NN-<slug>.md` | G5: every surface faithful to the artifacts |
+| 6 | `6-sweep-verify` | `verify.md` | G6: sweep complete (fresh-context audit) |
 
-1. **Research (parallel subagents).** Fan out 2-3 general-purpose agents over the eval literature for the behaviour: one per known-candidate cluster plus one broad sweep for 2024-current work. Require per eval: full citation; paper/code/data URLs each live-checked by actually fetching; metrics + dataset sizes; facet mapping against the behaviour's facets (and what falls outside the definition); rubric-relevant methodology facts (construct clarity, metric type, sample size, statistical uncertainty, sensitivity analyses, judge validation, release status, version pinning); per-model Claude/GPT results with exact versions; limitations and critiques from the literature.
-2. **Curate.** Keep the top ~5 by (a) fit to the behaviour definition and (b) rubric quality (decision by Andrés 2026-07-12: curated ~5, not exhaustive). Every rejected candidate gets one line + reason -- curation must be legible. Instruments that merely repackage another eval's data are "ports", not new evidence.
-3. **Score 0-4 on I/E/R** per the rubric operationalization in `research/evals/01-no-sycophancy.md` (4 = gold standard on essentially all applicable checklist items; 3 = minor gaps; 2 = one notable weakness, e.g. unvalidated judge or no uncertainty; 1 = demonstrative; 0 = absent). Justify each score by naming the checklist items met/unmet.
-4. **Adherence extraction** (decision by Andrés 2026-07-12: yes, extract): where a paper reports Claude/GPT results, map the in-scope metric (never credit "progressive" corrections as failures) onto the 0-4 band with full provenance (paper, model version, date). Never invent a number; missing = `null`. Label everything historical, not a current-model verdict.
-5. **Spec coverage excerpts.** Grep both local spec copies with behaviour-specific terms AND synonyms (for sycophancy: sycophan*, flatter*, "want to hear", "sounding board", placate...). For every passage kept, produce a locator per `specs/CITATION.md` using `engine/spec-cite/cite.py`: `find` the phrase, `show` the section to pick the exact ¶/sentence span, then `resolve` the locator and store the resolver's output as the quote -- never count paragraphs or transcribe by hand, and never elide inside a quote (a discontinuous quote is two locators). Locators carry spec@version; note authority level (Model Spec) alongside. Assign verdict (covered / partial / not-in-spec) + 0-4 depth with a one-line depth rationale.
-6. **Notion writes.** (a) One DB row per curated eval: properties = Name, Behaviour tag, Source/org, URL, Notes ("Assessed YYYY-MM-DD"), the three scores. The page body is a **full analysis page** (template: any behaviour-1 eval row, e.g. the SycophancyEval page): "How to read this page" callout; citation; **Sources table listing every link with its verification status** (paper, published venue, OpenReview, code, data, ports, critiques, follow-ups -- gated or unverified sources say so explicitly); what it measures; facet mapping; rubric summary table (score + confidence + basis per dimension); **detailed 15-row item-by-item table** (item D1-Do7, verdict, what we found, evidence tier: verified-by-us / paper's-claim / third-party); adherence extraction; limitations and critiques; **epistemic status and provenance block** (produced-by + human-review status, what was verified directly, what came from the paper, what from third parties, what remains open, and what would change the scores). (b) On the Behaviours page, inside the behaviour's toggle: replace the pointer-style "Spec coverage" details with the verbatim excerpt set, and add an "Existing evals -- rubric-scored" details block: intro line (incl. the AI-assisted-pending-review transparency note), table (eval mention-links, facets, I/E/R, one-liner with paper/code links), sweep findings bullets, rejected-candidates line. Match existing tab indentation exactly in `update_content` old_str; read the enhanced-markdown spec resource first. **Gotcha:** pass Notion content with real newlines -- literal \n escape sequences corrupt the page. (c) Update the behaviour's two rows in the "Spec Coverage by Behaviour" DB: properties Verdict, "Depth (0-4)", Spec version, References (compact locators), "date:Verified against local copy:start"; replace the row page body with the excerpt set (template: the behaviour-1 rows -- callout stating the convention + resolver + run date, then one bold role line + locator in code + blockquote per excerpt).
-7. **Repo persistence.** Write `research/evals/NN-<slug>.md` (method, rubric operationalization with the 15 item IDs, scored evals, rejected list, adherence table, spec excerpts, cross-cutting findings, **Appendix A rubric-item verdict matrix**, and a whole-sweep **epistemic status and provenance** section incl. evidence tiers, known unknowns, and a conflict-of-interest note -- the sweep is run by Claude, an Anthropic model); update `data/evals.json` (with per-eval `sources` arrays incl. verification status, `notion_page` links, `quality_confidence`, and a top-level `assessment` provenance block) + `data/coverage.json`; extend `research/core-behaviour-list.md`'s spec-coverage pointers if the excerpt hunt found passages it missed. Commit only the sweep's files.
-8. **Prototype.** Update `B[NN]` in `core-page.html`: real `cov` (depth + verbatim quote + note), `ins` (0-4 instrument strength -- be honest about facet gaps), `evals` with the full display fields: name, org+venue, `q:[I,E,R]`, `conf:[...]` (per-dimension confidence), `qNotes:[...]` (one-line per-dimension basis), `links:[{t,u,int?}]` (paper / code / data / port / analysis-record-with-`int:true`), `adh:{A,O}` or nulls, one-line note. The clause record panel renders a collapsible "how these scores are assigned · rubric v0" explainer (anchors + 15-item checklist + AI-assisted-pending-review line, driven by `b.verified`); it needs no per-clause work beyond setting `verified:"YYYY-MM-DD"` on the clause. Update the "illustrative" flags so swept clauses are labeled real. Verify: extract the script, `node --check`, exercise `adhOf/adhAvg`, and render `openPanel(NN)` through a DOM shim probing for links/explainer/notes.
-9. **Verify.** Every URL fetched live; every quote grep-verified against the local spec copies (match dash-free distinctive substrings; curly apostrophes differ from straight ones); re-fetch the Notion page and DB; `jq` the JSONs; confirm scores identical across research file, DB, evals.json, prototype.
+Two independent tracks: **evidence** (1 -> 2 -> 3) and **spec** (4). Stage 4 may run
+in parallel with 1-3; both tracks must be gated before stage 5. Stage 6 runs in a
+fresh session or subagent that did not execute the sweep.
 
-## Learned pitfalls
+## Sweep directory
 
-- Sycophancy-style constructs fragment: different evals can rank the same models in opposite order. Never present cross-eval aggregates without a facet mapping.
-- Headline metrics often bundle in-scope and out-of-scope behaviour (e.g. progressive flips); score and extract only the in-scope slice.
-- Vendor self-reports (system cards, postmortems) are context for the independence-of-evidence finding, not index evidence. [I think it's fine to check the model cards. This speaks about whether the companies are measuring this pre-release, but if there is a big difference between the model card eval and the independent evals, then we have a problem. We're not going to address this right now. Just keep a note, and we'll address this later.]
-- The most-quoted numbers are often from obsolete models; always carry model version + date next to any adherence number.
+```
+research/evals/NN-<slug>/     working record (committed with the sweep)
+  register.md                 candidate register -- the spine; updated at every stage
+  1-dossiers.md               discovery output
+  2-curation.md               curation memo
+  3-scores.md                 rubric scores + adherence extraction
+  4-spec-coverage.md          excerpt sets, verdict, depth
+  gates.md                    gate log: sign-offs, corrections, accepted open items
+  verify.md                   stage-6 audit report
+research/evals/NN-<slug>.md   canonical write-up, assembled at stage 5
+```
+
+The behaviour-1 sweep (`research/evals/01-no-sycophancy.md`) predates this layout;
+its content structure remains the template for write-ups and Notion pages.
+
+## Gate protocol (applies at every gate)
+
+1. The stage skill finishes its artifact and renders its gate checklist in chat --
+   each item with pointed evidence (fetch logs, command output, links into the
+   artifact), never bare checkmarks.
+2. **STOP.** Do not start the next stage. The human reviews the artifact against the
+   checklist; the checklist tells them what to spot-check, not just what to accept.
+3. Corrections loop within the stage; re-render the checklist after fixes.
+4. On approval, append to `gates.md`: gate number, date, approver, corrections made,
+   and any open items the human explicitly accepted.
+5. An open item accepted at a gate is carried into the write-up's known-unknowns /
+   epistemic-status section -- accepted never means dropped.
+6. Gate N+1 work must not begin, even speculatively, before gate N is signed. The
+   one exception is the stage-4 parallel track.
+
+## Shared references
+
+- Fixed IDs and file locations: `references/locations.md`
+- Exclusion criteria, dispositions, register conventions: `references/exclusion-criteria.md`
+
+## Transparency invariants (hold across all stages)
+
+- Every candidate found is in the register with exactly one final disposition;
+  leave-outs are documented, never deleted.
+- Every stage's output is a committed artifact, not chat scroll.
+- Every number carries model version + date; every quote carries a pinned locator;
+  every claim carries an evidence tier.
+- The gate log is the human-review record the epistemic-status blocks point to.
