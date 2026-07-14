@@ -1,0 +1,14 @@
+{
+  "name": "ai-character-index",
+  "private": true,
+  "packageManager": "pnpm@11.12.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "deploy:site": "wrangler pages deploy site --project-name ai-character-index"
+  },
+  "devDependencies": {
+    "wrangler": "^4.110.0"
+  }
+}
