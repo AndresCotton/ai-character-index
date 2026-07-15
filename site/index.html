@@ -58,6 +58,8 @@
   nav { display: flex; gap: 24px; }
   nav a { font-variant-caps: all-small-caps; letter-spacing: .12em; font-size: 14.5px;
           color: var(--ink3); text-decoration: none; cursor: default; }
+  nav a:not([href="#"]) { cursor: pointer; }
+  nav a:not([href="#"]):hover { color: var(--ink); }
   nav a.active { color: var(--ink); border-bottom: 1px solid var(--ink3); }
   .mode { background: none; border: none; padding: 6px 10px; margin: -6px -10px;
           font-family: var(--serif); font-size: 17px;
@@ -370,10 +372,10 @@
 <header>
   <span class="wordmark">AI Character Index</span>
   <span class="tagline">A public, evidence-based record of declared AI character</span>
-  <nav aria-label="prototype navigation (stubs)">
+  <nav aria-label="site navigation">
     <a class="active" href="#" onclick="return false">The Index</a>
     <a href="spec-reader/">Spec reader</a>
-    <a href="#" title="stub · not built in this prototype" onclick="return false">Methodology</a>
+    <a href="methodology.html">Methodology</a>
     <a href="#" title="stub · not built in this prototype" onclick="return false">Contribute</a>
     <a href="#" title="stub · not built in this prototype" onclick="return false">About</a>
     <button class="mode" id="mode" aria-label="switch surface">☾</button>

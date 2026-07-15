@@ -137,22 +137,102 @@ function escapeHTML(value) {
     .replaceAll('"', "&quot;");
 }
 
-function inlineMarkdown(source) {
-  let value = source
-    .replace(/\[\^[^\]]+\]/g, "")
-    .replace(/\{#[^}]+\}/g, "");
-  value = escapeHTML(value);
-  value = value.replace(
-    /\[([^\]]+)\]\((https?:\/\/[^)\s]+|#[^)\s]+)\)/g,
-    '<a href="$2">$1</a>',
-  );
-  value = value
+function plainHeadingTitle(source) {
+  return source
+    .replace(/\[\^([^\]]+)\]/g, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[*_`]/g, "")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function generatedHeadingAnchor(source) {
+  return plainHeadingTitle(source)
+    .toLocaleLowerCase()
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
+function buildHeadingIndex(markdown) {
+  const headings = new Map();
+  markdown.replace(/\r\n/g, "\n").split("\n").forEach(line => {
+    const heading = headingDetails(line);
+    if (!heading) return;
+    const anchor = heading.id || generatedHeadingAnchor(heading.text);
+    if (anchor && !headings.has(anchor)) {
+      headings.set(anchor, plainHeadingTitle(heading.text));
+    }
+  });
+  return headings;
+}
+
+function scopedAnchor(prefix, anchor) {
+  return `${prefix}--${anchor}`;
+}
+
+function applyInlineFormatting(value) {
+  return value
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/__([^_]+)__/g, "<strong>$1</strong>")
     .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, "<em>$1</em>")
     .replace(/(?<!_)_([^_\n]+)_(?!_)/g, "<em>$1</em>")
     .replace(/`([^`]+)`/g, "<code>$1</code>");
-  return value;
+}
+
+function inlineMarkdown(source, context) {
+  let value = source
+    .replace(/\[\^[^\]]+\]/g, "")
+    .replace(/\{#[^}]+\}/g, "");
+  value = escapeHTML(value);
+  const renderedLinks = [];
+  value = value.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^)\s]+|#[^)\s]+)\)/g,
+    (match, label, href) => {
+      let renderedLink;
+      if (!href.startsWith("#")) {
+        renderedLink = `<a href="${href}">${applyInlineFormatting(label)}</a>`;
+      } else {
+        const target = href.slice(1);
+        const title = context?.headings.get(target);
+        const placeholder = /^\s*\?\s*$/.test(label);
+        const renderedLabel = placeholder && title
+          ? escapeHTML(title)
+          : applyInlineFormatting(label);
+        const renderedHref = context
+          ? `#${scopedAnchor(context.idPrefix, target)}`
+          : href;
+        const ariaLabel = placeholder && title
+          ? ` aria-label="See section: ${escapeHTML(title)}"`
+          : "";
+        renderedLink = `<a href="${escapeHTML(renderedHref)}"${ariaLabel}>${renderedLabel}</a>`;
+      }
+
+      const token = `\uE000${renderedLinks.length}\uE001`;
+      renderedLinks.push(renderedLink);
+      return token;
+    },
+  );
+  value = applyInlineFormatting(value);
+  return value.replace(/\uE000(\d+)\uE001/g, (match, index) => renderedLinks[Number(index)]);
+}
+
+function renderCodeBlock(source, context) {
+  return escapeHTML(source).replace(
+    /\[([^\]]+)\]\(#([^)\s]+)\)/g,
+    (match, label, target) => {
+      const title = context?.headings.get(target);
+      const placeholder = /^\s*\?\s*$/.test(label);
+      const renderedLabel = placeholder && title ? escapeHTML(title) : label;
+      const renderedHref = context
+        ? `#${scopedAnchor(context.idPrefix, target)}`
+        : `#${target}`;
+      const ariaLabel = placeholder && title
+        ? ` aria-label="See section: ${escapeHTML(title)}"`
+        : "";
+      return `<a href="${escapeHTML(renderedHref)}"${ariaLabel}>${renderedLabel}</a>`;
+    },
+  );
 }
 
 function headingDetails(line) {
@@ -180,11 +260,12 @@ function isSpecialLine(lines, index) {
   );
 }
 
-function renderMarkdown(markdown) {
+function renderMarkdown(markdown, context) {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
   const output = [];
   let blockNumber = 0;
   const blockAttr = () => `data-block="${++blockNumber}"`;
+  const usedHeadingIds = context?.usedHeadingIds || new Map();
 
   for (let index = 0; index < lines.length;) {
     const line = lines[index];
@@ -195,8 +276,14 @@ function renderMarkdown(markdown) {
 
     const heading = headingDetails(line);
     if (heading) {
-      const id = heading.id ? ` id="${escapeHTML(heading.id)}"` : "";
-      output.push(`<h${heading.level} ${blockAttr()}${id}>${inlineMarkdown(heading.text)}</h${heading.level}>`);
+      const anchor = heading.id || generatedHeadingAnchor(heading.text);
+      const occurrence = (usedHeadingIds.get(anchor) || 0) + 1;
+      usedHeadingIds.set(anchor, occurrence);
+      const uniqueAnchor = occurrence === 1 ? anchor : `${anchor}--${occurrence}`;
+      const id = anchor
+        ? ` id="${escapeHTML(scopedAnchor(context.idPrefix, uniqueAnchor))}"`
+        : "";
+      output.push(`<h${heading.level} ${blockAttr()}${id}>${inlineMarkdown(heading.text, context)}</h${heading.level}>`);
       index += 1;
       continue;
     }
@@ -212,7 +299,7 @@ function renderMarkdown(markdown) {
         index += 1;
       }
       index += 1;
-      output.push(`<pre class="code-block" ${blockAttr()} data-language="${escapeHTML(language)}">${escapeHTML(content.join("\n"))}</pre>`);
+      output.push(`<pre class="code-block" ${blockAttr()} data-language="${escapeHTML(language)}">${renderCodeBlock(content.join("\n"), context)}</pre>`);
       continue;
     }
 
@@ -226,8 +313,8 @@ function renderMarkdown(markdown) {
       }
       output.push(`
         <aside class="admonition" ${blockAttr()}>
-          <div class="admonition-label">${inlineMarkdown(admonition[2] || admonition[1])}</div>
-          ${renderMarkdown(content.join("\n"))}
+          <div class="admonition-label">${inlineMarkdown(admonition[2] || admonition[1], context)}</div>
+          ${renderMarkdown(content.join("\n"), context)}
         </aside>
       `);
       continue;
@@ -239,7 +326,7 @@ function renderMarkdown(markdown) {
         content.push(lines[index].replace(/^>\s?/, ""));
         index += 1;
       }
-      output.push(`<blockquote ${blockAttr()}>${renderMarkdown(content.join("\n"))}</blockquote>`);
+      output.push(`<blockquote ${blockAttr()}>${renderMarkdown(content.join("\n"), context)}</blockquote>`);
       continue;
     }
 
@@ -251,7 +338,7 @@ function renderMarkdown(markdown) {
       while (index < lines.length) {
         const item = lines[index].match(/^\s*([-*+]|\d+\.)\s+(.+)$/);
         if (!item || /\d+\./.test(item[1]) !== ordered) break;
-        items.push(`<li ${blockAttr()}>${inlineMarkdown(item[2])}</li>`);
+        items.push(`<li ${blockAttr()}>${inlineMarkdown(item[2], context)}</li>`);
         index += 1;
       }
       output.push(`<${tag}>${items.join("")}</${tag}>`);
@@ -280,7 +367,7 @@ function renderMarkdown(markdown) {
       paragraph.push(lines[index].trim());
       index += 1;
     }
-    output.push(`<p ${blockAttr()}>${inlineMarkdown(paragraph.join(" "))}</p>`);
+    output.push(`<p ${blockAttr()}>${inlineMarkdown(paragraph.join(" "), context)}</p>`);
   }
 
   return output.join("\n");
@@ -453,14 +540,66 @@ function setupSectionFocus(panel) {
   setPanelFocus(panel, state.documentFocus[panel.dataset.documentId]);
 }
 
+function revealInternalTarget(panel, heading, shouldUpdateHash = true) {
+  const body = panel.querySelector(".document-body");
+  let sectionChild = heading;
+  while (sectionChild.parentElement && sectionChild.parentElement !== body) {
+    sectionChild = sectionChild.parentElement;
+  }
+  (sectionChild._sectionAncestors || []).forEach(info => { info.collapsed = false; });
+  updateSectionVisibility(panel);
+
+  const scroll = panel.querySelector(".document-scroll");
+  const top = heading.getBoundingClientRect().top
+    - scroll.getBoundingClientRect().top
+    + scroll.scrollTop
+    - 32;
+  heading.setAttribute("tabindex", "-1");
+  heading.focus({ preventScroll: true });
+  scroll.scrollTo({
+    top: Math.max(0, top),
+    behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+  });
+
+  if (shouldUpdateHash) {
+    history.replaceState(null, "", `${location.pathname}${location.search}#${heading.id}`);
+  }
+  requestAnimationFrame(updateRails);
+}
+
+function setupInternalLinks(panel) {
+  panel.querySelector(".document-body").addEventListener("click", event => {
+    const link = event.target.closest('a[href^="#"]');
+    if (!link) return;
+    const id = link.getAttribute("href").slice(1);
+    const heading = panel.querySelector(`#${CSS.escape(id)}`);
+    if (!heading) return;
+    event.preventDefault();
+    revealInternalTarget(panel, heading);
+  });
+}
+
+function revealHashTarget() {
+  const id = decodeURIComponent(location.hash.slice(1));
+  if (!id) return;
+  const heading = elements.documentReader.querySelector(`#${CSS.escape(id)}`);
+  const panel = heading?.closest(".document-panel");
+  if (heading && panel) revealInternalTarget(panel, heading, false);
+}
+
 function renderDocument(document) {
   const panel = elements.template.content.firstElementChild.cloneNode(true);
+  const markdownContext = {
+    headings: buildHeadingIndex(document.markdown),
+    idPrefix: document.id,
+    usedHeadingIds: new Map(),
+  };
   panel.dataset.documentId = document.id;
   panel.querySelector(".document-lab").textContent = document.lab;
   panel.querySelector(".document-title").textContent = document.title;
   panel.querySelector(".document-version").textContent = `Version ${document.version}`;
   panel.querySelector(".coverage-depth").textContent = `Coverage depth ${document.coverage.depth} / 4`;
-  panel.querySelector(".document-body").innerHTML = renderMarkdown(document.markdown);
+  panel.querySelector(".document-body").innerHTML = renderMarkdown(document.markdown, markdownContext);
 
   const missing = annotatePassages(panel, document);
   if (document.coverage.passages.length === 0) {
@@ -473,6 +612,7 @@ function renderDocument(document) {
     );
   }
   setupSectionFocus(panel);
+  setupInternalLinks(panel);
   panel._missingPassages = missing;
   return panel;
 }
@@ -508,6 +648,7 @@ function rebuildReader() {
     collectAnchors();
     updateRails();
     focusPassage(0, false);
+    revealHashTarget();
   });
 }
 
