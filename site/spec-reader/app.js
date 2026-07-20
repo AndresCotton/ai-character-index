@@ -42,9 +42,12 @@ const state = {
   passageIndex: 0,
   anchors: [],
   documentFocus: { anthropic: true, openai: true },
+  sidebarWidth: 292,
+  compareFirst: 50,
 };
 
 const elements = {
+  appShell: document.querySelector(".app-shell"),
   behaviourList: document.querySelector("#behaviour-list"),
   compareToggle: document.querySelector("#compare-toggle"),
   documentReader: document.querySelector("#document-reader"),
@@ -54,6 +57,7 @@ const elements = {
   passageCount: document.querySelector("#passage-count"),
   previousPassage: document.querySelector("#previous-passage"),
   readerStatus: document.querySelector("#reader-status"),
+  sidebarResizer: document.querySelector("#sidebar-resizer"),
   sourceLink: document.querySelector("#source-link"),
   template: document.querySelector("#document-template"),
 };
@@ -104,6 +108,133 @@ const paletteParam = new URLSearchParams(location.search).get("palette");
 let savedPalette = null;
 try { savedPalette = localStorage.getItem("aci-palette"); } catch (error) {}
 setPalette(paletteParam || savedPalette || "daylight");
+
+function clamp(value, minimum, maximum) {
+  return Math.min(maximum, Math.max(minimum, value));
+}
+
+function savedNumber(key, fallback) {
+  try {
+    const value = Number(localStorage.getItem(key));
+    return Number.isFinite(value) && value > 0 ? value : fallback;
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function saveNumber(key, value) {
+  try { localStorage.setItem(key, String(value)); } catch (error) {}
+}
+
+function setSidebarWidth(width, persist = false) {
+  const desktop = window.matchMedia("(min-width: 901px)").matches;
+  const maximum = desktop
+    ? Math.max(200, Math.min(480, elements.appShell.clientWidth - 420))
+    : 480;
+  state.sidebarWidth = Math.round(clamp(width, 200, maximum));
+  elements.appShell.style.setProperty("--sidebar-width", `${state.sidebarWidth}px`);
+  elements.sidebarResizer.setAttribute("aria-valuenow", String(state.sidebarWidth));
+  elements.sidebarResizer.setAttribute("aria-valuemax", String(maximum));
+  elements.sidebarResizer.setAttribute("aria-valuetext", `${state.sidebarWidth} pixels wide`);
+  if (persist) saveNumber("aci-sidebar-width", state.sidebarWidth);
+}
+
+function setCompareFirst(percent, persist = false) {
+  const width = elements.documentReader.clientWidth;
+  const minimum = width > 0 ? Math.min(40, (260 / width) * 100) : 20;
+  const maximum = 100 - minimum - (width > 0 ? (9 / width) * 100 : 0);
+  state.compareFirst = Math.round(clamp(percent, minimum, maximum) * 10) / 10;
+  elements.documentReader.style.setProperty("--compare-first", `${state.compareFirst}%`);
+  const resizer = elements.documentReader.querySelector(".document-resizer");
+  if (resizer) {
+    resizer.setAttribute("aria-valuemin", String(Math.ceil(minimum)));
+    resizer.setAttribute("aria-valuemax", String(Math.floor(maximum)));
+    resizer.setAttribute("aria-valuenow", String(Math.round(state.compareFirst)));
+    resizer.setAttribute("aria-valuetext", `First specification ${Math.round(state.compareFirst)} percent wide`);
+  }
+  if (persist) saveNumber("aci-compare-first", state.compareFirst);
+  requestAnimationFrame(updateRails);
+}
+
+function startColumnDrag(event, resizer, update, finish) {
+  if (event.button !== 0) return;
+  event.preventDefault();
+  resizer.setPointerCapture(event.pointerId);
+  resizer.classList.add("dragging");
+  document.body.classList.add("resizing-columns");
+
+  const move = moveEvent => update(moveEvent.clientX);
+  const end = () => {
+    resizer.classList.remove("dragging");
+    document.body.classList.remove("resizing-columns");
+    resizer.removeEventListener("pointermove", move);
+    resizer.removeEventListener("pointerup", end);
+    resizer.removeEventListener("pointercancel", end);
+    finish();
+  };
+  resizer.addEventListener("pointermove", move);
+  resizer.addEventListener("pointerup", end);
+  resizer.addEventListener("pointercancel", end);
+}
+
+function setupSidebarResizer() {
+  state.sidebarWidth = savedNumber("aci-sidebar-width", state.sidebarWidth);
+  setSidebarWidth(state.sidebarWidth);
+  elements.sidebarResizer.addEventListener("pointerdown", event => {
+    const shellLeft = elements.appShell.getBoundingClientRect().left;
+    startColumnDrag(
+      event,
+      elements.sidebarResizer,
+      clientX => setSidebarWidth(clientX - shellLeft),
+      () => setSidebarWidth(state.sidebarWidth, true),
+    );
+  });
+  elements.sidebarResizer.addEventListener("keydown", event => {
+    const step = event.shiftKey ? 40 : 16;
+    let next = state.sidebarWidth;
+    if (event.key === "ArrowLeft") next -= step;
+    else if (event.key === "ArrowRight") next += step;
+    else if (event.key === "Home") next = 200;
+    else if (event.key === "End") next = 480;
+    else return;
+    event.preventDefault();
+    setSidebarWidth(next, true);
+  });
+}
+
+function createDocumentResizer() {
+  const resizer = document.createElement("div");
+  resizer.className = "column-resizer document-resizer";
+  resizer.role = "separator";
+  resizer.tabIndex = 0;
+  resizer.setAttribute("aria-label", "Resize specification panels");
+  resizer.setAttribute("aria-orientation", "vertical");
+  resizer.setAttribute("aria-valuemin", "0");
+  resizer.setAttribute("aria-valuemax", "100");
+  resizer.addEventListener("pointerdown", event => {
+    const bounds = elements.documentReader.getBoundingClientRect();
+    startColumnDrag(
+      event,
+      resizer,
+      clientX => setCompareFirst(((clientX - bounds.left) / bounds.width) * 100),
+      () => setCompareFirst(state.compareFirst, true),
+    );
+  });
+  resizer.addEventListener("keydown", event => {
+    const step = event.shiftKey ? 10 : 2;
+    let next = state.compareFirst;
+    if (event.key === "ArrowLeft") next -= step;
+    else if (event.key === "ArrowRight") next += step;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = 100;
+    else return;
+    event.preventDefault();
+    setCompareFirst(next, true);
+  });
+  return resizer;
+}
+
+setupSidebarResizer();
 
 function renderBehaviourList() {
   elements.behaviourList.innerHTML = GROUPS.map(group => `
@@ -625,7 +756,12 @@ function visibleDocuments() {
 function rebuildReader() {
   const documents = visibleDocuments();
   elements.documentReader.classList.toggle("compare", state.comparing);
-  elements.documentReader.replaceChildren(...documents.map(renderDocument));
+  const panels = documents.map(renderDocument);
+  const children = state.comparing
+    ? [panels[0], createDocumentResizer(), panels[1]]
+    : panels;
+  elements.documentReader.replaceChildren(...children);
+  if (state.comparing) setCompareFirst(state.compareFirst);
   state.passageIndex = 0;
 
   const selected = state.payload.documents.find(document => document.id === state.selectedSpec);
@@ -755,7 +891,11 @@ document.addEventListener("keydown", event => {
   if (event.key === "k") focusPassage(state.passageIndex - 1);
 });
 
-window.addEventListener("resize", () => requestAnimationFrame(updateRails));
+window.addEventListener("resize", () => {
+  setSidebarWidth(state.sidebarWidth);
+  if (state.comparing) setCompareFirst(state.compareFirst);
+  requestAnimationFrame(updateRails);
+});
 
 async function initialize() {
   renderBehaviourList();
@@ -769,6 +909,7 @@ async function initialize() {
       state.selectedSpec = requestedSpec;
     }
     state.comparing = params.get("compare") === "1";
+    state.compareFirst = savedNumber("aci-compare-first", state.compareFirst);
     elements.compareToggle.setAttribute("aria-pressed", String(state.comparing));
     elements.findingDefinition.textContent = state.payload.behaviour.definition;
     syncURL();
