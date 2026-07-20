@@ -1,0 +1,49 @@
+# Spec-coverage depth rubric
+
+Anchors the 0-4 depth score assigned per spec in every stage-4 artifact and
+published in `data/coverage.json`. Depth qualifies a covered/partial verdict:
+it measures how much the spec gives an eval designer to work with for this
+behaviour, not how much the lab appears to care. Every score carries a one-line
+rationale naming what is present and what is missing, in the rubric's terms.
+
+| Depth | Anchor | Bar |
+|---|---|---|
+| 0 | absent | No passage bears on the behaviour. |
+| 1 | named | The behaviour appears -- a word or clause, typically inside a list or a passage about something else -- but the spec says nothing further about it. |
+| 2 | discussed | The spec addresses the behaviour in its own right -- what the norm is, why it matters -- but only in terms too general to grade a response against. |
+| 3 | prescribed | The spec states concrete do/don't rules or procedures for the behaviour, specific enough that a grader can quote the spec's own sentences as pass criteria. |
+| 4 | demonstrated | Prescribed, plus worked examples: concrete scenarios where the spec shows the sanctioned response, usable as an answer key for borderline cases. |
+
+## Boundary tests
+
+- **2 vs 3 -- the grading test:** could an eval score a transcript by quoting
+  the spec, or would the grader have to invent the standard? If invent, it is
+  a 2.
+- **3 vs 4 -- what counts as a worked example:** the spec must demonstrate a
+  response to a scenario instantiating this behaviour's own construct. A rule
+  restated with an inline illustration stays at 3, and examples that test a
+  neighbouring construct do not count (behaviour 3: none of the model spec's
+  examples test a report of the assistant's own actions, so it sits at 3
+  despite strong rules).
+- **A dedicated section is evidence, not a requirement.** Any level can be
+  reached by passages scattered across sections; likewise a dedicated section
+  with only general language does not clear 3.
+- **Depth is scored on core excerpts.** Adjacent-flagged passages define the
+  construct's edges for eval designers and do not raise depth.
+- **Depth is independent of authority level.** Note authority in the rationale
+  where it matters (behaviour 2 precedent: the model spec's dedicated
+  calibration section carries only guideline authority).
+
+## Precedent
+
+All scores assigned before this rubric existed were re-checked against it on
+2026-07-20 (Gate 4 of behaviour 3); all six stand unchanged.
+
+| Behaviour | Spec | Depth | Under the rubric |
+|---|---|---|---|
+| 1 no-sycophancy | constitution | 3 | prescribed (avoid-sycophancy and no-white-lies rules; the gift illustration asserts the rule but demonstrates no response) |
+| 1 no-sycophancy | model spec | 4 | demonstrated (invariance rule plus three worked examples) |
+| 2 calibration | constitution | 3 | prescribed (the two-directional Calibrated rule is a quotable pass criterion; no examples) |
+| 2 calibration | model spec | 4 | demonstrated (outcome ranking plus eight worked examples) |
+| 3 action-honesty | constitution | 3 | prescribed (enumerated oversight prohibitions and the no-sandbagging rule; no examples) |
+| 3 action-honesty | model spec | 3 | prescribed (stop-and-escalate, audit-trail, and error-acknowledgment rules; no examples test an action report) |

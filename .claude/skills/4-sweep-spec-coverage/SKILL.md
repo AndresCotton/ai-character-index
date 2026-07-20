@@ -53,16 +53,12 @@ were confirmed latest. If a pull changes a mirror, flag it: existing locators in
 
 ## Verdict and depth (per spec)
 
-Verdict: covered / partial / not-in-spec. Depth 0-4 with a one-line rationale naming
-what is present and what is missing (behaviour-1 precedent: constitution 3/4 --
-"named explicitly but no dedicated section, no operational test"; model spec 4/4 --
-"dedicated section with an operational invariance rule and worked examples").
-
-#TODO (Andrés, 2026-07-14): the depth score has no anchored rubric -- it is assigned
-by judgment plus rationale, and this matters. Define per-level anchors (candidate
-sketch: 0 absent / 1 named in passing / 2 discussed without guidance / 3 operational
-guidance / 4 dedicated section with an operational test and worked examples) before
-the next sweep hardens the current practice into precedent.
+Verdict: covered / partial / not-in-spec. Depth 0-4 scored against the anchored
+rubric in `research/spec-coverage-depth-rubric.md` (0 absent / 1 named /
+2 discussed / 3 prescribed / 4 demonstrated), with a one-line rationale naming
+what is present and what is missing in the rubric's terms. The rubric's boundary
+tests (the grading test for 2 vs 3; what counts as a worked example for 3 vs 4)
+settle border calls; its precedent table records how behaviours 1-3 map onto it.
 
 ## Gate 4 -- quotes are mechanical, not remembered
 
