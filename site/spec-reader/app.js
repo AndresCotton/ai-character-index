@@ -548,17 +548,37 @@ function normalize(value) {
     .trim();
 }
 
-function findPassageBlock(body, passage) {
+function findPassageBlocks(body, passage) {
   const needle = normalize(passage.quote);
   const blocks = [...body.querySelectorAll("[data-block]")];
   const exact = blocks.find(block => normalize(block.textContent).includes(needle));
-  if (exact) return exact;
+  if (exact) return { anchor: exact, continuation: [] };
+
+  // A whole-block citation can flatten a labelled list cluster (a bold intro
+  // plus its nested items) into one resolver line, while the reader renders
+  // each item as its own block. Match the needle across a run of consecutive
+  // blocks, anchoring the first and highlighting the rest as continuation.
+  const texts = blocks.map(block => normalize(block.textContent));
+  for (let start = 0; start < blocks.length; start += 1) {
+    if (!texts[start] || !needle.startsWith(texts[start])) continue;
+    let combined = texts[start];
+    const run = [blocks[start]];
+    for (let next = start + 1; next < blocks.length && combined.length < needle.length; next += 1) {
+      combined = `${combined} ${texts[next]}`;
+      if (!needle.startsWith(combined) && !combined.startsWith(needle)) break;
+      run.push(blocks[next]);
+    }
+    if (combined.startsWith(needle) && run.length > 1) {
+      return { anchor: run[0], continuation: run.slice(1) };
+    }
+  }
 
   // Published Markdown sometimes renders cross-references as "?" while the
   // citation ledger stores the resolved anchor. The opening clause remains a
   // stable, version-pinned fallback for those otherwise identical passages.
   const opening = needle.split(" ").slice(0, 18).join(" ");
-  return blocks.find(block => normalize(block.textContent).includes(opening));
+  const fallback = blocks.find(block => normalize(block.textContent).includes(opening));
+  return fallback ? { anchor: fallback, continuation: [] } : null;
 }
 
 function annotatePassages(panel, document) {
@@ -566,11 +586,16 @@ function annotatePassages(panel, document) {
   const missing = [];
 
   document.coverage.passages.forEach((passage, index) => {
-    const block = findPassageBlock(body, passage);
-    if (!block) {
+    const found = findPassageBlocks(body, passage);
+    if (!found) {
       missing.push(passage.locator);
       return;
     }
+    const block = found.anchor;
+    found.continuation.forEach(extra => {
+      extra.classList.add("passage", "passage-continuation");
+      extra.classList.toggle("adjacent", passage.adjacent);
+    });
 
     block.classList.add("passage");
     block.classList.toggle("adjacent", passage.adjacent);
