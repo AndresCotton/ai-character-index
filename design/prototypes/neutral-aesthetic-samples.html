@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Character Index · neutral aesthetic samples</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital,wght@0,400;1,400&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;1,8..60,400&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --page: #e8ecee;
+    --page-ink: #22292d;
+    --page-muted: #667178;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--page-ink);
+    font-family: "Public Sans", system-ui, sans-serif;
+  }
+
+  .board {
+    width: min(1180px, calc(100% - 40px));
+    margin: 48px auto 64px;
+  }
+  .board-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 410px);
+    gap: 40px;
+    align-items: end;
+    margin-bottom: 28px;
+  }
+  .board-kicker, .option, .label, .meta, .status {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+  }
+  .board-kicker { color: #536069; margin-bottom: 8px; }
+  h1 { margin: 0; font-size: clamp(28px, 4vw, 48px); line-height: 1; letter-spacing: -.045em; }
+  .board-intro { margin: 0; color: var(--page-muted); font-size: 14px; line-height: 1.55; }
+  .board-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 13px; }
+  .theme-toggle {
+    border: 1px solid #aeb7bc;
+    background: transparent;
+    color: var(--page-ink);
+    padding: 8px 12px;
+    font: 600 11px/1 "Public Sans", system-ui, sans-serif;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .theme-toggle:hover { background: rgba(255,255,255,.45); }
+  .theme-toggle:focus-visible { outline: 2px solid #38658c; outline-offset: 3px; }
+
+  .samples { display: grid; gap: 24px; }
+  .sample {
+    --surface: #fff;
+    --lift: #f1f4f5;
+    --ink: #192126;
+    --muted: #59656c;
+    --quiet: #78838a;
+    --rule: #ced5d8;
+    --coverage: #38658c;
+    --strong: #33705a;
+    --weak: #8a681f;
+    --gap: #a14848;
+    background: var(--surface);
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 235px minmax(0, 1fr);
+    min-height: 330px;
+  }
+  .sample-b {
+    --surface: #f7f8fa;
+    --lift: #eceff3;
+    --ink: #18212b;
+    --muted: #53606d;
+    --quiet: #77828d;
+    --rule: #cbd2d9;
+    --coverage: #315f88;
+    --strong: #2f6f5b;
+    --weak: #876622;
+    --gap: #9e4a4f;
+  }
+  .sample-c {
+    --surface: #f8faf9;
+    --lift: #edf1ef;
+    --ink: #1d2522;
+    --muted: #58645f;
+    --quiet: #7b8681;
+    --rule: #cdd5d1;
+    --coverage: #3f657e;
+    --strong: #36705b;
+    --weak: #896a2e;
+    --gap: #9c4f52;
+  }
+  body.dark {
+    --page: #101417;
+    --page-ink: #e7eaec;
+    --page-muted: #a6afb5;
+  }
+  body.dark .sample {
+    --surface: #1d2226;
+    --lift: #252b30;
+    --ink: #e7eaec;
+    --muted: #a6afb5;
+    --quiet: #7f8a91;
+    --rule: #394147;
+    --coverage: #79a2c2;
+    --strong: #67a589;
+    --weak: #c0a05c;
+    --gap: #cf7476;
+  }
+  body.dark .theme-toggle { border-color: #465159; }
+  body.dark .theme-toggle:hover { background: rgba(255,255,255,.06); }
+
+  .sample-d { font-family: "EB Garamond", Garamond, Georgia, serif; }
+  .sample-a { font-family: "Public Sans", system-ui, sans-serif; }
+  .sample-b { font-family: "IBM Plex Sans", system-ui, sans-serif; }
+  .sample-c { font-family: "Instrument Sans", system-ui, sans-serif; }
+  .sample-d .serif { font-family: "EB Garamond", Garamond, Georgia, serif; }
+  .sample-a .serif { font-family: "Source Serif 4", Georgia, serif; }
+  .sample-b .serif { font-family: "IBM Plex Serif", Georgia, serif; }
+  .sample-c .serif { font-family: "Source Serif 4", Georgia, serif; }
+  .sample-a .mono, .sample-b .mono { font-family: "IBM Plex Mono", monospace; }
+  .sample-d .mono { font-family: "IBM Plex Mono", monospace; }
+  .sample-c .mono { font-family: "Spline Sans Mono", monospace; }
+  .sample-d .wordmark { font-size: 15px; letter-spacing: .02em; }
+  .sample-d .group h3 { font-weight: 500; letter-spacing: -.015em; }
+  .sample-d .clause-name { font-size: 16px; }
+
+  .sample-notes {
+    border-right: 1px solid var(--rule);
+    padding: 26px 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .option { color: var(--coverage); margin-bottom: 12px; }
+  .sample-notes h2 { margin: 0; font-size: 20px; letter-spacing: -.025em; line-height: 1.15; }
+  .sample-notes p { margin: 12px 0 22px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+  .font-list { display: grid; gap: 7px; font-size: 12px; color: var(--muted); }
+  .font-list b { color: var(--ink); font-weight: 600; }
+  .swatches { display: flex; gap: 5px; margin-top: auto; padding-top: 24px; }
+  .swatch { width: 21px; height: 21px; border: 1px solid color-mix(in srgb, var(--ink) 18%, transparent); }
+  .swatch:nth-child(1) { background: var(--surface); }
+  .swatch:nth-child(2) { background: var(--ink); }
+  .swatch:nth-child(3) { background: var(--coverage); }
+  .swatch:nth-child(4) { background: var(--strong); }
+  .swatch:nth-child(5) { background: var(--weak); }
+  .swatch:nth-child(6) { background: var(--gap); }
+
+  .mock {
+    padding: 24px 30px 28px;
+    min-width: 0;
+  }
+  .mock-head { display: flex; justify-content: space-between; gap: 24px; align-items: baseline; }
+  .wordmark { font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
+  .meta { color: var(--quiet); white-space: nowrap; }
+  .divider { border: 0; border-top: 1px solid var(--rule); margin: 18px 0 22px; }
+  .group {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 18px;
+  }
+  .section-mark { color: var(--quiet); font-size: 12px; padding-top: 5px; }
+  .group h3 {
+    margin: 0;
+    font-size: clamp(24px, 3vw, 34px);
+    line-height: 1.08;
+    letter-spacing: -.035em;
+    font-weight: 500;
+  }
+  .preamble {
+    max-width: 660px;
+    margin: 9px 0 21px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .clause { border-top: 1px solid var(--rule); }
+  .clause-row {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: baseline;
+    padding: 12px 0;
+  }
+  .clause-id { color: var(--quiet); font-size: 12px; }
+  .clause-name { font-size: 15px; font-weight: 500; }
+  .status { color: var(--strong); white-space: nowrap; }
+  .dots { letter-spacing: .14em; font-size: 10px; margin-right: 6px; }
+  .detail {
+    margin: 0 0 15px 54px;
+    padding: 12px 14px;
+    background: var(--lift);
+    border-left: 2px solid var(--coverage);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .detail .label { color: var(--coverage); display: block; margin-bottom: 3px; }
+  .locator { color: var(--quiet); font-size: 10px; white-space: nowrap; }
+  .draft { color: var(--quiet); }
+  .colour-proof {
+    grid-column: 2;
+    margin-top: 19px;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border: 1px solid var(--rule);
+  }
+  .colour-cell {
+    min-width: 0;
+    padding: 10px 11px 11px;
+    border-right: 1px solid var(--rule);
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.3;
+  }
+  .colour-cell:last-child { border-right: 0; }
+  .colour-cell b {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .colour-cell code { color: var(--quiet); font: 9px/1 "IBM Plex Mono", monospace; }
+  .colour-cell.coverage { box-shadow: inset 0 3px var(--coverage); }
+  .colour-cell.coverage b { color: var(--coverage); }
+  .colour-cell.strong { box-shadow: inset 0 3px var(--strong); }
+  .colour-cell.strong b { color: var(--strong); }
+  .colour-cell.weak { box-shadow: inset 0 3px var(--weak); }
+  .colour-cell.weak b { color: var(--weak); }
+  .colour-cell.gap { box-shadow: inset 0 3px var(--gap); }
+  .colour-cell.gap b { color: var(--gap); }
+
+  @media (max-width: 760px) {
+    .board { width: min(100% - 24px, 620px); margin-top: 28px; }
+    .board-head { grid-template-columns: 1fr; gap: 14px; }
+    .sample { grid-template-columns: 1fr; }
+    .sample-notes { border-right: 0; border-bottom: 1px solid var(--rule); }
+    .swatches { margin-top: 0; }
+    .mock { padding: 22px 18px; }
+    .clause-row { grid-template-columns: 36px minmax(0, 1fr); }
+    .status { grid-column: 2; }
+    .detail { margin-left: 48px; grid-template-columns: 1fr; }
+    .locator { white-space: normal; }
+    .colour-proof { grid-column: 1 / -1; grid-template-columns: 1fr 1fr; }
+    .colour-cell:nth-child(2) { border-right: 0; }
+    .colour-cell:nth-child(-n+2) { border-bottom: 1px solid var(--rule); }
+  }
+</style>
+</head>
+<body>
+<main class="board">
+  <header class="board-head">
+    <div>
+      <div class="board-kicker">Design study · July 2026</div>
+      <h1>Four more neutral registers</h1>
+    </div>
+    <div class="board-actions">
+      <p class="board-intro">The same AI Character Index fragment is repeated in each system. Every semantic colour now appears in context; switch surfaces to inspect the graphite companion.</p>
+      <button class="theme-toggle" type="button" aria-pressed="false">View graphite surface</button>
+    </div>
+  </header>
+
+  <div class="samples">
+    <article class="sample sample-d">
+      <aside class="sample-notes">
+        <div class="option">D · requested pairing</div>
+        <h2>Recoloured original</h2>
+        <p>The original typographic voice on the cooler public-register palette. This isolates how much of the Anthropic resemblance comes from colour versus type.</p>
+        <div class="font-list">
+          <span><b>EB Garamond</b> interface, headings and preambles</span>
+          <span><b>IBM Plex Mono</b> spec anchors only</span>
+        </div>
+        <div class="swatches" aria-label="Palette swatches">
+          <span class="swatch"></span><span class="swatch"></span><span class="swatch"></span>
+          <span class="swatch"></span><span class="swatch"></span><span class="swatch"></span>
+        </div>
+      </aside>
+      <section class="mock">
+        <div class="mock-head">
+          <span class="wordmark">AI Character Index</span>
+          <span class="meta">Independent evidence register</span>
+        </div>
+        <hr class="divider">
+        <div class="group">
+          <span class="section-mark mono">01</span>
+          <div>
+            <h3>Honesty &amp; epistemics</h3>
+            <p class="preamble serif">The model should not create false impressions through agreement, confidence, or claims about its own actions.</p>
+            <div class="clause">
+              <div class="clause-row">
+                <span class="clause-id mono">§ 1</span>
+                <span class="clause-name">No sycophancy</span>
+                <span class="status"><span class="dots">●●●○</span>substantial</span>
+              </div>
+              <div class="detail">
+                <div><span class="label">Coverage</span>Anthropic · covered &nbsp; OpenAI · covered in depth</div>
+                <span class="locator mono">#avoid_sycophancy</span>
+              </div>
+            </div>
+            <div class="clause">
+              <div class="clause-row">
+                <span class="clause-id mono">§ 2</span>
+                <span class="clause-name">Calibration</span>
+                <span class="status draft"><span class="dots">●●○○</span>limited</span>
+              </div>
+            </div>
+          </div>
+          <div class="colour-proof" aria-label="Semantic colour palette">
+            <div class="colour-cell coverage"><b>Coverage</b>spec depth<br><code>#38658C</code></div>
+            <div class="colour-cell strong"><b>Strong</b>3–4 score<br><code>#33705A</code></div>
+            <div class="colour-cell weak"><b>Limited</b>2 score<br><code>#8A681F</code></div>
+            <div class="colour-cell gap"><b>Gap</b>0–1 / absent<br><code>#A14848</code></div>
+          </div>
+        </div>
+      </section>
+    </article>
+
+    <article class="sample sample-a">
+      <aside class="sample-notes">
+        <div class="option">A · recommended</div>
+        <h2>Public register</h2>
+        <p>Civic and independent without looking governmental. Keeps a restrained literary voice only where the content is genuinely quoted.</p>
+        <div class="font-list">
+          <span><b>Public Sans</b> interface and headings</span>
+          <span><b>Source Serif 4</b> preambles and quotations</span>
+          <span><b>IBM Plex Mono</b> spec anchors</span>
+        </div>
+        <div class="swatches" aria-label="Palette swatches">
+          <span class="swatch"></span><span class="swatch"></span><span class="swatch"></span>
+          <span class="swatch"></span><span class="swatch"></span><span class="swatch"></span>
+        </div>
+      </aside>
+      <section class="mock">
+        <div class="mock-head">
+          <span class="wordmark">AI Character Index</span>
+          <span class="meta">Independent evidence register</span>
+        </div>
+        <hr class="divider">
+        <div class="group">
+          <span class="section-mark mono">01</span>
+          <div>
+            <h3>Honesty &amp; epistemics</h3>
+            <p class="preamble serif">The model should not create false impressions through agreement, confidence, or claims about its own actions.</p>
+            <div class="clause">
+              <div class="clause-row">
+                <span class="clause-id mono">§ 1</span>
+                <span class="clause-name">No sycophancy</span>
+                <span class="status"><span class="dots">●●●○</span>substantial</span>
+              </div>
+              <div class="detail">
+                <div><span class="label">Coverage</span>Anthropic · covered &nbsp; OpenAI · covered in depth</div>
+                <span class="locator mono">#avoid_sycophancy</span>
+              </div>
+            </div>
+            <div class="clause">
+              <div class="clause-row">
+                <span class="clause-id mono">§ 2</span>
+                <span class="clause-name">Calibration</span>
+                <span class="status draft"><span class="dots">●●○○</span>limited</span>
+              </div>
+            </div>
+          </div>
+          <div class="colour-proof" aria-label="Semantic colour palette">
+            <div class="colour-cell coverage"><b>Coverage</b>spec depth<br><code>#38658C</code></div>
+            <div class="colour-cell strong"><b>Strong</b>3–4 score<br><code>#33705A</code></div>
+            <div class="colour-cell weak"><b>Limited</b>2 score<br><code>#8A681F</code></div>
+            <div class="colour-cell gap"><b>Gap</b>0–1 / absent<br><code>#A14848</code></div>
+          </div>
+        </div>
+      </section>
+    </article>
+
+    <article class="sample sample-b">
+      <aside class="sample-notes">
+        <div class="option">B · technical</div>
+        <h2>Open standard</h2>
+        <p>A cooler, more analytical system. The single superfamily makes dense evidence views especially coherent.</p>
+        <div class="font-list">
+          <span><b>IBM Plex Sans</b> interface and headings</span>
+          <span><b>IBM Plex Serif</b> preambles and quotations</span>
+          <span><b>IBM Plex Mono</b> spec anchors</span>
+        </div>
+        <div class="swatches" aria-label="Palette swatches">
+          <span class="swatch"></span><span class="swatch"></span><span class="swatch"></span>
+          <span class="swatch"></span><span class="swatch"></span><span class="swatch"></span>
+        </div>
+      </aside>
+      <section class="mock">
+        <div class="mock-head">
+          <span class="wordmark">AI Character Index</span>
+          <span class="meta">Evidence standard · v0</span>
+        </div>
+        <hr class="divider">
+        <div class="group">
+          <span class="section-mark mono">01</span>
+          <div>
+            <h3>Honesty &amp; epistemics</h3>
+            <p class="preamble serif">The model should not create false impressions through agreement, confidence, or claims about its own actions.</p>
+            <div class="clause">
+              <div class="clause-row">
+                <span class="clause-id mono">§ 1</span>
+                <span class="clause-name">No sycophancy</span>
+                <span class="status"><span class="dots">●●●○</span>substantial</span>
+              </div>
+              <div class="detail">
+                <div><span class="label">Coverage</span>Anthropic · covered &nbsp; OpenAI · covered in depth</div>
+                <span class="locator mono">#avoid_sycophancy</span>
+              </div>
+            </div>
+            <div class="clause">
+              <div class="clause-row">
+                <span class="clause-id mono">§ 2</span>
+                <span class="clause-name">Calibration</span>
+                <span class="status draft"><span class="dots">●●○○</span>limited</span>
+              </div>
+            </div>
+          </div>
+          <div class="colour-proof" aria-label="Semantic colour palette">
+            <div class="colour-cell coverage"><b>Coverage</b>spec depth<br><code>#315F88</code></div>
+            <div class="colour-cell strong"><b>Strong</b>3–4 score<br><code>#2F6F5B</code></div>
+            <div class="colour-cell weak"><b>Limited</b>2 score<br><code>#876622</code></div>
+            <div class="colour-cell gap"><b>Gap</b>0–1 / absent<br><code>#9E4A4F</code></div>
+          </div>
+        </div>
+      </section>
+    </article>
+
+    <article class="sample sample-c">
+      <aside class="sample-notes">
+        <div class="option">C · contemporary</div>
+        <h2>Independent index</h2>
+        <p>Still plain-spoken, but less utilitarian than the first pass. Instrument Sans gives it a precise, contemporary voice without a lab aesthetic.</p>
+        <div class="font-list">
+          <span><b>Instrument Sans</b> interface and headings</span>
+          <span><b>Source Serif 4</b> preambles and quotations</span>
+          <span><b>Spline Sans Mono</b> spec anchors</span>
+        </div>
+        <div class="swatches" aria-label="Palette swatches">
+          <span class="swatch"></span><span class="swatch"></span><span class="swatch"></span>
+          <span class="swatch"></span><span class="swatch"></span><span class="swatch"></span>
+        </div>
+      </aside>
+      <section class="mock">
+        <div class="mock-head">
+          <span class="wordmark">AI Character Index</span>
+          <span class="meta">How model claims compare with evidence</span>
+        </div>
+        <hr class="divider">
+        <div class="group">
+          <span class="section-mark mono">01</span>
+          <div>
+            <h3>Honesty &amp; epistemics</h3>
+            <p class="preamble serif">The model should not create false impressions through agreement, confidence, or claims about its own actions.</p>
+            <div class="clause">
+              <div class="clause-row">
+                <span class="clause-id mono">§ 1</span>
+                <span class="clause-name">No sycophancy</span>
+                <span class="status"><span class="dots">●●●○</span>substantial</span>
+              </div>
+              <div class="detail">
+                <div><span class="label">Coverage</span>Anthropic · covered &nbsp; OpenAI · covered in depth</div>
+                <span class="locator mono">#avoid_sycophancy</span>
+              </div>
+            </div>
+            <div class="clause">
+              <div class="clause-row">
+                <span class="clause-id mono">§ 2</span>
+                <span class="clause-name">Calibration</span>
+                <span class="status draft"><span class="dots">●●○○</span>limited</span>
+              </div>
+            </div>
+          </div>
+          <div class="colour-proof" aria-label="Semantic colour palette">
+            <div class="colour-cell coverage"><b>Coverage</b>spec depth<br><code>#3F657E</code></div>
+            <div class="colour-cell strong"><b>Strong</b>3–4 score<br><code>#36705B</code></div>
+            <div class="colour-cell weak"><b>Limited</b>2 score<br><code>#896A2E</code></div>
+            <div class="colour-cell gap"><b>Gap</b>0–1 / absent<br><code>#9C4F52</code></div>
+          </div>
+        </div>
+      </section>
+    </article>
+  </div>
+</main>
+<script>
+  const toggle = document.querySelector(".theme-toggle");
+  toggle.addEventListener("click", () => {
+    const dark = document.body.classList.toggle("dark");
+    toggle.setAttribute("aria-pressed", String(dark));
+    toggle.textContent = dark ? "View daylight surface" : "View graphite surface";
+  });
+</script>
+</body>
+</html>

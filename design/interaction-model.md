@@ -1,6 +1,6 @@
 # Interaction model -- the core index page
 
-*Decided with Andrés on 2026-07-12 (second pass, superseding the constellation-map first pass, which read too sci-fi): the core page is a **founding document** -- contractual, clean, principled, Garamond. Reference for the hover → drill grammar: [OWID's food-trade interactive](https://ourworldindata.org/how-does-food-get-traded-around-the-world).*
+*The core page keeps the founding-document structure settled with Andrés on 2026-07-12, but its visual register changed on 2026-07-20 to **Open Standard**: independent, analytical, and public. Reference for the hover → drill grammar: [OWID's food-trade interactive](https://ourworldindata.org/how-does-food-get-traded-around-the-world).*
 
 The core page is a drill-down with clear depth levels. The grammar throughout: **hover = preview** (says "there is more inside"), **click = commit** one level deeper, **back/Esc = one level up**.
 
@@ -8,7 +8,7 @@ The core page is a drill-down with clear depth levels. The grammar throughout: *
 
 ### L0 -- The title sheet (groups only)
 
-The page opens showing **only the group names** -- large small-caps Garamond titles stacked in the framed sheet, nothing else (no article numbering; Andrés removed it). The group list is **data-driven** from Notion. Current groups: Honesty & epistemics · Instruction & task fidelity · Power concentration & large-scale harm · Interaction with others (in deliberation). Hovering (or focusing) a group unfolds its italic preamble and clause ledger in-flow, **one group at a time** -- opening one closes the others. The only orchestrated motion is on load: groups settle in with a staggered fade. No idle animation.
+The page opens showing **only the group names** -- large IBM Plex Sans titles stacked in the framed register, nothing else (no article numbering; Andrés removed it). The group list is **data-driven** from Notion. Current groups: Honesty & epistemics · Instruction & task fidelity · Power concentration & large-scale harm · Interaction with others (in deliberation). Hovering (or focusing) a group unfolds its IBM Plex Serif preamble and clause ledger in-flow, **one group at a time** -- opening one closes the others. The only orchestrated motion is on load: groups settle in with a staggered fade. No idle animation.
 
 ### L1 -- Clauses, definitions, and the two levers
 
@@ -45,12 +45,12 @@ Progressive disclosure inside the L2 page (the "subtitles" level): one row per e
 
 Self-hosted, rendered copies of the specs we score against. **Both are CC0 (verified 2026-07-12: OpenAI Model Spec and the Claude constitution), so hosting annotated copies is legally clean.** Arriving from a behaviour highlights the cited passages and pins a sticky *"← back to \<behaviour\>"* chip. Every citation anywhere in the index links to a stable anchor here. This is the feature that makes every verdict checkable in one click.
 
-#### Spec-reader variation -- the annotated folio
+#### Spec-reader variation -- source typography within neutral chrome
 
-The reader is an L4 variation of the founding-document system, not a separate visual language. It uses EB Garamond throughout; the canonical daylight (`bg` / `panel` / `lift`) and umber surfaces; archival blue for coverage; amber only for adjacent/boundary passages; gap red for the currently focused find marker; hairline rules and small caps for structure. Long-form text sits on `lift`.
+The reader chrome remains an L4 variation of Open Standard, not a separate evaluator language. Controls, surfaces, highlights, and structural labels use the same IBM Plex and cool daylight/graphite tokens as the rest of the site. Only the rendered source document's typography varies by provenance: Anthropic uses EB Garamond; OpenAI uses a clean Helvetica-style sans. This preserves each source's reading character without allowing company colour or branding to bias the comparison. Long-form text sits on the neutral `paper` surface.
 
 - **Default = Focus highlights.** Sections with mapped passages remain open; sections without them collapse to compact, clickable heading rows. Heading nesting is respected, and mapped example blocks remain indivisible. “Expand all” restores the literal full document. In split view this state belongs to each document independently.
-- **Passage tint tokens (L4 only).** Core passage: a low-chroma tint derived from archival blue (`#E3E4F2` daylight / `#34384F` umber); current core passage: the stronger tint (`#CDD1ED` / `#444B73`). Adjacent passages use the neutral panel tint and an amber edge. Text, labels, and borders continue to carry meaning, so the tints are never the only signal.
+- **Passage tint tokens (L4 only).** Core passage: a low-chroma tint derived from standard blue (`#E3EBF1` daylight / `#263943` graphite); current core passage: the stronger tint (`#C9DAE6` / `#335264`). Adjacent passages use the neutral panel tint and an amber edge. Text, labels, and borders continue to carry meaning, so the tints are never the only signal.
 - **Find rail.** Each document has a full-height right-edge track, analogous to browser find markers. Blue ticks = core passages; amber ticks = adjacent/boundary passages; the current tick becomes wider and gap-red. Every tick is a keyboard-focusable button with a passage-role label. The global previous/next controls traverse the same anchors.
 - **Reader chrome.** Lab/version, coverage depth, focus/full-document control, and the two-mark legend live in the document header. Split mode duplicates this chrome rather than creating a cross-lab aggregate. Absence is explicit: a zero-passage document states that no mapped passages exist and that this is an index finding.
 
@@ -72,10 +72,10 @@ From a behaviour record, “read in context” and “compare both specs” open
 
 ## Visual encoding
 
-- **Evidence marks:** dot runs -- filled count carries the meaning, hue reinforces it (on umber: green `#3FA96C` / amber `#BC8A2F` / red `#C95550`; on daylight: `#1E7A45` / `#8A5F14` / `#A93732`; validator-passed on both grounds; always paired with a text label).
-- **Coverage:** archival blue (`#7B85D6` on umber, `#4A53B3` on daylight), filled count = depth · not in spec = an explicit label (an absence is a finding, not blank space).
+- **Evidence marks:** dot runs -- filled count carries the meaning, hue reinforces it (on graphite: green `#67A589` / amber `#C0A05C` / red `#D27B7D`; on daylight: `#2F6F5B` / `#876622` / `#9E4A4F`; always paired with a text label).
+- **Coverage:** standard blue (`#79A2C2` on graphite, `#315F88` on daylight), filled count = depth · not in spec = an explicit label (an absence is a finding, not blank space).
 - **Color speaks only about data.** Everything structural -- rules, section marks, small caps, borders -- is ink and hairline gray. Drafts are italic + "in deliberation" tag; parked behaviours keep their exclusion reason one hover away.
-- **Two surfaces:** **daylight** (default -- warm parchment `#EDE6D6`, ink `#26221A`) and **umber** (`#1A1510`, vellum `#EDE5D3`), toggled by the moon glyph (☾/☼) in the menu bar; Garamond throughout; monospace only for literal spec anchors. Text-heavy surfaces (L2 record, L4 reader) sit on a slightly lifted panel so long-form reading doesn't strain.
+- **Two surfaces:** **daylight** (default -- cool neutral `#E8ECEE`, panel `#F7F8FA`, ink `#18212B`) and **graphite** (`#101417`, panel `#1D2226`, ink `#E7EAEC`), toggled by the moon glyph (☾/☼) in the menu bar. IBM Plex Sans carries interface and headings, IBM Plex Serif is reserved for preambles and quotations, and IBM Plex Mono appears only for literal spec anchors. The L4 source body is the sole provenance-based exception described above.
 
 ## Data requirements this adds (fold into `data/` schemas)
 

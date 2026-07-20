@@ -7,35 +7,36 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2214%22 font-size=%2214%22>§</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <style>
   /* ---------- tokens ----------
-     Register: the constitution of a new country. Contractual, clean, principled.
+     Register: an open standard. Independent, analytical, public.
      The page opens as a title sheet: only the group names. One group unfolds at a time.
-     Scores are typographic dot runs (printer's ornaments), not badges.
-     Two surfaces, toggled in the footer: daylight (default) · umber.
+     Scores are typographic dot runs, not badges.
+     Two surfaces, toggled in the footer: daylight (default) · graphite.
      Data hues validator-passed on both grounds. */
   :root {
-    --serif: "EB Garamond", Garamond, "Hoefler Text", "Iowan Old Style", Georgia, serif;
-    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --serif: "IBM Plex Serif", Georgia, serif;
+    --mono: "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, monospace;
   }
   body[data-palette="daylight"] {
-    --bg:#EDE6D6; --panel:#F4EEE0; --lift:#F8F3E7;
-    --hair:#D8CEBA; --hair2:#B9AE97;
-    --ink:#26221A; --ink2:#5C564A; --ink3:#8A8272;
-    --spec:#4A53B3; --strong:#1E7A45; --weak:#8A5F14; --gap:#A93732;
-    --shadow: rgba(90,75,50,.35);
+    --bg:#E8ECEE; --panel:#F7F8FA; --lift:#ECEFF3;
+    --hair:#CBD2D9; --hair2:#AEB8C1;
+    --ink:#18212B; --ink2:#53606D; --ink3:#5F6C77;
+    --spec:#315F88; --strong:#2F6F5B; --weak:#876622; --gap:#9E4A4F;
+    --shadow: rgba(24,33,43,.22);
   }
   body[data-palette="umber"] {
-    --bg:#1A1510; --panel:#211B14; --lift:#262017;
-    --hair:#332B21; --hair2:#4A4033;
-    --ink:#EDE5D3; --ink2:#ABA08D; --ink3:#6F6659;
-    --spec:#7B85D6; --strong:#3FA96C; --weak:#BC8A2F; --gap:#C95550;
+    --bg:#101417; --panel:#1D2226; --lift:#252B30;
+    --hair:#394147; --hair2:#4C565E;
+    --ink:#E7EAEC; --ink2:#A6AFB5; --ink3:#8C979E;
+    --spec:#79A2C2; --strong:#67A589; --weak:#C0A05C; --gap:#D27B7D;
     --shadow: rgba(0,0,0,.5);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-  body { background: var(--bg); color: var(--ink); font-family: var(--serif);
+  body { background: var(--bg); color: var(--ink); font-family: var(--sans);
          font-size: 16px; min-height: 100vh; }
   .g-head, .c-row, .lever-row, .open-record, .mode, .p-close, summary { touch-action: manipulation; }
 
@@ -53,7 +54,7 @@
            padding: 22px 40px 14px; border-bottom: 1px solid var(--hair); position: relative; }
   header::after { content:""; position:absolute; left:0; right:0; bottom:3px;
                   border-bottom:1px solid var(--hair); }
-  .wordmark { font-size: 19px; font-weight: 600; font-variant-caps: all-small-caps; letter-spacing: .22em; }
+  .wordmark { font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
   .tagline { font-style: italic; font-size: 14.5px; color: var(--ink2); }
   nav { display: flex; gap: 24px; }
   nav a { font-variant-caps: all-small-caps; letter-spacing: .12em; font-size: 14.5px;
@@ -62,13 +63,14 @@
   nav a:not([href="#"]):hover { color: var(--ink); }
   nav a.active { color: var(--ink); border-bottom: 1px solid var(--ink3); }
   .mode { background: none; border: none; padding: 6px 10px; margin: -6px -10px;
-          font-family: var(--serif); font-size: 17px;
+          font-family: var(--sans); font-size: 17px;
           line-height: 1; color: var(--ink3); cursor: pointer; }
   .mode:hover { color: var(--ink); }
   .mode:focus-visible { outline: 1px solid var(--spec); outline-offset: 2px; }
 
   /* ---------- the title sheet ---------- */
-  .sheet { max-width: 880px; margin: 40px auto 0; border: 1px solid var(--hair); position: relative; }
+  .sheet { max-width: 880px; margin: 40px auto 0; border: 1px solid var(--hair); position: relative;
+           background: var(--panel); }
   .sheet::before, .sheet::after { content:""; position:absolute; width:9px; height:9px; pointer-events:none; }
   .sheet::before { top:-1px; left:-1px; border-top:1px solid var(--ink3); border-left:1px solid var(--ink3); }
   .sheet::after { bottom:-1px; right:-1px; border-bottom:1px solid var(--ink3); border-right:1px solid var(--ink3); }
@@ -82,8 +84,7 @@
 
   .g-head { display: flex; align-items: baseline; padding: 30px 44px; cursor: pointer; }
   .g-head:focus-visible { outline: 1px solid var(--spec); outline-offset: -4px; }
-  .g-title { font-size: 29px; font-weight: 500; font-variant-caps: all-small-caps;
-             letter-spacing: .07em; transition: color .2s; }
+  .g-title { font-size: 29px; font-weight: 500; letter-spacing: -.025em; transition: color .2s; }
   .g-count { margin-left: auto; font-variant-caps: all-small-caps; letter-spacing: .14em;
              font-size: 13.5px; color: var(--ink3); opacity: 0; transition: opacity .25s; }
   section.group:hover .g-count, section.group.open .g-count { opacity: 1; }
@@ -96,7 +97,7 @@
   .g-body > div { overflow: hidden; }
   .g-inner { padding: 0 44px 30px; }
   .g-preamble { font-style: italic; font-size: 15px; line-height: 1.55; color: var(--ink2);
-                max-width: 58ch; padding-bottom: 18px; }
+                max-width: 58ch; padding-bottom: 18px; font-family: var(--serif); }
 
   /* ---------- clauses ---------- */
   .clause { list-style: none; border-top: 1px solid var(--hair); }
@@ -126,7 +127,7 @@
   .anno > div { overflow: hidden; }
   .anno-inner { padding: 0 0 14px 52px; }
   .c-def { font-style: italic; font-size: 15px; line-height: 1.55; color: var(--ink2);
-           max-width: 52ch; padding: 2px 0 10px; }
+           max-width: 52ch; padding: 2px 0 10px; font-family: var(--serif); }
   .c-def.draftnote { color: var(--ink3); padding-bottom: 4px; }
 
   .lever { border-top: 1px solid var(--hair); }
@@ -170,7 +171,8 @@
   .cite-role { font-variant-caps: all-small-caps; letter-spacing: .08em; font-size: 12.5px;
                color: var(--ink3); }
   .cite-q { font-style: italic; font-size: 14.5px; line-height: 1.55; color: var(--ink2);
-            border-left: 2px solid var(--hair2); padding: 1px 0 1px 12px; margin-top: 3px; }
+            border-left: 2px solid var(--hair2); padding: 1px 0 1px 12px; margin-top: 3px;
+            font-family: var(--serif); }
   .cite.adj .cite-q { color: var(--ink3); }
   .cite.adj .cite-loc { opacity: .75; }
   .cite-rule { font-variant-caps: all-small-caps; letter-spacing: .2em; font-size: 12px;
@@ -195,11 +197,12 @@
   .p-title { font-size: 27px; font-weight: 500; margin: 6px 0 16px; line-height: 1.2; }
   .p-close { position: absolute; top: 20px; right: 22px; width: 34px; height: 34px; background: none;
              border: 1px solid var(--hair); border-radius: 50%; color: var(--ink2); font-size: 16px;
-             cursor: pointer; font-family: var(--serif); }
+             cursor: pointer; font-family: var(--sans); }
   .p-close:hover { border-color: var(--hair2); color: var(--ink); }
   .p-scroll { overflow-y: auto; padding: 0 34px 30px; flex: 1; }
   .p-def { font-size: 16.5px; font-style: italic; line-height: 1.6;
-           border-left: 2px solid var(--hair2); padding: 4px 0 4px 18px; margin-bottom: 24px; }
+           border-left: 2px solid var(--hair2); padding: 4px 0 4px 18px; margin-bottom: 24px;
+           font-family: var(--serif); }
   .p-sect { font-variant-caps: all-small-caps; letter-spacing: .24em; font-size: 13.5px; color: var(--ink3);
             margin: 24px 0 10px; display: flex; align-items: center; gap: 12px; }
   .p-sect::after { content: ""; flex: 1; border-top: 1px solid var(--hair); }
@@ -209,7 +212,8 @@
   .spec-card .verdict { font-variant-caps: all-small-caps; letter-spacing: .1em; font-size: 13px;
                         display: inline-flex; align-items: baseline; gap: 8px; }
   .spec-card .section { font-size: 13.5px; color: var(--ink2); margin-bottom: 5px; }
-  .spec-card .quote { font-style: italic; font-size: 15px; line-height: 1.55; color: var(--ink2); }
+  .spec-card .quote { font-style: italic; font-size: 15px; line-height: 1.55; color: var(--ink2);
+                      font-family: var(--serif); }
   .spec-card .note { font-size: 13px; color: var(--ink3); margin-top: 5px; }
   .spec-card .goto { display: inline-block; margin-top: 8px; font-variant-caps: all-small-caps;
                      letter-spacing: .12em; font-size: 13px; color: var(--spec); text-decoration: none; cursor: help; }
@@ -230,15 +234,16 @@
   .coverage-finding { color: var(--ink2); font-size: 15px; line-height: 1.5; }
   .coverage-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 13px; }
   .reader-action { border: 1px solid var(--spec); padding: 6px 12px; background: transparent;
-                   color: var(--spec); font-family: var(--serif); font-variant-caps: all-small-caps;
+                   color: var(--spec); font-family: var(--sans); font-variant-caps: all-small-caps;
                    letter-spacing: .11em; font-size: 13px; cursor: pointer; }
   .reader-action:hover { background: var(--spec); color: var(--lift); }
   .reader-action:focus-visible { outline: 2px solid var(--gap); outline-offset: 2px; }
   .compare-specs { width: 100%; margin-top: 2px; padding: 11px 14px; display: flex;
                    align-items: center; justify-content: space-between; gap: 14px;
                    border: 1px solid var(--hair2); background: var(--lift); color: var(--ink);
-                   font-family: var(--serif); text-align: left; cursor: pointer; }
-  .compare-specs span { color: var(--ink2); font-style: italic; font-size: 14px; }
+                   font-family: var(--sans); text-align: left; cursor: pointer; }
+  .compare-specs span { color: var(--ink2); font-style: italic; font-size: 14px;
+                        font-family: var(--serif); }
   .compare-specs b { color: var(--spec); font-variant-caps: all-small-caps;
                      letter-spacing: .1em; font-size: 13px; white-space: nowrap; }
   .elinks { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
@@ -273,7 +278,8 @@
   table.adh tr.agg td:first-child { font-variant-caps: all-small-caps; letter-spacing: .12em; color: var(--ink2); }
   .gap-card { border: 1px dashed var(--gap); padding: 15px 16px; }
   .gap-card .g1 { color: var(--gap); font-weight: 600; font-size: 15.5px; margin-bottom: 5px; }
-  .gap-card .g2 { font-size: 14.5px; color: var(--ink2); line-height: 1.55; font-style: italic; }
+  .gap-card .g2 { font-size: 14.5px; color: var(--ink2); line-height: 1.55; font-style: italic;
+                  font-family: var(--serif); }
   .gap-card .g3 { display: inline-block; margin-top: 12px; font-variant-caps: all-small-caps;
                   letter-spacing: .12em; font-size: 13.5px; color: var(--ink);
                   border: 1px solid var(--hair2); padding: 3px 12px; cursor: help; }
@@ -286,11 +292,11 @@
   body.spec-modal-open { overflow: hidden; }
   .spec-modal[hidden] { display: none; }
   .spec-modal { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center;
-                padding: 24px; background: rgba(26,21,16,.58); }
+                padding: 24px; background: rgba(16,20,23,.62); }
   .spec-dialog { width: min(1480px, 96vw); height: min(900px, 94vh); height: min(900px, 94dvh);
                  display: flex; flex-direction: column; overflow: hidden;
                  border: 1px solid var(--hair2); background: var(--panel);
-                 box-shadow: 0 28px 90px rgba(20,15,10,.45); }
+                 box-shadow: 0 28px 90px rgba(9,13,16,.45); }
   .spec-dialog-head { min-height: 48px; padding: 7px 10px 7px 18px; display: flex;
                       align-items: center; gap: 14px; border-bottom: 1px solid var(--hair); }
   .spec-dialog-title { min-width: 0; font-size: 16px; font-weight: 500; }
@@ -301,7 +307,7 @@
   .spec-full-link:hover { text-decoration: underline; text-underline-offset: 3px; }
   .spec-modal-close { width: 34px; height: 34px; flex: none; border: 1px solid var(--hair);
                       border-radius: 50%; background: transparent; color: var(--ink);
-                      font: 18px/1 var(--serif); cursor: pointer; }
+                      font: 18px/1 var(--sans); cursor: pointer; }
   .spec-modal-close:hover { border-color: var(--hair2); }
   .spec-reader-frame { width: 100%; flex: 1; min-height: 0; border: 0; background: var(--bg); }
 
@@ -1080,7 +1086,8 @@ window.addEventListener("message", event => {
   }
 });
 
-/* ---------- surface toggle: daylight ↔ umber, the moon in the menu bar ---------- */
+/* ---------- surface toggle: daylight ↔ graphite, the moon in the menu bar ----------
+   The persisted value remains "umber" for compatibility with existing links. */
 const SURFACES = ["daylight", "umber"];
 const modeBtn = document.getElementById("mode");
 function setPalette(p) {
@@ -1089,8 +1096,8 @@ function setPalette(p) {
   try { localStorage.setItem("aci-palette", p); } catch (e) {}
   const night = p === "umber";
   modeBtn.textContent = night ? "☼" : "☾";
-  modeBtn.title = night ? "back to daylight" : "switch to umber";
-  modeBtn.setAttribute("aria-label", night ? "switch to the daylight surface" : "switch to the umber night surface");
+  modeBtn.title = night ? "back to daylight" : "switch to graphite";
+  modeBtn.setAttribute("aria-label", night ? "switch to the daylight surface" : "switch to the graphite night surface");
 }
 modeBtn.addEventListener("click", () =>
   setPalette(document.body.dataset.palette === "umber" ? "daylight" : "umber"));

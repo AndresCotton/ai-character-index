@@ -99,10 +99,10 @@ function setPalette(palette) {
   document.body.dataset.palette = selected;
   const night = selected === "umber";
   elements.mode.textContent = night ? "☼" : "☾";
-  elements.mode.title = night ? "Back to daylight" : "Switch to umber";
+  elements.mode.title = night ? "Back to daylight" : "Switch to graphite";
   elements.mode.setAttribute(
     "aria-label",
-    night ? "Switch to the daylight surface" : "Switch to the umber night surface",
+    night ? "Switch to the daylight surface" : "Switch to the graphite night surface",
   );
   try { localStorage.setItem("aci-palette", selected); } catch (error) {}
 }
