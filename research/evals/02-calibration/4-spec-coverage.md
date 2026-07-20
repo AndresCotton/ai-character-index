@@ -379,6 +379,6 @@ MATCH  model-spec@2025-12-18 > #be_thorough_but_efficient > ¶13
 - [x] No elided quotes: every quote is one contiguous resolver span; all sentence-span excerpts are contiguous ranges (e.g. `¶2 s2-3`, `¶3 s1-3`); example blocks cited whole with the caption line stored (10 example blocks).
 - [x] Every excerpt has a role line; the 13 adjacent items (7 constitution-side; 6 model-spec-side: `#express_uncertainty` ¶30 and ¶32, `#ask_clarifying_questions` ¶1, ¶13, ¶17, `#be_thorough_but_efficient` ¶13) each carry the reason they sit outside the core construct.
 - [x] Verdict + depth rationale present for each spec (table above).
-- [ ] Human spot-read: the kept passages actually bear on the behaviour, and no passage the reviewer knows of is missing from the set. **Pending sign-off** (rendered in chat 2026-07-20).
+- [x] Human spot-read: the kept passages actually bear on the behaviour, and no passage the reviewer knows of is missing from the set. **Signed 2026-07-20 by Andrés** (see `gates.md`).
 
-Stage 4 stops here per the skill: no publication to `data/`, `site/`, or Notion, and no git commit, until Gate 4 is signed.
+Gate 4 signed; the coverage record is published in `data/coverage.json` and rendered by the spec reader (see `gates.md` for the authorized stage-5 scope).
