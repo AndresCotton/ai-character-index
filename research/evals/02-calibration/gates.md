@@ -8,4 +8,9 @@ human explicitly accepted.
 
 ---
 
-<!-- Gate 4 pending sign-off (rendered in chat 2026-07-20). -->
+**Gate 4** -- signed 2026-07-20 by Andrés (in chat). No corrections to the passage
+set, verdicts, or depths. Accepted deviation: a scoped slice of stage 5 was
+authorized ahead of stages 1-3 -- the coverage record was published to
+`data/coverage.json` and the spec reader was extended to render behaviour 2, so
+the coverage can be reviewed in the reader locally. No Notion publication, no
+eval data, no public deploy; the full stage 5 still requires Gates 1-3.
