@@ -18,7 +18,8 @@ body[data-palette="daylight"] {
   --accent-soft: #DEE0F2;
   --highlight: #E3E4F2;
   --highlight-strong: #CDD1ED;
-  --adjacent: #E8E0D1;
+  --adjacent: #F0E2B8;
+  --adjacent-strong: #E6CF8E;
   --adjacent-mark: #8A5F14;
   --focus: #A93732;
   --gap-soft: #F1DEDA;
@@ -38,7 +39,8 @@ body[data-palette="umber"] {
   --accent-soft: #343854;
   --highlight: #34384F;
   --highlight-strong: #444B73;
-  --adjacent: #352D22;
+  --adjacent: #3D321D;
+  --adjacent-strong: #514326;
   --adjacent-mark: #BC8A2F;
   --focus: #C95550;
   --gap-soft: #3A2420;
@@ -587,9 +589,14 @@ body.resizing-columns {
   background: var(--accent);
   opacity: .55;
 }
-.passage.adjacent::before { background: var(--muted); opacity: .32; }
+.passage.adjacent::before { background: var(--adjacent-mark); opacity: .55; }
 .passage.current { background: var(--highlight-strong); box-shadow: 0 0 0 1px var(--accent); }
 .passage.current::before { left: -10px; width: 4px; opacity: 1; }
+.passage.adjacent.current {
+  background: var(--adjacent-strong);
+  box-shadow: 0 0 0 1px var(--adjacent-mark);
+}
+.passage.adjacent.current::before { background: var(--adjacent-mark); }
 .passage-label {
   display: block;
   margin: 2px 0 5px;
@@ -601,7 +608,7 @@ body.resizing-columns {
   line-height: 1.35;
   text-transform: uppercase;
 }
-.passage.adjacent .passage-label { color: var(--muted); }
+.passage.adjacent .passage-label { color: var(--adjacent-mark); }
 
 .passage-rail {
   position: sticky;
@@ -645,6 +652,7 @@ body.resizing-columns {
   box-shadow: 0 0 0 2px var(--paper);
   opacity: 1;
 }
+.rail-mark.adjacent.current { background: var(--adjacent-mark); }
 
 button:focus-visible, a:focus-visible, .column-resizer:focus-visible {
   outline: 2px solid var(--focus);

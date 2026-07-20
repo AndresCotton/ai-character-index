@@ -2,7 +2,7 @@ const GROUPS = [
   {
     name: "Honesty & epistemics",
     behaviours: [
-      [1, "No sycophancy", true],
+      [1, "No sycophancy"],
       [2, "Calibration"],
       [3, "Honesty about one’s own actions"],
     ],
@@ -36,6 +36,7 @@ const GROUPS = [
 
 const state = {
   payload: null,
+  selectedBehaviour: null,
   selectedSpec: "anthropic",
   comparing: false,
   embedded: false,
@@ -51,6 +52,7 @@ const elements = {
   behaviourList: document.querySelector("#behaviour-list"),
   compareToggle: document.querySelector("#compare-toggle"),
   documentReader: document.querySelector("#document-reader"),
+  findingBehaviour: document.querySelector("#finding-behaviour"),
   findingDefinition: document.querySelector("#finding-definition"),
   mode: document.querySelector("#mode"),
   nextPassage: document.querySelector("#next-passage"),
@@ -66,9 +68,14 @@ const initialParams = new URLSearchParams(location.search);
 state.embedded = initialParams.get("embedded") === "1";
 document.body.classList.toggle("embedded", state.embedded);
 
+function activeBehaviour() {
+  const behaviours = state.payload?.behaviours || [];
+  return behaviours.find(behaviour => behaviour.slug === state.selectedBehaviour) || behaviours[0];
+}
+
 function syncURL() {
   const params = new URLSearchParams(location.search);
-  params.set("behavior", state.payload?.behaviour?.slug || "no-sycophancy");
+  params.set("behavior", activeBehaviour()?.slug || "no-sycophancy");
   params.set("spec", state.selectedSpec);
   if (state.comparing) params.set("compare", "1");
   else params.delete("compare");
@@ -237,27 +244,52 @@ function createDocumentResizer() {
 setupSidebarResizer();
 
 function renderBehaviourList() {
+  const byNumber = new Map((state.payload?.behaviours || []).map(behaviour => [behaviour.id, behaviour]));
+  const activeSlug = activeBehaviour()?.slug;
   elements.behaviourList.innerHTML = GROUPS.map(group => `
     <section class="behaviour-group">
       <h2>${group.name}</h2>
       <ul>
-        ${group.behaviours.map(([number, name, mapped]) => `
+        ${group.behaviours.map(([number, name]) => {
+          const behaviour = byNumber.get(number);
+          const active = behaviour && behaviour.slug === activeSlug;
+          return `
           <li>
             <button
-              class="behaviour-button ${mapped ? "mapped active" : ""}"
+              class="behaviour-button ${behaviour ? "mapped" : ""}${active ? " active" : ""}"
               type="button"
-              ${mapped ? 'aria-current="true"' : "disabled"}
-              title="${mapped ? "Show mapped passages" : "Passage mapping pending"}"
+              ${behaviour ? `data-behaviour="${behaviour.slug}"` : "disabled"}
+              ${active ? 'aria-current="true"' : ""}
+              title="${behaviour ? "Show mapped passages" : "Passage mapping pending"}"
             >
               <span class="number">${String(number).padStart(2, "0")}</span>
               <span class="name">${name}</span>
-              <i class="status-dot ${mapped ? "mapped" : "pending"}" aria-hidden="true"></i>
+              <i class="status-dot ${behaviour ? "mapped" : "pending"}" aria-hidden="true"></i>
             </button>
           </li>
-        `).join("")}
+        `;}).join("")}
       </ul>
     </section>
   `).join("");
+  elements.behaviourList.querySelectorAll("[data-behaviour]").forEach(button => {
+    button.addEventListener("click", () => selectBehaviour(button.dataset.behaviour));
+  });
+}
+
+function updateFindingBar() {
+  const behaviour = activeBehaviour();
+  if (!behaviour) return;
+  elements.findingBehaviour.textContent = behaviour.name;
+  elements.findingDefinition.textContent = behaviour.definition;
+}
+
+function selectBehaviour(slug) {
+  if (slug === activeBehaviour()?.slug) return;
+  state.selectedBehaviour = slug;
+  updateFindingBar();
+  renderBehaviourList();
+  syncURL();
+  rebuildReader();
 }
 
 function escapeHTML(value) {
@@ -548,7 +580,7 @@ function annotatePassages(panel, document) {
     block.dataset.role = passage.role;
     block.insertAdjacentHTML(
       "afterbegin",
-      `<span class="passage-label">${passage.adjacent ? "Adjacent · " : ""}${escapeHTML(passage.role)}</span>`,
+      `<span class="passage-label">${passage.adjacent ? "Related · " : ""}${escapeHTML(passage.role)}</span>`,
     );
 
     if (passage.exampleBlock) {
@@ -749,8 +781,13 @@ function renderDocument(document) {
 }
 
 function visibleDocuments() {
-  if (state.comparing) return state.payload.documents;
-  return [state.payload.documents.find(document => document.id === state.selectedSpec)];
+  const behaviour = activeBehaviour();
+  const withCoverage = state.payload.documents.map(document => ({
+    ...document,
+    coverage: behaviour.coverage[document.id],
+  }));
+  if (state.comparing) return withCoverage;
+  return [withCoverage.find(document => document.id === state.selectedSpec)];
 }
 
 function rebuildReader() {
@@ -904,6 +941,10 @@ async function initialize() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     state.payload = await response.json();
     const params = initialParams;
+    const requestedBehaviour = params.get("behavior");
+    if (state.payload.behaviours.some(behaviour => behaviour.slug === requestedBehaviour)) {
+      state.selectedBehaviour = requestedBehaviour;
+    }
     const requestedSpec = params.get("spec");
     if (state.payload.documents.some(document => document.id === requestedSpec)) {
       state.selectedSpec = requestedSpec;
@@ -911,7 +952,8 @@ async function initialize() {
     state.comparing = params.get("compare") === "1";
     state.compareFirst = savedNumber("aci-compare-first", state.compareFirst);
     elements.compareToggle.setAttribute("aria-pressed", String(state.comparing));
-    elements.findingDefinition.textContent = state.payload.behaviour.definition;
+    updateFindingBar();
+    renderBehaviourList();
     syncURL();
     rebuildReader();
   } catch (error) {

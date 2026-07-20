@@ -31,45 +31,73 @@ DOCUMENTS = [
     },
 ]
 
+BEHAVIOURS = [
+    {
+        "id": 1,
+        "slug": "no-sycophancy",
+        "name": "No sycophancy",
+        "definition": (
+            "The model should not shift its factual claims or assessments "
+            "to please the user."
+        ),
+        "category": "Honesty & epistemics",
+    },
+    {
+        "id": 2,
+        "slug": "calibration",
+        "name": "Calibration",
+        "definition": (
+            "The model’s verbalized confidence should track its actual accuracy."
+        ),
+        "category": "Honesty & epistemics",
+    },
+]
+
+
+def coverage_payload(record: dict, document_id: str, slug: str) -> dict:
+    return {
+        "verdict": record["verdict"],
+        "depth": record["depth_0_4"],
+        "note": record["depth_note"],
+        "verifiedDate": record["verified_date"],
+        "passages": [
+            {
+                "id": f"{document_id}-{slug}-{index + 1}",
+                "locator": citation["locator"],
+                "quote": citation["quote"],
+                "role": citation["role"],
+                "adjacent": citation.get("adjacent", False),
+                "exampleBlock": citation.get("example_block", False),
+            }
+            for index, citation in enumerate(record["citations"])
+        ],
+    }
+
 
 def main() -> None:
     coverage = json.loads((ROOT / "data" / "coverage.json").read_text())
     records = coverage["coverage"]
 
-    documents = []
-    for document in DOCUMENTS:
-        record = next(
-            item
-            for item in records
-            if item["behaviour_id"] == 1 and item["lab_id"] == document["id"]
-        )
-        documents.append(
-            {
-                key: value
-                for key, value in document.items()
-                if key != "path"
-            }
-            | {
-                "markdown": document["path"].read_text(),
-                "coverage": {
-                    "verdict": record["verdict"],
-                    "depth": record["depth_0_4"],
-                    "note": record["depth_note"],
-                    "verifiedDate": record["verified_date"],
-                    "passages": [
-                        {
-                            "id": f"{document['id']}-sycophancy-{index + 1}",
-                            "locator": citation["locator"],
-                            "quote": citation["quote"],
-                            "role": citation["role"],
-                            "adjacent": citation.get("adjacent", False),
-                            "exampleBlock": citation.get("example_block", False),
-                        }
-                        for index, citation in enumerate(record["citations"])
-                    ],
-                },
-            }
-        )
+    documents = [
+        {key: value for key, value in document.items() if key != "path"}
+        | {"markdown": document["path"].read_text()}
+        for document in DOCUMENTS
+    ]
+
+    behaviours = []
+    for behaviour in BEHAVIOURS:
+        per_document = {}
+        for document in DOCUMENTS:
+            record = next(
+                item
+                for item in records
+                if item["behaviour_id"] == behaviour["id"]
+                and item["lab_id"] == document["id"]
+            )
+            per_document[document["id"]] = coverage_payload(
+                record, document["id"], behaviour["slug"]
+            )
+        behaviours.append(behaviour | {"coverage": per_document})
 
     payload = {
         "generatedFrom": [
@@ -77,16 +105,7 @@ def main() -> None:
             "specs/openai-model-spec/model_spec.md",
             "data/coverage.json",
         ],
-        "behaviour": {
-            "id": 1,
-            "slug": "no-sycophancy",
-            "name": "No sycophancy",
-            "definition": (
-                "The model should not shift its factual claims or assessments "
-                "to please the user."
-            ),
-            "category": "Honesty & epistemics",
-        },
+        "behaviours": behaviours,
         "documents": documents,
     }
 
