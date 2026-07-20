@@ -48,6 +48,13 @@ resolution -- a clean final report that hides a fixed discrepancy is a false rec
 - [ ] Known-unknowns list is honest: everything NV or gate-accepted is there.
 - [ ] Human signs the final line of `gates.md`: `sweep complete: <name>, <date>`.
 
+## After Gate 6: public release
+
+Only now does the sweep reach the public webpage (Andrés, 2026-07-14: stage 5 is
+internal publication; verification precedes public release). Deploy the site
+(`pnpm deploy:site`) so the verified data goes live, and record the deploy date in
+`gates.md` under Gate 6.
+
 After Gate 6, the behaviour's transparency chain is closed: every candidate found is
 accounted for, every number traces to a source, every quote to a resolver call, and
 every review step to a dated sign-off.

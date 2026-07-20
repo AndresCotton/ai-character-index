@@ -1,9 +1,9 @@
 ---
 name: 5-sweep-publish
-description: Stage 5 of a behaviour sweep -- transcribe the gate-approved stage artifacts to the three surfaces (Notion, repo data + canonical write-up, core-page prototype), verify each surface, and stop at Gate 5. Requires Gates 1-4 signed.
+description: Stage 5 of a behaviour sweep -- internal publication: transcribe the gate-approved stage artifacts to the three internal surfaces (Notion, repo data + canonical write-up, core-page prototype), verify each surface, and stop at Gate 5. The public site is NOT deployed here. Requires Gates 1-4 signed.
 ---
 
-# Sweep stage 5: publish
+# Sweep stage 5: publish (internal)
 
 Input: stage artifacts 1-4, all four gates signed in `gates.md`.
 Outputs: the three surfaces + the canonical write-up `research/evals/NN-<slug>.md`.
@@ -13,6 +13,11 @@ IDs: `.claude/skills/behaviour-sweep/references/locations.md`.
 transcription surfaces an error in a stage artifact, fix the artifact first, note the
 fix in `gates.md` under its gate, then re-transcribe. Divergence between a surface
 and its artifact is always a bug.
+
+**This stage is internal, preliminary publication** (Andrés, 2026-07-14): Notion,
+repo data, and the prototype are the sweep's working record, not the public release.
+The public site is deployed only after the stage-6 fresh-context audit signs Gate 6
+-- nothing reaches the webpage unverified.
 
 ## Surface A: repo
 

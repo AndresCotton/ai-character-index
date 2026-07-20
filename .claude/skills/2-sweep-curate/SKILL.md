@@ -1,6 +1,6 @@
 ---
 name: 2-sweep-curate
-description: Stage 2 of a behaviour sweep -- assign every discovered candidate a final disposition (curated ~5 / rejected / watchlist / context / port) against the pre-registered exclusion criteria, and stop at Gate 2, the sweep's editorial decision point. Requires Gate 1 signed.
+description: Stage 2 of a behaviour sweep -- assign every discovered candidate a final disposition (curated-to-saturation / rejected / watchlist / context / port) against the pre-registered exclusion criteria, and stop at Gate 2, the sweep's editorial decision point. Requires Gate 1 signed.
 ---
 
 # Sweep stage 2: curate
@@ -13,11 +13,17 @@ flag the taxonomy gap to the human at the gate -- do not stretch a code.
 
 ## Decision rule
 
-Keep the top ~5 by (a) **fit** to the behaviour definition -- its facets, not an
-adjacent construct -- and (b) **rubric quality** (decision by Andrés, 2026-07-12:
-curated ~5, not exhaustive). Fit precedes quality: a brilliant paper on a different
-construct is `rejected:X-CONSTRUCT`. The ~5 is a target, not a quota -- keep fewer if
-the evidence is thin, and say so.
+Curate every candidate that (a) **fits** the behaviour definition -- its facets, not
+an adjacent construct -- and (b) clears the **rubric quality** bar. Fit is checked
+first: a brilliant paper on a different construct is `rejected:X-CONSTRUCT`.
+
+The set's size is an outcome, not a target (decision by Andrés, 2026-07-14,
+superseding the "~5" target of 2026-07-12). Stop adding when the next-best candidate
+is **saturated**: it would add no new facet coverage, no independent corroboration of
+an already-covered facet, and no methodological diversity (a different metric type or
+elicitation design). Record the saturation judgment for the first candidate left out
+-- that line is what makes the cutoff auditable. Keep fewer when the evidence is
+thin, and say so.
 
 The curated set should cover the behaviour's facets as well as the available evidence
 allows; remaining facet gaps are named explicitly in `2-curation.md` (they seed the
@@ -32,9 +38,13 @@ SycEval's regressive cell only). Later stages may use only the recorded slices.
 
 ## Vendor self-reports
 
-`X-INDEPENDENCE` -> `context`, never index evidence -- but keep their numbers in the
-dossier. A large gap between a lab's own pre-release evals and independent
-measurement is itself a finding (Andrés, 2026-07-12: keep the note; addressed later).
+The test is replicability, not authorship (Andrés, 2026-07-14). A vendor-built eval
+that is public and independently re-runnable -- released dataset, rubric, and judge
+details -- is eligible index evidence, scored like any other (SycophancyEval is
+Anthropic-authored and curated). Numbers from internal evals that cannot be inspected
+(e.g. model-card claims) are `X-INDEPENDENCE` -> `context`, never index evidence --
+but keep them in the dossier: a large gap between a lab's own pre-release numbers and
+independent public measurement is itself a finding.
 
 ## `2-curation.md` contents
 
@@ -65,6 +75,11 @@ disposition of every candidate. Render with evidence, then STOP.
 
 - An instrument that repackages another eval's data is a port, not new evidence --
   even when actively maintained (UK AISI's inspect_evals port).
+- The `X-STALE` two-year clock runs from the instrument's latest credible activity
+  (dataset/code release, maintained port, independent re-run), not the paper's year.
+  A maintained port contributes no new evidence (`X-EVIDENCE-DEP`) but does reset the
+  parent's staleness clock -- SycophancyEval (2023) stays curated because the UK AISI
+  port keeps it alive.
 - Constructs that merely sound like the behaviour (delusion-validation vs factual
   claim-shifting) are `X-CONSTRUCT` regardless of paper quality.
 - A rejected candidate can still be load-bearing as context or a design template

@@ -28,12 +28,23 @@ Leave-outs are never deleted from the register.
 | `X-INDEPENDENCE` | Vendor self-report on its own models without public dataset, rubric, or judge details | Vendor-authored, peer-reviewed evals with released data are eligible (SycophancyEval is Anthropic-authored and curated) | OpenAI internal sycophancy evals -> context |
 | `X-RIGOR` | Below the rigor floor: no peer review AND (unvalidated judge OR no release) | A strong preprint goes to watchlist with its promotion condition, not to rejected | PARROT -> watchlist (promotion: peer review or confirmed judge validation) |
 | `X-SCALE` | Too small or demonstrative to bear weight (order tens of items, self-published) | A small-but-unique datapoint may still be cited as corroboration inside findings | Syco-bench (40 items, weak judges) |
+| `X-STALE` | Dormant instrument: last update more than two years before the sweep's Gate 1 date | The clock runs from the latest credible activity anywhere on the instrument -- dataset/code release, maintained-port activity, or independent re-run on current models -- not the original paper date. An otherwise-strong dormant instrument goes to `watchlist` with promotion condition "credible re-run on current models" | None applied (code added after behaviour 1). Retro-check: SycophancyEval (2023 data, frozen personal repo) clears the rule via its actively maintained UK AISI port; without that port it would be `rejected:X-STALE` |
 | `X-TOOL` | Methodology or auditing tool without per-model benchmark tables | -- | Petri ("auditing tool, not a benchmark", per its authors) |
 | `X-SCOPE` | Off-domain for a general index | A domain-narrow but rigorous instrument can be curated and pay the cost in its External-validity score instead | TRUTH DECAY and 2026 domain preprints rejected; BrokenMath curated with E=2 |
 
-Note on `X-INDEPENDENCE` (Andrés, 2026-07-12): still record the vendor's numbers in
-the dossier. A large gap between a lab's own pre-release evals and independent
-measurement is itself an index finding -- not addressed yet, but the note must be kept.
+Note on `X-INDEPENDENCE` (Andrés, 2026-07-14, sharpening the 2026-07-12 note): the
+test is replicability, not authorship. A vendor-built eval that is public and
+independently re-runnable is eligible index evidence, scored like any other. Numbers
+from internal evals we cannot inspect (e.g. model-card claims) are never index
+evidence, but are kept in the dossier as `context` -- the gap between a lab's
+self-reported numbers and public, replicable measurement is itself an index finding.
+
+Note on `X-STALE` (Andrés, 2026-07-14): staleness is about the instrument being dead,
+not its numbers being old. An actively maintained eval whose latest published
+adherence numbers come from older models is not stale -- old numbers are handled by
+date-labelling at extraction (behaviour-1 precedent: claude-1.3's 98% apology "should
+not be quoted as current"). Conversely, strong historical numbers do not save a dead
+instrument.
 
 ## The candidate register (`research/evals/NN-<slug>/register.md`)
 

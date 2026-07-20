@@ -40,6 +40,9 @@ register is invisible to every later check.
 - Rubric-relevant methodology facts: construct clarity, metric type, sample size,
   statistical uncertainty, sensitivity analyses, judge validation, release status,
   version pinning.
+- Last-activity date: the most recent of dataset/code release, maintained-port
+  activity, or credible independent re-run, with its source (feeds the `X-STALE`
+  two-year check at curation).
 - Per-model Claude/GPT results with exact model versions, where reported.
 - Limitations and critiques from the literature.
 - An evidence tier on each fact: verified-by-us / paper's-claim / third-party.

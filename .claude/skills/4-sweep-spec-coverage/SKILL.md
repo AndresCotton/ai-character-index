@@ -12,6 +12,15 @@ Read first: `specs/CITATION.md` -- the locator format, block/sentence rules, and
 normalizations are all defined there. Resolver: `engine/spec-cite/cite.py`. Ground
 truth: the local mirrors under `specs/` (versions per `SPECS` in `cite.py`).
 
+## Mirror freshness (before the term sweep)
+
+The sweep's claim is "checked against the latest published version of each spec as
+of the sweep date" -- that claim depends on this step. Refresh the mirrors with
+`engine/spec-watch/pull-latest.sh` (or verify upstream directly that they are
+current), and record in `4-spec-coverage.md` the mirror versions and the date they
+were confirmed latest. If a pull changes a mirror, flag it: existing locators in
+`data/coverage.json` must re-resolve before new work builds on the moved text.
+
 ## Term sweep
 
 - Build the term list before grepping: the behaviour's own words, synonyms,
@@ -49,10 +58,18 @@ what is present and what is missing (behaviour-1 precedent: constitution 3/4 --
 "named explicitly but no dedicated section, no operational test"; model spec 4/4 --
 "dedicated section with an operational invariance rule and worked examples").
 
+#TODO (Andrés, 2026-07-14): the depth score has no anchored rubric -- it is assigned
+by judgment plus rationale, and this matters. Define per-level anchors (candidate
+sketch: 0 absent / 1 named in passing / 2 discussed without guidance / 3 operational
+guidance / 4 dedicated section with an operational test and worked examples) before
+the next sweep hardens the current practice into precedent.
+
 ## Gate 4 -- quotes are mechanical, not remembered
 
 Render with evidence, then STOP.
 
+- [ ] Mirror freshness confirmed this sweep (spec-watch run or upstream checked);
+      mirror versions and check date recorded in `4-spec-coverage.md`.
 - [ ] Term list documented, including zero-hit terms.
 - [ ] Mechanical re-check passes: every locator re-resolved in a scripted loop and
       diffed against its stored quote -- paste the loop's output; zero mismatches.

@@ -44,10 +44,19 @@ yes, extract).
   correct answer) as failures. If the headline metric bundles in-scope and
   out-of-scope behaviour, extract the slice and name it (behaviour-1 precedent:
   SycEval's regressive rate, ELEPHANT's moral + framing dimensions).
+- **Per-model first.** Record every reported result for every Anthropic/OpenAI model
+  the paper covers, as a per-model table in `3-scores.md` -- each row with its
+  underlying number, exact model version (or "unpinned", stated as such), and date.
+  Older-model results are kept and dated, never discarded: the date label, not
+  deletion, is what stops a 2023 number being read as current (Andrés, 2026-07-14).
+- **Lab-level band = most recent model measured.** The single per-lab band the
+  surfaces display is the band of the most recent model version that eval measured
+  for that lab -- never an average across model generations. The per-model table
+  travels to the write-up so the aggregation can be re-derived. #TODO (2026-07-14):
+  surface the per-model table on the site behind a click -- niche detail, not
+  top-level.
 - Map onto the 0-4 band (0 failing, 1 poor, 2 mixed, 3 good, 4 meets target) and
   **always give the underlying number** so the mapping can be re-derived.
-- Provenance is mandatory: paper, exact model version, date. An unpinned version is
-  stated as unpinned in the provenance string.
 - Never invent a number. Missing = `null` with a reason. Everything is labeled
   historical -- a per-paper snapshot, not a current-model verdict.
 
@@ -69,6 +78,9 @@ Render with evidence, then STOP.
 - [ ] Every verdict carries an evidence tier.
 - [ ] Every adherence band has complete provenance (paper, exact version or
       "unpinned" stated, date), its underlying number, and its in-scope slice named.
+- [ ] The per-model table is complete (every reported Anthropic/OpenAI model result
+      recorded), and each lab band matches its most recent model per the
+      aggregation rule.
 - [ ] No invented adherence numbers; all missing cells are `null` with reasons.
 - [ ] Any cross-eval comparison carries a facet mapping.
 - [ ] "What would change the scores" is present per eval.
