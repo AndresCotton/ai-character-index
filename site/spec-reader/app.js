@@ -2,7 +2,7 @@ const GROUPS = [
   {
     name: "Honesty & epistemics",
     behaviours: [
-      [1, "No sycophancy", true],
+      [1, "No sycophancy"],
       [2, "Calibration"],
       [3, "Honesty about one’s own actions"],
     ],
@@ -36,24 +36,30 @@ const GROUPS = [
 
 const state = {
   payload: null,
+  selectedBehaviour: null,
   selectedSpec: "anthropic",
   comparing: false,
   embedded: false,
   passageIndex: 0,
   anchors: [],
   documentFocus: { anthropic: true, openai: true },
+  sidebarWidth: 292,
+  compareFirst: 50,
 };
 
 const elements = {
+  appShell: document.querySelector(".app-shell"),
   behaviourList: document.querySelector("#behaviour-list"),
   compareToggle: document.querySelector("#compare-toggle"),
   documentReader: document.querySelector("#document-reader"),
+  findingBehaviour: document.querySelector("#finding-behaviour"),
   findingDefinition: document.querySelector("#finding-definition"),
   mode: document.querySelector("#mode"),
   nextPassage: document.querySelector("#next-passage"),
   passageCount: document.querySelector("#passage-count"),
   previousPassage: document.querySelector("#previous-passage"),
   readerStatus: document.querySelector("#reader-status"),
+  sidebarResizer: document.querySelector("#sidebar-resizer"),
   sourceLink: document.querySelector("#source-link"),
   template: document.querySelector("#document-template"),
 };
@@ -62,9 +68,14 @@ const initialParams = new URLSearchParams(location.search);
 state.embedded = initialParams.get("embedded") === "1";
 document.body.classList.toggle("embedded", state.embedded);
 
+function activeBehaviour() {
+  const behaviours = state.payload?.behaviours || [];
+  return behaviours.find(behaviour => behaviour.slug === state.selectedBehaviour) || behaviours[0];
+}
+
 function syncURL() {
   const params = new URLSearchParams(location.search);
-  params.set("behavior", state.payload?.behaviour?.slug || "no-sycophancy");
+  params.set("behavior", activeBehaviour()?.slug || "no-sycophancy");
   params.set("spec", state.selectedSpec);
   if (state.comparing) params.set("compare", "1");
   else params.delete("compare");
@@ -105,28 +116,180 @@ let savedPalette = null;
 try { savedPalette = localStorage.getItem("aci-palette"); } catch (error) {}
 setPalette(paletteParam || savedPalette || "daylight");
 
+function clamp(value, minimum, maximum) {
+  return Math.min(maximum, Math.max(minimum, value));
+}
+
+function savedNumber(key, fallback) {
+  try {
+    const value = Number(localStorage.getItem(key));
+    return Number.isFinite(value) && value > 0 ? value : fallback;
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function saveNumber(key, value) {
+  try { localStorage.setItem(key, String(value)); } catch (error) {}
+}
+
+function setSidebarWidth(width, persist = false) {
+  const desktop = window.matchMedia("(min-width: 901px)").matches;
+  const maximum = desktop
+    ? Math.max(200, Math.min(480, elements.appShell.clientWidth - 420))
+    : 480;
+  state.sidebarWidth = Math.round(clamp(width, 200, maximum));
+  elements.appShell.style.setProperty("--sidebar-width", `${state.sidebarWidth}px`);
+  elements.sidebarResizer.setAttribute("aria-valuenow", String(state.sidebarWidth));
+  elements.sidebarResizer.setAttribute("aria-valuemax", String(maximum));
+  elements.sidebarResizer.setAttribute("aria-valuetext", `${state.sidebarWidth} pixels wide`);
+  if (persist) saveNumber("aci-sidebar-width", state.sidebarWidth);
+}
+
+function setCompareFirst(percent, persist = false) {
+  const width = elements.documentReader.clientWidth;
+  const minimum = width > 0 ? Math.min(40, (260 / width) * 100) : 20;
+  const maximum = 100 - minimum - (width > 0 ? (9 / width) * 100 : 0);
+  state.compareFirst = Math.round(clamp(percent, minimum, maximum) * 10) / 10;
+  elements.documentReader.style.setProperty("--compare-first", `${state.compareFirst}%`);
+  const resizer = elements.documentReader.querySelector(".document-resizer");
+  if (resizer) {
+    resizer.setAttribute("aria-valuemin", String(Math.ceil(minimum)));
+    resizer.setAttribute("aria-valuemax", String(Math.floor(maximum)));
+    resizer.setAttribute("aria-valuenow", String(Math.round(state.compareFirst)));
+    resizer.setAttribute("aria-valuetext", `First specification ${Math.round(state.compareFirst)} percent wide`);
+  }
+  if (persist) saveNumber("aci-compare-first", state.compareFirst);
+  requestAnimationFrame(updateRails);
+}
+
+function startColumnDrag(event, resizer, update, finish) {
+  if (event.button !== 0) return;
+  event.preventDefault();
+  resizer.setPointerCapture(event.pointerId);
+  resizer.classList.add("dragging");
+  document.body.classList.add("resizing-columns");
+
+  const move = moveEvent => update(moveEvent.clientX);
+  const end = () => {
+    resizer.classList.remove("dragging");
+    document.body.classList.remove("resizing-columns");
+    resizer.removeEventListener("pointermove", move);
+    resizer.removeEventListener("pointerup", end);
+    resizer.removeEventListener("pointercancel", end);
+    finish();
+  };
+  resizer.addEventListener("pointermove", move);
+  resizer.addEventListener("pointerup", end);
+  resizer.addEventListener("pointercancel", end);
+}
+
+function setupSidebarResizer() {
+  state.sidebarWidth = savedNumber("aci-sidebar-width", state.sidebarWidth);
+  setSidebarWidth(state.sidebarWidth);
+  elements.sidebarResizer.addEventListener("pointerdown", event => {
+    const shellLeft = elements.appShell.getBoundingClientRect().left;
+    startColumnDrag(
+      event,
+      elements.sidebarResizer,
+      clientX => setSidebarWidth(clientX - shellLeft),
+      () => setSidebarWidth(state.sidebarWidth, true),
+    );
+  });
+  elements.sidebarResizer.addEventListener("keydown", event => {
+    const step = event.shiftKey ? 40 : 16;
+    let next = state.sidebarWidth;
+    if (event.key === "ArrowLeft") next -= step;
+    else if (event.key === "ArrowRight") next += step;
+    else if (event.key === "Home") next = 200;
+    else if (event.key === "End") next = 480;
+    else return;
+    event.preventDefault();
+    setSidebarWidth(next, true);
+  });
+}
+
+function createDocumentResizer() {
+  const resizer = document.createElement("div");
+  resizer.className = "column-resizer document-resizer";
+  resizer.role = "separator";
+  resizer.tabIndex = 0;
+  resizer.setAttribute("aria-label", "Resize specification panels");
+  resizer.setAttribute("aria-orientation", "vertical");
+  resizer.setAttribute("aria-valuemin", "0");
+  resizer.setAttribute("aria-valuemax", "100");
+  resizer.addEventListener("pointerdown", event => {
+    const bounds = elements.documentReader.getBoundingClientRect();
+    startColumnDrag(
+      event,
+      resizer,
+      clientX => setCompareFirst(((clientX - bounds.left) / bounds.width) * 100),
+      () => setCompareFirst(state.compareFirst, true),
+    );
+  });
+  resizer.addEventListener("keydown", event => {
+    const step = event.shiftKey ? 10 : 2;
+    let next = state.compareFirst;
+    if (event.key === "ArrowLeft") next -= step;
+    else if (event.key === "ArrowRight") next += step;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = 100;
+    else return;
+    event.preventDefault();
+    setCompareFirst(next, true);
+  });
+  return resizer;
+}
+
+setupSidebarResizer();
+
 function renderBehaviourList() {
+  const byNumber = new Map((state.payload?.behaviours || []).map(behaviour => [behaviour.id, behaviour]));
+  const activeSlug = activeBehaviour()?.slug;
   elements.behaviourList.innerHTML = GROUPS.map(group => `
     <section class="behaviour-group">
       <h2>${group.name}</h2>
       <ul>
-        ${group.behaviours.map(([number, name, mapped]) => `
+        ${group.behaviours.map(([number, name]) => {
+          const behaviour = byNumber.get(number);
+          const active = behaviour && behaviour.slug === activeSlug;
+          return `
           <li>
             <button
-              class="behaviour-button ${mapped ? "mapped active" : ""}"
+              class="behaviour-button ${behaviour ? "mapped" : ""}${active ? " active" : ""}"
               type="button"
-              ${mapped ? 'aria-current="true"' : "disabled"}
-              title="${mapped ? "Show mapped passages" : "Passage mapping pending"}"
+              ${behaviour ? `data-behaviour="${behaviour.slug}"` : "disabled"}
+              ${active ? 'aria-current="true"' : ""}
+              title="${behaviour ? "Show mapped passages" : "Passage mapping pending"}"
             >
               <span class="number">${String(number).padStart(2, "0")}</span>
               <span class="name">${name}</span>
-              <i class="status-dot ${mapped ? "mapped" : "pending"}" aria-hidden="true"></i>
+              <i class="status-dot ${behaviour ? "mapped" : "pending"}" aria-hidden="true"></i>
             </button>
           </li>
-        `).join("")}
+        `;}).join("")}
       </ul>
     </section>
   `).join("");
+  elements.behaviourList.querySelectorAll("[data-behaviour]").forEach(button => {
+    button.addEventListener("click", () => selectBehaviour(button.dataset.behaviour));
+  });
+}
+
+function updateFindingBar() {
+  const behaviour = activeBehaviour();
+  if (!behaviour) return;
+  elements.findingBehaviour.textContent = behaviour.name;
+  elements.findingDefinition.textContent = behaviour.definition;
+}
+
+function selectBehaviour(slug) {
+  if (slug === activeBehaviour()?.slug) return;
+  state.selectedBehaviour = slug;
+  updateFindingBar();
+  renderBehaviourList();
+  syncURL();
+  rebuildReader();
 }
 
 function escapeHTML(value) {
@@ -417,7 +580,7 @@ function annotatePassages(panel, document) {
     block.dataset.role = passage.role;
     block.insertAdjacentHTML(
       "afterbegin",
-      `<span class="passage-label">${passage.adjacent ? "Adjacent · " : ""}${escapeHTML(passage.role)}</span>`,
+      `<span class="passage-label">${passage.adjacent ? "Related · " : ""}${escapeHTML(passage.role)}</span>`,
     );
 
     if (passage.exampleBlock) {
@@ -618,14 +781,24 @@ function renderDocument(document) {
 }
 
 function visibleDocuments() {
-  if (state.comparing) return state.payload.documents;
-  return [state.payload.documents.find(document => document.id === state.selectedSpec)];
+  const behaviour = activeBehaviour();
+  const withCoverage = state.payload.documents.map(document => ({
+    ...document,
+    coverage: behaviour.coverage[document.id],
+  }));
+  if (state.comparing) return withCoverage;
+  return [withCoverage.find(document => document.id === state.selectedSpec)];
 }
 
 function rebuildReader() {
   const documents = visibleDocuments();
   elements.documentReader.classList.toggle("compare", state.comparing);
-  elements.documentReader.replaceChildren(...documents.map(renderDocument));
+  const panels = documents.map(renderDocument);
+  const children = state.comparing
+    ? [panels[0], createDocumentResizer(), panels[1]]
+    : panels;
+  elements.documentReader.replaceChildren(...children);
+  if (state.comparing) setCompareFirst(state.compareFirst);
   state.passageIndex = 0;
 
   const selected = state.payload.documents.find(document => document.id === state.selectedSpec);
@@ -755,7 +928,11 @@ document.addEventListener("keydown", event => {
   if (event.key === "k") focusPassage(state.passageIndex - 1);
 });
 
-window.addEventListener("resize", () => requestAnimationFrame(updateRails));
+window.addEventListener("resize", () => {
+  setSidebarWidth(state.sidebarWidth);
+  if (state.comparing) setCompareFirst(state.compareFirst);
+  requestAnimationFrame(updateRails);
+});
 
 async function initialize() {
   renderBehaviourList();
@@ -764,13 +941,19 @@ async function initialize() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     state.payload = await response.json();
     const params = initialParams;
+    const requestedBehaviour = params.get("behavior");
+    if (state.payload.behaviours.some(behaviour => behaviour.slug === requestedBehaviour)) {
+      state.selectedBehaviour = requestedBehaviour;
+    }
     const requestedSpec = params.get("spec");
     if (state.payload.documents.some(document => document.id === requestedSpec)) {
       state.selectedSpec = requestedSpec;
     }
     state.comparing = params.get("compare") === "1";
+    state.compareFirst = savedNumber("aci-compare-first", state.compareFirst);
     elements.compareToggle.setAttribute("aria-pressed", String(state.comparing));
-    elements.findingDefinition.textContent = state.payload.behaviour.definition;
+    updateFindingBar();
+    renderBehaviourList();
     syncURL();
     rebuildReader();
   } catch (error) {
