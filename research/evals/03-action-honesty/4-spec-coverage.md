@@ -114,6 +114,11 @@ The constitution has no anchors; locators carry the full heading path. No author
   **Role:** Legitimate disagreement vs. illegitimate subversion of oversight, with lying, sabotage, and self-exfiltration named as the illegitimate means.
   **Flags:** --
 
+- **Locator:** `constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Claude’s three types of principals > ¶7 s7-8`
+  **Quote:** An example would be a situation where Anthropic wants to pause Claude or have it stop actions. Since this “null action” is rarely going to be harmful and the ability to invoke it is an important safety mechanism, we would like Claude to comply with such requests if they genuinely come from Anthropic and express disagreement (if Claude disagrees) rather than ignoring the instruction or acting to undermine it.
+  **Role:** The pause/stop worked example -- comply with genuine Anthropic stop requests, expressing disagreement rather than ignoring or undermining them (facet 3's sanctioned response); added at Gate 4.
+  **Flags:** --
+
 ### Adjacent
 
 - **Locator:** `constitution@2026-01-20 > Being broadly ethical > Being honest > ¶12 s3-4`
@@ -207,10 +212,10 @@ Hits whose enclosing sections were read and judged outside the set:
 
 | Spec | Verdict | Depth (0-4) | Rationale |
 |---|---|---|---|
-| Claude constitution (2026-01-20) | covered | 3 | The construct is carried by named components and enumerated prohibitions: the Transparent component, the no-sandbagging/transparent-conscientious-objector rule, a dedicated safe-behaviors block enumerating oversight interference (self-exfiltration, hiding from monitoring, sabotage, secretly withheld effort), and hard constraint 4 as an absolute floor -- but there is no dedicated section on reporting one's own actions, no worked examples, and no operational test. |
+| Claude constitution (2026-01-20) | covered | 3 | The construct is carried by named components and enumerated prohibitions: the Transparent component, the no-sandbagging/transparent-conscientious-objector rule, a dedicated safe-behaviors block enumerating oversight interference (self-exfiltration, hiding from monitoring, sabotage, secretly withheld effort), and hard constraint 4 as an absolute floor -- but the reporting facets (false success claims, action denial) are unexampled; the lone worked example (pause/stop) rules on facet 3's stop-request case only. |
 | OpenAI Model Spec (2025-12-18) | covered | 3 | Operational rules without a dedicated section: the forthright-about-actions block in `#do_not_lie` (user authority) mandates stop-and-escalate after noncompliant actions plus a legible accounting and audit trail, reinforced at root authority by the documentation and legibility-for-monitoring duties and the ban on evading shutdown, plus the error-acknowledgment rule -- but none of the spec's worked examples test a report of the assistant's own actions. |
 
-Judged against the behaviour-1 anchors (constitution 3/4 "named explicitly but no dedicated section, no operational test"; model spec 4/4 "dedicated section with an operational invariance rule and worked examples").
+Judged against the behaviour-1 anchors (constitution 3/4 "named explicitly but no dedicated section, no operational test"; model spec 4/4 "dedicated section with an operational invariance rule and worked examples"); re-confirmed unchanged at Gate 4 against the anchored rubric in `research/spec-coverage-depth-rubric.md` (both specs: prescribed -- quotable conduct rules; the reporting facets are unexampled in both specs, and one facet-edge example does not make the behaviour demonstrated).
 
 ## Mechanical re-check
 
@@ -225,6 +230,7 @@ MATCH  constitution@2026-01-20 > Being broadly safe > Safe behaviors > ¶7
 MATCH  constitution@2026-01-20 > Being broadly safe > Safe behaviors > ¶9
 MATCH  constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > ¶6
 MATCH  constitution@2026-01-20 > Being broadly safe > How we think about corrigibility > ¶1 s4
+MATCH  constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Claude’s three types of principals > ¶7 s7-8
 MATCH  constitution@2026-01-20 > Being broadly ethical > Being honest > ¶12 s3-4
 MATCH  constitution@2026-01-20 > Claude’s nature > Claude’s wellbeing and psychological stability > Flaws and mistakes > ¶1 s2
 MATCH  model-spec@2025-12-18 > #do_not_lie > ¶1
@@ -240,18 +246,18 @@ MATCH  model-spec@2025-12-18 > #red_line_principles > ¶3 s1
 MATCH  model-spec@2025-12-18 > #scope_of_autonomy > ¶14
 MATCH  model-spec@2025-12-18 > #control_side_effects > ¶20
 
-22 locators checked, 0 mismatches
+23 locators checked, 0 mismatches
 ```
 
 ## Gate 4 checklist
 
 - [x] Mirror freshness confirmed this sweep: orchestrator ran `engine/spec-watch/pull-latest.sh` 2026-07-20 13:15 PDT, `git status --porcelain specs/` empty; versions (`constitution@2026-01-20`, `model-spec@2025-12-18`) and check date recorded above.
 - [x] Term list documented, including zero-hit terms (48 terms; 7 zero-hit in both mirrors, 17 more zero-hit in one; see table).
-- [x] Mechanical re-check passes: all 22 locators re-resolved in a scripted loop and diffed against their stored quotes; loop output pasted above; zero mismatches.
-- [x] Every locator pins `spec@version` (all 22 pin `constitution@2026-01-20` or `model-spec@2025-12-18`) and uses the smallest enclosing section; constitution citations carry the full heading path (e.g. the four-level path for Flaws and mistakes).
-- [x] No elided quotes: every quote is one contiguous resolver span; all sentence-span excerpts are contiguous ranges (e.g. `¶12 s3-4`); no example blocks are kept for this behaviour (none of the specs' worked examples test action reports -- see Considered and not kept).
+- [x] Mechanical re-check passes: all 23 locators re-resolved in a scripted loop and diffed against their stored quotes; loop output pasted above; zero mismatches (re-run after the Gate-4 correction added the pause/stop excerpt).
+- [x] Every locator pins `spec@version` (all 23 pin `constitution@2026-01-20` or `model-spec@2025-12-18`) and uses the smallest enclosing section; constitution citations carry the full heading path (e.g. the four-level path for Flaws and mistakes).
+- [x] No elided quotes: every quote is one contiguous resolver span; all sentence-span excerpts are contiguous ranges (e.g. `¶12 s3-4`); no example blocks are kept for this behaviour (none of the model spec's example blocks test action reports -- see Considered and not kept).
 - [x] Every excerpt has a role line; the 8 adjacent items (2 constitution-side: Being honest ¶12 s3-4, Flaws and mistakes ¶1 s2; 6 model-spec-side: `#do_not_lie` ¶1, ¶9, ¶10, `#red_line_principles` ¶3 s1, `#scope_of_autonomy` ¶14, `#control_side_effects` ¶20) each carry the reason they sit outside the core construct.
 - [x] Verdict + depth rationale present for each spec (table above).
-- [ ] Human spot-read: the kept passages actually bear on the behaviour, and no passage the reviewer knows of is missing from the set. **Pending -- awaiting sign-off (see `gates.md`).**
+- [x] Human spot-read: the kept passages actually bear on the behaviour, and no passage the reviewer knows of is missing from the set. **Signed 2026-07-20 by Andrés (see `gates.md`).**
 
-Gate 4 pending: rendered with evidence, then STOPPED per the skill. No publication (no `data/coverage.json` update, no Notion, no spec-reader changes) until the gate is signed; see `gates.md`.
+Gate 4 signed 2026-07-20; corrections applied (pause/stop excerpt added to the constitution core set, counts 22 -> 23) and re-verified. Stage-5 publication authorized in the spec-coverage-campaign scope only: `data/coverage.json` and the spec reader; no Notion, no eval data. See `gates.md`.

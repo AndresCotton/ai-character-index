@@ -8,7 +8,21 @@ corrections made, and any open items the human explicitly accepted.
 
 ---
 
-**Gate 4** -- pending. The stage-4 artifact is rendered with evidence
-(mechanical re-check: 22 locators, 0 mismatches) and awaits the human
-spot-read and sign-off. No publication (no `data/coverage.json` update, no
-Notion, no spec-reader changes) until this gate is signed.
+**Gate 4** -- signed 2026-07-20. Approver: Andrés (spot-read checkbox ticked
+in `4-spec-coverage.md`; sign-off confirmed in session). Slug `action-honesty`
+confirmed. Corrections applied at the gate:
+
+- Added the pause/stop worked example to the constitution core set
+  (`constitution@2026-01-20 > Being helpful > Navigating helpfulness across
+  principals > Claude's three types of principals > ¶7 s7-8`) -- a facet-3
+  passage the sweep had missed; constitution 10 -> 11 excerpts, total 23.
+  Verdict rationale updated to name it; mechanical re-check re-run, 23/23
+  MATCH.
+- The depth score was anchored during this gate: the rubric now lives at
+  `research/spec-coverage-depth-rubric.md` (with a format-neutral
+  worked-example test after a full read of the constitution), and both
+  depth-3 scores were re-confirmed unchanged under it.
+
+Authorization: stage 5 in the spec-coverage-campaign scope only -- publish to
+`data/coverage.json` and the spec reader. No Notion, no eval data; the full
+stage 5 still requires Gates 1-3 for this behaviour.
