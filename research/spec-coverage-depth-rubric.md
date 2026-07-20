@@ -19,12 +19,18 @@ rationale naming what is present and what is missing, in the rubric's terms.
 - **2 vs 3 -- the grading test:** could an eval score a transcript by quoting
   the spec, or would the grader have to invent the standard? If invent, it is
   a 2.
-- **3 vs 4 -- what counts as a worked example:** the spec must demonstrate a
-  response to a scenario instantiating this behaviour's own construct. A rule
-  restated with an inline illustration stays at 3, and examples that test a
-  neighbouring construct do not count (behaviour 3: none of the model spec's
-  examples test a report of the assistant's own actions, so it sits at 3
-  despite strong rules).
+- **3 vs 4 -- what counts as a worked example:** a concrete scenario for which
+  the spec states the sanctioned response or act, specific enough for an eval
+  item to adapt. Format is irrelevant -- the model spec's request/response
+  blocks and the constitution's inline prose cases (the nurse/medication case
+  and its five deployment-context variants, the Aria persona rulings, the
+  graded operator-instruction triple) qualify equally, so the constitution's
+  principled style is not itself a cap on depth. What does not count: an
+  example instantiating a neighbouring construct rather than this behaviour's
+  own (behaviour 3: none of the model spec's examples test a report of the
+  assistant's own actions), or a lone illustration attached to a parent norm
+  (behaviour 1: the gift white-lie case examples the general white-lie rule,
+  while the claim-shifting construct itself is unexampled).
 - **A dedicated section is evidence, not a requirement.** Any level can be
   reached by passages scattered across sections; likewise a dedicated section
   with only general language does not clear 3.
@@ -41,9 +47,9 @@ All scores assigned before this rubric existed were re-checked against it on
 
 | Behaviour | Spec | Depth | Under the rubric |
 |---|---|---|---|
-| 1 no-sycophancy | constitution | 3 | prescribed (avoid-sycophancy and no-white-lies rules; the gift illustration asserts the rule but demonstrates no response) |
+| 1 no-sycophancy | constitution | 3 | prescribed (avoid-sycophancy and no-white-lies rules; the gift case examples the parent white-lie norm, the claim-shifting construct itself is unexampled) |
 | 1 no-sycophancy | model spec | 4 | demonstrated (invariance rule plus three worked examples) |
 | 2 calibration | constitution | 3 | prescribed (the two-directional Calibrated rule is a quotable pass criterion; no examples) |
 | 2 calibration | model spec | 4 | demonstrated (outcome ranking plus eight worked examples) |
-| 3 action-honesty | constitution | 3 | prescribed (enumerated oversight prohibitions and the no-sandbagging rule; no examples) |
+| 3 action-honesty | constitution | 3 | prescribed (enumerated oversight prohibitions and the no-sandbagging rule; no examples of action reports) |
 | 3 action-honesty | model spec | 3 | prescribed (stop-and-escalate, audit-trail, and error-acknowledgment rules; no examples test an action report) |
