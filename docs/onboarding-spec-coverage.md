@@ -60,11 +60,17 @@ The two tracks are deliberately independent: Stage 4 runs in parallel with
 Stages 1-3 and shares none of their data. So you can work on the whole coverage
 pipeline without ever touching an eval.
 
-**The goal of the initial collaboration** is cleaner, better-structured process and
-code for that pipeline -- not new features. Section 7 points at the seams most
-worth your attention.
+**The goal of the initial collaboration** is a cleaner, better-structured, and --
+above all -- **reproducible and well-documented** spec-coverage process: the same
+behaviour run against the same specs should always yield the same coverage
+assessment, and every step should be documented well enough that someone else can
+re-run it and reproduce the result. The biggest gap today is the **term sweep**,
+which is still done entirely by hand (§3 explains it) -- turning it into a
+script-driven, reproducible step is the **headline TODO** (§7). This is about
+cleaner process and code, not new features.
 
-**This collaboration could be expanded** into building better tooling for indentifying contradictions in the models specs.
+**This collaboration could be expanded** into building better tooling for
+identifying contradictions in the model specs.
 
 ---
 
@@ -143,35 +149,56 @@ commit at each step on a per-behaviour branch merged by PR, is the
 `spec-coverage-pass` skill (`.claude/skills/spec-coverage-pass/SKILL.md`). Read
 it to see the exact ordering, commit messages, and verification commands.
 
-### The term sweep in detail (step 2)
+### The term sweep in detail (step 2) -- and why it is the headline TODO
 
-The term sweep is the least-automated step, and the one newcomers most often
-assume is a script. **It is not -- today it is run by hand.** There is no
-term-sweep `.py`; the only scripts in the repo are `cite.py`,
-`publish-coverage.py`, `build-spec-reader-data.py`, `verify-spec-reader.mjs`,
-and `spec-watch/pull-latest.sh`, none of which does discovery. The procedure
-(`Skill 4`, "Term sweep") is:
+The term sweep is the least-automated step, the one newcomers most often assume
+is a script, and the one this collaboration most wants to fix. **Today it is run
+by hand.** There is no term-sweep `.py`; the only scripts in the repo are
+`cite.py`, `publish-coverage.py`, `build-spec-reader-data.py`,
+`verify-spec-reader.mjs`, and `spec-watch/pull-latest.sh`, none of which does
+discovery.
 
-1. Build the term list first -- the behaviour's own words, synonyms,
-   antonym-phrasings, and each spec's register for the same idea. This is
-   judgement work; the agent proposes the list.
-2. `grep` both spec mirrors for every term, at the shell.
-3. Record every term's hit count per mirror -- **including zero-hit terms** --
-   into the artifact's term-sweep table. The empty probes are part of the
-   evidence that the search was exhaustive.
-4. Read the enclosing section of each hit by hand (the operational rule is often
-   a paragraph away from the matched word).
+**How the search terms are generated (agent judgement).** Before any grep, the
+agent builds a term list for the behaviour. It is deliberately *not* just the
+behaviour's name -- grepping the name alone finds the labelling passages and
+misses the operational ones (for behaviour 1, the invariance rule that does the
+real work contains no sycophancy term at all). The list is assembled from five
+buckets:
 
-**On regex:** the sweep is not a structured regex program. Terms are stems /
-substrings (`sycophan`, `calibrat`, `confiden`, `t know`); `grep` is
-regex-capable but used here for substring matching. The one real subtlety is
-done by hand: search **apostrophe-free, dash-free substrings**, because the
-specs' curly quotes and em dashes break naive greps (e.g. grep `t know` to catch
-both straight and curly "don't know"; word-bound short ambiguous terms). Note
-that `cite.py` already implements exactly this folding in `match_normalize()` --
-but only its `find` command (single remembered phrase → locator, part of the
-per-passage excerpt workflow) uses it, *not* the bulk sweep. A real example of
-the resulting table is in `research/sweeps/02-calibration/4-spec-coverage.md`.
+1. the behaviour's own words (e.g. `calibrat`, `sycophan`);
+2. synonyms and register variants (`confiden`, `uncertain`, `hedg`, `probab`);
+3. antonym- and failure-phrasings (`overconfiden`, `overclaim`, `wishy`, `vague`);
+4. each spec's own register for the idea -- how the document actually phrases it
+   (`express uncertainty`, `not sure`, `t know`, `acknowledg`);
+5. failure-mode neighbours worth probing (`hallucinat`, `sandbagg`).
+
+This is genuine judgement work, which is why the agent does it. The finished list
+is then **published in full in the artifact** (the `| Term | constitution hits |
+model-spec hits |` table), zero-hit terms included -- the empty probes are the
+evidence that the search looked everywhere. A real 35-term example is in
+`research/sweeps/02-calibration/4-spec-coverage.md`.
+
+**How the agent greps today (manual, and error-prone).** With the list in hand,
+the agent runs each term over both mirrors at the shell, hand-counts the hits and
+types them into the table, then reads the enclosing section of every hit (the
+operational rule is often a paragraph away from the matched word). The sweep is
+not a structured regex program: terms are stems / substrings and `grep` is used
+for plain substring matching. The one real subtlety is done entirely by hand --
+you must search **apostrophe-free, dash-free substrings**, because the specs'
+curly quotes and em dashes break naive greps (e.g. grep `t know` to catch both
+straight and curly "don't know", and word-bound short ambiguous terms). Every one
+of those manual acts -- transcribing counts, remembering the punctuation trick,
+word-bounding by eye -- is a place the sweep can silently miss a passage, and none
+of it is reproducible: re-running it is a fresh manual pass, not a command.
+
+**Where this is going (the target).** Keep the split that already exists and make
+only the mechanical half a script: **the agent still authors the term list
+(judgement), but a script then runs it (reproducible).** The folding the manual
+trick approximates already exists in `cite.py` as `match_normalize()` -- but only
+the `find` command uses it, not the sweep. A `cite.py sweep` (or a standalone)
+that ingests the agent's term list and emits the exact hit-count table would turn
+"we searched everywhere, here is the table" from a hand-assembled claim into a
+re-runnable one. The full spec is the **headline TODO in §7** -- start there.
 
 ---
 
@@ -309,8 +336,29 @@ about one's own actions) are published against 2 labs (Anthropic, OpenAI) =
 scripts, and reader all work. Data is hand-maintained via reviewed PRs (Phase 1);
 Notion sync is Phase 3 and not built.
 
-**What is described but not yet built** (so it is a natural place for your work):
+**What is described but not yet built** (so it is a natural place for your work).
+The first item is the headline objective of this collaboration; the rest are
+secondary observations.
 
+- **★ HEADLINE TODO -- make the term sweep reproducible and documented.** Today
+  the term sweep (§3) is entirely manual: the agent proposes the term list, then
+  hand-greps both specs and hand-assembles the hit-count table. Keep the
+  human-judgement half; automate the mechanical half.
+  - *Keep:* the agent authors the term list -- deciding which words, synonyms,
+    antonyms, and spec-register phrasings to probe is judgement, not automation.
+  - *Build:* a script (natural home: a `cite.py sweep` subcommand) that **takes
+    the agent's term list as input**, runs every term over both spec mirrors using
+    the apostrophe/dash-insensitive folding `match_normalize()` already
+    implements, word-bounds short/ambiguous terms, and prints the per-mirror
+    hit-count table -- **zero-hit terms included** -- in the exact shape the
+    artifact's term-sweep table expects (ideally with a candidate locator per hit,
+    to hand straight into the `find` → `show` → `resolve` excerpt workflow).
+  - *Document:* the term list becomes a committed input (e.g. a small file in the
+    behaviour's `research/sweeps/NN-<slug>/` dir), and `Skill 4` is updated so the
+    procedure reads "author the list, run the script" instead of "grep by hand".
+  - *Done when:* re-running the script for an already-published behaviour
+    regenerates that behaviour's term-sweep table byte-for-byte -- the sweep is
+    then reproducible and auditable rather than a one-off manual pass.
 - **CI is empty.** `.github/workflows/` has no workflows, and `data/schema/`
   holds no schemas -- yet `PLAN.md`, `README.md`, and `data/README.md` all
   describe CI that validates `data/*.json` against schemas and re-resolves every
@@ -332,10 +380,10 @@ Notion sync is Phase 3 and not built.
   `verify-spec-reader.mjs`. The sentence splitter, block segmenter, and locator
   parser are the trickiest code in the repo and would benefit from direct tests.
 
-The term-sweep TODO above is agreed and greenlit; treat the rest as observations,
-not a backlog -- confirm the direction with Andrés before large refactors. The
-whole point is *cleaner* structure, so leave each file at least as legible as you
-found it.
+The headline TODO is agreed and greenlit -- start there. Treat the rest as
+observations, not a backlog; confirm the direction with Andrés before large
+refactors. The whole point is *cleaner, reproducible* structure, so leave each
+file at least as legible as you found it.
 
 ---
 
@@ -343,8 +391,9 @@ found it.
 
 - **Conventional commits** (`type(scope): subject`): `feat`, `fix`, `docs`,
   `chore`, ... e.g. `feat(data): publish calibration spec coverage (behaviour 2)`.
-- **Prose uses `--`, never em dashes.** The one exception: **verbatim spec**
-- **quotes** keep the resolver's exact bytes, em dashes and all -- never retype a
+- **No AI attribution** of any kind in commit messages or PR bodies.
+- **Prose uses ` -- `, never em dashes.** The one exception: **verbatim spec
+  quotes** keep the resolver's exact bytes, em dashes and all -- never retype a
   quote to "fix" its punctuation.
 - **Quotes are never typed by hand.** Resolver output only, verified twice (the
   agent's scripted re-check inside the artifact, then `publish-coverage.py` at
