@@ -47,7 +47,10 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # pnpm 11.12 (pinned via packageManager) needs Node >= 22.13; the
+          # setup-node pnpm cache probe crashes on older Node ("requires at
+          # least Node.js v22.13" / node:sqlite unknown builtin).
+          node-version: 22
           cache: pnpm
 
       - name: Deploy site/ to Cloudflare Pages
