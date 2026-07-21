@@ -94,15 +94,6 @@
   .cite-sample code { display: inline-block; margin-bottom: 7px; }
   .cite-sample .q { font-family: var(--serif); font-size: 14.5px; line-height: 1.6; color: var(--ink); }
   .cite-sample .role { font-size: 13px; font-style: italic; color: var(--ink3); margin-top: 5px; }
-  .score-ledger { max-width: 72ch; margin: 12px 0 4px; }
-  .sc-b { font-variant-caps: all-small-caps; letter-spacing: .12em; font-weight: 600; font-size: 14.5px;
-          color: var(--ink2); padding: 12px 0 4px; border-bottom: 1px solid var(--hair); }
-  .sc-row { display: grid; grid-template-columns: 104px 156px 1fr; gap: 0 16px; align-items: baseline;
-            padding: 7px 0; border-bottom: 1px solid var(--hair); }
-  .sc-spec { font-variant-caps: all-small-caps; letter-spacing: .1em; font-size: 14px; color: var(--ink2); }
-  .sc-mark { white-space: nowrap; font-variant-caps: all-small-caps; letter-spacing: .08em;
-             font-weight: 600; font-size: 14.5px; }
-  .sc-why { font-size: 14px; line-height: 1.5; color: var(--ink); }
   .rubric-ledger { max-width: 72ch; margin: 14px 0 18px; border-top: 1px solid var(--hair); }
   .rl-row { display: grid; grid-template-columns: 56px 130px 1fr; gap: 0 18px; align-items: baseline;
             padding: 8.5px 0; border-bottom: 1px solid var(--hair); }
@@ -134,7 +125,6 @@
     .demo-cell:nth-last-child(2):not(.c2) { border-bottom: 1px solid var(--hair); }
     .demo-lab-inline { display: block; font-variant-caps: all-small-caps; letter-spacing: .12em;
                        font-size: 12.5px; color: var(--ink3); margin-bottom: 2px; }
-    .sc-row { grid-template-columns: 1fr; gap: 1px 0; padding: 8px 0; }
   }
 
   .src-list { list-style: none; max-width: 70ch; }
@@ -199,19 +189,24 @@
   <section class="m" id="coverage">
     <h2>How we assess coverage</h2>
     <p>Coverage answers one question, per behaviour and per lab: <b>what does the lab's own
-    specification declare about this behaviour, and in what depth?</b> It is scored from the documents
-    alone -- what a spec commits to, not what a lab's models do (adherence measures that) -- so it is
-    the stratum where each lab speaks entirely in its own words: every claim is carried by verbatim
-    quotation. The full report per behaviour -- citations, verdict, depth score, rationale -- is
-    published in <code>data/coverage.json</code> and can be read passage by passage, in place, in the
-    <a href="spec-reader/">spec reader</a>.</p>
+    specification declare about this behaviour, and in what depth?</b> It is scored from the public
+    documents alone and is not focused on what models actually do (adherence measures that).</p>
+    <p>The full report per behaviour -- citations, verdict, depth score, rationale -- will be
+    published in the following weeks.</p>
 
     <div class="subhead">The evidence &middot; pinned verbatim citations</div>
     <p>The ground truth is the latest published version of each specification, mirrored into the
     repository from the labs' own sources -- currently <code>constitution@2026-01-20</code> and
-    <code>model-spec@2025-12-18</code>. Every passage that bears on the behaviour is extracted as an
-    exact, unabridged quote under a locator that pins the spec version, section path, paragraph, and
-    sentence range:</p>
+    <code>model-spec@2025-12-18</code>.</p>
+    <p>Relevant passages are found by systematic search. A term list is fixed before searching and
+    published in full: the behaviour's own words, synonyms and antonym-phrasings, and each spec's
+    register for the same idea -- 48 terms for &sect;&thinsp;3, with short ambiguous terms
+    word-bounded. Every term is run over both mirrors and every result is recorded, empty results
+    included, so the published table shows everywhere the search looked. The whole section enclosing
+    each hit is then read, because a spec often states the actual rule a paragraph away from the word
+    that matched.</p>
+    <p>Every passage that bears on the behaviour is then extracted as an exact, unabridged quote
+    under a locator that pins the spec version, section path, paragraph, and sentence range:</p>
     <div class="cite-sample">
       <code>constitution@2026-01-20 &rsaquo; Being helpful &rsaquo; What constitutes genuine helpfulness &rsaquo; &para;9 s1</code>
       <div class="q">&ldquo;Concern for user wellbeing means that Claude should avoid being sycophantic
@@ -220,27 +215,17 @@
       <div class="role">role: the constitution&rsquo;s only verbatim use of &ldquo;sycophantic&rdquo; &middot; core passage</div>
     </div>
     <ul>
-      <li><b>Quotes are mechanical, not remembered.</b> No quote is copied by hand or from memory: each
-          stored quote is re-resolved against the pinned spec text by script, and a single character of
-          drift blocks publication.</li>
       <li><b>Every excerpt carries a role</b> -- one line stating what the passage contributes to the
           behaviour's construct.</li>
-      <li><b>Passages are core or adjacent.</b> Core passages state the behaviour's own construct.
-          Adjacent passages sit at its boundary -- a neighbouring norm, a related mechanism -- and are
+      <li><b>Passages are core or related.</b> Core passages state the behaviour's own construct.
+          Related passages sit at its boundary -- a neighbouring norm, a related mechanism -- and are
           kept and marked, with the reason, because they tell an eval designer where the construct
           ends.</li>
-      <li>On this evidence, each spec receives a <b>verdict</b> -- covered / partial / not in spec --
-          and a <b>depth score</b>, 0&#8211;4, on the rubric below. The two are separate claims: the
-          verdict says whether the behaviour is in the spec at all; depth says how much the spec gives
-          anyone trying to grade against it.</li>
+      <li>On this evidence, each spec receives a <b>depth score</b>, 0&#8211;4, on the rubric
+          below.</li>
     </ul>
 
     <div class="subhead">The depth rubric</div>
-    <p>Depth qualifies the verdict: it measures how much the spec gives an eval designer to work with
-    for this behaviour -- not how much the lab appears to care, and not how elegantly the document
-    reads. Every score carries a one-line rationale naming what is present and what is missing, in the
-    rubric's terms.</p>
-
     <div class="rubric-ledger">
       <div class="rl-row"><span class="run">○○○○</span><span class="rl-anchor"><b>0</b>absent</span>
         <span class="rl-bar">No passage bears on the behaviour.</span></div>
@@ -272,21 +257,10 @@
           instantiates a neighbouring construct rather than the behaviour's own (none of the Model
           Spec's honesty examples test a report of the assistant's <i>own actions</i>, so
           &sect;&thinsp;3 stays at 3 despite them), and a lone illustration attached to a broader
-          parent norm (the demonstration below turns on exactly this).</li>
-    </ul>
-    <p>Three rules keep the score honest:</p>
-    <ul>
-      <li><b>A dedicated section is evidence, not a requirement.</b> Any level can be reached by
-          passages scattered across sections; likewise a dedicated section with only general language
-          does not clear 3.</li>
-      <li><b>Depth is scored on core passages only.</b> Adjacent passages define the construct's edges
-          for eval designers and never raise the score.</li>
-      <li><b>Depth is independent of authority level.</b> A section carrying only guideline authority
-          can still score 4 -- the Model Spec's dedicated calibration section does -- and where
-          authority matters, the rationale says so rather than the score bending.</li>
+          parent norm.</li>
     </ul>
 
-    <div class="subhead">How a score is assigned &middot; &sect;&thinsp;1 No sycophancy</div>
+    <div class="subhead">How a score is assigned &middot; Example: No sycophancy</div>
     <p class="aside">The rubric is applied as a ladder: each bar must be cleared before the next is
     tested, and the score is the last bar cleared. Below, the published depth scores for
     &sect;&thinsp;1 -- <i>the model should not shift its factual claims or assessments to please the
@@ -341,8 +315,7 @@
           critique of a haiku with a broken 5-7-5 pattern, and an invitation to pick between two
           presidents.</div>
 
-        <div class="demo-q"><b>published depth</b> -- as it appears on <a href="./">the index</a> and
-        in <code>data/coverage.json</code></div>
+        <div class="demo-q"><b>published depth</b> -- as it appears on <a href="./">the index</a></div>
         <div class="demo-cell demo-res"><span class="demo-lab-inline">constitution</span>
           <span class="run">●●●○</span> <b>3 &middot; prescribed</b> -- rules quotable as pass criteria;
           the construct itself unexampled.</div>
@@ -350,41 +323,6 @@
           <span class="run">●●●●</span> <b>4 &middot; demonstrated</b> -- prescribed, plus an answer key
           of worked examples.</div>
       </div>
-    </div>
-
-    <p class="aside">Each spec above also carries two <i>adjacent</i> passages -- boundary material that
-    maps the construct's edges but, by the core-passages rule, cannot raise depth.</p>
-
-    <div class="subhead">Every score so far</div>
-    <p>The rubric was codified on 2026-07-20, after the first six scores had been assigned; all six
-    were re-checked against it that day and stand unchanged. Each score with its published rationale,
-    in the rubric's terms:</p>
-    <div class="score-ledger">
-      <div class="sc-b">&sect;&thinsp;1 &middot; No sycophancy</div>
-      <div class="sc-row"><span class="sc-spec">constitution</span>
-        <span class="sc-mark"><span class="run">●●●○</span> 3 prescribed</span>
-        <span class="sc-why">Avoid-sycophancy and no-white-lies rules; the gift case examples the
-        parent white-lie norm, the claim-shifting construct itself is unexampled.</span></div>
-      <div class="sc-row"><span class="sc-spec">model spec</span>
-        <span class="sc-mark"><span class="run">●●●●</span> 4 demonstrated</span>
-        <span class="sc-why">Invariance rule plus three worked examples.</span></div>
-      <div class="sc-b">&sect;&thinsp;2 &middot; Calibration</div>
-      <div class="sc-row"><span class="sc-spec">constitution</span>
-        <span class="sc-mark"><span class="run">●●●○</span> 3 prescribed</span>
-        <span class="sc-why">The two-directional Calibrated rule is a quotable pass criterion; no
-        examples.</span></div>
-      <div class="sc-row"><span class="sc-spec">model spec</span>
-        <span class="sc-mark"><span class="run">●●●●</span> 4 demonstrated</span>
-        <span class="sc-why">Outcome ranking plus eight worked examples.</span></div>
-      <div class="sc-b">&sect;&thinsp;3 &middot; Honesty about one&rsquo;s own actions</div>
-      <div class="sc-row"><span class="sc-spec">constitution</span>
-        <span class="sc-mark"><span class="run">●●●○</span> 3 prescribed</span>
-        <span class="sc-why">Enumerated oversight prohibitions and the no-sandbagging rule; no
-        examples of action reports.</span></div>
-      <div class="sc-row"><span class="sc-spec">model spec</span>
-        <span class="sc-mark"><span class="run">●●●○</span> 3 prescribed</span>
-        <span class="sc-why">Stop-and-escalate, audit-trail, and error-acknowledgment rules; no
-        examples test an action report.</span></div>
     </div>
   </section>
 
@@ -494,14 +432,8 @@
     target="_blank" rel="noopener">OpenAI Model Spec</a> -- mirrored into the repository from the labs' own
     published sources and confirmed current at the start of the sweep.</p>
     <ul>
-      <li>A term list is built before searching -- the behaviour's own words, synonyms, antonym-phrases, and
-          spec-register phrasings -- and documented in full in the sweep's public spec-coverage record,
-          <b>including the terms that returned nothing</b>: empty probes are part of the evidence that the
-          sweep was exhaustive.</li>
-      <li>A search hit is a starting point, not the passage: the whole surrounding section is read, because
-          a spec often states the actual rule a few sentences away from the word that matched.</li>
-      <li>What the extraction produces -- pinned verbatim citations, the core/adjacent split, the
-          verdict, and the depth score -- is defined in
+      <li>How passages are found, cited, and scored -- the term-list search, the pinned verbatim
+          citations, the core/related split, and the depth score -- is defined in
           <a href="#coverage">How we assess coverage</a> above.</li>
     </ul>
     <p class="gate-line"><b>Gate 4</b> -- quotes are mechanical, not remembered. Every stored quote is
