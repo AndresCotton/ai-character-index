@@ -37,6 +37,19 @@ jobs:
       - name: Check out the merged commit
         uses: actions/checkout@v4
 
+      # wrangler-action installs Wrangler with the repo's package manager, which
+      # is pnpm (pnpm-lock.yaml + packageManager in package.json). pnpm isn't on
+      # the runner by default, so set it up first or the install step can't find
+      # it ("Unable to locate executable file: pnpm").
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
       - name: Deploy site/ to Cloudflare Pages
         id: deploy
         uses: cloudflare/wrangler-action@v3
