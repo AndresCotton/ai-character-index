@@ -10,7 +10,7 @@ authorized slice of stage 5 (repo coverage data + spec reader). It does NOT
 publish to Notion and adds no eval data -- the full stage 5 still requires
 Gates 1-3 for the behaviour. One behaviour per pass; never batch.
 
-Precedent: behaviour 2 (Calibration), `research/evals/02-calibration/`. Its
+Precedent: behaviour 2 (Calibration), `research/sweeps/02-calibration/`. Its
 artifact is both the format template and a parsing contract --
 `engine/publish-coverage.py` reads the artifact mechanically (see its docstring
 for the exact entry format). Deviating from the format breaks step 3.
@@ -30,7 +30,7 @@ for the exact entry format). Deviating from the format breaks step 3.
 - Spawn ONE fresh-context agent for the behaviour. Its instructions: follow
   `.claude/skills/4-sweep-spec-coverage/SKILL.md` exactly; behaviour definition
   and facets from `research/core-behaviour-list.md`; artifact format per the
-  behaviour-2 template; write `research/evals/NN-<slug>/4-spec-coverage.md`
+  behaviour-2 template; write `research/sweeps/NN-<slug>/4-spec-coverage.md`
   and a `gates.md` stub; no publishing, no git. Tell it the mirror-freshness
   result from step 0 so it records rather than re-pulls.
 - Orchestrator independently re-resolves a sample of locators with `cite.py`
@@ -50,7 +50,7 @@ artifact's pending note with the signed date, and append the Gate 4 entry to
 
 ## Step 3 -- Publish, commit each surface, push
 
-- `python3 engine/publish-coverage.py research/evals/NN-<slug>` -- parses the
+- `python3 engine/publish-coverage.py research/sweeps/NN-<slug>` -- parses the
   artifact, re-verifies every quote byte-for-byte against `cite.py`, rewrites
   `data/coverage.json`.
 - Add the behaviour (id, slug, name, definition, category) to `BEHAVIOURS` in
@@ -65,7 +65,7 @@ artifact's pending note with the signed date, and append the Gate 4 entry to
 
 - `node engine/verify-spec-reader.mjs` -- every behaviour x spec view must
   PASS (this re-checks all previously published behaviours too).
-- `python3 engine/publish-coverage.py research/evals/NN-<slug> --check` --
+- `python3 engine/publish-coverage.py research/sweeps/NN-<slug> --check` --
   must print CHECK OK.
 - Local look for the human: `cd site && python3 -m http.server 8000`, then
   http://localhost:8000/spec-reader/?behavior=<slug>. Never open via file:// --

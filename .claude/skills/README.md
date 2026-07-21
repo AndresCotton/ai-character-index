@@ -36,13 +36,13 @@ subagent that did not execute the sweep** -- start a new conversation and say
 ## Where everything lands
 
 ```
-research/evals/NN-<slug>/    the committed working record
+research/sweeps/NN-<slug>/    the committed working record
   register.md                every candidate found, one row + disposition each
   1-dossiers.md              full dossier per candidate (kept or not)
   2-curation.md  3-scores.md  4-spec-coverage.md
   gates.md                   your dated sign-offs, corrections, accepted open items
   verify.md                  the stage-6 audit
-research/evals/NN-<slug>.md  canonical write-up, assembled at stage 5
+research/sweeps/NN-<slug>.md  canonical write-up, assembled at stage 5
 data/evals.json  data/coverage.json   what the site renders
 ```
 

@@ -7,7 +7,7 @@ description: Stage 4 of a behaviour sweep (parallel track, independent of stages
 
 Input: the behaviour (number, name, definition, facets). Independent of stages 1-3;
 may run in parallel with them.
-Output: `research/evals/NN-<slug>/4-spec-coverage.md`.
+Output: `research/sweeps/NN-<slug>/4-spec-coverage.md`.
 Read first: `specs/CITATION.md` -- the locator format, block/sentence rules, and
 normalizations are all defined there. Resolver: `engine/spec-cite/cite.py`. Ground
 truth: the local mirrors under `specs/` (versions per `SPECS` in `cite.py`).

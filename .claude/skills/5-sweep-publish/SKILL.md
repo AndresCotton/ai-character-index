@@ -6,7 +6,7 @@ description: Stage 5 of a behaviour sweep -- internal publication: transcribe th
 # Sweep stage 5: publish (internal)
 
 Input: stage artifacts 1-4, all four gates signed in `gates.md`.
-Outputs: the three surfaces + the canonical write-up `research/evals/NN-<slug>.md`.
+Outputs: the three surfaces + the canonical write-up `research/sweeps/NN-<slug>.md`.
 IDs: `.claude/skills/behaviour-sweep/references/locations.md`.
 
 **Nothing new is decided here.** Publish transcribes approved content. If
@@ -21,8 +21,8 @@ The public site is deployed only after the stage-6 fresh-context audit signs Gat
 
 ## Surface A: repo
 
-- **Canonical write-up** `research/evals/NN-<slug>.md`, assembled from the stage
-  artifacts. Template: `research/evals/01-no-sycophancy.md` -- method (quoting the
+- **Canonical write-up** `research/sweeps/NN-<slug>.md`, assembled from the stage
+  artifacts. Template: `research/sweeps/01-no-sycophancy.md` -- method (quoting the
   Gate 2 curation-decision line); rubric operationalization with the 15 item IDs;
   spec coverage excerpts; curated evals; rejected candidates table; adherence
   summary; cross-cutting findings; Appendix A verdict matrix; and the whole-sweep
@@ -32,7 +32,7 @@ The public site is deployed only after the stage-6 fresh-context audit signs Gat
 - **`data/evals.json`:** one entry per curated eval (per-eval `sources` array with
   verification status per link, `notion_page`, `quality_confidence`, adherence with
   provenance strings) plus the rejected entries; update the top-level `assessment`
-  block to reflect the gate log honestly -- link `research/evals/NN-<slug>/gates.md`
+  block to reflect the gate log honestly -- link `research/sweeps/NN-<slug>/gates.md`
   as the review record and do not claim more review than the gates record (a gate
   spot-audit is not an item-by-item human review).
 - **`data/coverage.json`:** the behaviour's rows with `locator` + `quote` citations

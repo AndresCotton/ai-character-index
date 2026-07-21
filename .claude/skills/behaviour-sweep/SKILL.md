@@ -21,7 +21,7 @@ when you reach its stage -- this file only sequences them.
 | 2 | `2-sweep-curate` | `2-curation.md`, dispositions final | G2: curation is legible; the human owns the set |
 | 3 | `3-sweep-score` | `3-scores.md` | G3: scores are auditable |
 | 4 | `4-sweep-spec-coverage` | `4-spec-coverage.md` | G4: quotes are mechanical, not remembered |
-| 5 | `5-sweep-publish` | three internal surfaces + `research/evals/NN-<slug>.md` | G5: internal publication faithful to the artifacts |
+| 5 | `5-sweep-publish` | three internal surfaces + `research/sweeps/NN-<slug>.md` | G5: internal publication faithful to the artifacts |
 | 6 | `6-sweep-verify` | `verify.md` | G6: sweep complete (fresh-context audit) -> public site deploy |
 
 Two independent tracks: **evidence** (1 -> 2 -> 3) and **spec** (4). Stage 4 may run
@@ -36,7 +36,7 @@ then public.
 ## Sweep directory
 
 ```
-research/evals/NN-<slug>/     working record (committed with the sweep)
+research/sweeps/NN-<slug>/     working record (committed with the sweep)
   register.md                 candidate register -- the spine; updated at every stage
   1-dossiers.md               discovery output
   2-curation.md               curation memo
@@ -44,10 +44,10 @@ research/evals/NN-<slug>/     working record (committed with the sweep)
   4-spec-coverage.md          excerpt sets, verdict, depth
   gates.md                    gate log: sign-offs, corrections, accepted open items
   verify.md                   stage-6 audit report
-research/evals/NN-<slug>.md   canonical write-up, assembled at stage 5
+research/sweeps/NN-<slug>.md   canonical write-up, assembled at stage 5
 ```
 
-The behaviour-1 sweep (`research/evals/01-no-sycophancy.md`) predates this layout;
+The behaviour-1 sweep (`research/sweeps/01-no-sycophancy.md`) predates this layout;
 its content structure remains the template for write-ups and Notion pages.
 
 ## Gate protocol (applies at every gate)

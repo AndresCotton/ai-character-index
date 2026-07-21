@@ -6,9 +6,9 @@ description: Stage 3 of a behaviour sweep -- score each curated eval 0-4 on Inte
 # Sweep stage 3: score
 
 Input: the curated set + `1-dossiers.md`, with Gate 2 signed.
-Output: `research/evals/NN-<slug>/3-scores.md`; register Used-downstream column
+Output: `research/sweeps/NN-<slug>/3-scores.md`; register Used-downstream column
 marked `scored` per eval.
-Operationalization reference: `research/evals/01-no-sycophancy.md`, sections "Rubric
+Operationalization reference: `research/sweeps/01-no-sycophancy.md`, sections "Rubric
 operationalization (v0)" and "Appendix A" -- follow their structure exactly. Rubric
 source of truth: the Notion Evals Rubric (RAND, Paskov et al. 2025).
 

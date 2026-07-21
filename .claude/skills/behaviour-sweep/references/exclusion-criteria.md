@@ -46,7 +46,7 @@ date-labelling at extraction (behaviour-1 precedent: claude-1.3's 98% apology "s
 not be quoted as current"). Conversely, strong historical numbers do not save a dead
 instrument.
 
-## The candidate register (`research/evals/NN-<slug>/register.md`)
+## The candidate register (`research/sweeps/NN-<slug>/register.md`)
 
 One row per candidate. Created at discovery, updated by every later stage; after
 Gate 6 every row is either fully propagated to the surfaces or explains why not.
