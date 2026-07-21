@@ -1,0 +1,49 @@
+name: Deploy site
+
+# Publishes the static site in site/ to Cloudflare Pages (production) on every
+# merge to main. This is the automated half of PLAN.md's "merging a PR is the
+# push-to-production button": nothing reaches the live site until it lands on main.
+#
+# Setup required once (see .github/workflows/README.md):
+#   - repo secret CLOUDFLARE_API_TOKEN  (Cloudflare token with "Pages: Edit")
+#   - repo secret CLOUDFLARE_ACCOUNT_ID (the Cloudflare account id)
+
+on:
+  push:
+    branches: [main]
+    # The site is self-contained in site/, so only redeploy when it (or this
+    # workflow) changes. Data/research-only commits don't alter the built site.
+    paths:
+      - "site/**"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch: {}
+
+# Never run two production deploys at once, and let an in-flight deploy finish
+# rather than cancelling it half-way (which could leave stale files live).
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.deployment-url }}
+    steps:
+      - name: Check out the merged commit
+        uses: actions/checkout@v4
+
+      - name: Deploy site/ to Cloudflare Pages
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.110.0"
+          # --branch main marks this a production deployment (main is the
+          # Cloudflare Pages production branch); other branches would be previews.
+          command: pages deploy site --project-name ai-character-index --branch main
