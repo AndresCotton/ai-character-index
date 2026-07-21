@@ -6,7 +6,7 @@ description: Stage 2 of a behaviour sweep -- assign every discovered candidate a
 # Sweep stage 2: curate
 
 Input: `register.md` + `1-dossiers.md`, with Gate 1 signed in `gates.md`.
-Output: `research/evals/NN-<slug>/2-curation.md`; register Disposition column finalized.
+Output: `research/sweeps/NN-<slug>/2-curation.md`; register Disposition column finalized.
 Read first: `.claude/skills/behaviour-sweep/references/exclusion-criteria.md`, in
 full. Every disposition uses its vocabulary and codes. If a candidate fits no code,
 flag the taxonomy gap to the human at the gate -- do not stretch a code.

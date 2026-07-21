@@ -2,7 +2,7 @@
 """Publish a behaviour's stage-4 spec coverage into data/coverage.json.
 
 Usage:
-    publish-coverage.py research/evals/NN-<slug> [--check]
+    publish-coverage.py research/sweeps/NN-<slug> [--check]
 
 Parses the behaviour's stage-4 artifact (4-spec-coverage.md), re-verifies every
 stored quote byte-for-byte against engine/spec-cite/cite.py, and replaces that

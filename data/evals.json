@@ -5,7 +5,7 @@
     "produced_by": "AI-assisted sweep (Claude, Claude Code session), directed by Andrés Cotton",
     "human_reviewed": false,
     "method": "Three parallel research agents fetched primary sources; findings consolidated, scored 0-4 per rubric dimension with per-checklist-item verdicts (met/partial/not met/not reported/not verified); every URL live-checked at sweep time.",
-    "detail_pages": "Per-eval item-by-item findings, evidence tiers, and epistemic-status blocks live on each eval's Notion row page and in research/evals/01-no-sycophancy.md (Appendix A holds the verdict matrix)."
+    "detail_pages": "Per-eval item-by-item findings, evidence tiers, and epistemic-status blocks live on each eval's Notion row page and in research/sweeps/01-no-sycophancy.md (Appendix A holds the verdict matrix)."
   },
   "evals": [
     {

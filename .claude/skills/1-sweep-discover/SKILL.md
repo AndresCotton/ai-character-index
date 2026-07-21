@@ -6,7 +6,7 @@ description: Stage 1 of a behaviour sweep -- fan out research agents over the ev
 # Sweep stage 1: discover
 
 Input: one behaviour from `research/core-behaviour-list.md` (number NN, name, definition, facets).
-Outputs: `research/evals/NN-<slug>/1-dossiers.md` and `research/evals/NN-<slug>/register.md`.
+Outputs: `research/sweeps/NN-<slug>/1-dossiers.md` and `research/sweeps/NN-<slug>/register.md`.
 Read first: `.claude/skills/behaviour-sweep/references/exclusion-criteria.md` (register conventions) and `references/locations.md` in the same directory.
 
 ## Principle

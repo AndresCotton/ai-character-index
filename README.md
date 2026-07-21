@@ -16,7 +16,7 @@ Evidence enters through **behaviour sweeps**: a staged pipeline with a human sig
 
 | Folder | What it holds |
 |---|---|
-| [`research/`](research/) | The intellectual core: the [canonical behaviour list](research/core-behaviour-list.md) (synced with Notion), sweep records in [`evals/`](research/evals/), its [sources](research/sources/), superseded drafts in `archive/` |
+| [`research/`](research/) | The intellectual core: the [canonical behaviour list](research/core-behaviour-list.md) (synced with Notion), sweep records in [`evals/`](research/sweeps/), its [sources](research/sources/), superseded drafts in `archive/` |
 | [`.claude/skills/`](.claude/skills/) | The behaviour-sweep pipeline: versioned procedure files, one per stage, each ending at a human gate -- [how to run a sweep](.claude/skills/README.md) |
 | [`specs/`](specs/) | Local mirrors of the specs the index scores against (Claude constitution, OpenAI Model Spec) |
 | [`data/`](data/) | Canonical machine-readable data the site renders from; schemas in `data/schema/` |

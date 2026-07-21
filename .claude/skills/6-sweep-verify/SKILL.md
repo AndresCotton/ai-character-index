@@ -6,7 +6,7 @@ description: Stage 6 of a behaviour sweep -- fresh-context audit of a completed 
 # Sweep stage 6: verify
 
 Input: a behaviour whose Gates 1-5 are signed.
-Output: `research/evals/NN-<slug>/verify.md` -- findings, discrepancies, and their
+Output: `research/sweeps/NN-<slug>/verify.md` -- findings, discrepancies, and their
 resolution.
 
 **Independence rule:** this stage is run by a context that did not produce the sweep
