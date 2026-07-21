@@ -34,6 +34,9 @@ const GROUPS = [
   },
 ];
 
+/* Depth anchors per the coverage depth rubric (methodology.html#coverage). */
+const DEPTH_ANCHORS = ["absent", "named", "discussed", "prescribed", "demonstrated"];
+
 const state = {
   payload: null,
   selectedBehaviour: null,
@@ -786,7 +789,8 @@ function renderDocument(document) {
   panel.querySelector(".document-lab").textContent = document.lab;
   panel.querySelector(".document-title").textContent = document.title;
   panel.querySelector(".document-version").textContent = `Version ${document.version}`;
-  panel.querySelector(".coverage-depth").textContent = `Coverage depth ${document.coverage.depth} / 4`;
+  panel.querySelector(".coverage-depth").textContent =
+    `Coverage depth ${document.coverage.depth} / 4 · ${DEPTH_ANCHORS[document.coverage.depth] ?? ""}`;
   panel.querySelector(".document-body").innerHTML = renderMarkdown(document.markdown, markdownContext);
 
   const missing = annotatePassages(panel, document);
