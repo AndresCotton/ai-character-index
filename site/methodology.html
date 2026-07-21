@@ -86,6 +86,59 @@
   a { color: var(--spec); text-decoration: none; }
   a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
+  /* ---------- how we assess coverage ---------- */
+  .run { font-size: 10.5px; letter-spacing: 2.5px; white-space: nowrap; vertical-align: 1px;
+         color: var(--spec); opacity: .85; }
+  .subhead { font-variant-caps: all-small-caps; letter-spacing: .14em; font-size: 14.5px;
+             font-weight: 600; color: var(--ink2); margin: 24px 0 8px; }
+  .cite-sample { max-width: 66ch; margin: 12px 0 14px; border-left: 2px solid var(--hair2);
+                 padding: 4px 0 4px 16px; }
+  .cite-sample code { display: inline-block; margin-bottom: 7px; }
+  .cite-sample .q { font-family: var(--serif); font-size: 14.5px; line-height: 1.6; color: var(--ink); }
+  .cite-sample .role { font-size: 13px; font-style: italic; color: var(--ink3); margin-top: 5px; }
+  .score-ledger { max-width: 72ch; margin: 12px 0 4px; }
+  .sc-b { font-variant-caps: all-small-caps; letter-spacing: .12em; font-weight: 600; font-size: 14.5px;
+          color: var(--ink2); padding: 12px 0 4px; border-bottom: 1px solid var(--hair); }
+  .sc-row { display: grid; grid-template-columns: 104px 156px 1fr; gap: 0 16px; align-items: baseline;
+            padding: 7px 0; border-bottom: 1px solid var(--hair); }
+  .sc-spec { font-variant-caps: all-small-caps; letter-spacing: .1em; font-size: 14px; color: var(--ink2); }
+  .sc-mark { white-space: nowrap; font-variant-caps: all-small-caps; letter-spacing: .08em;
+             font-weight: 600; font-size: 14.5px; }
+  .sc-why { font-size: 14px; line-height: 1.5; color: var(--ink); }
+  .rubric-ledger { max-width: 72ch; margin: 14px 0 18px; border-top: 1px solid var(--hair); }
+  .rl-row { display: grid; grid-template-columns: 56px 130px 1fr; gap: 0 18px; align-items: baseline;
+            padding: 8.5px 0; border-bottom: 1px solid var(--hair); }
+  .rl-anchor { font-variant-caps: all-small-caps; letter-spacing: .1em; font-weight: 600; font-size: 15.5px; }
+  .rl-anchor b { font-family: var(--mono); font-size: 12.5px; font-weight: 500; color: var(--ink3);
+                 margin-right: 7px; letter-spacing: 0; }
+  .rl-bar { font-size: 14.5px; line-height: 1.52; color: var(--ink); }
+
+  .demo { border: 1px solid var(--hair); margin: 14px 0 12px; background: var(--panel); }
+  .demo-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .demo-lab { padding: 10px 16px; font-variant-caps: all-small-caps; letter-spacing: .12em;
+              font-size: 14px; font-weight: 600; color: var(--ink2); border-bottom: 1px solid var(--hair); }
+  .demo-lab code { margin-left: 8px; font-variant-caps: normal; letter-spacing: 0; font-weight: 400; }
+  .demo-q { grid-column: 1 / -1; padding: 8px 16px; background: var(--lift);
+            border-bottom: 1px solid var(--hair); font-size: 13.5px; line-height: 1.5; color: var(--ink2); }
+  .demo-q b { font-variant-caps: all-small-caps; letter-spacing: .1em; font-size: 14px; color: var(--ink); }
+  .demo-cell { padding: 10px 16px 12px; font-size: 14px; line-height: 1.55; color: var(--ink);
+               border-bottom: 1px solid var(--hair); }
+  .demo-cell:last-child, .demo-cell:nth-last-child(2):not(.c2) { border-bottom: none; }
+  .c2 { border-left: 1px solid var(--hair); }
+  .demo-verdict { font-variant-caps: all-small-caps; letter-spacing: .1em; font-weight: 600;
+                  color: var(--ink2); margin-right: 6px; }
+  .demo-lab-inline { display: none; }
+  .demo-res b { font-variant-caps: all-small-caps; letter-spacing: .1em; font-size: 14.5px; }
+  @media (max-width: 640px) {
+    .demo-grid { grid-template-columns: 1fr; }
+    .demo-lab { display: none; }
+    .c2 { border-left: none; }
+    .demo-cell:nth-last-child(2):not(.c2) { border-bottom: 1px solid var(--hair); }
+    .demo-lab-inline { display: block; font-variant-caps: all-small-caps; letter-spacing: .12em;
+                       font-size: 12.5px; color: var(--ink3); margin-bottom: 2px; }
+    .sc-row { grid-template-columns: 1fr; gap: 1px 0; padding: 8px 0; }
+  }
+
   .src-list { list-style: none; max-width: 70ch; }
   .src-list li { padding-left: 22px; }
 
@@ -131,7 +184,8 @@
     <h2>What the index measures</h2>
     <p>For each behaviour, three strata, each on a 0&#8211;4 scale:</p>
     <ul>
-      <li><b>Coverage</b> -- what each lab's own specification declares about the behaviour, cited verbatim.</li>
+      <li><b>Coverage</b> -- what each lab's own specification declares about the behaviour, cited verbatim
+          (<a href="#coverage">how we assess it</a>).</li>
       <li><b>Instruments</b> -- what public evaluations of the behaviour exist. A fact about the field, not about any lab.</li>
       <li><b>Adherence</b> -- what those evaluations report per lab, as historical per-paper snapshots.</li>
     </ul>
@@ -142,6 +196,198 @@
     <p>Evidence enters through a <b>behaviour sweep</b>: a staged pipeline run one behaviour at a time.
     Every stage produces a committed artifact and stops at a <b>gate</b> -- a checklist a human verifies
     and signs before the next stage may start.</p>
+  </section>
+
+  <section class="m" id="coverage">
+    <h2>How we assess coverage</h2>
+    <p>Coverage answers one question, per behaviour and per lab: <b>what does the lab's own
+    specification declare about this behaviour, and in what depth?</b> It is scored from the documents
+    alone -- what a spec commits to, not what a lab's models do (adherence measures that) -- so it is
+    the stratum where each lab speaks entirely in its own words: every claim is carried by verbatim
+    quotation. The full report per behaviour -- citations, verdict, depth score, rationale -- is
+    published in <code>data/coverage.json</code> and can be read passage by passage, in place, in the
+    <a href="spec-reader/">spec reader</a>.</p>
+
+    <div class="subhead">The evidence &middot; pinned verbatim citations</div>
+    <p>The ground truth is the latest published version of each specification, mirrored into the
+    repository from the labs' own sources -- currently <code>constitution@2026-01-20</code> and
+    <code>model-spec@2025-12-18</code>. Every passage that bears on the behaviour is extracted as an
+    exact, unabridged quote under a locator that pins the spec version, section path, paragraph, and
+    sentence range:</p>
+    <div class="cite-sample">
+      <code>constitution@2026-01-20 &rsaquo; Being helpful &rsaquo; What constitutes genuine helpfulness &rsaquo; &para;9 s1</code>
+      <div class="q">&ldquo;Concern for user wellbeing means that Claude should avoid being sycophantic
+      or trying to foster excessive engagement or reliance on itself if this isn&rsquo;t in the
+      person&rsquo;s genuine interest.&rdquo;</div>
+      <div class="role">role: the constitution&rsquo;s only verbatim use of &ldquo;sycophantic&rdquo; &middot; core passage</div>
+    </div>
+    <ul>
+      <li><b>Quotes are mechanical, not remembered.</b> No quote is copied by hand or from memory: each
+          stored quote is re-resolved against the pinned spec text by script, and a single character of
+          drift blocks publication.</li>
+      <li><b>Every excerpt carries a role</b> -- one line stating what the passage contributes to the
+          behaviour's construct.</li>
+      <li><b>Passages are core or adjacent.</b> Core passages state the behaviour's own construct.
+          Adjacent passages sit at its boundary -- a neighbouring norm, a related mechanism -- and are
+          kept and marked, with the reason, because they tell an eval designer where the construct
+          ends.</li>
+      <li>On this evidence, each spec receives a <b>verdict</b> -- covered / partial / not in spec --
+          and a <b>depth score</b>, 0&#8211;4, on the rubric below. The two are separate claims: the
+          verdict says whether the behaviour is in the spec at all; depth says how much the spec gives
+          anyone trying to grade against it.</li>
+    </ul>
+
+    <div class="subhead">The depth rubric</div>
+    <p>Depth qualifies the verdict: it measures how much the spec gives an eval designer to work with
+    for this behaviour -- not how much the lab appears to care, and not how elegantly the document
+    reads. Every score carries a one-line rationale naming what is present and what is missing, in the
+    rubric's terms.</p>
+
+    <div class="rubric-ledger">
+      <div class="rl-row"><span class="run">○○○○</span><span class="rl-anchor"><b>0</b>absent</span>
+        <span class="rl-bar">No passage bears on the behaviour.</span></div>
+      <div class="rl-row"><span class="run">●○○○</span><span class="rl-anchor"><b>1</b>named</span>
+        <span class="rl-bar">The behaviour appears -- a word or clause, typically inside a list or a
+        passage about something else -- but the spec says nothing further about it.</span></div>
+      <div class="rl-row"><span class="run">●●○○</span><span class="rl-anchor"><b>2</b>discussed</span>
+        <span class="rl-bar">The spec addresses the behaviour in its own right -- what the norm is, why
+        it matters -- but only in terms too general to grade a response against.</span></div>
+      <div class="rl-row"><span class="run">●●●○</span><span class="rl-anchor"><b>3</b>prescribed</span>
+        <span class="rl-bar">The spec states concrete do/don't rules or procedures for the behaviour,
+        specific enough that a grader can quote the spec's own sentences as pass criteria.</span></div>
+      <div class="rl-row"><span class="run">●●●●</span><span class="rl-anchor"><b>4</b>demonstrated</span>
+        <span class="rl-bar">Prescribed, plus worked examples: concrete scenarios where the spec shows
+        the sanctioned response, usable as an answer key for borderline cases.</span></div>
+    </div>
+
+    <p>Two boundaries do most of the work:</p>
+    <ul>
+      <li><b>2 vs 3 is the grading test:</b> could an eval score a transcript by quoting the spec, or
+          would the grader have to invent the standard? If invent, it is a 2. A passage that praises
+          honesty in general is a 2; a rule a grader can hold a transcript against is a 3.</li>
+      <li><b>3 vs 4 is the worked-example test:</b> a worked example is a concrete scenario for which
+          the spec states the sanctioned response, specific enough for an eval item to adapt. Format is
+          irrelevant: the Model Spec's request/response blocks and the constitution's inline prose
+          cases -- the nurse/medication case and its five deployment-context variants, the Aria persona
+          rulings, the graded operator-instruction triple -- qualify equally, so a spec's principled
+          prose style is not itself a cap on depth. Two things do not count: an example that
+          instantiates a neighbouring construct rather than the behaviour's own (none of the Model
+          Spec's honesty examples test a report of the assistant's <i>own actions</i>, so
+          &sect;&thinsp;3 stays at 3 despite them), and a lone illustration attached to a broader
+          parent norm (the demonstration below turns on exactly this).</li>
+    </ul>
+    <p>Three rules keep the score honest:</p>
+    <ul>
+      <li><b>A dedicated section is evidence, not a requirement.</b> Any level can be reached by
+          passages scattered across sections; likewise a dedicated section with only general language
+          does not clear 3.</li>
+      <li><b>Depth is scored on core passages only.</b> Adjacent passages define the construct's edges
+          for eval designers and never raise the score.</li>
+      <li><b>Depth is independent of authority level.</b> A section carrying only guideline authority
+          can still score 4 -- the Model Spec's dedicated calibration section does -- and where
+          authority matters, the rationale says so rather than the score bending.</li>
+    </ul>
+
+    <div class="subhead">How a score is assigned &middot; &sect;&thinsp;1 No sycophancy</div>
+    <p class="aside">The rubric is applied as a ladder: each bar must be cleared before the next is
+    tested, and the score is the last bar cleared. Below, the published depth scores for
+    &sect;&thinsp;1 -- <i>the model should not shift its factual claims or assessments to please the
+    user</i> -- re-derived step by step from the passages the sweep extracted. Every quote is verbatim;
+    all mapped passages can be read in place in the <a href="spec-reader/">spec reader</a>.</p>
+
+    <div class="demo">
+      <div class="demo-grid">
+        <div class="demo-lab">Claude constitution <code>constitution@2026-01-20</code></div>
+        <div class="demo-lab c2">OpenAI Model Spec <code>model-spec@2025-12-18</code></div>
+
+        <div class="demo-q"><b>1 &middot; named</b> -- does any passage bear on the behaviour?</div>
+        <div class="demo-cell"><span class="demo-lab-inline">constitution</span>
+          <span class="demo-verdict">cleared</span> Six core passages do; one is the document's only
+          verbatim use of the word: &ldquo;Claude should avoid being sycophantic&hellip;&rdquo;</div>
+        <div class="demo-cell c2"><span class="demo-lab-inline">model spec</span>
+          <span class="demo-verdict">cleared</span> Ten core passages, including a dedicated section,
+          <code>#avoid_sycophancy</code>.</div>
+
+        <div class="demo-q"><b>2 &middot; discussed</b> -- is the behaviour addressed in its own right,
+        the norm and why it matters?</div>
+        <div class="demo-cell"><span class="demo-lab-inline">constitution</span>
+          <span class="demo-verdict">cleared</span> Obsequiousness is named as the failure mode of
+          intrinsic helpfulness -- &ldquo;an unfortunate trait at best and a dangerous one at
+          worst&rdquo; -- and epistemic cowardice as a violation of honesty norms.</div>
+        <div class="demo-cell c2"><span class="demo-lab-inline">model spec</span>
+          <span class="demo-verdict">cleared</span> The section opens with the norm and its stakes:
+          &ldquo;sycophancy, which erodes trust. The assistant exists to help the user, not flatter
+          them or agree with them all the time.&rdquo;</div>
+
+        <div class="demo-q"><b>3 &middot; prescribed</b> -- the grading test: could a grader quote the
+        spec's own sentences as pass criteria?</div>
+        <div class="demo-cell"><span class="demo-lab-inline">constitution</span>
+          <span class="demo-verdict">cleared</span> Yes -- &ldquo;Claude only sincerely asserts things
+          it believes to be true&rdquo; and &ldquo;Claude should not even tell white lies of this
+          kind&rdquo; are quotable pass criteria for a claim-shifting transcript.</div>
+        <div class="demo-cell c2"><span class="demo-lab-inline">model spec</span>
+          <span class="demo-verdict">cleared</span> Yes -- the invariance rule is a directly quotable
+          criterion: &ldquo;the factual aspects of the assistant&rsquo;s response should not differ
+          based on how the user&rsquo;s question is phrased.&rdquo;</div>
+
+        <div class="demo-q"><b>4 &middot; demonstrated</b> -- the worked-example test: does the spec
+        show the sanctioned response in concrete scenarios of <i>this</i> behaviour?</div>
+        <div class="demo-cell"><span class="demo-lab-inline">constitution</span>
+          <span class="demo-verdict">not cleared</span> The one nearby example -- telling someone you
+          love a gift you actually dislike -- instantiates the parent white-lie norm; the
+          claim-shifting construct itself is unexampled. A lone illustration of a broader norm does not
+          clear the bar.</div>
+        <div class="demo-cell c2"><span class="demo-lab-inline">model spec</span>
+          <span class="demo-verdict">cleared</span> Three request/response examples under
+          <code>#avoid_sycophancy</code>: an opinion asked with the user's own stance attached, a
+          critique of a haiku with a broken 5-7-5 pattern, and an invitation to pick between two
+          presidents.</div>
+
+        <div class="demo-q"><b>published depth</b> -- as it appears on <a href="./">the index</a> and
+        in <code>data/coverage.json</code></div>
+        <div class="demo-cell demo-res"><span class="demo-lab-inline">constitution</span>
+          <span class="run">●●●○</span> <b>3 &middot; prescribed</b> -- rules quotable as pass criteria;
+          the construct itself unexampled.</div>
+        <div class="demo-cell demo-res c2"><span class="demo-lab-inline">model spec</span>
+          <span class="run">●●●●</span> <b>4 &middot; demonstrated</b> -- prescribed, plus an answer key
+          of worked examples.</div>
+      </div>
+    </div>
+
+    <p class="aside">Each spec above also carries two <i>adjacent</i> passages -- boundary material that
+    maps the construct's edges but, by the core-passages rule, cannot raise depth.</p>
+
+    <div class="subhead">Every score so far</div>
+    <p>The rubric was codified on 2026-07-20, after the first six scores had been assigned; all six
+    were re-checked against it that day and stand unchanged. Each score with its published rationale,
+    in the rubric's terms:</p>
+    <div class="score-ledger">
+      <div class="sc-b">&sect;&thinsp;1 &middot; No sycophancy</div>
+      <div class="sc-row"><span class="sc-spec">constitution</span>
+        <span class="sc-mark"><span class="run">●●●○</span> 3 prescribed</span>
+        <span class="sc-why">Avoid-sycophancy and no-white-lies rules; the gift case examples the
+        parent white-lie norm, the claim-shifting construct itself is unexampled.</span></div>
+      <div class="sc-row"><span class="sc-spec">model spec</span>
+        <span class="sc-mark"><span class="run">●●●●</span> 4 demonstrated</span>
+        <span class="sc-why">Invariance rule plus three worked examples.</span></div>
+      <div class="sc-b">&sect;&thinsp;2 &middot; Calibration</div>
+      <div class="sc-row"><span class="sc-spec">constitution</span>
+        <span class="sc-mark"><span class="run">●●●○</span> 3 prescribed</span>
+        <span class="sc-why">The two-directional Calibrated rule is a quotable pass criterion; no
+        examples.</span></div>
+      <div class="sc-row"><span class="sc-spec">model spec</span>
+        <span class="sc-mark"><span class="run">●●●●</span> 4 demonstrated</span>
+        <span class="sc-why">Outcome ranking plus eight worked examples.</span></div>
+      <div class="sc-b">&sect;&thinsp;3 &middot; Honesty about one&rsquo;s own actions</div>
+      <div class="sc-row"><span class="sc-spec">constitution</span>
+        <span class="sc-mark"><span class="run">●●●○</span> 3 prescribed</span>
+        <span class="sc-why">Enumerated oversight prohibitions and the no-sandbagging rule; no
+        examples of action reports.</span></div>
+      <div class="sc-row"><span class="sc-spec">model spec</span>
+        <span class="sc-mark"><span class="run">●●●○</span> 3 prescribed</span>
+        <span class="sc-why">Stop-and-escalate, audit-trail, and error-acknowledgment rules; no
+        examples test an action report.</span></div>
+    </div>
   </section>
 
   <section class="m">
@@ -256,12 +502,9 @@
           sweep was exhaustive.</li>
       <li>A search hit is a starting point, not the passage: the whole surrounding section is read, because
           a spec often states the actual rule a few sentences away from the word that matched.</li>
-      <li>Every quote is exact, never edited or abridged, and is pinned to the spec version it came from --
-          each is re-checked mechanically against the spec text rather than copied by hand.</li>
-      <li>Each excerpt carries a one-line role; boundary passages are kept but marked adjacent, with the reason
-          they sit outside the core construct.</li>
-      <li>Each spec receives a verdict (covered / partial / not in spec) and a depth score 0&#8211;4 with a
-          rationale naming what is present and what is missing.</li>
+      <li>What the extraction produces -- pinned verbatim citations, the core/adjacent split, the
+          verdict, and the depth score -- is defined in
+          <a href="#coverage">How we assess coverage</a> above.</li>
     </ul>
     <p class="gate-line"><b>Gate 4</b> -- quotes are mechanical, not remembered. Every stored quote is
     re-checked against the spec text in a scripted loop, with zero mismatches; the human spot-reads the set.</p>
@@ -362,7 +605,7 @@
 
 <footer>
   <div class="f-row">
-    <span class="proto-flag">methodology as executed · pipeline codified 2026-07-13, revised 2026-07-14 · § 1 swept 2026-07-12</span>
+    <span class="proto-flag">methodology as executed · pipeline codified 2026-07-13, revised 2026-07-14 · depth rubric codified 2026-07-20 · § 1 swept 2026-07-12</span>
   </div>
 </footer>
 

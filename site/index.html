@@ -326,6 +326,8 @@
   .rn-table .rn-name { font-variant-caps: all-small-caps; letter-spacing: .14em; font-size: 13px; }
   .rn-table .rn-what { color: var(--ink2); }
   .rn-table .rn-anchors { grid-column: 3; font-size: 13px; color: var(--ink3); margin-top: -6px; }
+  .rn-table .rn-anchors a { color: var(--spec); text-decoration: none; }
+  .rn-table .rn-anchors a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
   /* ---------- footer ---------- */
   footer { max-width: 880px; margin: 14px auto 34px; display: flex; flex-direction: column; gap: 8px;
@@ -433,7 +435,7 @@
    clauses remain ILLUSTRATIVE PLACEHOLDERS for design discussion.
    ========================================================================= */
 const LABS = [ { k:"A", name:"Anthropic" }, { k:"O", name:"OpenAI" } ];
-const COVW = ["not in spec","implied","touched on","covered","covered in depth"];
+const COVW = ["absent","named","discussed","prescribed","demonstrated"];
 const INSW = ["no public evals","scant","limited","substantial","strong"];
 const ADHW = ["failing","poor","mixed","good","meets target"];
 const DIMS = ["Internal validity","External validity","Reproducibility"];
@@ -711,8 +713,8 @@ sheet.insertAdjacentHTML("beforeend", `
     <div class="rn-table">
       <span class="rn-name">Instruments</span>${insRun(2)}<span class="rn-what">the public evals that exist -- a fact about the field, not any lab; the clause row's one mark</span>
       <span class="rn-anchors">0 no public evals · 1 scant · 2 limited · 3 substantial · 4 strong · <i>red ···· on the row where none exist</i></span>
-      <span class="rn-name">Coverage</span>${covRun(3, "example: covered")}<span class="rn-what">what each spec declares -- per lab, in the unfold</span>
-      <span class="rn-anchors">0 not in spec · 1 implied · 2 touched on · 3 covered · 4 covered in depth · <i>always archival blue</i></span>
+      <span class="rn-name">Coverage</span>${covRun(3, "example: prescribed")}<span class="rn-what">what each spec declares -- per lab, in the unfold</span>
+      <span class="rn-anchors">0 absent · 1 named · 2 discussed · 3 prescribed · 4 demonstrated · <i>always archival blue</i> · <a href="methodology.html#coverage">how coverage is assessed → methodology</a></span>
       <span class="rn-name">Adherence</span>${adhRun(2, "example: mixed")}<span class="rn-what">how each lab's models score on the instruments -- per lab, in the unfold</span>
       <span class="rn-anchors">${run(null, "unm", "unmeasured -- the floor of the scale")} unmeasured, the floor of the scale (no public evals exist -- worse than weak evidence, and itself a finding) · then 0 failing · 1 poor · 2 mixed · 3 good · 4 meets target · <i>colour follows the level: red up to 1, amber at 2, green from 3; instrument-strength runs share this colouring</i></span>
       <span class="rn-name">Quality</span>${qRun(3)}<span class="rn-what">the instrument itself, rubric-scored</span>
