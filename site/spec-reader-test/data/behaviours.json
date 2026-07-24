@@ -1,0 +1,5 @@
+{
+  "generatedFrom": [],
+  "note": "Behaviour set under test on the reader-test bench. Empty until the reviewer's behaviours are published. Spec text comes from ../../spec-reader/data/documents.json.",
+  "behaviours": []
+}
