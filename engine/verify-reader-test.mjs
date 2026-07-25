@@ -51,6 +51,13 @@ page.on("pageerror", error => consoleErrors.push(String(error)));
 
 let failures = 0;
 
+// Two citations that pin different sentences of one paragraph resolve to the same rendered
+// block, and a block carries one passage marker however many citations land on it. So what
+// a view must show is the number of distinct blocks the behaviour cites, not the number of
+// citations: strip the sentence suffix (`¶3 s2`, `¶18 s2-s4`, `¶9 s2-4`) and count.
+const blockOf = locator => locator.replace(/ s\d+(?:-s?\d+)?$/, "");
+const anchorCount = passages => new Set(passages.map(passage => blockOf(passage.locator))).size;
+
 function report(ok, label, detail) {
   if (!ok) failures += 1;
   console.log(`${ok ? "PASS" : "FAIL"}  ${label}${detail ? `: ${detail}` : ""}`);
@@ -83,6 +90,21 @@ async function readView(url) {
     })),
     emptyMenu: Boolean(document.querySelector(".behaviour-empty")),
     menuItems: document.querySelectorAll("[data-behaviour]").length,
+    ticked: [...document.querySelectorAll("[data-behaviour]")]
+      .filter(input => input.checked).map(input => input.dataset.behaviour),
+    // A passage carries the name of every behaviour that cites it, so a selection of
+    // several can be accounted for behaviour by behaviour.
+    byBehaviour: [...document.querySelectorAll("[data-passage-id]")]
+      .reduce((tally, anchor) => {
+        anchor.dataset.behaviours.split(" · ").forEach(name => {
+          tally[name] = (tally[name] || 0) + 1;
+        });
+        return tally;
+      }, {}),
+    // Marked as shared, and cited by more than one: the same passages, counted two ways.
+    sharedMarked: document.querySelectorAll(".passage-overlap[data-passage-id]").length,
+    sharedCited: [...document.querySelectorAll("[data-passage-id]")]
+      .filter(anchor => anchor.dataset.behaviours.includes(" · ")).length,
   }));
 }
 
@@ -131,7 +153,7 @@ if (behaviours.length === 0) {
   for (const behaviour of behaviours) {
     let total = 0;
     for (const document of documents) {
-      const passages = behaviour.coverage[document.id].passages.length;
+      const passages = anchorCount(behaviour.coverage[document.id].passages);
       total += passages;
       await expectView(
         `${base}?behavior=${behaviour.slug}&spec=${document.id}`,
@@ -145,6 +167,86 @@ if (behaviours.length === 0) {
       `${behaviour.slug} · compare`,
     );
   }
+
+  // Several behaviours read over the same text. Each must still anchor exactly its own
+  // published passages; where two of them cite one passage it is highlighted once and
+  // marked as shared, rather than counted twice or overwritten by the last one drawn.
+  const selections = [behaviours.slice(0, 3), behaviours];
+  for (const selection of selections) {
+    const slugs = selection.map(behaviour => behaviour.slug);
+    for (const document of documents) {
+      const seen = await readView(`${base}?behavior=${slugs.join(",")}&spec=${document.id}`);
+      const short = selection.map(behaviour =>
+        `${behaviour.slug} ${seen.byBehaviour[behaviour.name] || 0}/${anchorCount(behaviour.coverage[document.id].passages)}`);
+      const accounted = selection.every(behaviour =>
+        (seen.byBehaviour[behaviour.name] || 0) === anchorCount(behaviour.coverage[document.id].passages));
+      report(
+        accounted
+          && seen.status === ""
+          && seen.sharedMarked === seen.sharedCited
+          && seen.ticked.join(",") === slugs.join(","),
+        `${slugs.length} behaviors · ${document.id}`,
+        `${seen.passages} passages, ${seen.sharedMarked} shared`
+        + (accounted ? "" : `  unaccounted: ${short.join(", ")}`)
+        + (seen.status ? `  status: ${seen.status}` : ""),
+      );
+    }
+  }
+
+  // Ticking the menu must change only the highlight layer: the reader keeps its place in
+  // the text, and the behaviour taken away takes its passages with it.
+  const [first, second] = behaviours;
+  await readView(`${base}?behavior=${first.slug},${second.slug}&spec=anthropic`);
+  await page.evaluate(() => { document.querySelector(".document-scroll").scrollTop = 2400; });
+  // The panel scrolls smoothly, so wait for two readings in a row that agree before
+  // taking the position the toggle is supposed to leave alone.
+  await page.waitForFunction(() => {
+    const scroll = document.querySelector(".document-scroll");
+    const settled = scroll.scrollTop > 0 && scroll.scrollTop === scroll._previousTop;
+    scroll._previousTop = scroll.scrollTop;
+    return settled;
+  });
+  const before = await page.evaluate(() => document.querySelector(".document-scroll").scrollTop);
+  await page.click(`.behaviour-option:has([data-behaviour="${first.slug}"])`);
+  await page.waitForTimeout(250);
+  const after = await page.evaluate(() => ({
+    scrollTop: document.querySelector(".document-scroll").scrollTop,
+    passages: document.querySelectorAll("[data-passage-id]").length,
+    behaviour: document.querySelector("#finding-behaviour").textContent,
+    url: new URL(location.href).searchParams.get("behavior"),
+  }));
+  report(
+    Math.abs(after.scrollTop - before) < 4
+      && after.passages === anchorCount(second.coverage.anthropic.passages)
+      && after.behaviour === second.name
+      && after.url === second.slug,
+    "unticking one of two · anthropic",
+    `scroll ${before} → ${after.scrollTop}, ${after.passages} passages left,`
+    + ` menu reads ${after.behaviour}, url ${after.url}`,
+  );
+
+  // And with the last behaviour unticked, the specification is readable in full again.
+  await page.click("#clear-behaviours");
+  await page.waitForTimeout(250);
+  const cleared = await page.evaluate(() => ({
+    passages: document.querySelectorAll("[data-passage-id]").length,
+    hiddenBlocks: [...document.querySelectorAll(".document-body > *")].filter(child => child.hidden).length,
+    collapsedSections: document.querySelectorAll(".section-collapsed").length,
+    behaviour: document.querySelector("#finding-behaviour").textContent,
+    focusToggleHidden: getComputedStyle(document.querySelector(".document-focus-toggle")).display === "none",
+    url: new URL(location.href).searchParams.get("behavior"),
+  }));
+  report(
+    cleared.passages === 0
+      && cleared.hiddenBlocks === 0
+      && cleared.collapsedSections === 0
+      && cleared.behaviour === "No behaviors selected"
+      && cleared.focusToggleHidden
+      && cleared.url === null,
+    "nothing ticked · anthropic",
+    `${cleared.passages} passages, ${cleared.hiddenBlocks} hidden,`
+    + ` ${cleared.collapsedSections} collapsed, menu reads ${cleared.behaviour}`,
+  );
 }
 
 if (consoleErrors.length) {

@@ -3,11 +3,15 @@
  * kept separate so an external reviewer's behaviour set can be published, revised and
  * withdrawn without touching the index's own reader.
  *
- * Two differences from the original: the behaviour menu is built from whatever set has
- * been published to this bench (rather than the index's fixed thirteen), and the reader
+ * Differences from the original: the behaviour menu is built from whatever set has
+ * been published to this bench (rather than the index's fixed thirteen); the reader
  * degrades to plain reading -- both specs in full, nothing highlighted -- when that set
- * is empty. The spec text itself is shared with the published reader, so both surfaces
- * always render the same document versions.
+ * is empty; and the menu is a checklist rather than a single choice, so any number of
+ * behaviours can be read over the same text at once. Each behaviour carries its own
+ * colour, a core passage is that colour at full strength and a related one the same
+ * colour washed out, and a passage cited by more than one selected behaviour blends
+ * their colours and shows one gutter rule per behaviour. The spec text itself is shared
+ * with the published reader, so both surfaces always render the same document versions.
  */
 
 const DOCUMENTS_URL = "../spec-reader/data/documents.json";
@@ -19,9 +23,13 @@ const NO_COVERAGE = { verdict: null, depth: null, note: "", verifiedDate: "", pa
 /* Depth anchors per the coverage depth rubric (../methodology.html#coverage). */
 const DEPTH_ANCHORS = ["absent", "named", "discussed", "prescribed", "demonstrated"];
 
+/* Behaviour colours live in the stylesheet, one --hue-N per slot and one set per
+ * surface, so a palette switch repaints every highlight without re-annotating. */
+const HUE_SLOTS = 12;
+
 const state = {
   payload: null,
-  selectedBehaviour: null,
+  selectedSlugs: [],
   selectedSpec: "anthropic",
   comparing: false,
   embedded: false,
@@ -34,7 +42,10 @@ const state = {
 
 const elements = {
   appShell: document.querySelector(".app-shell"),
+  behaviourCount: document.querySelector("#behaviour-count"),
   behaviourList: document.querySelector("#behaviour-list"),
+  behaviourToolbar: document.querySelector("#behaviour-toolbar"),
+  clearBehaviours: document.querySelector("#clear-behaviours"),
   compareToggle: document.querySelector("#compare-toggle"),
   documentReader: document.querySelector("#document-reader"),
   findingBehaviour: document.querySelector("#finding-behaviour"),
@@ -44,6 +55,7 @@ const elements = {
   passageCount: document.querySelector("#passage-count"),
   previousPassage: document.querySelector("#previous-passage"),
   readerStatus: document.querySelector("#reader-status"),
+  selectAllBehaviours: document.querySelector("#select-all-behaviours"),
   sidebarResizer: document.querySelector("#sidebar-resizer"),
   sourceLink: document.querySelector("#source-link"),
   template: document.querySelector("#document-template"),
@@ -53,15 +65,30 @@ const initialParams = new URLSearchParams(location.search);
 state.embedded = initialParams.get("embedded") === "1";
 document.body.classList.toggle("embedded", state.embedded);
 
-function activeBehaviour() {
-  const behaviours = state.payload?.behaviours || [];
-  return behaviours.find(behaviour => behaviour.slug === state.selectedBehaviour) || behaviours[0];
+function benchBehaviours() {
+  return state.payload?.behaviours || [];
+}
+
+/* The ticked behaviours, always in menu order: the order decides which colour a passage
+ * blend starts from and the order of the rules in a shared passage's gutter. */
+function selectedBehaviours() {
+  return benchBehaviours().filter(behaviour => state.selectedSlugs.includes(behaviour.slug));
+}
+
+function highlightsActive() {
+  return selectedBehaviours().length > 0;
+}
+
+/* A behaviour's colour is fixed by its place in the published set, not by what else is
+ * ticked, so a passage keeps the same colour as the selection changes around it. */
+function behaviourHue(behaviour) {
+  const index = benchBehaviours().indexOf(behaviour);
+  return `var(--hue-${(Math.max(0, index) % HUE_SLOTS) + 1})`;
 }
 
 function syncURL() {
   const params = new URLSearchParams(location.search);
-  const behaviour = activeBehaviour();
-  if (behaviour) params.set("behavior", behaviour.slug);
+  if (state.selectedSlugs.length) params.set("behavior", state.selectedSlugs.join(","));
   else params.delete("behavior");
   params.set("spec", state.selectedSpec);
   if (state.comparing) params.set("compare", "1");
@@ -242,9 +269,11 @@ function behaviourGroups() {
 
 function renderBehaviourList() {
   const groups = behaviourGroups();
-  document.body.classList.toggle("no-behaviours", groups.length === 0);
+  const empty = groups.length === 0;
+  document.body.classList.toggle("no-behaviours", empty);
+  elements.behaviourToolbar.hidden = empty;
 
-  if (!groups.length) {
+  if (empty) {
     elements.behaviourList.innerHTML = `
       <div class="behaviour-empty">
         <strong>No behaviors under test yet.</strong>
@@ -254,51 +283,94 @@ function renderBehaviourList() {
     return;
   }
 
-  const activeSlug = activeBehaviour()?.slug;
+  const selected = new Set(state.selectedSlugs);
   elements.behaviourList.innerHTML = groups.map(group => `
     <section class="behaviour-group">
       <h2>${escapeHTML(group.name)}</h2>
       <ul>
         ${group.behaviours.map(behaviour => {
-          const active = behaviour.slug === activeSlug;
+          const checked = selected.has(behaviour.slug);
           return `
           <li>
-            <button
-              class="behaviour-button mapped${active ? " active" : ""}"
-              type="button"
-              data-behaviour="${escapeHTML(behaviour.slug)}"
-              ${active ? 'aria-current="true"' : ""}
-              title="Show mapped passages"
-            >
+            <label class="behaviour-option${checked ? " checked" : ""}" style="--bh: ${behaviourHue(behaviour)}">
+              <input
+                class="behaviour-check"
+                type="checkbox"
+                data-behaviour="${escapeHTML(behaviour.slug)}"
+                ${checked ? "checked" : ""}
+              >
+              <span class="behaviour-box" aria-hidden="true"></span>
               <span class="number">${String(behaviour.id).padStart(2, "0")}</span>
               <span class="name">${escapeHTML(behaviour.name)}</span>
-              <i class="status-dot mapped" aria-hidden="true"></i>
-            </button>
+            </label>
           </li>
         `;}).join("")}
       </ul>
     </section>
   `).join("");
-  elements.behaviourList.querySelectorAll("[data-behaviour]").forEach(button => {
-    button.addEventListener("click", () => selectBehaviour(button.dataset.behaviour));
+  elements.behaviourList.querySelectorAll(".behaviour-check").forEach(input => {
+    input.addEventListener("change", () => toggleBehaviour(input.dataset.behaviour, input.checked));
   });
+  updateBehaviourCount();
 }
 
-function updateFindingBar() {
-  const behaviour = activeBehaviour();
-  elements.findingBehaviour.textContent = behaviour ? behaviour.name : "No behavior under test";
-  elements.findingDefinition.textContent = behaviour
-    ? behaviour.definition
-    : "Reading both specifications in full — nothing is highlighted until a behavior is published to this bench.";
+function updateBehaviourCount() {
+  const total = benchBehaviours().length;
+  if (!total) return;
+  const chosen = state.selectedSlugs.length;
+  elements.behaviourCount.textContent = `${chosen} of ${total} selected`;
+  elements.selectAllBehaviours.disabled = chosen === total;
+  elements.clearBehaviours.disabled = chosen === 0;
 }
 
-function selectBehaviour(slug) {
-  if (slug === activeBehaviour()?.slug) return;
-  state.selectedBehaviour = slug;
-  updateFindingBar();
-  renderBehaviourList();
+function behaviourChip(behaviour) {
+  return `<span class="behaviour-chip" style="--bh: ${behaviourHue(behaviour)}">${escapeHTML(behaviour.name)}</span>`;
+}
+
+function updateFindingBar(overlaps = null) {
+  const behaviours = selectedBehaviours();
+  if (!behaviours.length) {
+    const bench = benchBehaviours().length;
+    elements.findingBehaviour.textContent = bench ? "No behaviors selected" : "No behavior under test";
+    elements.findingDefinition.textContent = bench
+      ? "Both specifications are shown in full. Tick a behavior in the menu to highlight the passages that bear on it."
+      : "Reading both specifications in full -- nothing is highlighted until a behavior is published to this bench.";
+    return;
+  }
+
+  elements.findingBehaviour.innerHTML = behaviours.map(behaviourChip).join("");
+  if (behaviours.length === 1) {
+    elements.findingDefinition.textContent = behaviours[0].definition;
+    return;
+  }
+  const shared = overlaps === null
+    ? ""
+    : ` · ${overlaps} ${overlaps === 1 ? "passage is" : "passages are"} cited by more than one`;
+  elements.findingDefinition.textContent = `${behaviours.length} behaviors read over the same text${shared}.`;
+}
+
+/* Ticking or unticking never re-renders the specification, only its highlight layer, so
+ * the reader keeps its place in the text while a behaviour is added or taken away. */
+function setSelection(slugs) {
+  const order = benchBehaviours().map(behaviour => behaviour.slug);
+  const chosen = new Set(slugs);
+  state.selectedSlugs = order.filter(slug => chosen.has(slug));
+
+  elements.behaviourList.querySelectorAll(".behaviour-check").forEach(input => {
+    const on = chosen.has(input.dataset.behaviour);
+    input.checked = on;
+    input.closest(".behaviour-option").classList.toggle("checked", on);
+  });
+  updateBehaviourCount();
   syncURL();
-  rebuildReader();
+  applyHighlights();
+}
+
+function toggleBehaviour(slug, checked) {
+  const next = new Set(state.selectedSlugs);
+  if (checked) next.add(slug);
+  else next.delete(slug);
+  setSelection([...next]);
 }
 
 function escapeHTML(value) {
@@ -557,10 +629,41 @@ function normalize(value) {
     .trim();
 }
 
+/* Two places where resolver output and rendered text legitimately differ, so the
+ * quote has to be matched in pieces rather than as one literal run:
+ *
+ *   - an admonition opens "!!! meta "Commentary"" in the source and in the
+ *     resolver's output, while the reader renders the label alone;
+ *   - a cross-reference is written "[?](#letter_and_spirit)" in the source and
+ *     resolved to "#letter_and_spirit", while the reader renders the title of
+ *     the section it points at.
+ *
+ * Dropping the marker and splitting on the references leaves fragments that are
+ * identical on both sides and must appear, in order, inside one block. A quote
+ * with neither feature yields a single fragment, i.e. the whole normalized quote. */
+function passageFragments(quote) {
+  return quote
+    .replace(/^!!!\s+\w+\s*/, "")
+    .split(/#[A-Za-z0-9_]+/)
+    .map(normalize)
+    .filter(Boolean);
+}
+
+function containsInOrder(haystack, fragments) {
+  let cursor = 0;
+  for (const fragment of fragments) {
+    const at = haystack.indexOf(fragment, cursor);
+    if (at < 0) return false;
+    cursor = at + fragment.length;
+  }
+  return true;
+}
+
 function findPassageBlocks(body, passage) {
   const needle = normalize(passage.quote);
+  const fragments = passageFragments(passage.quote);
   const blocks = [...body.querySelectorAll("[data-block]")];
-  const exact = blocks.find(block => normalize(block.textContent).includes(needle));
+  const exact = blocks.find(block => containsInOrder(normalize(block.textContent), fragments));
   if (exact) return { anchor: exact, continuation: [] };
 
   // A whole-block citation can flatten a labelled list cluster (a bold intro
@@ -582,55 +685,208 @@ function findPassageBlocks(body, passage) {
     }
   }
 
-  // Published Markdown sometimes renders cross-references as "?" while the
-  // citation ledger stores the resolved anchor. The opening clause remains a
-  // stable, version-pinned fallback for those otherwise identical passages.
-  const opening = needle.split(" ").slice(0, 18).join(" ");
+  // Last resort for a passage the two paths above both miss: the opening clause
+  // of its first fragment is the longest run of the quote that no rendering
+  // difference can reach, and stays stable for a pinned spec version.
+  const opening = (fragments[0] || needle).split(" ").slice(0, 18).join(" ");
   const fallback = blocks.find(block => normalize(block.textContent).includes(opening));
   return fallback ? { anchor: fallback, continuation: [] } : null;
 }
 
-function annotatePassages(panel, document) {
+/* The example a passage introduces is rendered as its own code block, which the citation
+ * does not quote; it is highlighted as continuation of the passage that announces it. */
+function followingExampleBlock(block) {
+  let next = block.nextElementSibling;
+  while (next && !next.classList.contains("code-block")) {
+    if (/^H[1-6]$/.test(next.tagName)) return null;
+    next = next.nextElementSibling;
+  }
+  return next?.classList.contains("code-block") ? next : null;
+}
+
+/* One wash per behaviour on the block, blended left to right where several land on the
+ * same passage. Core carries the colour at full strength, related the same colour thinned;
+ * the alphas are palette variables so daylight and umber can weigh the tint differently. */
+function tintGradient(marks, strong) {
+  const suffix = strong ? "-strong" : "";
+  const colors = marks.map(mark =>
+    `rgb(${mark.hue} / var(--tint-${mark.adjacent ? "related" : "core"}${suffix}))`);
+  if (colors.length === 1) return `linear-gradient(${colors[0]}, ${colors[0]})`;
+  const step = 100 / (colors.length - 1);
+  return `linear-gradient(100deg, ${colors.map((color, index) => `${color} ${Math.round(index * step)}%`).join(", ")})`;
+}
+
+/* The margin rules: one per behaviour, side by side, so a shared passage is legible as
+ * two or three behaviours at a glance rather than as one indeterminate blend. */
+function gutterRules(marks) {
+  const bar = marks.length > 4 ? 1 : 2;
+  const pitch = bar + 1;
+  const stops = [];
+  marks.forEach((mark, index) => {
+    const start = index * pitch;
+    if (index) stops.push(`transparent ${start - 1}px ${start}px`);
+    stops.push(`rgb(${mark.hue} / var(--rule-${mark.adjacent ? "related" : "core"})) ${start}px ${start + bar}px`);
+  });
+  return {
+    image: `linear-gradient(to right, ${stops.join(", ")})`,
+    width: marks.length * pitch - 1,
+  };
+}
+
+/* The same reading, banded down the height of a 4px rail mark. */
+function railTint(marks) {
+  const colors = marks.map(mark =>
+    `rgb(${mark.hue} / var(--rule-${mark.adjacent ? "related" : "core"}))`);
+  if (colors.length === 1) return `linear-gradient(${colors[0]}, ${colors[0]})`;
+  const step = 100 / colors.length;
+  return `linear-gradient(to bottom, ${colors
+    .map((color, index) => `${color} ${index * step}% ${(index + 1) * step}%`)
+    .join(", ")})`;
+}
+
+/* The strip above an anchored passage. It names the behaviours that cite the passage and
+ * nothing else: the role sentences are the reason a passage was picked, not part of reading
+ * it, and set above every highlight they crowded the specification off the page. They move
+ * behind the question mark at the right of the strip, one per anchored passage.
+ *
+ * Every element here is inline, because a block is whatever the markdown made it -- often a
+ * <p>, where insertAdjacentHTML would drop a <div> straight back out again. */
+function passageLabels(marks, passageId) {
+  const naming = marks.filter(mark => mark.anchored.length);
+  const chips = naming.map(mark => `
+    <span class="passage-label" style="--bh: ${mark.hue}">
+      <span class="passage-label-behaviour">${escapeHTML(mark.behaviour.name)}</span>
+    </span>
+  `).join("");
+  // One reason needs no name: the strip above it already carries the only behaviour there is.
+  const pairs = naming.flatMap(mark => mark.anchored.map(passage => ({ mark, passage })));
+  const reasons = pairs.map(({ mark, passage }) => `
+    <span class="passage-reason" style="--bh: ${mark.hue}">
+      ${pairs.length > 1
+        ? `<span class="passage-reason-behaviour">${escapeHTML(mark.behaviour.name)}</span>`
+        : ""}
+      <span class="passage-reason-role">${passage.adjacent ? "Related · " : ""}${
+        applyInlineFormatting(escapeHTML(passage.role))}</span>
+    </span>
+  `).join("");
+  const panelId = `${passageId}-why`;
+  return `
+    <span class="passage-head">
+      ${chips}
+      <button type="button" class="passage-why" aria-expanded="false" aria-controls="${panelId}"
+        aria-label="Why was this passage selected?" data-tip="Why was this passage selected?">?</button>
+    </span>
+    <span class="passage-rationale" id="${panelId}" role="note" hidden>${reasons}</span>
+  `;
+}
+
+/* Opening a rationale changes the height of the block it sits in, so the rail marks -- which
+ * are positioned from block offsets -- have to be measured again once it has laid out. */
+function setupPassageDisclosure(panel) {
+  panel.querySelector(".document-body").addEventListener("click", event => {
+    const button = event.target.closest(".passage-why");
+    if (!button) return;
+    const panelEl = panel.querySelector(`#${CSS.escape(button.getAttribute("aria-controls"))}`);
+    if (!panelEl) return;
+    const open = button.getAttribute("aria-expanded") === "true";
+    button.setAttribute("aria-expanded", String(!open));
+    panelEl.hidden = open;
+    requestAnimationFrame(updateRails);
+  });
+}
+
+/* Strip every trace of the previous selection, so the next one can be laid over text that
+ * reads exactly as the specification does -- passage matching runs against textContent. */
+function clearHighlights(panel) {
+  const body = panel.querySelector(".document-body");
+  body.querySelectorAll(".passage-head, .passage-rationale").forEach(part => part.remove());
+  body.querySelectorAll(":scope > .zero-coverage").forEach(note => note.remove());
+  body.querySelectorAll(".passage").forEach(block => {
+    block.classList.remove("passage", "passage-continuation", "adjacent", "passage-overlap", "current");
+    ["passageId", "documentId", "passageNumber", "role", "behaviours"]
+      .forEach(key => { delete block.dataset[key]; });
+    ["--tint", "--tint-strong", "--gutter", "--gutter-width", "--bh-primary"]
+      .forEach(property => block.style.removeProperty(property));
+    delete block._railTint;
+  });
+}
+
+function annotatePassages(panel, doc) {
   const body = panel.querySelector(".document-body");
   const missing = [];
+  const contributions = new Map();
+  const record = (block, behaviour, passage, anchored) => {
+    if (!contributions.has(block)) contributions.set(block, []);
+    contributions.get(block).push({ behaviour, passage, anchored });
+  };
 
-  document.coverage.passages.forEach((passage, index) => {
-    const found = findPassageBlocks(body, passage);
-    if (!found) {
-      missing.push(passage.locator);
-      return;
-    }
-    const block = found.anchor;
-    found.continuation.forEach(extra => {
-      extra.classList.add("passage", "passage-continuation");
-      extra.classList.toggle("adjacent", passage.adjacent);
+  // Collected for every ticked behaviour before anything is painted: the labels this pass
+  // inserts would otherwise sit inside the text the next behaviour's quote is matched against.
+  selectedBehaviours().forEach(behaviour => {
+    const coverage = behaviour.coverage?.[doc.id] || NO_COVERAGE;
+    coverage.passages.forEach(passage => {
+      const found = findPassageBlocks(body, passage);
+      if (!found) {
+        missing.push(passage.locator);
+        return;
+      }
+      record(found.anchor, behaviour, passage, true);
+      found.continuation.forEach(extra => record(extra, behaviour, passage, false));
+      if (passage.exampleBlock) {
+        const example = followingExampleBlock(found.anchor);
+        if (example) record(example, behaviour, passage, false);
+      }
     });
-
-    block.classList.add("passage");
-    block.classList.toggle("adjacent", passage.adjacent);
-    block.dataset.passageId = passage.id;
-    block.dataset.documentId = document.id;
-    block.dataset.passageNumber = String(index + 1);
-    block.dataset.role = passage.role;
-    block.insertAdjacentHTML(
-      "afterbegin",
-      `<span class="passage-label">${passage.adjacent ? "Related · " : ""}${escapeHTML(passage.role)}</span>`,
-    );
-
-    if (passage.exampleBlock) {
-      let continuation = block.nextElementSibling;
-      while (continuation && !continuation.classList.contains("code-block")) {
-        if (/^H[1-6]$/.test(continuation.tagName)) break;
-        continuation = continuation.nextElementSibling;
-      }
-      if (continuation?.classList.contains("code-block")) {
-        continuation.classList.add("passage", "passage-continuation");
-        continuation.classList.toggle("adjacent", passage.adjacent);
-      }
-    }
   });
 
-  return missing;
+  const behaviours = selectedBehaviours();
+  const blocks = [...body.querySelectorAll("[data-block]")].filter(block => contributions.has(block));
+  let overlaps = 0;
+  let number = 0;
+
+  blocks.forEach(block => {
+    const items = contributions.get(block);
+    const marks = behaviours
+      .map(behaviour => {
+        const own = items.filter(item => item.behaviour === behaviour);
+        if (!own.length) return null;
+        return {
+          behaviour,
+          hue: behaviourHue(behaviour),
+          adjacent: own.every(item => item.passage.adjacent),
+          anchored: own.filter(item => item.anchored).map(item => item.passage),
+        };
+      })
+      .filter(Boolean);
+
+    const anchored = marks.some(mark => mark.anchored.length);
+    const gutter = gutterRules(marks);
+    if (marks.length > 1) overlaps += 1;
+
+    block.classList.add("passage");
+    block.classList.toggle("adjacent", marks.every(mark => mark.adjacent));
+    block.classList.toggle("passage-continuation", !anchored);
+    block.classList.toggle("passage-overlap", marks.length > 1);
+    block.style.setProperty("--tint", tintGradient(marks, false));
+    block.style.setProperty("--tint-strong", tintGradient(marks, true));
+    block.style.setProperty("--gutter", gutter.image);
+    block.style.setProperty("--gutter-width", `${gutter.width}px`);
+    block.style.setProperty("--bh-primary", marks[0].hue);
+    if (!anchored) return;
+
+    number += 1;
+    block.dataset.passageId = `${doc.id}-passage-${number}`;
+    block.dataset.documentId = doc.id;
+    block.dataset.passageNumber = String(number);
+    block.dataset.behaviours = marks.map(mark => mark.behaviour.name).join(" · ");
+    block.dataset.role = marks
+      .flatMap(mark => mark.anchored.map(passage => passage.role))
+      .join(" · ");
+    block._railTint = railTint(marks);
+    block.insertAdjacentHTML("afterbegin", passageLabels(marks, block.dataset.passageId));
+  });
+
+  return { missing, overlaps };
 }
 
 function addContentsSection(body) {
@@ -650,8 +906,12 @@ function addContentsSection(body) {
   body.insertBefore(heading, opening[0]);
 }
 
+function panelFocused(panel) {
+  return highlightsActive() && Boolean(state.documentFocus[panel.dataset.documentId]);
+}
+
 function updateSectionVisibility(panel) {
-  const focused = state.documentFocus[panel.dataset.documentId];
+  const focused = panelFocused(panel);
   const infos = panel._sectionInfos || [];
 
   infos.forEach(info => {
@@ -669,13 +929,30 @@ function updateSectionVisibility(panel) {
   toggle.setAttribute("aria-pressed", String(!focused));
 }
 
-function setPanelFocus(panel, focused) {
-  state.documentFocus[panel.dataset.documentId] = focused;
-  (panel._sectionInfos || []).forEach(info => {
-    info.collapsed = focused ? !info.hasPassage : false;
-  });
+/* Focus mode is re-applied whenever the selection changes, so the sections a document
+ * opens on follow the behaviours currently ticked. With focus off, sections the reader
+ * collapsed by hand are left alone -- unless nothing is highlighted at all, when the
+ * toggle is hidden and everything has to be readable again. */
+function applyPanelFocus(panel, { expandAll = false } = {}) {
+  const focused = panelFocused(panel);
+  const infos = panel._sectionInfos || [];
+  if (focused) infos.forEach(info => { info.collapsed = !info.hasPassage; });
+  else if (expandAll || !highlightsActive()) infos.forEach(info => { info.collapsed = false; });
   updateSectionVisibility(panel);
   requestAnimationFrame(updateRails);
+}
+
+/* Which sections carry a highlight changes with every tick of the menu. */
+function refreshSectionPassages(panel) {
+  const children = [...panel.querySelector(".document-body").children];
+  (panel._sectionInfos || []).forEach(info => {
+    info.hasPassage = children.some(child => {
+      if (!(child._sectionAncestors || []).includes(info)) return false;
+      return child.matches(".passage") || Boolean(child.querySelector(".passage"));
+    });
+    info.heading.classList.toggle("section-has-passage", info.hasPassage);
+  });
+  applyPanelFocus(panel);
 }
 
 function setupSectionFocus(panel) {
@@ -718,11 +995,6 @@ function setupSectionFocus(panel) {
   });
 
   infos.forEach(info => {
-    info.hasPassage = children.some(child => {
-      if (!(child._sectionAncestors || []).includes(info)) return false;
-      return child.matches(".passage") || Boolean(child.querySelector(".passage"));
-    });
-    info.heading.classList.toggle("section-has-passage", info.hasPassage);
     info.button.addEventListener("click", () => {
       info.collapsed = !info.collapsed;
       updateSectionVisibility(panel);
@@ -732,9 +1004,10 @@ function setupSectionFocus(panel) {
 
   panel._sectionInfos = infos;
   panel.querySelector(".document-focus-toggle").addEventListener("click", () => {
-    setPanelFocus(panel, !state.documentFocus[panel.dataset.documentId]);
+    const next = !panelFocused(panel);
+    state.documentFocus[panel.dataset.documentId] = next;
+    applyPanelFocus(panel, { expandAll: !next });
   });
-  setPanelFocus(panel, state.documentFocus[panel.dataset.documentId]);
 }
 
 function revealInternalTarget(panel, heading, shouldUpdateHash = true) {
@@ -784,64 +1057,117 @@ function revealHashTarget() {
   if (heading && panel) revealInternalTarget(panel, heading, false);
 }
 
-function renderDocument(document) {
+function renderDocument(doc) {
   const panel = elements.template.content.firstElementChild.cloneNode(true);
   const markdownContext = {
-    headings: buildHeadingIndex(document.markdown),
-    idPrefix: document.id,
+    headings: buildHeadingIndex(doc.markdown),
+    idPrefix: doc.id,
     usedHeadingIds: new Map(),
   };
-  panel.dataset.documentId = document.id;
-  panel.querySelector(".document-lab").textContent = document.lab;
-  panel.querySelector(".document-title").textContent = document.title;
-  panel.querySelector(".document-version").textContent = `Version ${document.version}`;
-  const tracking = Boolean(activeBehaviour());
-  panel.querySelector(".coverage-depth").textContent = tracking
-    ? `Coverage depth ${document.coverage.depth} / 4 · ${DEPTH_ANCHORS[document.coverage.depth] ?? ""}`
-    : "";
-  panel.querySelector(".coverage-depth").hidden = !tracking;
+  panel.dataset.documentId = doc.id;
+  panel.querySelector(".document-lab").textContent = doc.lab;
+  panel.querySelector(".document-title").textContent = doc.title;
+  panel.querySelector(".document-version").textContent = `Version ${doc.version}`;
+  panel.querySelector(".document-body").innerHTML = renderMarkdown(doc.markdown, markdownContext);
+  setupSectionFocus(panel);
+  setupInternalLinks(panel);
+  setupPassageDisclosure(panel);
+  return panel;
+}
+
+/* The coverage line reads one behaviour's depth verdict; over several it reads the range,
+ * because a set of behaviours has no single depth and averaging them would invent one. */
+function coverageDepthLine(doc) {
+  const depths = selectedBehaviours()
+    .map(behaviour => behaviour.coverage?.[doc.id]?.depth)
+    .filter(depth => Number.isFinite(depth));
+  if (!depths.length) return "";
+  const low = Math.min(...depths);
+  const high = Math.max(...depths);
+  if (low === high) {
+    return `Coverage depth ${low} / 4 · ${DEPTH_ANCHORS[low] ?? ""}`
+      + (depths.length > 1 ? ` · all ${depths.length}` : "");
+  }
+  return `Coverage depth ${low}–${high} / 4 · ${depths.length} behaviors`;
+}
+
+function updatePanelMeta(panel, doc) {
+  const tracking = highlightsActive();
+  const depth = panel.querySelector(".coverage-depth");
+  depth.textContent = tracking ? coverageDepthLine(doc) : "";
+  depth.hidden = !tracking;
   panel.querySelector(".rail-legend").hidden = !tracking;
   panel.querySelector(".document-focus-toggle").hidden = !tracking;
-  panel.querySelector(".document-body").innerHTML = renderMarkdown(document.markdown, markdownContext);
 
-  const missing = annotatePassages(panel, document);
-  if (tracking && document.coverage.passages.length === 0) {
+  // Counted from the published set, not from what resolved: a passage that failed to
+  // anchor is an unresolved-anchor warning, not an absence of coverage.
+  const published = selectedBehaviours()
+    .reduce((total, behaviour) => total + (behaviour.coverage?.[doc.id]?.passages.length || 0), 0);
+  if (tracking && published === 0) {
+    const several = selectedBehaviours().length > 1;
     panel.querySelector(".document-body").insertAdjacentHTML(
       "afterbegin",
       `<div class="zero-coverage" role="note">
-        <strong>No mapped passages in this specification.</strong>
+        <strong>${several
+          ? "None of the selected behaviors map to a passage in this specification."
+          : "No mapped passages in this specification."}</strong>
         <span>Absence of coverage is an index finding, not missing data.</span>
       </div>`,
     );
   }
-  setupSectionFocus(panel);
-  setupInternalLinks(panel);
-  panel._missingPassages = missing;
-  return panel;
+}
+
+/* Lay the current selection over documents that are already rendered. Nothing here
+ * touches the specification text, so ticking a behaviour cannot move the reader. */
+function applyHighlights() {
+  const previous = state.anchors[state.passageIndex] || null;
+  const panels = [...elements.documentReader.querySelectorAll(".document-panel")];
+  const missing = [];
+  let overlaps = 0;
+
+  panels.forEach(panel => {
+    const doc = state.payload.documents.find(item => item.id === panel.dataset.documentId);
+    clearHighlights(panel);
+    const annotated = annotatePassages(panel, doc);
+    missing.push(...annotated.missing);
+    overlaps += annotated.overlaps;
+    updatePanelMeta(panel, doc);
+    refreshSectionPassages(panel);
+  });
+
+  elements.readerStatus.classList.toggle("visible", missing.length > 0);
+  elements.readerStatus.textContent = missing.length
+    ? `${missing.length} cached passage ${missing.length === 1 ? "anchor could" : "anchors could"} not be resolved against this document version.`
+    : "";
+  updateFindingBar(overlaps);
+
+  requestAnimationFrame(() => {
+    collectAnchors();
+    updateRails();
+    // Hold the reader's place: the passage it was on keeps the cursor if it survived
+    // the change of selection, and nothing scrolls if it did not.
+    const index = previous ? state.anchors.indexOf(previous) : -1;
+    focusPassage(Math.max(0, index), false);
+  });
 }
 
 function visibleDocuments() {
-  const behaviour = activeBehaviour();
-  const withCoverage = state.payload.documents.map(document => ({
-    ...document,
-    coverage: behaviour?.coverage?.[document.id] || NO_COVERAGE,
-  }));
-  if (state.comparing) return withCoverage;
-  return [withCoverage.find(document => document.id === state.selectedSpec)];
+  if (state.comparing) return state.payload.documents;
+  return [state.payload.documents.find(doc => doc.id === state.selectedSpec)];
 }
 
 function rebuildReader() {
-  const documents = visibleDocuments();
   elements.documentReader.classList.toggle("compare", state.comparing);
-  const panels = documents.map(renderDocument);
+  const panels = visibleDocuments().map(renderDocument);
   const children = state.comparing
     ? [panels[0], createDocumentResizer(), panels[1]]
     : panels;
   elements.documentReader.replaceChildren(...children);
   if (state.comparing) setCompareFirst(state.compareFirst);
   state.passageIndex = 0;
+  state.anchors = [];
 
-  const selected = state.payload.documents.find(document => document.id === state.selectedSpec);
+  const selected = state.payload.documents.find(doc => doc.id === state.selectedSpec);
   elements.sourceLink.href = selected.sourceUrl;
   elements.sourceLink.textContent = state.comparing ? "Sources ↗" : "Original ↗";
 
@@ -850,19 +1176,8 @@ function rebuildReader() {
     option.setAttribute("aria-pressed", String(option.dataset.spec === state.selectedSpec));
   });
 
-  const missing = [...elements.documentReader.querySelectorAll(".document-panel")]
-    .flatMap(panel => panel._missingPassages || []);
-  elements.readerStatus.classList.toggle("visible", missing.length > 0);
-  elements.readerStatus.textContent = missing.length
-    ? `${missing.length} cached passage ${missing.length === 1 ? "anchor could" : "anchors could"} not be resolved against this document version.`
-    : "";
-
-  requestAnimationFrame(() => {
-    collectAnchors();
-    updateRails();
-    focusPassage(0, false);
-    revealHashTarget();
-  });
+  applyHighlights();
+  requestAnimationFrame(revealHashTarget);
 }
 
 function collectAnchors() {
@@ -871,7 +1186,8 @@ function collectAnchors() {
   elements.nextPassage.disabled = state.anchors.length === 0;
 
   if (!state.anchors.length) {
-    if (!activeBehaviour()) elements.passageCount.textContent = "No behaviors under test";
+    if (!benchBehaviours().length) elements.passageCount.textContent = "No behaviors under test";
+    else if (!highlightsActive()) elements.passageCount.textContent = "No behaviors selected";
     else if (state.comparing) elements.passageCount.textContent = "No passages in either spec";
     else elements.passageCount.textContent = "No passages in this spec";
   }
@@ -894,17 +1210,22 @@ function updateRails() {
     const rail = panel.querySelector(".passage-rail");
     const anchors = [...panel.querySelectorAll("[data-passage-id]")];
     rail.replaceChildren(...anchors.map((anchor, localIndex) => {
+      const overlap = anchor.classList.contains("passage-overlap");
       const mark = document.createElement("button");
       mark.type = "button";
-      mark.className = `rail-mark${anchor.classList.contains("adjacent") ? " adjacent" : ""}`;
+      mark.className = "rail-mark"
+        + (anchor.classList.contains("adjacent") ? " adjacent" : "")
+        + (overlap ? " overlap" : "");
       mark.dataset.forPassage = anchor.dataset.passageId;
+      mark.style.setProperty("--rail", anchor._railTint || "");
       mark.style.top = `${Math.min(98, (anchor.offsetTop / body.scrollHeight) * 100)}%`;
       mark.style.height = `max(5px, ${(anchor.offsetHeight / body.scrollHeight) * 100}%)`;
       mark.setAttribute(
         "aria-label",
-        `${anchor.classList.contains("adjacent") ? "Related" : "Core"} passage ${localIndex + 1}: ${anchor.dataset.role}`,
+        `${overlap ? "Shared" : anchor.classList.contains("adjacent") ? "Related" : "Core"}`
+        + ` passage ${localIndex + 1}, ${anchor.dataset.behaviours}: ${anchor.dataset.role}`,
       );
-      mark.title = anchor.dataset.role;
+      mark.title = `${anchor.dataset.behaviours} · ${anchor.dataset.role}`;
       mark.addEventListener("click", () => focusPassage(state.anchors.indexOf(anchor)));
       return mark;
     }));
@@ -948,6 +1269,11 @@ document.querySelectorAll(".spec-option").forEach(option => {
   });
 });
 
+elements.selectAllBehaviours.addEventListener("click", () => {
+  setSelection(benchBehaviours().map(behaviour => behaviour.slug));
+});
+elements.clearBehaviours.addEventListener("click", () => setSelection([]));
+
 elements.compareToggle.addEventListener("click", () => {
   state.comparing = !state.comparing;
   elements.compareToggle.setAttribute("aria-pressed", String(state.comparing));
@@ -959,7 +1285,9 @@ elements.previousPassage.addEventListener("click", () => focusPassage(state.pass
 elements.nextPassage.addEventListener("click", () => focusPassage(state.passageIndex + 1));
 
 document.addEventListener("keydown", event => {
-  if (event.target.matches("input, textarea, select")) return;
+  // Text entry keeps its keys; a checkbox in the behaviour menu does not, so j and k
+  // still walk the passages while the reader is ticking behaviours from the keyboard.
+  if (event.target.matches("textarea, select, input:not([type=checkbox])")) return;
   if (event.key === "Escape" && state.embedded) {
     window.parent.postMessage({ type: "aci-spec-reader-close" }, location.origin);
     return;
@@ -991,13 +1319,18 @@ async function initialize() {
       documents: documents.documents,
       behaviours: behaviours.behaviours || [],
     };
-    const tracking = state.payload.behaviours.length > 0;
-    state.documentFocus = { anthropic: tracking, openai: tracking };
+    const bench = state.payload.behaviours;
+    state.documentFocus = { anthropic: bench.length > 0, openai: bench.length > 0 };
     const params = initialParams;
-    const requestedBehaviour = params.get("behavior");
-    if (state.payload.behaviours.some(behaviour => behaviour.slug === requestedBehaviour)) {
-      state.selectedBehaviour = requestedBehaviour;
-    }
+    // ?behavior= takes one slug or a comma-separated list; with none given the reader
+    // opens on the first behaviour of the set, as the single-choice menu used to.
+    const requested = (params.get("behavior") || "")
+      .split(",")
+      .map(slug => slug.trim())
+      .filter(slug => bench.some(behaviour => behaviour.slug === slug));
+    if (requested.length) state.selectedSlugs = requested;
+    else if (!params.has("behavior") && bench.length) state.selectedSlugs = [bench[0].slug];
+
     const requestedSpec = params.get("spec");
     if (state.payload.documents.some(document => document.id === requestedSpec)) {
       state.selectedSpec = requestedSpec;

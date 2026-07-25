@@ -1,18 +1,64 @@
 # behaviours-for-adria -- stage-4 spec-coverage sweeps
 
-Stage-4 (spec-coverage) artifacts for eight behaviours, produced with the
-`/4-sweep-spec-coverage` skill. Each behaviour has its own folder with a
+Stage-4 (spec-coverage) artifacts for nine behaviours in two groups, produced with
+the `/4-sweep-spec-coverage` skill. Each behaviour has its own folder with a
 `4-spec-coverage.md` holding the term sweep, the pinned + resolver-verified
 excerpt set (per-spec verdict and 0-4 depth), the "considered and not kept"
 log, the mechanical re-check output, and a Gate-4 checklist.
 
-This is an **independent batch**: these eight behaviours are *not* the numbered
+This is an **independent batch**: these behaviours are *not* the numbered
 Tier-1 rows in `research/core-behaviour-list.md`. They were supplied by name +
 one-line definition (no pre-registered facets), so each file states the scope it
-adopted from the definition. Nothing here is published to Notion, `data/`, or the
-site; this is stage-4 output only.
+adopted from the definition.
+
+## Groups
+
+The batch is split into groups, each of which renders as its own heading in the
+bench's left menu bar:
+
+| Group | Where | Rows | On the bench? |
+|---|---|---|---|
+| Behaviours under test | the eight numbered folders below | 8 | yes |
+| [General Guidelines](general-guidelines/README.md) | `general-guidelines/` | 1 | yes |
+
+**General Guidelines** rows are defined by a *filter over the specs* rather than
+by a construct of their own: each collects the general, topic-neutral machinery
+governing a subject the specs address only by implication, so the passages kept
+never name the subject. Its one row so far is
+[Animal Welfare impacts](general-guidelines/01-animal-welfare-impacts/4-spec-coverage.md)
+(swept 2026-07-25; 51 locators, 0 mismatches; covered/4 on both specs). The counts
+below are for the whole batch: 256 locators across nine rows, 27 behaviour x spec
+views.
+
+## Where this is published
+
+Onto the **reader test bench** only -- [`site/spec-reader-test/`](../site/spec-reader-test/README.md),
+the separate tab that exists so a reviewer's set can be published, revised and withdrawn
+without touching the index's own reader. Nothing here reaches Notion, `data/coverage.json`,
+`research/core-behaviour-list.md` or the published reader at `site/spec-reader/`.
+
+The route is one hop each way:
+
+```
+behaviours-for-adria/**/4-spec-coverage.md
+  -> data/reader-test-coverage.json          (the bench's ledger; sweep records, unchanged)
+  -> python3 engine/build-reader-test-data.py
+  -> site/spec-reader-test/data/behaviours.json
+```
+
+All 256 locators were re-resolved against the mirrors from the ledger itself (not from these
+files) with 0 mismatches, and `node engine/verify-reader-test.mjs` anchors every one of them
+in the rendered specs across all 27 behaviour x spec views. One caveat the counts have to
+carry: a behaviour's *citations* and its *passage markers* are not always the same number.
+Two citations that pin different sentences of one paragraph land on one rendered block, which
+carries one marker -- so Animal Welfare impacts shows 28 markers on the constitution for 29
+citations, and the verifier counts distinct blocks rather than citations.
 
 ## Shared provenance
+
+Of the eight numbered folders. The General Guidelines row was swept a day later by a
+different model and states its own provenance in
+[its README](general-guidelines/README.md); the mirror versions are the same.
 
 - **Sweep date:** 2026-07-24. **Author:** Claude Code (Opus 4.8).
 - **Mirror freshness (shared):** `engine/spec-watch/pull-latest.sh` was run
@@ -25,7 +71,7 @@ site; this is stage-4 output only.
   transcribed, and independently re-resolved at Gate 4.
 - **Mechanical verification:** all **205** locators across the eight files
   re-resolve against the mirrors with **0 mismatches** (each file pastes its own
-  re-check loop output).
+  re-check loop output). With the General Guidelines row's 51, the batch is 256.
 
 ## Coverage summary
 
@@ -57,6 +103,11 @@ depth score or on a passage that should be added/removed is exactly what that
 step is for. Everything mechanical (mirror freshness, term-list completeness,
 locator resolution, smallest-enclosing-section, example-block handling,
 role/adjacent lines) is done and checked.
+
+Publishing to the bench does not close that item, and was not treated as closing
+it. The bench is a review surface, not the index: it is where the spot-read is
+easiest to do, since every kept passage can be read in place in the spec it came
+from. Sign-off stays a separate act.
 
 ## Cross-behaviour notes
 

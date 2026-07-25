@@ -29,14 +29,20 @@
   <main class="app-shell">
     <aside class="behaviour-sidebar" aria-label="Behaviors under test">
       <div class="sidebar-intro">
-        <p class="eyebrow">Reader test</p>
-        <h1>A separate bench for one reviewer's questions.</h1>
-        <p>This copy of the spec reader carries its own behavior set, kept apart from the published index. Select a behavior to see every passage that bears on it, without removing the surrounding text.</p>
+        <h1 class="eyebrow">Reader test</h1>
+      </div>
+      <div id="behaviour-toolbar" class="behaviour-toolbar" hidden>
+        <span id="behaviour-count" class="behaviour-count" aria-live="polite">0 selected</span>
+        <span class="behaviour-toolbar-actions">
+          <button id="select-all-behaviours" type="button">All</button>
+          <button id="clear-behaviours" type="button">None</button>
+        </span>
       </div>
       <div id="behaviour-list" class="behaviour-list"></div>
       <div class="sidebar-key">
-        <span><i class="status-dot mapped"></i> Mapped</span>
-        <span><i class="status-dot pending"></i> Mapping pending</span>
+        <span><i class="key-swatch core"></i> Core</span>
+        <span><i class="key-swatch related"></i> Related</span>
+        <span><i class="key-swatch overlap"></i> Shared</span>
       </div>
     </aside>
 
