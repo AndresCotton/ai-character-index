@@ -344,6 +344,31 @@ body.resizing-columns {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
+/* A stippled group is marked in the menu as well as in the text: its heading rule and the
+   selected row's spine are broken the same way the passage's margin rule is, so the group
+   reads as a different kind of row before a spec is even open. */
+.behaviour-group.texture-stipple h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.behaviour-group.texture-stipple h2::after {
+  content: "";
+  height: 3px;
+  flex: 1;
+  border-radius: 2px;
+  background-image: repeating-linear-gradient(
+    to right, currentColor 0 3px, transparent 3px 6px);
+  opacity: .45;
+}
+.behaviour-option.texture-stipple.checked {
+  background-image: repeating-linear-gradient(
+    to bottom, rgb(var(--bh) / var(--rule-core)) 0 3px, transparent 3px 6px);
+  background-size: 3px 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  box-shadow: none;
+}
 .behaviour-option .number {
   width: 20px;
   flex: none;
@@ -358,7 +383,8 @@ body.resizing-columns {
 .sidebar-key {
   padding: 12px 22px;
   display: flex;
-  gap: 13px;
+  flex-wrap: wrap;
+  gap: 6px 13px;
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 10px;
@@ -389,6 +415,14 @@ body.resizing-columns {
     linear-gradient(100deg,
       rgb(var(--hue-1) / var(--tint-core)),
       rgb(var(--hue-3) / var(--tint-core)));
+}
+/* The group key: the same wash, with the margin rule broken instead of solid. */
+.key-swatch.stipple {
+  background:
+    repeating-linear-gradient(to bottom,
+      rgb(var(--hue-1) / var(--rule-core)) 0 3px,
+      transparent 3px 6px) 0 0 / 2px 100% no-repeat,
+    linear-gradient(rgb(var(--hue-1) / var(--tint-core)), rgb(var(--hue-1) / var(--tint-core)));
 }
 
 .workspace { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
@@ -686,8 +720,10 @@ body.resizing-columns {
 .zero-coverage span { color: var(--muted); }
 
 /* Every colour on a passage is written by app.js into --tint (the wash), --gutter (one
-   margin rule per behaviour) and --bh-primary, all of them in terms of the palette's
-   --hue-N, so switching surfaces repaints the highlights without re-annotating them. */
+   margin rule per behaviour, solid or broken by group) and --bh-primary, all of them in
+   terms of the palette's --hue-N, so switching surfaces repaints the highlights without
+   re-annotating them. The gutter's -size and -pos place each behaviour's rule in its own
+   column; the wash is a single layer and needs neither. */
 .passage {
   position: relative;
   margin-right: -12px !important;
@@ -706,6 +742,9 @@ body.resizing-columns {
   width: var(--gutter-width, 2px);
   border-radius: 2px;
   background-image: var(--gutter);
+  background-size: var(--gutter-size, auto);
+  background-position: var(--gutter-pos, 0 0);
+  background-repeat: no-repeat;
 }
 .passage.current {
   background-image: var(--tint-strong);

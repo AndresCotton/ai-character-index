@@ -19,16 +19,18 @@ bench's left menu bar:
 | Group | Where | Rows | On the bench? |
 |---|---|---|---|
 | Behaviours under test | the eight numbered folders below | 8 | yes |
-| [General Guidelines](general-guidelines/README.md) | `general-guidelines/` | 1 | yes |
+| [General Guidelines](general-guidelines/README.md) | `general-guidelines/` | 1 | yes -- broken margin rule rather than solid |
 
 **General Guidelines** rows are defined by a *filter over the specs* rather than
 by a construct of their own: each collects the general, topic-neutral machinery
 governing a subject the specs address only by implication, so the passages kept
 never name the subject. Its one row so far is
 [Animal Welfare impacts](general-guidelines/01-animal-welfare-impacts/4-spec-coverage.md)
-(swept 2026-07-25; 51 locators, 0 mismatches; covered/4 on both specs). The counts
-below are for the whole batch: 256 locators across nine rows, 27 behaviour x spec
-views.
+(swept 2026-07-25; 51 locators, 0 mismatches; covered/4 on both specs). On the
+bench its passages carry the usual wash with a **broken** margin rule rather than a
+solid one -- the group's rows bear on their subject without naming it, and the
+discontinuous mark says so. The counts below are for the whole batch: 256 locators across
+nine rows, 27 behaviour x spec views.
 
 ## Where this is published
 

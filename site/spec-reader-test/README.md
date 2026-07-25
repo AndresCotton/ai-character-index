@@ -12,7 +12,7 @@ spec-coverage sweeps, 256 citations across the two specifications. Eight of them
 the menu heading "Behaviours under test", because that is how the set was supplied: a flat
 list, with no grouping of ours imposed on it. The ninth,
 [Animal Welfare impacts](../../behaviours-for-adria/general-guidelines/README.md), is the first
-row of a second group, "General Guidelines", and gets its own menu heading. Each
+row of a second group, "General Guidelines", and is drawn differently -- see below. Each
 behaviour's Gate-4 human spot-read is still open; this bench is the surface it happens on,
 which is why the set is published before sign-off.
 
@@ -40,7 +40,8 @@ behaviour you happened to open. The encoding:
 |---|---|
 | Colour | One per behaviour, fixed by its place in the published set, so a passage keeps its colour as the selection changes around it. Twelve `--hue-N` slots, one set per surface (daylight, umber), in `styles.css` |
 | Intensity | A core passage carries its colour at full strength, a related (`"adjacent": true`) one the same colour thinned -- `--tint-core` against `--tint-related` |
-| Overlap | A passage several behaviours cite blends their colours left to right and shows one margin rule per behaviour, in menu order; its rail mark is banded down its height |
+| Texture | One per **group**, not per behaviour, and carried by the margin rule rather than the wash: "Behaviours under test" takes a solid rule, "General Guidelines" one broken down its length. Nothing is laid over the text itself -- both versions that did (dots added, and the same lattice knocked out of the wash) cost more in legibility than the distinction was worth. `GROUP_TEXTURE` in `app.js` decides which rule, keyed by the behaviour's `category` |
+| Overlap | A passage several behaviours cite blends their colours left to right and shows one margin rule per behaviour, in menu order; its rail mark is banded down its height. Rules from different groups stand side by side, each with its own texture |
 | Labels | The role line of every behaviour that cites the passage, each in that behaviour's colour, named once more than one behaviour is ticked |
 
 `?behavior=` takes a comma-separated list (`?behavior=helpfulness,user-autonomy`); a bare

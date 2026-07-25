@@ -69,3 +69,28 @@ to look at first, both flagged in the file:
 Published to the reader test bench (2026-07-25), which does not close that item:
 the bench is the surface the spot-read happens on, since every kept passage can be
 read in place in the spec it came from. Sign-off stays a separate act.
+
+## How the group is drawn on the bench
+
+Colour distinguishes one behaviour from another; the **margin rule** distinguishes
+one group from another. A General Guidelines passage carries exactly the wash any
+other behaviour would give it, and its rule in the gutter is broken down its length
+where the eight rows of the parent group carry a solid one. The argument for the
+difference is the group's own definition: these rows are a filter over the specs
+rather than a construct of their own, so a passage is here because it *bears on* the
+subject, never because it is about it -- a discontinuous mark is that reading, made
+visible. Where a broken-rule row and a solid-rule row cite the same passage, the
+colours blend as they always do and both rules stand side by side in the gutter, so
+the passage reads as answering to both.
+
+The texture is kept in the margin and out of the wash deliberately. Two versions
+that put it over the text were built and rejected on sight: dots of colour laid on
+top put ink either side of every stroke, and knocking the same lattice *out* of the
+wash reads better but still costs more in legibility than the distinction is worth.
+The spec is what the reader is here to read; the group is a fact about the row, and
+it belongs beside the passage rather than across it.
+
+Which groups take the broken rule is `GROUP_TEXTURE` in
+[`site/spec-reader-test/app.js`](../../site/spec-reader-test/app.js), keyed by the
+`category` the ledger gives the behaviour; the dash geometry is in `gutterRules`
+beside it.

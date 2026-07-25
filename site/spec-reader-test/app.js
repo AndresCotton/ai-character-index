@@ -10,8 +10,10 @@
  * behaviours can be read over the same text at once. Each behaviour carries its own
  * colour, a core passage is that colour at full strength and a related one the same
  * colour washed out, and a passage cited by more than one selected behaviour blends
- * their colours and shows one gutter rule per behaviour. The spec text itself is shared
- * with the published reader, so both surfaces always render the same document versions.
+ * their colours and shows one gutter rule per behaviour. Colour distinguishes the
+ * behaviours; the margin rule's texture distinguishes the groups -- see GROUP_TEXTURE
+ * below. The spec text itself is shared with the published reader, so both surfaces
+ * always render the same document versions.
  */
 
 const DOCUMENTS_URL = "../spec-reader/data/documents.json";
@@ -26,6 +28,19 @@ const DEPTH_ANCHORS = ["absent", "named", "discussed", "prescribed", "demonstrat
 /* Behaviour colours live in the stylesheet, one --hue-N per slot and one set per
  * surface, so a palette switch repaints every highlight without re-annotating. */
 const HUE_SLOTS = 12;
+
+/* Colour separates the behaviours; texture separates the groups they belong to. A group
+ * whose rows are defined by a filter over the specs -- passages that bear on the subject
+ * without ever naming it -- carries a broken margin rule where the others carry a solid
+ * one, so the indirectness of the reading is legible beside the passage. The texture is
+ * kept in the margin and out of the wash on purpose: anything laid over the text itself,
+ * added or knocked out, costs more in legibility than the distinction is worth. Groups not
+ * listed here take the solid rule. Keyed by the `category` the ledger gives the behaviour. */
+const GROUP_TEXTURE = { "General Guidelines": "stipple" };
+
+function behaviourTexture(behaviour) {
+  return GROUP_TEXTURE[behaviour.category] || "wash";
+}
 
 const state = {
   payload: null,
@@ -264,7 +279,11 @@ function behaviourGroups() {
     if (!groups.has(name)) groups.set(name, []);
     groups.get(name).push(behaviour);
   });
-  return [...groups].map(([name, behaviours]) => ({ name, behaviours }));
+  return [...groups].map(([name, behaviours]) => ({
+    name,
+    behaviours,
+    texture: GROUP_TEXTURE[name] || "wash",
+  }));
 }
 
 function renderBehaviourList() {
@@ -285,14 +304,15 @@ function renderBehaviourList() {
 
   const selected = new Set(state.selectedSlugs);
   elements.behaviourList.innerHTML = groups.map(group => `
-    <section class="behaviour-group">
+    <section class="behaviour-group texture-${group.texture}">
       <h2>${escapeHTML(group.name)}</h2>
       <ul>
         ${group.behaviours.map(behaviour => {
           const checked = selected.has(behaviour.slug);
+          const texture = behaviourTexture(behaviour);
           return `
           <li>
-            <label class="behaviour-option${checked ? " checked" : ""}" style="--bh: ${behaviourHue(behaviour)}">
+            <label class="behaviour-option${checked ? " checked" : ""} texture-${texture}" style="--bh: ${behaviourHue(behaviour)}">
               <input
                 class="behaviour-check"
                 type="checkbox"
@@ -717,18 +737,28 @@ function tintGradient(marks, strong) {
 }
 
 /* The margin rules: one per behaviour, side by side, so a shared passage is legible as
- * two or three behaviours at a glance rather than as one indeterminate blend. */
+ * two or three behaviours at a glance rather than as one indeterminate blend. One layer
+ * per behaviour rather than one gradient across all of them, because a stippled group's
+ * rule is broken down its length -- the same reading as its dotted wash, at rule width. */
 function gutterRules(marks) {
   const bar = marks.length > 4 ? 1 : 2;
   const pitch = bar + 1;
-  const stops = [];
+  const dash = bar > 1 ? 3 : 2;
+  const layers = [];
+  const sizes = [];
+  const positions = [];
   marks.forEach((mark, index) => {
-    const start = index * pitch;
-    if (index) stops.push(`transparent ${start - 1}px ${start}px`);
-    stops.push(`rgb(${mark.hue} / var(--rule-${mark.adjacent ? "related" : "core"})) ${start}px ${start + bar}px`);
+    const color = `rgb(${mark.hue} / var(--rule-${mark.adjacent ? "related" : "core"}))`;
+    layers.push(mark.texture === "stipple"
+      ? `repeating-linear-gradient(to bottom, ${color} 0 ${dash}px, transparent ${dash}px ${dash * 2}px)`
+      : `linear-gradient(${color}, ${color})`);
+    sizes.push(`${bar}px 100%`);
+    positions.push(`${index * pitch}px 0`);
   });
   return {
-    image: `linear-gradient(to right, ${stops.join(", ")})`,
+    image: layers.join(", "),
+    size: sizes.join(", "),
+    position: positions.join(", "),
     width: marks.length * pitch - 1,
   };
 }
@@ -805,7 +835,8 @@ function clearHighlights(panel) {
     block.classList.remove("passage", "passage-continuation", "adjacent", "passage-overlap", "current");
     ["passageId", "documentId", "passageNumber", "role", "behaviours"]
       .forEach(key => { delete block.dataset[key]; });
-    ["--tint", "--tint-strong", "--gutter", "--gutter-width", "--bh-primary"]
+    ["--tint", "--tint-strong", "--gutter", "--gutter-size", "--gutter-pos",
+      "--gutter-width", "--bh-primary"]
       .forEach(property => block.style.removeProperty(property));
     delete block._railTint;
   });
@@ -853,6 +884,7 @@ function annotatePassages(panel, doc) {
         return {
           behaviour,
           hue: behaviourHue(behaviour),
+          texture: behaviourTexture(behaviour),
           adjacent: own.every(item => item.passage.adjacent),
           anchored: own.filter(item => item.anchored).map(item => item.passage),
         };
@@ -870,6 +902,8 @@ function annotatePassages(panel, doc) {
     block.style.setProperty("--tint", tintGradient(marks, false));
     block.style.setProperty("--tint-strong", tintGradient(marks, true));
     block.style.setProperty("--gutter", gutter.image);
+    block.style.setProperty("--gutter-size", gutter.size);
+    block.style.setProperty("--gutter-pos", gutter.position);
     block.style.setProperty("--gutter-width", `${gutter.width}px`);
     block.style.setProperty("--bh-primary", marks[0].hue);
     if (!anchored) return;
