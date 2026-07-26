@@ -23,15 +23,28 @@ were confirmed latest. If a pull changes a mirror, flag it: existing locators in
 
 ## Term sweep
 
-- Build the term list before grepping: the behaviour's own words, synonyms,
-  antonym-phrases, and spec-register phrasings (behaviour-1 precedent: sycophan*,
-  flatter*, obsequi*, placate, "want to hear", "sounding board", white lie*,
-  "doles out praise", "push back").
-- Grep both mirrors. **Document the full term list including zero-hit terms** -- the
-  empty probes are part of the evidence that the sweep was exhaustive.
-- Read the enclosing section of every hit: the operational content is often one
-  paragraph away from the term hit. A grep-hit list is a starting point, not the
-  passage set.
+- **Author the term list** (this is the judgement step -- do it before running
+  anything): the behaviour's own words, synonyms, antonym-phrases, and spec-register
+  phrasings (behaviour-1 precedent: sycophan, flatter, obsequi, placate, "want to
+  hear", "sounding board", white lie, "doles out praise", "push back"). Each term is a
+  case-insensitive **regex** -- a plain word is a literal (substring, so `calibrat`
+  catches calibrated/calibration); use `\b` to word-bound an ambiguous short term
+  (`\blie`, not inside "believe") and `|` for alternatives (`deceiv|decept`). Write
+  phrases apostrophe- and dash-free (`t know` catches curly and straight "don't know").
+- **Persist it** to `research/sweeps/NN-<slug>/terms.txt`: one term per line,
+  everything from `#` to end-of-line ignored (use `#` for notes). This committed file
+  is the sweep's input.
+- **Run the sweep -- do not grep or count by hand:**
+  `python3 engine/spec-cite/cite.py sweep research/sweeps/NN-<slug>/terms.txt`
+  It prints the per-mirror hit-count table (zero-hit terms included). Paste that table
+  into the artifact verbatim.
+- **Check the tool's feedback before continuing:** on stderr it echoes `parsed N
+  terms` -- confirm N matches what you wrote -- and warns on lines that look
+  mis-formatted (list markers, unmatched quotes, prose, duplicates, unescaped regex
+  metacharacters). Fix `terms.txt` and re-run until N is right and there are no warnings.
+- **Read the enclosing section of every hit:** the operational content is often one
+  paragraph away from the term hit. The hit table is a starting point, not the passage
+  set.
 
 ## Excerpt workflow (per passage kept)
 
@@ -81,6 +94,10 @@ Render with evidence, then STOP.
 
 - Curly vs straight apostrophes (and em dashes) break naive greps: search dash-free,
   apostrophe-free distinctive substrings.
+- The sweep matches **substrings** by default, so a short/ambiguous term can over-count by
+  matching inside unrelated words (`lie` matches "believe"). For a genuinely short/ambiguous
+  term, **word-bound it with `\b`** in the term file (e.g. `\blie` matches "lie" at a word
+  boundary, not inside "believe"); plain stems like `calibrat` stay unbounded.
 - Grepping only the behaviour's name finds the naming passages and misses the
   operational ones (behaviour 1: the invariance rule contains no sycophancy term).
 - Locators into an unpinned spec are meaningless after the next release; the version
