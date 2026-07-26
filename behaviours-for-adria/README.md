@@ -1,6 +1,6 @@
 # behaviours-for-adria -- stage-4 spec-coverage sweeps
 
-Stage-4 (spec-coverage) artifacts for nine behaviours in two groups, produced with
+Stage-4 (spec-coverage) artifacts for ten behaviours in two groups, produced with
 the `/4-sweep-spec-coverage` skill. Each behaviour has its own folder with a
 `4-spec-coverage.md` holding the term sweep, the pinned + resolver-verified
 excerpt set (per-spec verdict and 0-4 depth), the "considered and not kept"
@@ -19,18 +19,25 @@ bench's left menu bar:
 | Group | Where | Rows | On the bench? |
 |---|---|---|---|
 | Behaviours under test | the eight numbered folders below | 8 | yes |
-| [General Guidelines](general-guidelines/README.md) | `general-guidelines/` | 1 | yes -- broken margin rule rather than solid |
+| [General Guidelines](general-guidelines/README.md) | `general-guidelines/` | 2 | yes -- broken margin rule rather than solid |
 
 **General Guidelines** rows are defined by a *filter over the specs* rather than
 by a construct of their own: each collects the general, topic-neutral machinery
 governing a subject the specs address only by implication, so the passages kept
-never name the subject. Its one row so far is
-[Animal Welfare impacts](general-guidelines/01-animal-welfare-impacts/4-spec-coverage.md)
-(swept 2026-07-25; 51 locators, 0 mismatches; covered/4 on both specs). On the
-bench its passages carry the usual wash with a **broken** margin rule rather than a
-solid one -- the group's rows bear on their subject without naming it, and the
-discontinuous mark says so. The counts below are for the whole batch: 256 locators across
-nine rows, 27 behaviour x spec views.
+never name the subject. Its two rows are
+[General welfare impacts](general-guidelines/01-animal-welfare-impacts/4-spec-coverage.md)
+(swept 2026-07-25; 51 locators; covered/4 on both specs) and
+[General welfare impacts -- strict reading](general-guidelines/02-general-welfare-impacts-strict/4-spec-coverage.md)
+(swept 2026-07-25; 38 locators; covered/4 on both specs) -- **the same supplied
+definition read two ways**, kept side by side so the choice between the readings
+can be made on the evidence. The second keeps a passage only where the other
+specification states the same rule and the counterpart locator is named; that
+filter costs the constitution nearly half its citations and leaves the model spec's
+count untouched. Both were verified with 0 mismatches. On the bench their passages
+carry the usual wash with a **broken** margin rule rather than a solid one -- the
+group's rows bear on their subject without naming it, and the discontinuous mark
+says so. The counts below are for the whole batch: 294 locators across ten rows,
+30 behaviour x spec views.
 
 ## Where this is published
 
@@ -48,19 +55,20 @@ behaviours-for-adria/**/4-spec-coverage.md
   -> site/spec-reader-test/data/behaviours.json
 ```
 
-All 256 locators were re-resolved against the mirrors from the ledger itself (not from these
+All 294 locators were re-resolved against the mirrors from the ledger itself (not from these
 files) with 0 mismatches, and `node engine/verify-reader-test.mjs` anchors every one of them
-in the rendered specs across all 27 behaviour x spec views. One caveat the counts have to
+in the rendered specs across all 30 behaviour x spec views. One caveat the counts have to
 carry: a behaviour's *citations* and its *passage markers* are not always the same number.
 Two citations that pin different sentences of one paragraph land on one rendered block, which
-carries one marker -- so Animal Welfare impacts shows 28 markers on the constitution for 29
-citations, and the verifier counts distinct blocks rather than citations.
+carries one marker -- so General welfare impacts shows 28 markers on the constitution for 29
+citations, and the verifier counts distinct blocks rather than citations. Its strict-reading
+row happens to land one marker per citation on both specs (16 and 22).
 
 ## Shared provenance
 
-Of the eight numbered folders. The General Guidelines row was swept a day later by a
-different model and states its own provenance in
-[its README](general-guidelines/README.md); the mirror versions are the same.
+Of the eight numbered folders. The two General Guidelines rows were swept a day later by a
+different model and state their own provenance in
+[their README](general-guidelines/README.md); the mirror versions are the same.
 
 - **Sweep date:** 2026-07-24. **Author:** Claude Code (Opus 4.8).
 - **Mirror freshness (shared):** `engine/spec-watch/pull-latest.sh` was run
@@ -73,7 +81,7 @@ different model and states its own provenance in
   transcribed, and independently re-resolved at Gate 4.
 - **Mechanical verification:** all **205** locators across the eight files
   re-resolve against the mirrors with **0 mismatches** (each file pastes its own
-  re-check loop output). With the General Guidelines row's 51, the batch is 256.
+  re-check loop output). With the General Guidelines rows' 51 and 38, the batch is 294.
 
 ## Coverage summary
 
