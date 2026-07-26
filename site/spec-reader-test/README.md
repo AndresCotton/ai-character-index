@@ -11,7 +11,7 @@ set is the gate-approved output of the [behaviour sweeps](../../.claude/skills/R
 spec-coverage sweeps, 256 citations across the two specifications. Eight of them appear under
 the menu heading "Behaviours under test", because that is how the set was supplied: a flat
 list, with no grouping of ours imposed on it. The ninth,
-[Animal Welfare impacts](../../behaviours-for-adria/general-guidelines/README.md), is the first
+[General welfare impacts](../../behaviours-for-adria/general-guidelines/README.md), is the first
 row of a second group, "General Guidelines", and is drawn differently -- see below. Each
 behaviour's Gate-4 human spot-read is still open; this bench is the surface it happens on,
 which is why the set is published before sign-off.
