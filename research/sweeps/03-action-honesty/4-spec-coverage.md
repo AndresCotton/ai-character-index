@@ -13,55 +13,55 @@ The orchestrator ran `engine/spec-watch/pull-latest.sh` on 2026-07-20 at 13:15 P
 
 ## Term sweep
 
-Term list built before grepping: the behaviour's own words (own action*, its actions, honest*, truthful*), facet-1 report words (success*, claim*, fabricat*, falsif*, misrepresent*, pretend*), facet-2 denial words (deny*/denial, admit*, confess*, mistake*, error*), facet-3 oversight words (oversight, overse*, monitor*, surveill*, sabotag*, sandbagg*, exfiltrat*, tamper*, disabl*, undermin*, escap*, conceal*, hidden, hide*, cover up, withh*, "full effort", log*, evidence), and spec-register phrasings (transparen*, forthright*, deceiv*/decept*, mislead*, lie (word-bounded, since "lie" hides inside "believe"), covert*, "hidden agenda", "conscientious objector", "chain of command", noncompliant, escalat*, corrigib*, "red line", "in control"). Per the pitfalls note, phrases were grepped as apostrophe-free, dash-free substrings, case-insensitive; short ambiguous terms were word-bounded; and the enclosing section of every hit was read, since operational content is often a paragraph away from the term.
+Term list built before sweeping: the behaviour's own words (own action*, its actions, honest*, truthful*), facet-1 report words (success*, claim*, fabricat*, falsif*, misrepresent*, pretend*), facet-2 denial words (deny*/denial, admit*, confess*, mistake*, error*), facet-3 oversight words (oversight, overse*, monitor*, surveill*, sabotag*, sandbagg*, exfiltrat*, tamper*, disabl*, undermin*, escap*, conceal*, hidden, hide*, cover up, withh*, "full effort", log*, evidence), and spec-register phrasings (transparen*, forthright*, deceiv*/decept*, mislead*, lie (word-bounded, since "lie" hides inside "believe"), covert*, "hidden agenda", "conscientious objector", "chain of command", noncompliant, escalat*, corrigib*, "red line", "in control"). The list is a committed `terms.txt` swept with `cite.py sweep`: apostrophe/dash-folded and case-insensitive, short/ambiguous terms word-bounded via regex, counted per matching normalized block; the enclosing section of every hit was read, since operational content is often a paragraph away from the term.
 
 | Term | constitution hits | model-spec hits |
 |---|---|---|
 | own action* | 0 | 0 |
-| its actions | 3 | 2 |
-| honest* | 57 | 12 |
+| its actions | 3 | 1 |
+| honest* | 31 | 10 |
 | truthful* | 1 | 3 |
-| deceiv*/decept* | 30 | 5 |
-| mislead* | 2 | 6 |
-| lie/lies/lied/lying (word-bounded) | 9 | 17 |
+| deceiv*/decept* | 22 | 4 |
+| mislead* | 2 | 5 |
+| lie/lies/lied/lying (word-bounded) | 6 | 10 |
 | fabricat* | 0 | 1 |
 | falsif* | 0 | 0 |
 | misrepresent* | 0 | 1 |
 | pretend* | 3 | 4 |
-| success* | 5 | 2 |
-| claim* (word-initial) | 20 | 7 |
+| success* | 4 | 2 |
+| claim* (word-initial) | 18 | 6 |
 | deny/denies/denied/denying/denial (word-bounded) | 4 | 4 |
 | admit* | 0 | 0 |
 | confess* | 0 | 0 |
-| mistake* | 29 | 9 |
-| error* | 5 | 27 |
+| mistake* | 21 | 9 |
+| error* | 5 | 14 |
 | conceal* | 2 | 1 |
-| hidden | 2 | 9 |
-| hide/hides/hiding (word-bounded) | 1 | 6 |
+| hidden | 2 | 8 |
+| hide/hides/hiding (word-bounded) | 1 | 4 |
 | cover up / cover-up / covering up | 0 | 0 |
 | sandbagg* | 1 | 0 |
 | sabotag* | 2 | 0 |
 | exfiltrat* | 2 | 0 |
-| oversight | 23 | 0 |
-| overse* (oversee/overseen/overseer) | 8 | 0 |
+| oversight | 17 | 0 |
+| overse* (oversee/overseen/overseer) | 7 | 0 |
 | monitor* | 2 | 5 |
 | surveill* | 2 | 1 |
 | tamper* | 0 | 0 |
-| disabl* | 0 | 2 |
-| undermin* | 21 | 8 |
-| escap* | 4 | 3 |
+| disabl* | 0 | 1 |
+| undermin* | 17 | 7 |
+| escap* | 4 | 2 |
 | withh* (withhold/withheld) | 3 | 1 |
 | full effort | 1 | 0 |
-| transparen* | 10 | 14 |
-| forthright* | 1 | 4 |
+| transparen* | 7 | 9 |
+| forthright* | 1 | 3 |
 | hidden agenda* | 1 | 1 |
 | conscientious objector | 3 | 0 |
-| chain of command | 0 | 13 |
+| chain of command | 0 | 12 |
 | noncompliant | 0 | 1 |
-| escalat* | 0 | 12 |
+| escalat* | 0 | 10 |
 | covert* | 0 | 1 |
-| corrigib* | 20 | 0 |
-| red line / red-line | 0 | 2 |
+| corrigib* | 9 | 0 |
+| red line / red-line | 0 | 1 |
 | log/logs (word-bounded) | 0 | 0 |
 | evidence | 10 | 6 |
 | in control | 0 | 1 |

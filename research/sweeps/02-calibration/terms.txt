@@ -1,0 +1,37 @@
+# Calibration -- term-sweep input. One term per line; '#' starts a comment (line start or after a space). Order matches 4-spec-coverage.md.
+
+calibrat
+confiden
+overconfiden
+underconfiden
+uncertain
+certaint
+certainly
+hedg
+t know
+not sure
+unsure
+probab
+guess
+speculat
+epistemic
+humility
+humble
+be wrong
+acknowledg
+lack of knowledge
+caveat
+doubt
+hallucinat
+confabulat
+assumption
+limitation
+overstate
+understate
+overclaim
+sandbagg
+convey
+express uncertaint
+expressing uncertaint
+wishy
+vague

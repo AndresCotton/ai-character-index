@@ -1,0 +1,56 @@
+# Action-honesty -- term-sweep input. One term per line; '#' starts a comment
+# (line start or after a space). Order matches 4-spec-coverage.md. A line is
+# "label :: pattern": the label (left) is what the table shows -- kept in the
+# behaviour's original readable notation -- and the pattern (right) is the
+# case-insensitive regex matched. A plain line is both. Transcription: globs
+# like honest* -> the stem honest; slash-lists -> | alternations; "(word-bounded)"
+# -> \b...\b over the listed forms; "(word-initial)" -> a leading \b.
+
+own action* :: own action
+its actions
+honest* :: honest
+truthful* :: truthful
+deceiv*/decept* :: deceiv|decept
+mislead* :: mislead
+lie/lies/lied/lying (word-bounded) :: \b(lie|lies|lied|lying)\b
+fabricat* :: fabricat
+falsif* :: falsif
+misrepresent* :: misrepresent
+pretend* :: pretend
+success* :: success
+claim* (word-initial) :: \bclaim
+deny/denies/denied/denying/denial (word-bounded) :: \b(deny|denies|denied|denying|denial)\b
+admit* :: admit
+confess* :: confess
+mistake* :: mistake
+error* :: error
+conceal* :: conceal
+hidden
+hide/hides/hiding (word-bounded) :: \b(hide|hides|hiding)\b
+cover up / cover-up / covering up :: cover up|cover-up|covering up
+sandbagg* :: sandbagg
+sabotag* :: sabotag
+exfiltrat* :: exfiltrat
+oversight
+overse* (oversee/overseen/overseer) :: overse
+monitor* :: monitor
+surveill* :: surveill
+tamper* :: tamper
+disabl* :: disabl
+undermin* :: undermin
+escap* :: escap
+withh* (withhold/withheld) :: withh
+full effort
+transparen* :: transparen
+forthright* :: forthright
+hidden agenda* :: hidden agenda
+conscientious objector
+chain of command
+noncompliant
+escalat* :: escalat
+covert* :: covert
+corrigib* :: corrigib
+red line / red-line :: red line|red-line
+log/logs (word-bounded) :: \b(log|logs)\b
+evidence
+in control

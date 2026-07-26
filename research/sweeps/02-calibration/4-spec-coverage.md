@@ -13,42 +13,42 @@ The orchestrator ran `engine/spec-watch/pull-latest.sh` on 2026-07-20 at 12:08 P
 
 ## Term sweep
 
-Term list built before grepping: the behaviour's own words (calibrat*), synonyms and register variants (confiden*, uncertain*, certaint*, hedg*, probab*, guess, speculat*, epistemic, humility), antonym-phrases (overconfiden*, underconfiden*, overstate*, overclaim*, "wishy", "vague"), spec-register phrasings ("express uncertainty", "not sure", "t know" for "don't know", acknowledg*, "lack of knowledge", caveat*, doubt*, assumption*, limitation*, convey*), and failure-mode neighbours (hallucinat*, confabulat*, sandbagg*). Per the pitfalls note, phrases were grepped as apostrophe-free, dash-free substrings ("t know" catches both straight and curly "don't know"), and the enclosing section of every hit was read, since operational content is often a paragraph away from the term.
+Term list built before sweeping: the behaviour's own words (calibrat*), synonyms and register variants (confiden*, uncertain*, certaint*, hedg*, probab*, guess, speculat*, epistemic, humility), antonym-phrases (overconfiden*, underconfiden*, overstate*, overclaim*, "wishy", "vague"), spec-register phrasings ("express uncertainty", "not sure", "t know" for "don't know", acknowledg*, "lack of knowledge", caveat*, doubt*, assumption*, limitation*, convey*), and failure-mode neighbours (hallucinat*, confabulat*, sandbagg*). The list is a committed `terms.txt` swept with `cite.py sweep`, which folds apostrophes and dashes ("t know" catches both straight and curly "don't know") and counts each term's matching normalized blocks; the enclosing section of every hit was read, since operational content is often a paragraph away from the term.
 
 | Term | constitution hits | model-spec hits |
 |---|---|---|
 | calibrat | 4 | 0 |
-| confiden | 10 | 20 |
+| confiden | 10 | 19 |
 | overconfiden | 0 | 0 |
 | underconfiden | 0 | 0 |
-| uncertain | 18 | 35 |
-| certaint | 12 | 31 |
+| uncertain | 18 | 31 |
+| certaint | 12 | 27 |
 | certainly | 0 | 3 |
 | hedg | 1 | 4 |
 | t know | 2 | 5 |
 | not sure | 1 | 5 |
 | unsure | 0 | 0 |
-| probab | 15 | 5 |
-| guess | 1 | 10 |
+| probab | 14 | 4 |
+| guess | 1 | 9 |
 | speculat | 1 | 2 |
-| epistemic | 13 | 0 |
+| epistemic | 12 | 0 |
 | humility | 2 | 1 |
 | humble | 0 | 0 |
 | be wrong | 0 | 0 |
-| acknowledg | 9 | 17 |
+| acknowledg | 8 | 16 |
 | lack of knowledge | 1 | 0 |
 | caveat | 7 | 1 |
 | doubt | 6 | 1 |
 | hallucinat | 0 | 0 |
 | confabulat | 0 | 0 |
-| assumption | 2 | 20 |
+| assumption | 2 | 17 |
 | limitation | 1 | 6 |
 | overstate | 1 | 0 |
 | understate | 0 | 0 |
 | overclaim | 1 | 0 |
 | sandbagg | 1 | 0 |
 | convey | 3 | 3 |
-| express uncertaint | 1 | 5 |
+| express uncertaint | 1 | 4 |
 | expressing uncertaint | 0 | 3 |
 | wishy | 1 | 0 |
 | vague | 1 | 0 |
