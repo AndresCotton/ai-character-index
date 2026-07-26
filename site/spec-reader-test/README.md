@@ -6,15 +6,17 @@ external reviewer asked us to trace through the specs. It exists so those result
 published, revised and withdrawn without touching the index's own reader, whose behaviour
 set is the gate-approved output of the [behaviour sweeps](../../.claude/skills/README.md).
 
-**Current state:** nine behaviours are under test -- the set in
+**Current state:** ten behaviours are under test -- the set in
 [`behaviours-for-adria/`](../../behaviours-for-adria/README.md), published from their stage-4
-spec-coverage sweeps, 256 citations across the two specifications. Eight of them appear under
+spec-coverage sweeps, 294 citations across the two specifications. Eight of them appear under
 the menu heading "Behaviours under test", because that is how the set was supplied: a flat
-list, with no grouping of ours imposed on it. The ninth,
-[General welfare impacts](../../behaviours-for-adria/general-guidelines/README.md), is the first
-row of a second group, "General Guidelines", and is drawn differently -- see below. Each
-behaviour's Gate-4 human spot-read is still open; this bench is the surface it happens on,
-which is why the set is published before sign-off.
+list, with no grouping of ours imposed on it. The other two make up a second group,
+["General Guidelines"](../../behaviours-for-adria/general-guidelines/README.md), which is drawn
+differently -- see below. Those two are one supplied definition read two ways: General welfare
+impacts, and a strict reading of it that keeps a passage only where both specifications state
+the same rule, so the reader can hold the two side by side. Each behaviour's Gate-4 human
+spot-read is still open; this bench is the surface it happens on, which is why the set is
+published before sign-off.
 
 ## What is shared, what is not
 
