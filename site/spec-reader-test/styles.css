@@ -16,14 +16,34 @@ body[data-palette="daylight"] {
   --line-light: #E4DCCB;
   --accent: #4A53B3;
   --accent-soft: #DEE0F2;
-  --highlight: #E3E4F2;
-  --highlight-strong: #CDD1ED;
-  --adjacent: #F0E2B8;
-  --adjacent-strong: #E6CF8E;
   --adjacent-mark: #8A5F14;
   --focus: #A93732;
   --gap-soft: #F1DEDA;
   --shadow: rgba(90, 75, 50, .25);
+
+  /* One colour per behaviour, deep enough to read as a wash over cream paper. */
+  --hue-1: 74 83 179;
+  --hue-2: 176 84 48;
+  --hue-3: 31 116 110;
+  --hue-4: 160 110 20;
+  --hue-5: 129 62 129;
+  --hue-6: 95 122 47;
+  --hue-7: 62 106 158;
+  --hue-8: 165 56 74;
+  --hue-9: 123 96 45;
+  --hue-10: 44 128 150;
+  --hue-11: 44 106 74;
+  --hue-12: 146 92 116;
+
+  /* How much of that colour a passage carries: core at full strength, related thinned,
+     -strong for the passage the reader is standing on. */
+  --tint-core: .21;
+  --tint-related: .085;
+  --tint-core-strong: .34;
+  --tint-related-strong: .19;
+  --rule-core: .85;
+  --rule-related: .38;
+
 }
 
 body[data-palette="umber"] {
@@ -37,14 +57,32 @@ body[data-palette="umber"] {
   --line-light: #3D3428;
   --accent: #7B85D6;
   --accent-soft: #343854;
-  --highlight: #34384F;
-  --highlight-strong: #444B73;
-  --adjacent: #3D321D;
-  --adjacent-strong: #514326;
   --adjacent-mark: #BC8A2F;
   --focus: #C95550;
   --gap-soft: #3A2420;
   --shadow: rgba(0, 0, 0, .5);
+
+  /* The same twelve, lifted so they read as light laid on a dark surface. */
+  --hue-1: 139 148 236;
+  --hue-2: 226 141 100;
+  --hue-3: 106 196 186;
+  --hue-4: 224 179 82;
+  --hue-5: 206 145 206;
+  --hue-6: 170 197 110;
+  --hue-7: 130 175 226;
+  --hue-8: 230 130 146;
+  --hue-9: 205 176 116;
+  --hue-10: 120 200 220;
+  --hue-11: 120 200 160;
+  --hue-12: 220 160 185;
+
+  --tint-core: .22;
+  --tint-related: .095;
+  --tint-core-strong: .34;
+  --tint-related-strong: .2;
+  --rule-core: .9;
+  --rule-related: .4;
+
 }
 
 * { box-sizing: border-box; }
@@ -196,30 +234,46 @@ body.resizing-columns {
   user-select: none;
 }
 
-.sidebar-intro { padding: 27px 25px 21px; border-bottom: 1px solid var(--line); }
+/* The bench's name and nothing else. What this copy of the reader is for belongs in the
+   note that sends a reviewer here, not standing over the menu they came to use -- the
+   sidebar's whole height is worth more as behaviours than as an explanation read once. */
+.sidebar-intro { padding: 15px 25px 14px; border-bottom: 1px solid var(--line); }
 .eyebrow {
-  margin: 0 0 13px;
+  margin: 0;
   color: var(--accent);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: .14em;
   text-transform: uppercase;
 }
-.sidebar-intro h1 {
-  max-width: 220px;
-  margin: 0;
-  font-family: var(--reader);
-  font-size: 27px;
-  font-weight: 500;
-  line-height: 1.04;
-  letter-spacing: -.02em;
-}
-.sidebar-intro > p:last-child {
-  margin: 13px 0 0;
+
+.behaviour-toolbar {
+  padding: 10px 25px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--line-light);
   color: var(--muted);
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
 }
+.behaviour-toolbar[hidden] { display: none; }
+.behaviour-toolbar-actions { display: inline-flex; gap: 4px; }
+.behaviour-toolbar-actions button {
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.behaviour-toolbar-actions button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.behaviour-toolbar-actions button:disabled { opacity: .4; cursor: default; }
 
 .behaviour-list { flex: 1; min-height: 0; overflow: auto; padding: 8px 0 18px; }
 .behaviour-group { border-bottom: 1px solid var(--line-light); }
@@ -234,20 +288,88 @@ body.resizing-columns {
   text-transform: uppercase;
 }
 .behaviour-group ul { list-style: none; margin: 0; padding: 0 10px 10px; }
-.behaviour-button {
+.behaviour-option {
+  position: relative;
   width: 100%;
   min-height: 34px;
-  padding: 7px 12px 7px 15px;
+  padding: 7px 12px 7px 12px;
   display: flex;
-  gap: 10px;
+  gap: 9px;
   align-items: baseline;
-  border: 0;
   border-radius: 5px;
-  background: transparent;
-  color: var(--muted);
+  color: var(--ink);
+  cursor: pointer;
   text-align: left;
 }
-.behaviour-button .number {
+.behaviour-option:hover { background: var(--chrome-deep); }
+.behaviour-option.checked {
+  background: var(--paper);
+  box-shadow: inset 3px 0 0 rgb(var(--bh) / var(--rule-core));
+}
+.behaviour-check {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.behaviour-box {
+  width: 12px;
+  height: 12px;
+  flex: none;
+  align-self: center;
+  border: 1px solid var(--faint);
+  border-radius: 3px;
+  background: transparent;
+}
+.behaviour-option:hover .behaviour-box { border-color: rgb(var(--bh) / var(--rule-core)); }
+.behaviour-option.checked .behaviour-box {
+  position: relative;
+  border-color: rgb(var(--bh) / var(--rule-core));
+  background: rgb(var(--bh) / var(--rule-core));
+}
+.behaviour-option.checked .behaviour-box::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 3.5px;
+  width: 3px;
+  height: 6px;
+  border: solid var(--paper);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(42deg);
+}
+.behaviour-check:focus-visible + .behaviour-box {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+/* A stippled group is marked in the menu as well as in the text: its heading rule and the
+   selected row's spine are broken the same way the passage's margin rule is, so the group
+   reads as a different kind of row before a spec is even open. */
+.behaviour-group.texture-stipple h2 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.behaviour-group.texture-stipple h2::after {
+  content: "";
+  height: 3px;
+  flex: 1;
+  border-radius: 2px;
+  background-image: repeating-linear-gradient(
+    to right, currentColor 0 3px, transparent 3px 6px);
+  opacity: .45;
+}
+.behaviour-option.texture-stipple.checked {
+  background-image: repeating-linear-gradient(
+    to bottom, rgb(var(--bh) / var(--rule-core)) 0 3px, transparent 3px 6px);
+  background-size: 3px 100%;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  box-shadow: none;
+}
+.behaviour-option .number {
   width: 20px;
   flex: none;
   color: var(--faint);
@@ -255,34 +377,53 @@ body.resizing-columns {
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
-.behaviour-button .name { flex: 1; font-size: 12px; line-height: 1.35; }
-.behaviour-button.mapped { cursor: pointer; color: var(--ink); }
-.behaviour-button.mapped:hover { background: var(--chrome-deep); }
-.behaviour-button.active {
-  background: var(--paper);
-  box-shadow: inset 3px 0 0 var(--accent);
-}
-.behaviour-button[disabled] { opacity: .72; }
+.behaviour-option .name { flex: 1; font-size: 12px; line-height: 1.35; }
+.behaviour-option.checked .name { color: var(--ink); }
 
-.status-dot {
-  width: 6px;
-  height: 6px;
-  display: inline-block;
-  border-radius: 50%;
-  background: var(--faint);
-}
-.status-dot.mapped { background: var(--accent); }
-.status-dot.pending { border: 1px solid var(--faint); background: transparent; }
-.behaviour-button .status-dot { margin-left: auto; flex: none; }
 .sidebar-key {
   padding: 12px 22px;
   display: flex;
-  gap: 13px;
+  flex-wrap: wrap;
+  gap: 6px 13px;
   border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 10px;
 }
 .sidebar-key span { display: inline-flex; align-items: center; gap: 5px; }
+/* The key is painted the way a passage is: the margin rules on the left, the wash behind. */
+.key-swatch {
+  width: 16px;
+  height: 10px;
+  display: inline-block;
+  border-radius: 2px;
+  background:
+    linear-gradient(to right, rgb(var(--hue-1) / var(--rule-core)) 0 2px, transparent 2px),
+    linear-gradient(rgb(var(--hue-1) / var(--tint-core)), rgb(var(--hue-1) / var(--tint-core)));
+}
+.key-swatch.related {
+  background:
+    linear-gradient(to right, rgb(var(--hue-1) / var(--rule-related)) 0 2px, transparent 2px),
+    linear-gradient(rgb(var(--hue-1) / var(--tint-related)), rgb(var(--hue-1) / var(--tint-related)));
+}
+.key-swatch.overlap {
+  background:
+    linear-gradient(to right,
+      rgb(var(--hue-1) / var(--rule-core)) 0 2px,
+      transparent 2px 3px,
+      rgb(var(--hue-3) / var(--rule-core)) 3px 5px,
+      transparent 5px),
+    linear-gradient(100deg,
+      rgb(var(--hue-1) / var(--tint-core)),
+      rgb(var(--hue-3) / var(--tint-core)));
+}
+/* The group key: the same wash, with the margin rule broken instead of solid. */
+.key-swatch.stipple {
+  background:
+    repeating-linear-gradient(to bottom,
+      rgb(var(--hue-1) / var(--rule-core)) 0 3px,
+      transparent 3px 6px) 0 0 / 2px 100% no-repeat,
+    linear-gradient(rgb(var(--hue-1) / var(--tint-core)), rgb(var(--hue-1) / var(--tint-core)));
+}
 
 .workspace { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .reader-toolbar {
@@ -341,11 +482,20 @@ body.resizing-columns {
 }
 .finding-behaviour {
   margin-right: 10px;
-  padding: 4px 8px;
-  border-radius: 3px;
-  background: var(--highlight);
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  vertical-align: -1px;
   font-size: 11px;
   font-weight: 600;
+}
+.finding-behaviour:empty { display: none; }
+.behaviour-chip {
+  padding: 3px 8px;
+  border-radius: 3px;
+  background: rgb(var(--bh) / var(--tint-core-strong));
+  box-shadow: inset 2px 0 0 rgb(var(--bh) / var(--rule-core));
+  white-space: nowrap;
 }
 .finding-definition { color: var(--muted); font-family: var(--reader); font-size: 14px; font-style: italic; }
 .passage-controls { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
@@ -429,8 +579,9 @@ body.resizing-columns {
 }
 .document-focus-toggle:hover { border-color: var(--accent); color: var(--accent); }
 .rail-legend { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
-.legend-mark { width: 3px; height: 9px; display: inline-block; border-radius: 2px; background: var(--accent); }
-.legend-mark.adjacent { margin-left: 3px; background: var(--adjacent-mark); }
+/* Neutral: the legend explains intensity, and the colour belongs to the behaviour. */
+.legend-mark { width: 3px; height: 9px; display: inline-block; border-radius: 2px; background: var(--muted); }
+.legend-mark.adjacent { margin-left: 3px; opacity: .4; }
 .document-scroll { position: relative; flex: 1; min-height: 0; overflow: auto; scroll-behavior: smooth; }
 
 .document-body {
@@ -568,39 +719,49 @@ body.resizing-columns {
 .zero-coverage strong { display: block; margin-bottom: 3px; color: var(--focus); }
 .zero-coverage span { color: var(--muted); }
 
+/* Every colour on a passage is written by app.js into --tint (the wash), --gutter (one
+   margin rule per behaviour, solid or broken by group) and --bh-primary, all of them in
+   terms of the palette's --hue-N, so switching surfaces repaints the highlights without
+   re-annotating them. The gutter's -size and -pos place each behaviour's rule in its own
+   column; the wash is a single layer and needs neither. */
 .passage {
   position: relative;
   margin-right: -12px !important;
   margin-left: -12px !important;
   padding: 5px 12px;
   border-radius: 3px;
-  background: var(--highlight);
+  background-image: var(--tint);
   box-decoration-break: clone;
 }
-.passage.adjacent { background: var(--adjacent); }
 .passage::before {
   content: "";
   position: absolute;
   top: 5px;
   bottom: 5px;
-  left: -9px;
-  width: 2px;
+  left: calc(-7px - var(--gutter-width, 2px));
+  width: var(--gutter-width, 2px);
   border-radius: 2px;
-  background: var(--accent);
-  opacity: .55;
+  background-image: var(--gutter);
+  background-size: var(--gutter-size, auto);
+  background-position: var(--gutter-pos, 0 0);
+  background-repeat: no-repeat;
 }
-.passage.adjacent::before { background: var(--adjacent-mark); opacity: .55; }
-.passage.current { background: var(--highlight-strong); box-shadow: 0 0 0 1px var(--accent); }
-.passage.current::before { left: -10px; width: 4px; opacity: 1; }
-.passage.adjacent.current {
-  background: var(--adjacent-strong);
-  box-shadow: 0 0 0 1px var(--adjacent-mark);
+.passage.current {
+  background-image: var(--tint-strong);
+  box-shadow: 0 0 0 1px rgb(var(--bh-primary) / .5);
 }
-.passage.adjacent.current::before { background: var(--adjacent-mark); }
-.passage-label {
-  display: block;
+.passage.current::before { top: 2px; bottom: 2px; }
+/* The strip above a passage carries the behaviour names only. Why the passage was selected
+   sits behind the question mark at the right of the strip: the role sentences are long
+   enough that set out in the open they read as a second document over the first. */
+.passage-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   margin: 2px 0 5px;
-  color: var(--accent);
+}
+.passage-label {
+  color: rgb(var(--bh));
   font-family: var(--ui);
   font-size: 9px;
   font-weight: 600;
@@ -608,7 +769,88 @@ body.resizing-columns {
   line-height: 1.35;
   text-transform: uppercase;
 }
-.passage.adjacent .passage-label { color: var(--adjacent-mark); }
+.passage-label + .passage-label::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--faint);
+}
+
+.passage-why {
+  flex: none;
+  position: relative;
+  width: 15px;
+  height: 15px;
+  margin-left: auto;
+  padding: 0;
+  border: 1px solid rgb(var(--bh-primary) / .45);
+  border-radius: 50%;
+  background: transparent;
+  color: rgb(var(--bh-primary));
+  font-family: var(--ui);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  opacity: .62;
+  transition: opacity .12s ease, background-color .12s ease;
+}
+.passage-why:hover,
+.passage-why:focus-visible,
+.passage-why[aria-expanded="true"] {
+  opacity: 1;
+  background: rgb(var(--bh-primary) / .14);
+}
+/* The hover legend. Anchored to the right edge so it opens inwards over the text rather
+   than off the panel, and never intercepts the pointer on its way to the button. */
+.passage-why::after {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 4;
+  top: calc(100% + 5px);
+  right: 0;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--chrome);
+  box-shadow: 0 2px 8px var(--shadow);
+  color: var(--muted);
+  font-family: var(--ui);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.3;
+  text-transform: none;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s ease;
+}
+.passage-why:hover::after,
+.passage-why:focus-visible::after { opacity: 1; }
+.passage-why[aria-expanded="true"]::after { content: none; }
+
+.passage-rationale {
+  display: block;
+  margin: 0 0 7px;
+  padding: 6px 9px;
+  border-left: 2px solid rgb(var(--bh-primary) / .5);
+  border-radius: 0 3px 3px 0;
+  background: rgb(var(--bh-primary) / .07);
+  font-family: var(--ui);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.passage-rationale[hidden] { display: none; }
+.passage-reason { display: block; color: var(--muted); }
+.passage-reason + .passage-reason { margin-top: 5px; }
+.passage-reason-behaviour {
+  color: rgb(var(--bh));
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.passage-reason-behaviour::after { content: " · "; }
 
 .passage-rail {
   position: sticky;
@@ -637,22 +879,22 @@ body.resizing-columns {
   padding: 0;
   border: 0;
   border-radius: 2px;
-  background: var(--accent);
-  opacity: .52;
+  background-color: transparent;
+  background-image: var(--rail);
+  opacity: .85;
   pointer-events: auto;
   cursor: pointer;
 }
 .rail-mark:hover { width: 7px; opacity: 1; }
-.rail-mark.adjacent { width: 4px; background: var(--adjacent-mark); opacity: .62; }
+/* A mark banded down its height is a passage more than one behaviour cites. */
+.rail-mark.overlap { width: 6px; }
 .rail-mark.current {
   right: 1px;
   width: 9px;
   min-height: 7px;
-  background: var(--focus);
-  box-shadow: 0 0 0 2px var(--paper);
+  box-shadow: 0 0 0 1px var(--paper), 0 0 0 2px var(--focus);
   opacity: 1;
 }
-.rail-mark.adjacent.current { background: var(--adjacent-mark); }
 
 button:focus-visible, a:focus-visible, .column-resizer:focus-visible {
   outline: 2px solid var(--focus);
@@ -665,8 +907,7 @@ button:focus-visible, a:focus-visible, .column-resizer:focus-visible {
   .app-shell { height: auto; min-height: calc(100vh - 54px); grid-template-columns: 1fr; }
   .behaviour-sidebar { border-bottom: 1px solid var(--line); }
   .column-resizer { display: none; }
-  .sidebar-intro { padding: 20px; }
-  .sidebar-intro h1 { max-width: none; }
+  .sidebar-intro { padding: 14px 20px; }
   .behaviour-list { display: flex; overflow-x: auto; padding: 8px; }
   .behaviour-group { min-width: 220px; border-bottom: 0; border-right: 1px solid var(--line); }
   .sidebar-key { display: none; }
