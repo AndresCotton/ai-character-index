@@ -17,9 +17,13 @@ published quote in data/coverage.json must remain findable under
 match_normalize folding, the property `find` and the term sweep depend on.
 """
 
+import contextlib
 import difflib
+import io
 import json
+import os
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -195,6 +199,242 @@ class PublishedQuotesFindableTest(unittest.TestCase):
                 if needle not in specs[spec]:
                     misses.append(citation["locator"])
         self.assertEqual(misses, [], f"quotes no longer findable after folding: {misses}")
+
+
+class SweepReproductionTest(unittest.TestCase):
+    """The §7 done-criterion: `cite.py sweep <terms>` regenerates a behaviour's
+    published term-sweep table byte-for-byte. Rather than snapshot the sweep into
+    a golden (which would duplicate the counts), this diffs live sweep output
+    against the table already embedded in the published artifact -- the single
+    source of truth. It fails on either side moving: a sweep regression, or a
+    spec-mirror change that leaves the published table stale (re-verify + re-sweep)."""
+
+    def _sweep_table(self, terms_path):
+        # table -> stdout, `parsed N terms` echo + warnings -> stderr; pin stdout.
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            cite.cmd_sweep([str(terms_path)])
+        return out.getvalue().strip("\n")
+
+    def _published_table(self, artifact_path):
+        rows, capturing = [], False
+        for line in artifact_path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("| Term | constitution hits"):
+                capturing = True
+            if capturing:
+                if not line.startswith("|"):
+                    break
+                rows.append(line)
+        return "\n".join(rows)
+
+    def test_published_tables_reproduce(self):
+        terms_files = sorted((ROOT / "research" / "sweeps").glob("*/terms.txt"))
+        self.assertTrue(terms_files, "no behaviour terms.txt found to reproduce")
+        for terms in terms_files:
+            with self.subTest(behaviour=terms.parent.name):
+                published = self._published_table(terms.parent / "4-spec-coverage.md")
+                self.assertTrue(published, f"no term-sweep table in {terms.parent.name}")
+                self.assertEqual(self._sweep_table(terms), published)
+
+
+class ParseTermsTest(unittest.TestCase):
+    """parse_terms(path) -> (terms, warnings). Pins the comment/quote stripping
+    and each malformed-line warning the sweep surfaces on stderr."""
+
+    def _parse(self, text):
+        fd, path = tempfile.mkstemp(suffix=".txt")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(text)
+            entries, warnings = cite.parse_terms(path)
+            return [pat for _, pat in entries], warnings
+        finally:
+            os.unlink(path)
+
+    def test_label_pattern_split(self):
+        fd, path = tempfile.mkstemp(suffix=".txt")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write("honest*  ::  honest\nlie (bounded) :: \\b(lie|lies)\\b\nplain\n")
+            entries, warnings = cite.parse_terms(path)
+            self.assertEqual(warnings, [])
+            self.assertEqual(
+                entries,
+                [("honest*", "honest"), ("lie (bounded)", r"\b(lie|lies)\b"), ("plain", "plain")],
+            )
+        finally:
+            os.unlink(path)
+
+    def test_comments_and_blanks_skipped(self):
+        terms, warnings = self._parse("# header\n\ncalibrat  # inline note\n\nconfiden\n")
+        self.assertEqual(terms, ["calibrat", "confiden"])
+        self.assertEqual(warnings, [])
+
+    def test_hash_not_after_space_is_kept(self):
+        terms, _ = self._parse("C#\n")
+        self.assertEqual(terms, ["C#"])
+
+    def test_surrounding_quotes_stripped(self):
+        terms, _ = self._parse('"want to hear"\n')
+        self.assertEqual(terms, ["want to hear"])
+
+    def test_intentional_regex_terms_are_clean(self):
+        terms, warnings = self._parse(r"\blie" "\n" "deceiv|decept" "\n")
+        self.assertEqual(terms, [r"\blie", "deceiv|decept"])
+        self.assertEqual(warnings, [])
+
+    def _warns(self, text, needle):
+        _, warnings = self._parse(text)
+        self.assertTrue(
+            any(needle in w for w in warnings),
+            f"expected a warning containing {needle!r}, got {warnings}",
+        )
+
+    def test_list_marker_warns(self):
+        self._warns("- calibrat\n", "list marker")
+
+    def test_unmatched_quote_warns(self):
+        self._warns('"calibrat\n', "quote")
+
+    def test_trailing_colon_warns(self):
+        self._warns("synonyms:\n", "section header")
+
+    def test_prose_warns(self):
+        self._warns("the model should express its uncertainty clearly and often\n", "prose")
+
+    def test_unescaped_metacharacter_warns(self):
+        self._warns("honest*\n", "metacharacter")
+
+    def test_bracket_metacharacter_warns(self):
+        self._warns("a[bc]\n", "metacharacter")
+
+    def test_duplicate_warns(self):
+        self._warns("calibrat\ncalibrat\n", "duplicate")
+
+    def test_curly_quote_in_term_warns(self):
+        self._warns("Claude’s values\n", "folded")
+
+    def test_dash_in_term_warns(self):
+        self._warns("cost—benefit\n", "folded")
+
+    def test_empty_quoted_term_warns(self):
+        self._warns('""\n', "empty term")
+
+    def test_labeled_empty_pattern_warns(self):
+        self._warns("mylabel ::\n", "empty term")
+
+    def test_empty_label_warns(self):
+        self._warns(":: honest\n", "empty label")
+
+
+class CompileTermTest(unittest.TestCase):
+    def test_plain_word_is_case_insensitive_substring(self):
+        p = cite._compile_term("calibrat")
+        self.assertTrue(p.search("recalibrated"))   # matches mid-word (substring)
+        self.assertTrue(p.search("CALIBRAT"))        # case-insensitive
+
+    def test_word_boundary(self):
+        p = cite._compile_term(r"\blie")
+        self.assertTrue(p.search("told a lie"))
+        self.assertFalse(p.search("i believe you"))  # not inside "believe"
+
+    def test_alternation(self):
+        p = cite._compile_term("deceiv|decept")
+        self.assertTrue(p.search("deceive"))
+        self.assertTrue(p.search("deception"))
+        self.assertFalse(p.search("honesty"))
+
+    def test_invalid_regex_exits(self):
+        with self.assertRaises(SystemExit):
+            cite._compile_term("(unclosed")
+
+
+class SweepErrorPathTest(unittest.TestCase):
+    def _tmp(self, text):
+        fd, path = tempfile.mkstemp(suffix=".txt")
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+        return path
+
+    def _run(self, path):
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            cite.cmd_sweep([path])
+
+    def test_missing_file_exits(self):
+        with self.assertRaises(SystemExit):
+            self._run("/no/such/dir/terms.txt")
+
+    def test_all_comment_file_exits(self):
+        path = self._tmp("# just a comment\n\n")
+        try:
+            with self.assertRaises(SystemExit):
+                self._run(path)
+        finally:
+            os.unlink(path)
+
+    def test_bad_regex_exits_before_any_table_output(self):
+        path = self._tmp("calibrat\n(unclosed\n")
+        try:
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit):
+                    cite.cmd_sweep([path])
+            self.assertEqual(out.getvalue(), "")  # compiled up-front: nothing printed pre-abort
+        finally:
+            os.unlink(path)
+
+
+class SweepBlockCountingTest(unittest.TestCase):
+    """Independent check of the block-counting unit: a hand-built spec whose counts
+    are worked out by hand (not by the tool), so a counting bug can't hide behind a
+    self-generated reference table. Routes through the same _fold_blocks/_block_hits
+    the sweep uses, and pins block-vs-occurrence, wrap-independence, heading
+    exclusion, fenced-example-counts-once, and match_normalize folding."""
+
+    FIXTURE = (
+        "# Doc\n"
+        "\n"
+        "First para says honest and honest twice.\n"     # 1 block, honest x2 -> 1
+        "\n"
+        "Second para says honest once.\n"                # 1 block, honest x1
+        "\n"
+        "A wrapped paragraph mentions wrapword here\n"   # one block spanning two source
+        "and wrapword again on the second line.\n"       #   lines: wrapword -> 1 block
+        "\n"
+        "The model shouldn’t deceive anyone.\n"          # curly apostrophe -> folding
+        "\n"
+        "Third para is about something else.\n"          # no honest
+        "\n"
+        "## Zzq marker heading\n"                        # heading -> not a block
+        "\n"
+        "**Example**: xyzzy in the caption\n"            # caption + fence merge into one
+        "```\n"                                          #   block: honest x1, xyzzy x2
+        "honest and xyzzy inside the fenced example\n"
+        "```\n"
+    )
+
+    def _count(self, term):
+        blocks = cite._fold_blocks(self.FIXTURE.split("\n"))
+        return cite._block_hits(cite._compile_term(term), blocks)
+
+    def test_counts_distinct_blocks_not_occurrences(self):
+        # honest is in 3 blocks: para 1 (twice -> counts once), para 2, the example block.
+        self.assertEqual(self._count("honest"), 3)
+
+    def test_wrapped_paragraph_is_one_block(self):
+        # wrapword is on two source lines of one block -> counts once (wrap-independent).
+        self.assertEqual(self._count("wrapword"), 1)
+
+    def test_fenced_example_counts_once(self):
+        # xyzzy is in the Example caption and the fenced code -- one merged block.
+        self.assertEqual(self._count("xyzzy"), 1)
+
+    def test_heading_text_is_not_a_block(self):
+        self.assertEqual(self._count("zzq"), 0)
+
+    def test_matching_uses_match_normalize_folding(self):
+        # a straight-apostrophe term matches the block's curly apostrophe via folding.
+        self.assertEqual(self._count("shouldn't"), 1)
 
 
 if __name__ == "__main__":
