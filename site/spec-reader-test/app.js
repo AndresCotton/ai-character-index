@@ -63,6 +63,8 @@ const elements = {
   clearBehaviours: document.querySelector("#clear-behaviours"),
   compareToggle: document.querySelector("#compare-toggle"),
   documentReader: document.querySelector("#document-reader"),
+  downloadHint: document.querySelector("#download-hint"),
+  downloadPassages: document.querySelector("#download-passages"),
   findingBehaviour: document.querySelector("#finding-behaviour"),
   findingDefinition: document.querySelector("#finding-definition"),
   mode: document.querySelector("#mode"),
@@ -299,6 +301,7 @@ function renderBehaviourList() {
         <p>Both specifications are shown here in full, with no passages highlighted.
         Behaviors appear in this menu once their passage mappings are published to this bench.</p>
       </div>`;
+    updateExportControl();
     return;
   }
 
@@ -336,12 +339,160 @@ function renderBehaviourList() {
 
 function updateBehaviourCount() {
   const total = benchBehaviours().length;
+  updateExportControl();
   if (!total) return;
   const chosen = state.selectedSlugs.length;
   elements.behaviourCount.textContent = `${chosen} of ${total} selected`;
   elements.selectAllBehaviours.disabled = chosen === total;
   elements.clearBehaviours.disabled = chosen === 0;
 }
+
+/* ---------- taking the reading away ---------- */
+
+/* What the export is for: the passages a behaviour rests on, read away from the reader --
+ * pasted into a review, diffed against a later spec version, or annotated by hand. So it
+ * carries the whole citation and not just the quote: the definition the passage was read
+ * against, the locator that pins it to a section of a pinned spec version, and the role
+ * sentence saying why it was picked. Both specifications are written out whichever one is
+ * open, because a behaviour's coverage is the pair -- and a spec that maps nothing to it
+ * is a finding of the index, so it is named and stated rather than left out. */
+
+function paddedNumber(behaviour) {
+  return String(behaviour.id).padStart(2, "0");
+}
+
+function selectedPassageTotal() {
+  return selectedBehaviours().reduce((total, behaviour) => total
+    + (state.payload?.documents || []).reduce(
+      (count, doc) => count + (behaviour.coverage?.[doc.id]?.passages.length || 0), 0), 0);
+}
+
+function updateExportControl() {
+  const behaviours = selectedBehaviours();
+  const bench = benchBehaviours().length;
+  elements.downloadPassages.disabled = behaviours.length === 0;
+  if (!bench) {
+    elements.downloadHint.textContent = "";
+    return;
+  }
+  if (!behaviours.length) {
+    elements.downloadHint.textContent = "Tick a behavior to export its passages.";
+    return;
+  }
+  const passages = selectedPassageTotal();
+  elements.downloadHint.textContent =
+    `${behaviours.length} ${behaviours.length === 1 ? "behavior" : "behaviors"}`
+    + ` · ${passages} ${passages === 1 ? "passage" : "passages"}, both specs`;
+}
+
+/* The reader's own date, not UTC: an export made in the evening is dated the day it was
+   made, and the file names of a day's exports sort together. */
+function today() {
+  const now = new Date();
+  return [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+/* A quote can run to several lines; every one of them has to carry the marker, or the
+ * markdown closes the quotation early and the rest of the passage reads as commentary. */
+function blockquote(value) {
+  return value
+    .trim()
+    .split("\n")
+    .map(line => `> ${line}`.trimEnd())
+    .join("\n");
+}
+
+function coverageSummary(coverage) {
+  const parts = [];
+  if (coverage.verdict) parts.push(`Verdict: ${coverage.verdict}`);
+  if (Number.isFinite(coverage.depth)) {
+    parts.push(`coverage depth ${coverage.depth} / 4 (${DEPTH_ANCHORS[coverage.depth] || "--"})`);
+  }
+  if (coverage.verifiedDate) parts.push(`verified ${coverage.verifiedDate}`);
+  return parts.join(" · ");
+}
+
+function passagesMarkdown() {
+  const behaviours = selectedBehaviours();
+  const documents = state.payload?.documents || [];
+  const lines = [
+    "# Reader test -- specification passages",
+    "",
+    `Exported from the AI Character Index reader test bench on ${today()}.`,
+    "",
+    `Behaviors: ${behaviours.map(behaviour => `${paddedNumber(behaviour)} ${behaviour.name}`).join(", ")}.`,
+    "",
+    `Specifications read: ${documents.map(doc => `${doc.lab} · ${doc.title} (${doc.version})`).join("; ")}.`,
+    "",
+    "Each passage is quoted verbatim from the specification version named above; the locator"
+    + " pins it to the section it was read in, and the role sentence records why it was cited.",
+  ];
+
+  behaviours.forEach(behaviour => {
+    lines.push("", "---", "", `## ${paddedNumber(behaviour)} · ${behaviour.name}`);
+    if (behaviour.category) lines.push("", `*${behaviour.category}*`);
+    lines.push("", `**Definition.** ${behaviour.definition}`);
+
+    documents.forEach(doc => {
+      const coverage = behaviour.coverage?.[doc.id] || NO_COVERAGE;
+      lines.push("", `### ${doc.lab} · ${doc.title} (${doc.version})`);
+      const summary = coverageSummary(coverage);
+      if (summary) lines.push("", summary);
+      lines.push("", `Source: ${doc.sourceUrl}`);
+      if (coverage.note) lines.push("", `**Coverage note.** ${coverage.note}`);
+      if (!coverage.passages.length) {
+        lines.push(
+          "",
+          "No mapped passages in this specification."
+          + " Absence of coverage is an index finding, not missing data.",
+        );
+        return;
+      }
+      coverage.passages.forEach((passage, index) => {
+        lines.push(
+          "",
+          `#### ${index + 1}. ${passage.adjacent ? "Related" : "Core"} passage`,
+          "",
+          `\`${passage.locator}\``,
+          "",
+          blockquote(passage.quote),
+          "",
+          `**Why this passage.** ${passage.role}`,
+        );
+      });
+    });
+  });
+
+  return `${lines.join("\n")}\n`;
+}
+
+function exportFilename() {
+  const behaviours = selectedBehaviours();
+  const subject = behaviours.length === 1
+    ? behaviours[0].slug
+    : `${behaviours.length}-behaviors`;
+  return `reader-test-${subject}-passages-${today()}.md`;
+}
+
+function downloadPassages() {
+  if (!selectedBehaviours().length) return;
+  const blob = new Blob([passagesMarkdown()], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = exportFilename();
+  document.body.append(link);
+  link.click();
+  link.remove();
+  // Held open until the browser has taken the blob, then released.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+elements.downloadPassages.addEventListener("click", downloadPassages);
 
 function behaviourChip(behaviour) {
   return `<span class="behaviour-chip" style="--bh: ${behaviourHue(behaviour)}">${escapeHTML(behaviour.name)}</span>`;
