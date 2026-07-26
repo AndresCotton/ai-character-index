@@ -11,3 +11,7 @@ dist/
 # Private -- not for the public repo
 research/sources/Founding an AI Charter organisation.pdf
 outreach/
+
+# Python bytecode
+__pycache__/
+*.pyc
