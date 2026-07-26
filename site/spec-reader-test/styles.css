@@ -390,27 +390,27 @@ body.resizing-columns {
   font-size: 10px;
 }
 .sidebar-key span { display: inline-flex; align-items: center; gap: 5px; }
-/* The key is painted the way a passage is: the margin rules on the left, the wash behind. */
+/* The key is painted the way a passage is: the margin rules on the right, the wash behind. */
 .key-swatch {
   width: 16px;
   height: 10px;
   display: inline-block;
   border-radius: 2px;
   background:
-    linear-gradient(to right, rgb(var(--hue-1) / var(--rule-core)) 0 2px, transparent 2px),
+    linear-gradient(to left, rgb(var(--hue-1) / var(--rule-core)) 0 2px, transparent 2px),
     linear-gradient(rgb(var(--hue-1) / var(--tint-core)), rgb(var(--hue-1) / var(--tint-core)));
 }
 .key-swatch.related {
   background:
-    linear-gradient(to right, rgb(var(--hue-1) / var(--rule-related)) 0 2px, transparent 2px),
+    linear-gradient(to left, rgb(var(--hue-1) / var(--rule-related)) 0 2px, transparent 2px),
     linear-gradient(rgb(var(--hue-1) / var(--tint-related)), rgb(var(--hue-1) / var(--tint-related)));
 }
 .key-swatch.overlap {
   background:
-    linear-gradient(to right,
-      rgb(var(--hue-1) / var(--rule-core)) 0 2px,
+    linear-gradient(to left,
+      rgb(var(--hue-3) / var(--rule-core)) 0 2px,
       transparent 2px 3px,
-      rgb(var(--hue-3) / var(--rule-core)) 3px 5px,
+      rgb(var(--hue-1) / var(--rule-core)) 3px 5px,
       transparent 5px),
     linear-gradient(100deg,
       rgb(var(--hue-1) / var(--tint-core)),
@@ -421,7 +421,7 @@ body.resizing-columns {
   background:
     repeating-linear-gradient(to bottom,
       rgb(var(--hue-1) / var(--rule-core)) 0 3px,
-      transparent 3px 6px) 0 0 / 2px 100% no-repeat,
+      transparent 3px 6px) 100% 0 / 2px 100% no-repeat,
     linear-gradient(rgb(var(--hue-1) / var(--tint-core)), rgb(var(--hue-1) / var(--tint-core)));
 }
 
@@ -723,7 +723,11 @@ body.resizing-columns {
    margin rule per behaviour, solid or broken by group) and --bh-primary, all of them in
    terms of the palette's --hue-N, so switching surfaces repaints the highlights without
    re-annotating them. The gutter's -size and -pos place each behaviour's rule in its own
-   column; the wash is a single layer and needs neither. */
+   column; the wash is a single layer and needs neither.
+
+   The rules hang off the right margin, not the left: on the left they sat in the same
+   column as an ordered list's numbers and a blockquote's rule, and a highlighted list item
+   had its marker struck through. Nothing but the passage rail lives on the right. */
 .passage {
   position: relative;
   margin-right: -12px !important;
@@ -738,7 +742,7 @@ body.resizing-columns {
   position: absolute;
   top: 5px;
   bottom: 5px;
-  left: calc(-7px - var(--gutter-width, 2px));
+  right: calc(-7px - var(--gutter-width, 2px));
   width: var(--gutter-width, 2px);
   border-radius: 2px;
   background-image: var(--gutter);
@@ -833,8 +837,8 @@ body.resizing-columns {
   display: block;
   margin: 0 0 7px;
   padding: 6px 9px;
-  border-left: 2px solid rgb(var(--bh-primary) / .5);
-  border-radius: 0 3px 3px 0;
+  border-right: 2px solid rgb(var(--bh-primary) / .5);
+  border-radius: 3px 0 0 3px;
   background: rgb(var(--bh-primary) / .07);
   font-family: var(--ui);
   font-size: 12px;
@@ -934,7 +938,9 @@ button:focus-visible, a:focus-visible, .column-resizer:focus-visible {
   .view-actions { width: 100%; justify-content: space-between; }
   .finding-bar { padding: 8px 12px; }
   .document-header { padding: 11px 15px; }
-  .document-body, .document-grid.compare .document-body { padding: 38px 28px 90px; font-size: 16px; }
+  /* Asymmetric on a phone: the right margin has to hold the passage rules and the rail,
+     the left holds nothing. */
+  .document-body, .document-grid.compare .document-body { padding: 38px 46px 90px 28px; font-size: 16px; }
   .document-body h1 { font-size: 34px; }
   .document-body h2 { font-size: 25px; }
 }
