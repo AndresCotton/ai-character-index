@@ -1846,7 +1846,7 @@
     {
       "id": 9,
       "slug": "animal-welfare-impacts",
-      "name": "Animal Welfare impacts",
+      "name": "General welfare impacts",
       "definition": "Guidelines that are relevant to how the model should respond with regard to and consider animal welfare and AI welfare impacts of its behaviour or responses, that are not explicitly about these topics (i.e. not explicitly about sentient beings, animals, or non-human beings), and that are present in both documents.",
       "category": "General Guidelines",
       "coverage": {
