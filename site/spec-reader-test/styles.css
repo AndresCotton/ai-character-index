@@ -380,6 +380,46 @@ body.resizing-columns {
 .behaviour-option .name { flex: 1; font-size: 12px; line-height: 1.35; }
 .behaviour-option.checked .name { color: var(--ink); }
 
+/* The export sits at the foot of the menu rather than in the toolbar at its head: it acts on
+   the ticked set, so it reads as the end of the list it takes away and not as a third control
+   beside All and None. The line under it counts what would come out, so the reader knows what
+   they are asking for before the file lands. */
+.sidebar-export {
+  padding: 12px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+}
+.download-passages {
+  width: 100%;
+  padding: 7px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.download-passages:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--paper);
+}
+.download-passages:disabled { opacity: .4; cursor: default; }
+.download-hint {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .sidebar-key {
   padding: 12px 22px;
   display: flex;
@@ -914,6 +954,14 @@ button:focus-visible, a:focus-visible, .column-resizer:focus-visible {
   .sidebar-intro { padding: 14px 20px; }
   .behaviour-list { display: flex; overflow-x: auto; padding: 8px; }
   .behaviour-group { min-width: 220px; border-bottom: 0; border-right: 1px solid var(--line); }
+  .sidebar-export {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+  }
+  .download-passages { width: auto; }
+  .download-hint { text-align: left; }
   .sidebar-key { display: none; }
   .workspace { min-height: 75vh; }
   .reader-toolbar { flex-wrap: wrap; }
@@ -965,8 +1013,10 @@ button:focus-visible, a:focus-visible, .column-resizer:focus-visible {
 .behaviour-empty strong { display: block; margin-bottom: 5px; color: var(--ink); }
 .behaviour-empty p { margin: 0; }
 
-/* The Mapped / Mapping pending key describes nothing while the bench is empty. */
-body.no-behaviours .sidebar-key { display: none; }
+/* The Mapped / Mapping pending key describes nothing while the bench is empty, and there is
+   nothing to take away either. */
+body.no-behaviours .sidebar-key,
+body.no-behaviours .sidebar-export { display: none; }
 
 /* .rail-legend sets its own display, which would otherwise beat the [hidden] default
    when the reader hides the highlight legend for want of a behaviour. */

@@ -60,6 +60,23 @@ a cross-reference, which the published Markdown writes `[?](#anchor)`, the resol
 behaviours' passages sit on one of those two shapes and would otherwise report as unresolved
 anchors. A quote with neither feature yields a single fragment, i.e. the previous behaviour.
 
+## Taking the reading away
+
+**Download passages**, at the foot of the menu just above the key, writes whatever is ticked
+to a single Markdown file: per behaviour its group and definition, then per specification the
+coverage verdict, depth and note, and every citation as its locator, its quote as a blockquote,
+and the role sentence recording why it was picked. It is the whole citation rather than the
+highlighted text alone, because the file is meant to be read away from the reader -- pasted
+into a review, diffed against a later spec version, annotated by hand.
+
+Both specifications are written out whichever one is open (a behaviour's coverage is the pair),
+and a spec that maps nothing to a behaviour is named and said so rather than left out --
+absence of coverage is an index finding. Citations are counted, not blocks: two sentences of
+one paragraph are two entries in the file even where they light one passage in the reader,
+which is why the count under the button can exceed the reader's passage count. The file is
+named `reader-test-<slug>-passages-<date>.md` for one behaviour and
+`reader-test-<n>-behaviors-passages-<date>.md` for several.
+
 ## Publishing a behaviour to the bench
 
 `data/behaviours.json` is `{"behaviours": [...]}`, each entry the same shape the reader's

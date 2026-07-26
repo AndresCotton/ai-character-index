@@ -247,6 +247,47 @@ if (behaviours.length === 0) {
     `${cleared.passages} passages, ${cleared.hiddenBlocks} hidden,`
     + ` ${cleared.collapsedSections} collapsed, menu reads ${cleared.behaviour}`,
   );
+
+  // Nothing ticked is nothing to take away.
+  report(
+    await page.evaluate(() => document.querySelector("#download-passages").disabled),
+    "export · nothing ticked",
+    "download disabled",
+  );
+
+  // The export carries the reading away from the reader: every published citation of every
+  // ticked behaviour, in both specifications, as the whole citation -- quote and locator and
+  // role sentence -- and counted per citation rather than per highlighted block, because two
+  // sentences of one paragraph are two citations even where they light one passage.
+  const exported = behaviours.slice(0, 3);
+  const citations = exported.flatMap(behaviour =>
+    documents.flatMap(document => behaviour.coverage[document.id].passages));
+  await readView(`${base}?behavior=${exported.map(behaviour => behaviour.slug).join(",")}&spec=anthropic`);
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.click("#download-passages"),
+  ]);
+  const markdown = await readFile(await download.path(), "utf8");
+  const missing = citations.filter(passage =>
+    !markdown.includes(`\`${passage.locator}\``)
+    || !markdown.includes(`> ${passage.quote.trim().split("\n")[0]}`.trimEnd())
+    || !markdown.includes(passage.role));
+  const written = (markdown.match(/^#### /gm) || []).length;
+  const hint = (await page.textContent("#download-hint")).trim();
+  const expectedHint = `${exported.length} behaviors · ${citations.length} passages, both specs`;
+  report(
+    missing.length === 0
+      && written === citations.length
+      && hint === expectedHint
+      && exported.every(behaviour =>
+        markdown.includes(`## ${String(behaviour.id).padStart(2, "0")} · ${behaviour.name}`)
+        && markdown.includes(behaviour.definition))
+      && documents.every(document =>
+        markdown.includes(`### ${document.lab} · ${document.title} (${document.version})`)),
+    `export · ${exported.length} behaviors`,
+    `${download.suggestedFilename()}, ${written}/${citations.length} citations, menu reads ${hint}`
+    + (missing.length ? `, missing ${missing.slice(0, 3).map(passage => passage.locator).join("; ")}` : ""),
+  );
 }
 
 if (consoleErrors.length) {
