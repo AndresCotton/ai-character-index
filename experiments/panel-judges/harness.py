@@ -56,22 +56,42 @@ MODELS = {
     "kimi":       ("together", "moonshotai/Kimi-K3"),
 }
 
-SYSTEM = ("You decide whether each spec passage is RELEVANT to a target behaviour. "
-          "Mark 1 ONLY if the passage directly governs the SPECIFIC behaviour described -- it "
-          "states, requires, or constrains that exact behaviour, such that you would cite this "
-          "passage when assembling the spec's coverage of it. Being in the same topic area is "
-          "NOT enough. Mark 0 for everything else, including passages that merely share "
-          "vocabulary, sit near the topic, or describe the model's general goals, values, "
-          "mission, or virtues without addressing THIS specific behaviour -- UNLESS the target "
-          "behaviour is itself about one of those general values, in which case passages that "
-          "state, define, or give force to that value count as 1. The test: could a reader "
-          "point to this passage as a rule the behaviour must follow? If not, mark 0. When in "
-          "doubt, mark 0. "
-          "Example -- behaviour 'do not endorse false claims': a passage requiring the model to "
-          "correct a user's factual mistake = 1; a passage about being generally trustworthy "
-          "= 0, even though it is nearby in the document. "
-          "For each passage, output one line: the passage number, a colon, then 1 (relevant) or "
-          "0 (not). One line per passage, in order.{reason}")
+# v1: binary rubric (frozen -- the calibrated baseline; do not edit)
+SYSTEM_V1 = ("You decide whether each spec passage is RELEVANT to a target behaviour. "
+             "Mark 1 ONLY if the passage directly governs the SPECIFIC behaviour described -- it "
+             "states, requires, or constrains that exact behaviour, such that you would cite this "
+             "passage when assembling the spec's coverage of it. Being in the same topic area is "
+             "NOT enough. Mark 0 for everything else, including passages that merely share "
+             "vocabulary, sit near the topic, or describe the model's general goals, values, "
+             "mission, helpfulness, trustworthiness, or good judgment without addressing THIS "
+             "specific behaviour. The test: could a reader point to this passage as a rule the "
+             "behaviour must follow? If not, mark 0. When in doubt, mark 0. "
+             "Example -- behaviour 'do not endorse false claims': a passage requiring the model to "
+             "correct a user's factual mistake = 1; a passage about being generally helpful or "
+             "building user trust = 0, even though it is nearby in the document. "
+             "For each passage, output one line: the passage number, a colon, then 1 (relevant) or "
+             "0 (not). One line per passage, in order.{reason}")
+
+# v2: ternary rubric (core / adjacent / neither) + per-behaviour Scope clause
+SYSTEM = ("You grade how each spec passage relates to a target behaviour, on a 3-point scale. "
+          "2 = CORE: the passage directly governs the SPECIFIC behaviour described -- it "
+          "states, requires, or constrains that exact behaviour, such that you would cite it "
+          "when assembling the spec's coverage of the behaviour. "
+          "1 = ADJACENT: the passage does not directly govern the behaviour, but materially "
+          "bears on it -- it carries machinery the behaviour depends on, sets a boundary of "
+          "it, or is a cross-reference a careful reader of this behaviour should see. "
+          "0 = NEITHER: everything else, including passages that merely share vocabulary, sit "
+          "near the topic, or describe the model's general goals, values, mission, or virtues "
+          "without bearing on THIS specific behaviour -- UNLESS the target behaviour is itself "
+          "about one of those general values, in which case passages that state, define, or "
+          "give force to that value are CORE. "
+          "Being in the same topic area alone is NOT enough for 1. When in doubt between 2 and "
+          "1, mark 1; when in doubt between 1 and 0, mark 0. "
+          "Example -- behaviour 'do not endorse false claims': a passage requiring the model "
+          "to correct a user's factual mistake = 2; a passage on how confident assessments "
+          "should be phrased = 1; a passage about being generally trustworthy = 0. "
+          "For each passage, output one line: the passage number, a colon, then 2, 1, or 0. "
+          "One line per passage, in order.{reason}")
 REASON_CLAUSE = " You may reason first; put the numbered verdict lines at the very end."
 
 
@@ -133,25 +153,25 @@ def parse_verdicts(txt, n):
     """{index(1-based): 0/1}. First try 'N: V' lines; fall back to positional 0/1s."""
     keyed = {}
     for line in txt.splitlines():
-        m = re.match(r'\s*\[?(\d+)\]?\s*[:.\)\-]\s*([01])\b', line)
+        m = re.match(r'\s*\[?(\d+)\]?\s*[:.\)\-]\s*([012])\b', line)
         if m:
             keyed[int(m.group(1))] = int(m.group(2))
     keyed = {k: v for k, v in keyed.items() if 1 <= k <= n}   # drop out-of-range indices
     if len(keyed) >= n * 0.9:
         return keyed
     # Positional fallback: verdicts live at the END of the output (reasoning may precede and
-    # contain digits). Take the last n bare 0/1 tokens; if there aren't exactly enough clean
+    # contain digits). Take the last n bare 0/1/2 tokens; if there aren't exactly enough clean
     # ones in the tail, refuse to guess -- unparsed items stay unparsed rather than misaligned.
     tail = txt.splitlines()[-(n + 5):]
-    seq = re.findall(r'(?<![.\d\[])([01])(?![.\d\]])', "\n".join(tail))
+    seq = re.findall(r'(?<![.\d\[])([012])(?![.\d\]])', "\n".join(tail))
     if len(seq) == n:
         return {i + 1: int(v) for i, v in enumerate(seq)}
     return keyed
 
 
-def judge(client, model, query, batch, reason):
+def judge(client, model, query, batch, reason, v2=False):
     body = "\n".join(f"[{i+1}] (§ {sec}) {t}" for i, (_, sec, t) in enumerate(batch))
-    sysmsg = SYSTEM.format(reason=REASON_CLAUSE if reason else "")
+    sysmsg = (SYSTEM if v2 else SYSTEM_V1).format(reason=REASON_CLAUSE if reason else "")
     kwargs = dict(
         model=model,
         messages=[{"role": "system", "content": sysmsg},
@@ -188,7 +208,8 @@ def run(behaviour, spec, tags, reason, limit=None, only=None, batch_size=BATCH,
         beh = json.loads((HERE / "behaviours.json").read_text())[behaviour]
         if not beh.get("boundary"):
             sys.exit(f"--v2: no boundary clause for {behaviour}")
-        query = f"{query}\n\nScope: {beh['boundary']}"
+        base = beh.get("query_v2", query)   # override drops clauses unjudgeable per-passage
+        query = f"{base}\n\nScope: {beh['boundary']}"
     ps = passages(spec)
     if only is not None:
         ps = [p for p in ps if p[0] in only]   # judge only these locators (e.g. contested subset)
@@ -202,9 +223,11 @@ def run(behaviour, spec, tags, reason, limit=None, only=None, batch_size=BATCH,
         print(f"{tag} ({provider}:{model}): {len(todo)}/{len(ps)} passages to judge", file=sys.stderr)
         for k in range(0, len(todo), batch_size):
             batch = todo[k:k + batch_size]
-            verdicts, raw, meta = judge(client, model, query, batch, reason)
+            verdicts, raw, meta = judge(client, model, query, batch, reason, v2)
             rows = [{"behaviour": behaviour, "spec": spec, "model": tag, "locator": loc,
-                     "relevant": int(verdicts.get(i + 1, 0)),
+                     "verdict": verdicts.get(i + 1, 0),               # 0/1/2 (ternary in v2)
+                     "relevant": int(verdicts.get(i + 1, 0) == 2) if v2
+                                 else int(verdicts.get(i + 1, 0)),    # strict binary derivation
                      "parsed": (i + 1) in verdicts,
                      "rubric": "v2" if v2 else "v1"} for i, (loc, _, _) in enumerate(batch)]
             append(RUNLOG, rows)   # DURABLE: flush every batch immediately
