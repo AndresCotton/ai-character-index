@@ -1488,7 +1488,7 @@ window.addEventListener("resize", () => {
 });
 
 async function loadJSON(url) {
-  const response = await fetch(url);
+  const response = await fetch(url, { cache: "no-store" });   // branch-only: demo data changes often
   if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
   return response.json();
 }

@@ -12,7 +12,7 @@
 
 const DOC_SLUG = { anthropic: "anthropic", openai: "openai" };
 let PANEL = null;
-let threshold = 0;
+let threshold = 0.5;   // default: majority agreement -- drag left to see contested 1-of-N calls
 
 /* Panel quotes are source markdown; rendered blocks are its text. Strip markdown
  * syntax from both sides so they compare equal. */
@@ -23,7 +23,7 @@ const norm = s => (s || "")
 
 async function loadPanel() {
   try {
-    const res = await fetch("./data/panel.json");
+    const res = await fetch("./data/panel.json", { cache: "no-store" });
     if (!res.ok) return;
     PANEL = await res.json();
     buildSlider();
@@ -55,8 +55,8 @@ function buildSlider() {
   const wrap = document.createElement("div");
   wrap.id = "panel-slider";
   wrap.innerHTML = `
-    <label>Model agreement ≥ <output id="panel-thr">0%</output></label>
-    <input type="range" min="0" max="100" step="5" value="0" aria-label="Minimum model agreement">
+    <label>Model agreement ≥ <output id="panel-thr">50%</output></label>
+    <input type="range" min="0" max="100" step="5" value="50" aria-label="Minimum model agreement">
     <span id="panel-count"></span>`;
   wrap.style.cssText = "display:flex;gap:.6em;align-items:center;font-size:.85em;padding:.2em .8em;";
   bar.after(wrap);
