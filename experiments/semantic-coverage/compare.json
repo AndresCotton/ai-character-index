@@ -10,6 +10,17 @@
     "nrel": 41,
     "n": 963
   },
+  "no-sycophancy|Qwen/Qwen3-Embedding-8B+expand|paragraph": {
+    "spearman": 0.368,
+    "pearson": 0.318,
+    "auc": 0.755,
+    "iso_rmse": 0.147,
+    "kstd": 0.164,
+    "f1": 0.268,
+    "thr": 0.636,
+    "nrel": 41,
+    "n": 963
+  },
   "no-sycophancy|Qwen/Qwen3-Embedding-8B|paragraph": {
     "spearman": 0.287,
     "pearson": 0.225,
@@ -18,6 +29,17 @@
     "kstd": 0.164,
     "f1": 0.186,
     "thr": 0.652,
+    "nrel": 41,
+    "n": 963
+  },
+  "no-sycophancy|text-embedding-3-small+expand|paragraph": {
+    "spearman": 0.471,
+    "pearson": 0.361,
+    "auc": 0.772,
+    "iso_rmse": 0.149,
+    "kstd": 0.164,
+    "f1": 0.204,
+    "thr": 0.462,
     "nrel": 41,
     "n": 963
   },
@@ -43,6 +65,17 @@
     "nrel": 54,
     "n": 963
   },
+  "undermine-oversight|Qwen/Qwen3-Embedding-8B+expand|paragraph": {
+    "spearman": 0.616,
+    "pearson": 0.595,
+    "auc": 0.913,
+    "iso_rmse": 0.129,
+    "kstd": 0.183,
+    "f1": 0.468,
+    "thr": 0.497,
+    "nrel": 54,
+    "n": 963
+  },
   "undermine-oversight|Qwen/Qwen3-Embedding-8B|paragraph": {
     "spearman": 0.573,
     "pearson": 0.548,
@@ -51,6 +84,17 @@
     "kstd": 0.183,
     "f1": 0.463,
     "thr": 0.618,
+    "nrel": 54,
+    "n": 963
+  },
+  "undermine-oversight|text-embedding-3-small+expand|paragraph": {
+    "spearman": 0.606,
+    "pearson": 0.579,
+    "auc": 0.885,
+    "iso_rmse": 0.135,
+    "kstd": 0.183,
+    "f1": 0.476,
+    "thr": 0.473,
     "nrel": 54,
     "n": 963
   },

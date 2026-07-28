@@ -142,8 +142,9 @@ def main():
     name = sys.argv[1] if len(sys.argv) > 1 else None
     provider = sys.argv[2] if len(sys.argv) > 2 else DEFAULT_PROVIDER
     chunk = sys.argv[3] if len(sys.argv) > 3 else "paragraph"
+    annotation = sys.argv[4] if len(sys.argv) > 4 else "None"
     if name not in behaviours:
-        sys.exit(f"usage: score.py <behaviour> [provider] [chunk]   behaviours: {', '.join(behaviours)}")
+        sys.exit(f"usage: score.py <behaviour> [provider] [chunk] [annotation]   behaviours: {', '.join(behaviours)}")
     if provider not in PROVIDERS:
         sys.exit(f"unknown provider {provider!r} -- choices: {', '.join(PROVIDERS)}")
     if chunk not in ("paragraph", "sentence"):
@@ -152,6 +153,14 @@ def main():
     source = behaviours[name].get("source", "")
     cfg = PROVIDERS[provider]
     model = cfg["model"]
+    outtag = model  # what the demo labels the column; base model, or model+annotation
+    if annotation != "None":
+        ann = json.loads((HERE / "annotations.json").read_text())
+        if name not in ann or annotation not in ann[name]:
+            sys.exit(f"no annotation {annotation!r} for {name}; run: python3 annotate.py generate")
+        query = ann[name][annotation]  # the augmented direction text (shown in the demo's direction panel)
+        source = (source + "  |  " if source else "") + f"annotation={annotation} (LLM-augmented direction; the text above IS the expansion)"
+        outtag = f"{model}+{annotation}"
 
     key = load_key(cfg["key"])
     if not key:
@@ -168,10 +177,10 @@ def main():
                 "snippet": text[:220]} for loc, text in units]
     results.sort(key=lambda r: -r["score"])
 
-    stem = f"{name}-{provider}" + ("" if chunk == "paragraph" else f"-{chunk}")
+    stem = f"{name}-{provider}" + ("" if chunk == "paragraph" else f"-{chunk}") + ("" if annotation == "None" else f"-{annotation}")
     (HERE / f"scores-{stem}.json").write_text(json.dumps(
         {"behaviour": name, "label": label, "query": query, "source": source,
-         "provider": provider, "model": model, "chunk": chunk,
+         "provider": provider, "model": outtag, "chunk": chunk,
          "n_blocks": len(results), "results": results}, indent=2))
     (HERE / f"viewer-{stem}.html").write_text(
         VIEWER.replace("__LABEL__", html.escape(f"{label}  [{model}, {chunk}]"))
