@@ -67,8 +67,10 @@ select,input[type=range]{font:14px system-ui}
 #dir{max-width:64rem;margin:.8rem auto 0;padding:0 1.5rem}
 #dir summary{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#777;cursor:pointer}
 #dir .box{background:#f6f8fa;border:1px solid #e3e7ea;border-radius:6px;padding:.6rem .8rem;margin-top:.45rem}
-#dir .q{font-size:13px}
+#dir .q{font-size:13px;white-space:pre-wrap}
 #dir .src{font-size:11px;color:#777;margin-top:.4rem;font-style:italic}
+#dir mark.exp{background:#fdf0b8;color:#111;border-radius:2px;padding:0 1px}
+#dir .mech{font-size:11px;color:#555;margin-top:.5rem;line-height:1.45;border-top:1px solid #e3e7ea;padding-top:.4rem}
 #cmp{max-width:64rem;margin:.55rem auto 0;padding:0 1.5rem}
 #cmp summary{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#777;cursor:pointer}
 table.cmp{border-collapse:collapse;margin:.45rem 0 .3rem;font-size:12px}
@@ -79,7 +81,7 @@ table.cmp td{text-align:right;padding:.15rem .7rem;font-variant-numeric:tabular-
 #matchinfo{max-width:64rem;margin:.3rem auto 0;padding:0 1.5rem;font-size:11px;color:#555;font-family:ui-monospace,monospace}
 main{max-width:64rem;margin:0 auto;padding:0 1.5rem 4rem}
 .thead{display:flex;position:sticky;background:#fff;border-bottom:2px solid #ccc;z-index:6;align-items:flex-end}
-.thsc{flex:0 0 3rem;writing-mode:vertical-rl;transform:rotate(180deg);height:9rem;
+.thsc{flex:0 0 3rem;writing-mode:vertical-rl;transform:rotate(180deg);height:15rem;
   padding:.5rem .1rem .35rem;font:11px ui-monospace,monospace;color:#555;cursor:pointer;white-space:nowrap}
 .thsc.ctrl{color:#0a52cc;font-weight:700;background:#eef4fe}
 .thsc:hover{background:#f2f5f9}
@@ -194,8 +196,20 @@ function render(){
     st[m]={mn:mn,mx:mx,span:(mx-mn)||1,sc:sc};
   });
   var ccfg=CONFIGS[beh+'|'+ctrl+'|'+chunk];
-  document.getElementById('dirbody').innerHTML='<div class=box><div class=q>'+esc(ccfg.query)+'</div>'+
-    (ccfg.source?'<div class=src>source: '+esc(ccfg.source)+'</div>':'')+'</div>';
+  var qhtml, mech='';
+  if(ctrl.indexOf('+')>=0){                 // an annotation variant (e.g. model+expand)
+    var kind=ctrl.split('+')[1], baseM=ctrl.split('+')[0];
+    var bcfg=CONFIGS[beh+'|'+baseM+'|'+chunk], bq=bcfg?bcfg.query:'';
+    var added=(bq&&ccfg.query.indexOf(bq)===0)?ccfg.query.slice(bq.length):'';
+    qhtml=added?('<div class=q>'+esc(bq)+'<mark class=exp>'+esc(added)+'</mark></div>')
+               :('<div class=q>'+esc(ccfg.query)+'</div>');
+    mech='<div class=mech><b>Mechanism ('+esc(kind)+' = query expansion):</b> the highlighted text is what an LLM '+
+      'appended to the base definition — concrete synonyms and phrasings the spec actually uses (e.g. “agree with,” '+
+      '“to be polite”). That pulls the embedded direction toward the passages worded that way, so more of them rank high. '+
+      'Switch the reference to <b>'+esc(shortModel(baseM))+'</b> and watch which passages lose their highlight — those are the ones expansion rescued.</div>';
+  } else { qhtml='<div class=q>'+esc(ccfg.query)+'</div>'; }
+  document.getElementById('dirbody').innerHTML='<div class=box>'+qhtml+
+    (ccfg.source?'<div class=src>source: '+esc(ccfg.source)+'</div>':'')+mech+'</div>';
   var cmpRows='';
   srcs.forEach(function(m){
     if(m===REFMODEL)return;
