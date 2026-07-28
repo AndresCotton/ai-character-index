@@ -87,20 +87,31 @@ function showTip(block, hit) {
 }
 function hideTip() { tooltip?.remove(); tooltip = null; }
 
+/* Block text for matching: the app injects .passage-head labels and .passage-rationale
+ * spans INSIDE curated-passage blocks, and we prepend .panel-chip -- all of which pollute
+ * textContent and break the quote match. Strip them on a clone before normalizing. */
+function matchText(block) {
+  const clone = block.cloneNode(true);
+  clone.querySelectorAll(".panel-chip, .passage-head, .passage-rationale, .passage-why")
+    .forEach(el => el.remove());
+  return norm(clone.textContent);
+}
+
 function apply() {
   if (!PANEL) return;
   let shown = 0, total = 0;
   document.querySelectorAll(".document-panel").forEach(panel => {
+    try {
     const docId = DOC_SLUG[panel.dataset.documentId] || panel.dataset.documentId
       || (norm(panel.querySelector(".document-lab")?.textContent).includes("anthropic") ? "anthropic" : "openai");
     const hits = passagesFor(docId);
     const index = new Map(hits.map(h => [norm(h.quote), h]));
     panel.querySelectorAll("[data-block]").forEach(block => {
-      block.querySelector(":scope > .panel-chip")?.remove();   // before matching: chip text pollutes textContent
+      block.querySelector(":scope > .panel-chip")?.remove();
       block.classList.remove("panel-hit");
       block.style.outline = "";
       block.onmouseenter = null; block.onmouseleave = null;
-      const hit = index.get(norm(block.textContent));
+      const hit = index.get(matchText(block));
       if (!hit) return;
       total += 1;
       if (hit.pct < threshold) return;
@@ -118,9 +129,9 @@ function apply() {
       block.onmouseenter = () => showTip(block, hit);
       block.onmouseleave = hideTip;
     });
+    console.info(`[panel-overlay] ${docId}: selected=[${selectedSlugs()}] hits=${hits.length}`
+      + ` painted=${panel.querySelectorAll(".panel-hit").length} thr=${threshold}`);
     if (hits.length) {
-      console.info(`[panel-overlay] ${docId}: matched ${index.size ? total : 0} blocks`
-        + ` from ${hits.length} flagged passages (ticked behaviours)`);
       // Rows with no curated passages render fully collapsed, hiding our outlines --
       // expand the document once so panel hits are visible.
       const painted = [...panel.querySelectorAll(".panel-hit")];
@@ -134,6 +145,7 @@ function apply() {
           + "model-panel votes (demo). Use the agreement slider to filter.";
       });
     }
+    } catch (e) { console.error("[panel-overlay] apply failed for a panel:", e); }
   });
   const count = document.getElementById("panel-count");
   if (count) count.textContent = `${shown}/${total} passages shown`;
