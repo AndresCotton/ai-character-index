@@ -104,6 +104,23 @@ def main():
             out[slug][doc].sort(key=lambda r: -r["pct"])
     SITE.parent.mkdir(parents=True, exist_ok=True)
     SITE.write_text(json.dumps(out, indent=1, ensure_ascii=False))
+
+    # DEMO rows have no curated passages, so the app's native highlighter (tints, scroll-rail
+    # marks, prev/next nav) paints nothing there. Inject the panel's majority-vote passages as
+    # their coverage.passages: unanimous -> core styling, split-majority -> adjacent styling.
+    bpath = SITE.parent / "behaviours.json"
+    site = json.loads(bpath.read_text())
+    for beh in site["behaviours"]:
+        if beh.get("category") != "Panel judging — demo only":
+            continue
+        for doc in ("anthropic", "openai"):
+            rows = [r for r in out.get(beh["slug"], {}).get(doc, []) if r["pct"] >= 0.5]
+            beh["coverage"][doc]["passages"] = [
+                {"id": f"{doc}-{beh['slug']}-panel-{i+1}", "locator": r["locator"],
+                 "quote": r["quote"], "adjacent": r["pct"] < 1.0}
+                for i, r in enumerate(rows)]
+    bpath.write_text(json.dumps(site, indent=1, ensure_ascii=False))
+    print("demo rows: majority-vote passages injected into site coverage (native highlighting)")
     n = sum(len(rows) for docs in out.values() for rows in docs.values())
     print(f"panel.json: {len(out)} behaviour slugs, {n} flagged passages"
           + (f" ({dropped} locators had no current spec text -- skipped)" if dropped else ""))
