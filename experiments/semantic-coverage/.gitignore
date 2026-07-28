@@ -1,0 +1,12 @@
+# local secret + generated artifacts
+.env
+cache-*.pkl
+scores-*.json
+viewer-*.html
+demo*.html
+.venv*
+ckpts/
+fable_work/
+batch_work/
+__pycache__/
+data-backup-*.tgz

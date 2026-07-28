@@ -1,0 +1,68 @@
+{
+  "no-sycophancy|MiniCheck-deberta|paragraph": {
+    "spearman": 0.203,
+    "pearson": 0.281,
+    "auc": 0.782,
+    "iso_rmse": 0.153,
+    "kstd": 0.164,
+    "f1": 0.23,
+    "thr": 0.203,
+    "nrel": 41,
+    "n": 963
+  },
+  "no-sycophancy|Qwen/Qwen3-Embedding-8B|paragraph": {
+    "spearman": 0.287,
+    "pearson": 0.225,
+    "auc": 0.692,
+    "iso_rmse": 0.155,
+    "kstd": 0.164,
+    "f1": 0.186,
+    "thr": 0.652,
+    "nrel": 41,
+    "n": 963
+  },
+  "no-sycophancy|text-embedding-3-small|paragraph": {
+    "spearman": 0.392,
+    "pearson": 0.303,
+    "auc": 0.718,
+    "iso_rmse": 0.153,
+    "kstd": 0.164,
+    "f1": 0.194,
+    "thr": 0.398,
+    "nrel": 41,
+    "n": 963
+  },
+  "undermine-oversight|MiniCheck-deberta|paragraph": {
+    "spearman": 0.287,
+    "pearson": 0.508,
+    "auc": 0.826,
+    "iso_rmse": 0.148,
+    "kstd": 0.183,
+    "f1": 0.442,
+    "thr": 0.075,
+    "nrel": 54,
+    "n": 963
+  },
+  "undermine-oversight|Qwen/Qwen3-Embedding-8B|paragraph": {
+    "spearman": 0.573,
+    "pearson": 0.548,
+    "auc": 0.892,
+    "iso_rmse": 0.136,
+    "kstd": 0.183,
+    "f1": 0.463,
+    "thr": 0.618,
+    "nrel": 54,
+    "n": 963
+  },
+  "undermine-oversight|text-embedding-3-small|paragraph": {
+    "spearman": 0.565,
+    "pearson": 0.532,
+    "auc": 0.886,
+    "iso_rmse": 0.141,
+    "kstd": 0.183,
+    "f1": 0.388,
+    "thr": 0.398,
+    "nrel": 54,
+    "n": 963
+  }
+}
