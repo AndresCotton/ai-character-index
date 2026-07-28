@@ -67,15 +67,20 @@ function buildSlider() {
   });
 }
 
+const shortName = slug => slug.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+  .replace("Avoidance To", "to").replace(" On Contested Questions", "");
+
 let tooltip = null;
-function showTip(block, hit) {
+function showTip(block, hitList) {
   hideTip();
   tooltip = document.createElement("div");
-  const rows = Object.entries(hit.votes)
-    .map(([m, v]) => `<tr><td>${m}</td><td>${v ? "✓ relevant" : "✗ not"}</td></tr>`).join("");
-  tooltip.innerHTML =
-    `<strong>${hit.nRelevant}/${hit.nVoters} models</strong> (${Math.round(hit.pct * 100)}%)` +
-    `<table>${rows}</table><small>${hit.locator}</small>`;
+  tooltip.innerHTML = hitList.map(hit => {
+    const rows = Object.entries(hit.votes)
+      .map(([m, v]) => `<tr><td>${m}</td><td>${v ? "✓ relevant" : "✗ not"}</td></tr>`).join("");
+    return `<div style="margin-bottom:.4em"><strong>${shortName(hit.slug)}: `
+      + `${hit.nRelevant}/${hit.nVoters} models</strong> (${Math.round(hit.pct * 100)}%)`
+      + `<table>${rows}</table></div>`;
+  }).join("") + `<small>${hitList[0].locator}</small>`;
   tooltip.style.cssText =
     "position:absolute;z-index:50;background:var(--surface,#fff);border:1px solid #8886;" +
     "border-radius:6px;padding:.5em .7em;font-size:.78rem;max-width:22em;box-shadow:0 4px 14px #0003;";
@@ -105,28 +110,37 @@ function apply() {
     const docId = DOC_SLUG[panel.dataset.documentId] || panel.dataset.documentId
       || (norm(panel.querySelector(".document-lab")?.textContent).includes("anthropic") ? "anthropic" : "openai");
     const hits = passagesFor(docId);
-    const index = new Map(hits.map(h => [norm(h.quote), h]));
+    const index = new Map();   // normText -> ALL hits (multiple ticked behaviours can flag one block)
+    hits.forEach(h => {
+      const k = norm(h.quote);
+      if (!index.has(k)) index.set(k, []);
+      index.get(k).push(h);
+    });
     panel.querySelectorAll("[data-block]").forEach(block => {
-      block.querySelector(":scope > .panel-chip")?.remove();
+      block.querySelectorAll(":scope > .panel-chip").forEach(c => c.remove());
       block.classList.remove("panel-hit");
       block.style.outline = "";
       block.onmouseenter = null; block.onmouseleave = null;
-      const hit = index.get(matchText(block));
-      if (!hit) return;
+      const all = index.get(matchText(block));
+      if (!all) return;
       total += 1;
-      if (hit.pct < threshold) return;
+      const visible = all.filter(h => h.pct >= threshold);
+      if (!visible.length) return;
       shown += 1;
+      const top = Math.max(...visible.map(h => h.pct));
       block.classList.add("panel-hit");
-      block.style.outline = `2px solid hsl(${120 * hit.pct} 70% 45% / .55)`;
+      block.style.outline = `2px solid hsl(${120 * top} 70% 45% / .55)`;
       block.style.outlineOffset = "2px";
-      const chip = document.createElement("span");
-      chip.className = "panel-chip";
-      chip.textContent = `${hit.nRelevant}/${hit.nVoters}`;
-      chip.style.cssText =
-        "float:right;font-size:.7rem;padding:0 .45em;border-radius:1em;margin-left:.5em;" +
-        `background:hsl(${120 * hit.pct} 70% 45% / .18);border:1px solid hsl(${120 * hit.pct} 70% 35% / .5);`;
-      block.prepend(chip);
-      block.onmouseenter = () => showTip(block, hit);
+      visible.forEach(hit => {
+        const chip = document.createElement("span");
+        chip.className = "panel-chip";
+        chip.textContent = `${shortName(hit.slug)} ${hit.nRelevant}/${hit.nVoters}`;
+        chip.style.cssText =
+          "float:right;clear:right;font-size:.68rem;padding:0 .45em;border-radius:1em;margin-left:.5em;" +
+          `background:hsl(${120 * hit.pct} 70% 45% / .18);border:1px solid hsl(${120 * hit.pct} 70% 35% / .5);`;
+        block.prepend(chip);
+      });
+      block.onmouseenter = () => showTip(block, visible);
       block.onmouseleave = hideTip;
     });
     console.info(`[panel-overlay] ${docId}: selected=[${selectedSlugs()}] hits=${hits.length}`
