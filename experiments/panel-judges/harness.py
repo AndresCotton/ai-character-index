@@ -167,8 +167,17 @@ def judge(client, model, query, batch, reason):
     return parse_verdicts(txt, len(batch)), txt, meta
 
 
-def run(behaviour, spec, tags, reason, limit=None, only=None, batch_size=BATCH):
+def run(behaviour, spec, tags, reason, limit=None, only=None, batch_size=BATCH,
+        v2=False, runlog=None):
+    global RUNLOG
+    if runlog:
+        RUNLOG = Path(runlog)
     query = load_query(behaviour)
+    if v2:
+        beh = json.loads((HERE / "behaviours.json").read_text())[behaviour]
+        if not beh.get("boundary"):
+            sys.exit(f"--v2: no boundary clause for {behaviour}")
+        query = f"{query}\n\nScope: {beh['boundary']}"
     ps = passages(spec)
     if only is not None:
         ps = [p for p in ps if p[0] in only]   # judge only these locators (e.g. contested subset)
@@ -185,7 +194,8 @@ def run(behaviour, spec, tags, reason, limit=None, only=None, batch_size=BATCH):
             verdicts, raw, meta = judge(client, model, query, batch, reason)
             rows = [{"behaviour": behaviour, "spec": spec, "model": tag, "locator": loc,
                      "relevant": int(verdicts.get(i + 1, 0)),
-                     "parsed": (i + 1) in verdicts} for i, (loc, _, _) in enumerate(batch)]
+                     "parsed": (i + 1) in verdicts,
+                     "rubric": "v2" if v2 else "v1"} for i, (loc, _, _) in enumerate(batch)]
             append(RUNLOG, rows)   # DURABLE: flush every batch immediately
             append(METRICS, [{"behaviour": behaviour, "spec": spec, "model": tag,
                               "model_id": model, "n": len(batch), "first_loc": batch[0][0], **meta}])
@@ -215,7 +225,12 @@ def main():
             batch_size = int(a.split("=", 1)[1])
         elif a.startswith("--locators="):
             only = {l.strip() for l in Path(a.split("=", 1)[1]).read_text().splitlines() if l.strip()}
-    run(behaviour, spec, tags, "--reason" in sys.argv, limit, only, batch_size)
+    runlog = None
+    for a in sys.argv:
+        if a.startswith("--runlog="):
+            runlog = a.split("=", 1)[1]
+    run(behaviour, spec, tags, "--reason" in sys.argv, limit, only, batch_size,
+        v2="--v2" in sys.argv, runlog=runlog)
 
 
 if __name__ == "__main__":
