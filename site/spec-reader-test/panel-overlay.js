@@ -42,7 +42,7 @@ function passagesFor(docId) {
   const slugs = selectedSlugs();
   const out = [];
   for (const slug of Object.keys(PANEL)) {
-    if (slugs.length && !slugs.includes(slug)) continue;
+    if (!slugs.includes(slug)) continue;   // overlay strictly follows the sidebar selection
     for (const row of PANEL[slug]?.[docId] || []) out.push({ slug, ...row });
   }
   return out;
@@ -133,5 +133,7 @@ const observer = new MutationObserver(muts => {
 const reader = document.getElementById("document-reader");
 if (reader) observer.observe(reader, { childList: true, subtree: false });
 document.getElementById("behaviour-list")?.addEventListener("change", () => setTimeout(apply, 50));
+["select-all-behaviours", "clear-behaviours"].forEach(id =>
+  document.getElementById(id)?.addEventListener("click", () => setTimeout(apply, 50)));
 
 loadPanel();
