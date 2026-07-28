@@ -39,7 +39,7 @@ def client_for(provider):
 
 
 def call(client, model, sys_p, user):
-    r = client.chat.completions.create(model=model, temperature=0,
+    r = client.chat.completions.create(model=model, temperature=0, max_tokens=16384,
                                        messages=[{"role": "system", "content": sys_p},
                                                  {"role": "user", "content": user}])
     return r.choices[0].message.content or "", r.usage
@@ -134,6 +134,31 @@ def evaluate(beh):
         print(f"  {d['model']:32} spearman {sp:.3f}  auc {auc:.3f}  (n={n})")
 
 
+def whole(beh, spec, provider, model):
+    """Whole document in one prompt: 1 compact-score call + 1 rank call over ALL passages."""
+    query = json.loads((HERE / "behaviours.json").read_text())[beh]["query"]
+    passages = [p for _, plist in sections_of(spec) for p in plist]
+    text = {loc: t for loc, _, _, t in score.units_meta("paragraph")}
+    client = client_for(provider)
+    print(f"whole-doc {beh}/{spec}: {len(passages)} passages -> 1 score + 1 rank prompt [{model}]", file=sys.stderr)
+    t0 = time.time()
+    sv, u1, ok1 = score_section(client, model, query, passages)
+    rv, u2, ok2 = rank_section(client, model, query, passages)
+    tag = model.split("/")[-1]
+    for kind, vals in (("whole-score", sv), ("whole-rank", rv)):
+        results = [{"locator": loc, "score": round(vals[loc], 4), "snippet": text[loc][:220]} for loc in text if loc in vals]
+        results.sort(key=lambda r: -r["score"])
+        (HERE / f"scores-{beh}-{tag}-{kind}.json").write_text(json.dumps(
+            {"behaviour": beh, "label": beh, "query": query,
+             "source": f"{model} whole-document {'score' if 'score' in kind else 'listwise rank'} ({len(passages)} passages, one prompt)",
+             "provider": provider, "model": f"{tag}-{kind}", "chunk": "paragraph",
+             "n_blocks": len(results), "results": results}, indent=2))
+    pin, pout = u1.prompt_tokens + u2.prompt_tokens, u1.completion_tokens + u2.completion_tokens
+    print(f"\nwhole-doc [{model}] {beh}/{spec}: {len(passages)} passages")
+    print(f"  score: ok={ok1} ({len(sv)}/{len(passages)})   rank: ok={ok2} ({sum(1 for v in rv.values() if v>0)}/{len(passages)})")
+    print(f"  tokens {pin} in / {pout} out (~${cost(pin,pout):.2f}); {time.time()-t0:.0f}s")
+
+
 def test(provider, model):
     beh = "no-sycophancy"
     query = json.loads((HERE / "behaviours.json").read_text())[beh]["query"]
@@ -153,6 +178,9 @@ def main():
         test(sys.argv[2] if len(sys.argv) > 2 else DEF_PROVIDER, sys.argv[3] if len(sys.argv) > 3 else DEF_MODEL)
     elif cmd == "run":
         run(sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else DEF_PROVIDER, sys.argv[5] if len(sys.argv) > 5 else DEF_MODEL)
+    elif cmd == "whole":
+        whole(sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else "together",
+              sys.argv[5] if len(sys.argv) > 5 else "moonshotai/Kimi-K3")
     elif cmd == "eval":
         evaluate(sys.argv[2])
     else:
