@@ -17,16 +17,33 @@ RUNLOG = HERE / "runlog.jsonl"
 
 def main():
     want = sys.argv[1] if len(sys.argv) > 1 else None
-    if not RUNLOG.exists():
-        sys.exit("no runlog.jsonl yet -- run harness.py first")
+    rubric = "v1"
+    runlog = RUNLOG
+    for a in sys.argv[1:]:
+        if a.startswith("--rubric="):
+            rubric = a.split("=", 1)[1]
+        elif a.startswith("--runlog="):
+            runlog = Path(a.split("=", 1)[1])
+        elif a == want:
+            pass
+    if not runlog.exists():
+        sys.exit(f"no {runlog.name} yet -- run harness.py first")
     per = collections.defaultdict(dict)   # (behaviour, model) -> {locator: 0/1}
-    for line in RUNLOG.read_text().splitlines():
+    unparsed = collections.Counter()
+    for line in runlog.read_text().splitlines():
         if not line.strip():
             continue
         d = json.loads(line)
         if want and d["behaviour"] != want:
             continue
+        if d.get("rubric", "v1") != rubric:
+            continue
+        if not d.get("parsed", True):          # unparsed is missing data, not a 0-vote
+            unparsed[(d["behaviour"], d["model"])] += 1
+            continue
         per[(d["behaviour"], d["model"])][d["locator"]] = d["relevant"]
+    for (beh, m), n in sorted(unparsed.items()):
+        print(f"note: {beh}/{m}: {n} unparsed verdicts excluded")
 
     for beh in sorted({b for b, _ in per}):
         models = sorted(m for b, m in per if b == beh)

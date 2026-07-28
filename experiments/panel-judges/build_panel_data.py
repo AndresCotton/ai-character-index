@@ -60,6 +60,10 @@ def main():
     counts = collections.Counter()
     for line in (HERE / "runlog.jsonl").read_text().splitlines():
         d = json.loads(line)
+        if not d.get("parsed", True):
+            continue                      # unparsed is missing data, not a 0-vote
+        if d.get("rubric", "v1") != ("v2" if "--v2" in sys.argv else "v1"):
+            continue
         votes[(d["behaviour"], d["locator"])][d["model"]] = d["relevant"]
         spec_of[(d["behaviour"], d["locator"])] = d["spec"]
         counts[(d["behaviour"], d["model"])] += 1

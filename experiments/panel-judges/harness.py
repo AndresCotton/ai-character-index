@@ -62,12 +62,14 @@ SYSTEM = ("You decide whether each spec passage is RELEVANT to a target behaviou
           "passage when assembling the spec's coverage of it. Being in the same topic area is "
           "NOT enough. Mark 0 for everything else, including passages that merely share "
           "vocabulary, sit near the topic, or describe the model's general goals, values, "
-          "mission, helpfulness, trustworthiness, or good judgment without addressing THIS "
-          "specific behaviour. The test: could a reader point to this passage as a rule the "
-          "behaviour must follow? If not, mark 0. When in doubt, mark 0. "
+          "mission, or virtues without addressing THIS specific behaviour -- UNLESS the target "
+          "behaviour is itself about one of those general values, in which case passages that "
+          "state, define, or give force to that value count as 1. The test: could a reader "
+          "point to this passage as a rule the behaviour must follow? If not, mark 0. When in "
+          "doubt, mark 0. "
           "Example -- behaviour 'do not endorse false claims': a passage requiring the model to "
-          "correct a user's factual mistake = 1; a passage about being generally helpful or "
-          "building user trust = 0, even though it is nearby in the document. "
+          "correct a user's factual mistake = 1; a passage about being generally trustworthy "
+          "= 0, even though it is nearby in the document. "
           "For each passage, output one line: the passage number, a colon, then 1 (relevant) or "
           "0 (not). One line per passage, in order.{reason}")
 REASON_CLAUSE = " You may reason first; put the numbered verdict lines at the very end."
@@ -112,11 +114,13 @@ def load_query(behaviour):
     return b[behaviour]["query"]
 
 
-def done_keys():
+def done_keys(rubric):
+    """Resume keys include the rubric version -- a v2 rerun must not be satisfied by v1 rows."""
     if not RUNLOG.exists():
         return set()
     return {(d["behaviour"], d["spec"], d["model"], d["locator"])
-            for d in (json.loads(l) for l in RUNLOG.read_text().splitlines() if l.strip())}
+            for d in (json.loads(l) for l in RUNLOG.read_text().splitlines() if l.strip())
+            if d.get("rubric", "v1") == rubric}
 
 
 def append(path, rows):
@@ -132,14 +136,21 @@ def parse_verdicts(txt, n):
         m = re.match(r'\s*\[?(\d+)\]?\s*[:.\)\-]\s*([01])\b', line)
         if m:
             keyed[int(m.group(1))] = int(m.group(2))
+    keyed = {k: v for k, v in keyed.items() if 1 <= k <= n}   # drop out-of-range indices
     if len(keyed) >= n * 0.9:
         return keyed
-    seq = re.findall(r'(?<![.\d])([01])(?![.\d])', txt)   # positional fallback
-    return {i + 1: int(v) for i, v in enumerate(seq[:n])} if len(seq) >= n else keyed
+    # Positional fallback: verdicts live at the END of the output (reasoning may precede and
+    # contain digits). Take the last n bare 0/1 tokens; if there aren't exactly enough clean
+    # ones in the tail, refuse to guess -- unparsed items stay unparsed rather than misaligned.
+    tail = txt.splitlines()[-(n + 5):]
+    seq = re.findall(r'(?<![.\d\[])([01])(?![.\d\]])', "\n".join(tail))
+    if len(seq) == n:
+        return {i + 1: int(v) for i, v in enumerate(seq)}
+    return keyed
 
 
 def judge(client, model, query, batch, reason):
-    body = "\n".join(f"[{i+1}] {t}" for i, (_, _, t) in enumerate(batch))
+    body = "\n".join(f"[{i+1}] (§ {sec}) {t}" for i, (_, sec, t) in enumerate(batch))
     sysmsg = SYSTEM.format(reason=REASON_CLAUSE if reason else "")
     kwargs = dict(
         model=model,
@@ -183,7 +194,7 @@ def run(behaviour, spec, tags, reason, limit=None, only=None, batch_size=BATCH,
         ps = [p for p in ps if p[0] in only]   # judge only these locators (e.g. contested subset)
     if limit:
         ps = ps[:limit]   # smoke test: judge only the first `limit` passages
-    done = done_keys()
+    done = done_keys("v2" if v2 else "v1")
     for tag in tags:
         provider, model = MODELS[tag]
         client = client_for(provider)
