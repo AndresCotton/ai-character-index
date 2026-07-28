@@ -121,6 +121,18 @@ function apply() {
     if (hits.length) {
       console.info(`[panel-overlay] ${docId}: matched ${index.size ? total : 0} blocks`
         + ` from ${hits.length} flagged passages (ticked behaviours)`);
+      // Rows with no curated passages render fully collapsed, hiding our outlines --
+      // expand the document once so panel hits are visible.
+      const painted = [...panel.querySelectorAll(".panel-hit")];
+      if (painted.length && painted.every(b => b.offsetParent === null)) {
+        const toggle = panel.querySelector(".document-focus-toggle");
+        if (toggle?.getAttribute("aria-pressed") === "false") toggle.click();
+      }
+      // The app's zero-coverage note reads as "no data" -- point at the overlay instead.
+      panel.querySelectorAll(".zero-coverage").forEach(note => {
+        note.textContent = "No curated passage mapping for this row -- highlights below are "
+          + "model-panel votes (demo). Use the agreement slider to filter.";
+      });
     }
   });
   const count = document.getElementById("panel-count");
