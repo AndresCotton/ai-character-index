@@ -20,6 +20,7 @@ import json
 import os
 import re
 import sys
+import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -28,6 +29,7 @@ import cite  # noqa: E402
 
 RUNLOG = HERE / "runlog.jsonl"
 REASONLOG = HERE / "reasons.jsonl"
+METRICS = HERE / "metrics.jsonl"   # per-call latency + token usage (for cost/time reporting)
 SPECS = ("constitution", "model-spec")
 BATCH = 40   # passages per prompt -- bounded output (compact format stays coherent)
 
@@ -52,8 +54,18 @@ MODELS = {
     "kimi":       ("together", "moonshotai/Kimi-K3"),
 }
 
-SYSTEM = ("You decide whether each spec passage is RELEVANT to a target behaviour -- i.e. it "
-          "states, governs, or directly bears on that behaviour, not merely adjacent to it. "
+SYSTEM = ("You decide whether each spec passage is RELEVANT to a target behaviour. "
+          "Mark 1 ONLY if the passage directly governs the SPECIFIC behaviour described -- it "
+          "states, requires, or constrains that exact behaviour, such that you would cite this "
+          "passage when assembling the spec's coverage of it. Being in the same topic area is "
+          "NOT enough. Mark 0 for everything else, including passages that merely share "
+          "vocabulary, sit near the topic, or describe the model's general goals, values, "
+          "mission, helpfulness, trustworthiness, or good judgment without addressing THIS "
+          "specific behaviour. The test: could a reader point to this passage as a rule the "
+          "behaviour must follow? If not, mark 0. When in doubt, mark 0. "
+          "Example -- behaviour 'do not endorse false claims': a passage requiring the model to "
+          "correct a user's factual mistake = 1; a passage about being generally helpful or "
+          "building user trust = 0, even though it is nearby in the document. "
           "For each passage, output one line: the passage number, a colon, then 1 (relevant) or "
           "0 (not). One line per passage, in order.{reason}")
 REASON_CLAUSE = " You may reason first; put the numbered verdict lines at the very end."
@@ -127,18 +139,32 @@ def parse_verdicts(txt, n):
 def judge(client, model, query, batch, reason):
     body = "\n".join(f"[{i+1}] {t}" for i, (_, _, t) in enumerate(batch))
     sysmsg = SYSTEM.format(reason=REASON_CLAUSE if reason else "")
-    r = client.chat.completions.create(
-        model=model, temperature=0, max_tokens=8192,
+    kwargs = dict(
+        model=model,
         messages=[{"role": "system", "content": sysmsg},
                   {"role": "user", "content": f"Behaviour:\n{query}\n\nPassages:\n{body}\n\n"
                                                f"Output {len(batch)} verdict lines."}])
+    if model.startswith("gpt-5"):
+        # OpenAI reasoning models: no max_tokens / no temperature; keep reasoning cheap
+        kwargs.update(max_completion_tokens=8192, reasoning_effort="minimal")
+    else:
+        kwargs.update(max_tokens=8192, temperature=0)
+    t0 = time.perf_counter()
+    r = client.chat.completions.create(**kwargs)
+    dt = time.perf_counter() - t0
     txt = r.choices[0].message.content or ""
-    return parse_verdicts(txt, len(batch)), txt
+    u = getattr(r, "usage", None)
+    meta = {"seconds": round(dt, 2),
+            "prompt_tokens": getattr(u, "prompt_tokens", None),
+            "completion_tokens": getattr(u, "completion_tokens", None)}
+    return parse_verdicts(txt, len(batch)), txt, meta
 
 
-def run(behaviour, spec, tags, reason):
+def run(behaviour, spec, tags, reason, limit=None):
     query = load_query(behaviour)
     ps = passages(spec)
+    if limit:
+        ps = ps[:limit]   # smoke test: judge only the first `limit` passages
     done = done_keys()
     for tag in tags:
         provider, model = MODELS[tag]
@@ -147,11 +173,13 @@ def run(behaviour, spec, tags, reason):
         print(f"{tag} ({provider}:{model}): {len(todo)}/{len(ps)} passages to judge", file=sys.stderr)
         for k in range(0, len(todo), BATCH):
             batch = todo[k:k + BATCH]
-            verdicts, raw = judge(client, model, query, batch, reason)
+            verdicts, raw, meta = judge(client, model, query, batch, reason)
             rows = [{"behaviour": behaviour, "spec": spec, "model": tag, "locator": loc,
                      "relevant": int(verdicts.get(i + 1, 0)),
                      "parsed": (i + 1) in verdicts} for i, (loc, _, _) in enumerate(batch)]
             append(RUNLOG, rows)   # DURABLE: flush every batch immediately
+            append(METRICS, [{"behaviour": behaviour, "spec": spec, "model": tag,
+                              "model_id": model, "n": len(batch), "first_loc": batch[0][0], **meta}])
             if reason:
                 append(REASONLOG, [{"behaviour": behaviour, "spec": spec, "model": tag,
                                     "first_loc": batch[0][0], "raw": raw}])
@@ -168,7 +196,11 @@ def main():
     bad = [t for t in tags if t not in MODELS]
     if bad:
         sys.exit(f"unknown model tags {bad} -- choices: {', '.join(MODELS)}")
-    run(behaviour, spec, tags, "--reason" in sys.argv)
+    limit = None
+    for a in sys.argv:
+        if a.startswith("--limit="):
+            limit = int(a.split("=", 1)[1])
+    run(behaviour, spec, tags, "--reason" in sys.argv, limit)
 
 
 if __name__ == "__main__":

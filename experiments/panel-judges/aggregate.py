@@ -53,6 +53,22 @@ def main():
             print(f"  {a:12} vs {b:12}  agree {100*agree/max(len(common),1):3.0f}%   "
                   f"relevant-set F1 {2*both/max(either+both,1):.2f}")
 
+        # calibration vs the Kimi-K3 reference (score>=0.5 = relevant), if present
+        k3f = HERE / f"k3ref-{beh}.json"
+        if k3f.exists():
+            k3 = {r["locator"]: int(r["score"] >= 0.5) for r in json.loads(k3f.read_text())["results"]}
+            print(f"  -- vs K3 reference (K3 relevant = {sum(k3.values())}) --")
+            for m in models:
+                common = [l for l in per[(beh, m)] if l in k3]
+                agree = sum(1 for l in common if per[(beh, m)][l] == k3[l])
+                both = sum(1 for l in common if per[(beh, m)][l] and k3[l])
+                mp = sum(per[(beh, m)][l] for l in common)
+                kp = sum(k3[l] for l in common)
+                prec, rec = both / max(mp, 1), both / max(kp, 1)
+                f1 = 2 * prec * rec / max(prec + rec, 1e-9)
+                print(f"  {m:12} vs K3           agree {100*agree/max(len(common),1):3.0f}%   "
+                      f"P {prec:.2f} R {rec:.2f} F1 {f1:.2f}   ({m} rel={mp}, common={len(common)})")
+
 
 if __name__ == "__main__":
     main()
