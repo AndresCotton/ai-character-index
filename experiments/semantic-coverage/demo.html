@@ -23,6 +23,7 @@ table.cmp th:first-child,table.cmp td:first-child{text-align:left;font-family:ui
 table.cmp td{text-align:right;padding:.15rem .7rem;font-variant-numeric:tabular-nums}
 .cmpnote{font-size:11px;color:#888;max-width:52rem;line-height:1.4}
 #matchinfo{max-width:64rem;margin:.3rem auto 0;padding:0 1.5rem;font-size:11px;color:#555;font-family:ui-monospace,monospace}
+#help{max-width:64rem;margin:.35rem auto 0;padding:0 1.5rem;font-size:11px;color:#777;line-height:1.4}
 main{max-width:64rem;margin:0 auto;padding:0 1.5rem 4rem}
 .thead{display:flex;position:sticky;background:#fff;border-bottom:2px solid #ccc;z-index:6;align-items:flex-end}
 .thsc{flex:0 0 3rem;writing-mode:vertical-rl;transform:rotate(180deg);height:15rem;
@@ -53,6 +54,7 @@ main{max-width:64rem;margin:0 auto;padding:0 1.5rem 4rem}
   <span class=hcap>distribution<svg id=hist width=220 height=44></svg></span>
   <span id=stats></span>
 </div></header>
+<div id=help>Slider = the <b>reference</b> column's cutoff for "relevant". <b>Match others</b> = how each other column's threshold is chosen to reproduce that selection (overlap = best F1 vs the reference; count = same number of passages). Click any score-column header to make it the reference.</div>
 <details id=dir open><summary>Direction vector (exact text embedded)</summary><div id=dirbody></div></details>
 <details id=cmp open><summary>How each column maps to Kimi-K3 (the LLM judge)</summary><div id=cmpbody></div></details>
 <div id=matchinfo></div>
