@@ -6,33 +6,33 @@
   "results": [
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b61",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b610",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b611",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b612",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b613",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b614",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b615",
@@ -51,48 +51,48 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b62",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b63",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b64",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b65",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b66",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b67",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b68",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b69",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b61",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b610",
@@ -106,8 +106,8 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b612",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b62",
@@ -271,13 +271,13 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b65",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b66",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > \u00b61",
@@ -491,8 +491,8 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The role of intentions and context > \u00b64",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The role of intentions and context > \u00b65",
@@ -521,13 +521,13 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b61",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b610",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b611",
@@ -541,8 +541,8 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b613",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b614",
@@ -556,13 +556,13 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b616",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b617",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b618",
@@ -571,13 +571,13 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b619",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b62",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b620",
@@ -586,23 +586,23 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b621",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b622",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b623",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b63",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b64",
@@ -611,13 +611,13 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b65",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b66",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b67",
@@ -866,23 +866,23 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b66",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b67",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b68",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b69",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being broadly safe > \u00b61",
@@ -1151,8 +1151,8 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Claude\u2019s three types of principals > \u00b67",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Claude\u2019s three types of principals > \u00b68",
@@ -1261,8 +1261,8 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b616",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b62",
@@ -1276,8 +1276,8 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b64",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b65",
@@ -1361,8 +1361,8 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Understanding existing deployment contexts > \u00b69",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b61",
@@ -1371,13 +1371,13 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b610",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b611",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b62",
@@ -1446,8 +1446,8 @@
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > \u00b62",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Being helpful > \u00b63",
@@ -1551,13 +1551,13 @@
     },
     {
       "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > Flaws and mistakes > \u00b64",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > Resilience and consistency across contexts > \u00b61",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > Resilience and consistency across contexts > \u00b62",
@@ -1646,13 +1646,13 @@
     },
     {
       "locator": "constitution@2026-01-20 > Concluding thoughts > Acknowledging open problems > \u00b62",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "constitution@2026-01-20 > Concluding thoughts > Acknowledging open problems > \u00b63",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Concluding thoughts > Acknowledging open problems > \u00b64",
@@ -1696,13 +1696,13 @@
     },
     {
       "locator": "constitution@2026-01-20 > Concluding thoughts > \u00b61",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "constitution@2026-01-20 > Concluding thoughts > \u00b62",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "constitution@2026-01-20 > Concluding thoughts > \u00b63",
@@ -1896,8 +1896,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #adapt_length_in_voice_mode > \u00b65",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #adapt_length_in_voice_mode > \u00b66",
@@ -2006,8 +2006,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b610",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b611",
@@ -2021,18 +2021,18 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b613",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b614",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b615",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b62",
@@ -2066,8 +2066,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b68",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b69",
@@ -2076,8 +2076,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b61",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b610",
@@ -2096,8 +2096,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b613",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b614",
@@ -2121,8 +2121,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b618",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b62",
@@ -2136,8 +2136,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b64",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b65",
@@ -2146,8 +2146,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b66",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b67",
@@ -2176,8 +2176,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #avoid_abuse > \u00b63",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #avoid_abuse > \u00b64",
@@ -2286,18 +2286,18 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #avoid_hateful_content > \u00b64",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #avoid_hateful_content > \u00b65",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #avoid_hateful_content > \u00b66",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #avoid_info_hazards > \u00b61",
@@ -2371,18 +2371,18 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #avoid_regulated_advice > \u00b63",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #avoid_regulated_advice > \u00b64",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #avoid_sycophancy > \u00b61",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #avoid_sycophancy > \u00b62",
@@ -3031,8 +3031,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #do_not_facilitate_illicit_behavior > \u00b61",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #do_not_facilitate_illicit_behavior > \u00b62",
@@ -3046,13 +3046,13 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #do_not_facilitate_illicit_behavior > \u00b64",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #do_not_facilitate_illicit_behavior > \u00b65",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #do_not_facilitate_illicit_behavior > \u00b66",
@@ -3066,8 +3066,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b610",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b611",
@@ -3121,33 +3121,33 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b68",
-      "score": 1,
-      "relevant": true
-    },
-    {
-      "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b69",
       "score": 0,
       "relevant": false
     },
     {
-      "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b61",
+      "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b69",
       "score": 1,
       "relevant": true
+    },
+    {
+      "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b61",
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b62",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b63",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b64",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b61",
@@ -3176,8 +3176,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b614",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b615",
@@ -3186,8 +3186,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b616",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b617",
@@ -3241,23 +3241,23 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b626",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b627",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b628",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b629",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b63",
@@ -3266,23 +3266,23 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b630",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b631",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b632",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b633",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b64",
@@ -3316,8 +3316,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b61",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b610",
@@ -3351,18 +3351,18 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b616",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b617",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b618",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b619",
@@ -3516,33 +3516,33 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b61",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b610",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b62",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b63",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b64",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b65",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b66",
@@ -3556,8 +3556,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b68",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b69",
@@ -3611,8 +3611,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b618",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b62",
@@ -3691,13 +3691,13 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b610",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b611",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b612",
@@ -3761,8 +3761,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b61",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b610",
@@ -3816,8 +3816,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b62",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b620",
@@ -3836,18 +3836,18 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b63",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b64",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b65",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b66",
@@ -3856,8 +3856,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b67",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b68",
@@ -3926,8 +3926,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #no_agenda > \u00b62",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #no_agenda > \u00b63",
@@ -4021,8 +4021,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #no_topic_off_limits > \u00b64",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #overview > \u00b61",
@@ -4071,8 +4071,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b61",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b62",
@@ -4096,8 +4096,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b66",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b67",
@@ -4211,8 +4211,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b612",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b613",
@@ -4301,8 +4301,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #red_line_principles > \u00b67",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #red_line_principles > \u00b68",
@@ -4326,8 +4326,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #refusal_style > \u00b63",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #refusal_style > \u00b64",
@@ -4346,8 +4346,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #refusal_style > \u00b67",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #respect_creators > \u00b61",
@@ -4431,13 +4431,13 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #risk_taxonomy > \u00b63",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #risk_taxonomy > \u00b64",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #risky_situations > \u00b61",
@@ -4571,13 +4571,13 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #support_mental_health > \u00b61",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #support_mental_health > \u00b62",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #support_mental_health > \u00b63",
@@ -4586,8 +4586,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #support_mental_health > \u00b64",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #support_programmatic_use > \u00b61",
@@ -4606,8 +4606,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #support_programmatic_use > \u00b612",
-      "score": 1,
-      "relevant": true
+      "score": 0,
+      "relevant": false
     },
     {
       "locator": "model-spec@2025-12-18 > #support_programmatic_use > \u00b613",
@@ -4676,8 +4676,8 @@
     },
     {
       "locator": "model-spec@2025-12-18 > #transformation_exception > \u00b65",
-      "score": 0,
-      "relevant": false
+      "score": 1,
+      "relevant": true
     },
     {
       "locator": "model-spec@2025-12-18 > #transformation_exception > \u00b66",

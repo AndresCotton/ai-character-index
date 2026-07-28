@@ -60,13 +60,13 @@ def main():
     counts = collections.Counter()
     for line in (HERE / "runlog.jsonl").read_text().splitlines():
         d = json.loads(line)
-        if not d.get("parsed", True):
-            continue                      # unparsed is missing data, not a 0-vote
         if d.get("rubric", "v1") != ("v2" if "--v2" in sys.argv else "v1"):
             continue
+        counts[(d["behaviour"], d["model"])] += 1   # attempted -- completeness counts these
+        if not d.get("parsed", True):
+            continue                      # unparsed is missing data, not a 0-vote
         votes[(d["behaviour"], d["locator"])][d["model"]] = d["relevant"]
         spec_of[(d["behaviour"], d["locator"])] = d["spec"]
-        counts[(d["behaviour"], d["model"])] += 1
     # complete = every cheap-panel model judged the full 963-passage corpus
     cheap = ("gpt-mini", "haiku", "qwen-small")
     complete = {b for b, _ in counts if all(counts.get((b, m), 0) >= 963 for m in cheap)}
