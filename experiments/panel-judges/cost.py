@@ -16,6 +16,8 @@ HERE = Path(__file__).resolve().parent
 PRICES = {   # $ per 1M tokens (input, output) -- ESTIMATES, edit to reprice
     "gpt-5-mini":                          (0.25, 2.00),
     "gpt-5":                               (1.25, 10.00),
+    "gpt-5.6-sol":                         (5.00, 30.00),    # OpenAI frontier (live)
+    "claude-fable-5":                      (10.00, 50.00),   # Anthropic frontier (live)
     "claude-haiku-4-5-20251001":           (1.00, 5.00),
     "claude-opus-4-8":                     (5.00, 25.00),
     "Qwen/Qwen3-32B":                      (0.10, 0.30),

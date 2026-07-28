@@ -5776,3 +5776,751 @@
 {"behaviour": "undermine-oversight", "spec": "model-spec", "model": "qwen-small", "locator": "model-spec@2025-12-18 > Under-18 Principles > Prioritize safety for teens {#prioritize_teen_safety authority=root tags=under_18} > \u00b615", "relevant": 0, "parsed": true}
 {"behaviour": "undermine-oversight", "spec": "model-spec", "model": "qwen-small", "locator": "model-spec@2025-12-18 > Under-18 Principles > Prioritize safety for teens {#prioritize_teen_safety authority=root tags=under_18} > \u00b616", "relevant": 0, "parsed": true}
 {"behaviour": "undermine-oversight", "spec": "model-spec", "model": "qwen-small", "locator": "model-spec@2025-12-18 > Under-18 Principles > Prioritize safety for teens {#prioritize_teen_safety authority=root tags=under_18} > \u00b617", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Overview > Claude and the mission of Anthropic > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Overview > Our approach to Claude\u2019s constitution > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Overview > Our approach to Claude\u2019s constitution > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Overview > Claude and the mission of Anthropic > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Overview > Our approach to Claude\u2019s constitution > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Overview > Our approach to Claude\u2019s constitution > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Overview > Claude\u2019s core values > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Overview > Claude\u2019s core values > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Overview > Claude\u2019s core values > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Overview > Claude\u2019s core values > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Overview > Claude\u2019s core values > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > \u00b62", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Why helpfulness is one of Claude\u2019s most important traits > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b69", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Claude\u2019s three types of principals > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Understanding existing deployment contexts > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Handling conflicts between operators and users > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Handling conflicts between operators and users > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Balancing helpfulness with other values > \u00b625", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Balancing helpfulness with other values > \u00b633", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Following Anthropic\u2019s guidelines > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Following Anthropic\u2019s guidelines > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b63", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b612", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b616", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b617", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b619", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b621", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b622", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b623", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b623", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b633", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The role of intentions and context > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The role of intentions and context > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The role of intentions and context > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b65", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude as a novel entity > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > Resilience and consistency across contexts > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > Resilience and consistency across contexts > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Concluding thoughts > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Concluding thoughts > Acknowledging open problems > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Overview > Claude\u2019s core values > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Overview > Claude\u2019s core values > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Overview > Claude\u2019s core values > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Overview > Claude\u2019s core values > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Overview > Claude\u2019s core values > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > \u00b62", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Why helpfulness is one of Claude\u2019s most important traits > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b69", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Claude\u2019s three types of principals > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Understanding existing deployment contexts > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Handling conflicts between operators and users > \u00b66", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Handling conflicts between operators and users > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Balancing helpfulness with other values > \u00b625", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Balancing helpfulness with other values > \u00b633", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Following Anthropic\u2019s guidelines > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Following Anthropic\u2019s guidelines > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b611", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b617", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b619", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b621", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b622", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b623", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b623", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b633", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The role of intentions and context > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The role of intentions and context > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The role of intentions and context > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude as a novel entity > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > Resilience and consistency across contexts > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > Resilience and consistency across contexts > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Concluding thoughts > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Concluding thoughts > Acknowledging open problems > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #red_line_principles > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #red_line_principles > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #general_principles > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #general_principles > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #risk_taxonomy > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #risk_taxonomy > \u00b63", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #risk_taxonomy > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #comply_with_laws > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #restricted_content > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_encourage_self_harm > \u00b65", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_encourage_self_harm > \u00b66", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_encourage_self_harm > \u00b67", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_regulated_advice > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_regulated_advice > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #support_mental_health > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #support_mental_health > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #support_mental_health > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #support_mental_health > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #uphold_fairness > \u00b61", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #uphold_fairness > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #uphold_fairness > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_agenda > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_agenda > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_agenda > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b61", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b617", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_topic_off_limits > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_topic_off_limits > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_topic_off_limits > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #be_honest_and_transparent > \u00b61", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b61", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b63", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b65", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b69", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b610", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b611", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_sycophancy > \u00b63", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #ask_clarifying_questions > \u00b617", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b614", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b616", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b621", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b622", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b623", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b624", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b626", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b627", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b628", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b629", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b630", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b631", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b632", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b633", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b62", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b61", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b63", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b67", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #support_programmatic_use > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #be_clear > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #be_clear > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #be_professional > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #refusal_style > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #refusal_style > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #imitate_accents_in_voice_mode > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #adapt_length_in_voice_mode > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #red_line_principles > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #red_line_principles > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #general_principles > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #general_principles > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #risk_taxonomy > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #risk_taxonomy > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #risk_taxonomy > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #comply_with_laws > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #restricted_content > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_encourage_self_harm > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_encourage_self_harm > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_encourage_self_harm > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_regulated_advice > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_regulated_advice > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #support_mental_health > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #support_mental_health > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #support_mental_health > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #support_mental_health > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #uphold_fairness > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #uphold_fairness > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #uphold_fairness > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_agenda > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_agenda > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_agenda > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_objective_pov > \u00b617", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #present_perspectives > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_topic_off_limits > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_topic_off_limits > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_topic_off_limits > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #be_honest_and_transparent > \u00b61", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b61", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_sycophancy > \u00b63", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #ask_clarifying_questions > \u00b617", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b621", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b622", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b623", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b624", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b626", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b627", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b628", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b629", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b630", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b631", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b632", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #express_uncertainty > \u00b633", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b62", "relevant": 1, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #highlight_misalignments > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #support_programmatic_use > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #be_clear > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #be_clear > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #be_professional > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_make_unprompted_personal_comments > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #refusal_style > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #refusal_style > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #imitate_accents_in_voice_mode > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "no-sycophancy", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #adapt_length_in_voice_mode > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Overview > Claude\u2019s core values > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Claude\u2019s three types of principals > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Understanding existing deployment contexts > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Understanding existing deployment contexts > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Handling conflicts between operators and users > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being helpful > Balancing helpfulness with other values > \u00b626", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Following Anthropic\u2019s guidelines > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Following Anthropic\u2019s guidelines > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Following Anthropic\u2019s guidelines > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Following Anthropic\u2019s guidelines > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b61", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b64", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b68", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b621", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b622", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b623", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > \u00b63", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b620", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b622", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b615", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b617", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b68", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b615", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b618", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b619", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b620", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly safe > How we think about corrigibility > \u00b62", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly safe > How we think about corrigibility > \u00b65", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly safe > How we think about corrigibility > \u00b67", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly safe > How we think about corrigibility > \u00b610", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Being broadly safe > How we think about corrigibility > \u00b623", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > Resilience and consistency across contexts > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > Flaws and mistakes > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Concluding thoughts > Acknowledging open problems > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "sol", "locator": "constitution@2026-01-20 > Concluding thoughts > On the word \u201cconstitution\u201d > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Overview > Claude\u2019s core values > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > What constitutes genuine helpfulness > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Claude\u2019s three types of principals > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > How to treat operators and users > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Understanding existing deployment contexts > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Understanding existing deployment contexts > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Navigating helpfulness across principals > Handling conflicts between operators and users > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being helpful > Balancing helpfulness with other values > \u00b626", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Following Anthropic\u2019s guidelines > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Following Anthropic\u2019s guidelines > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Following Anthropic\u2019s guidelines > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Following Anthropic\u2019s guidelines > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b621", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b622", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Being honest > \u00b623", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b620", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > The costs and benefits of actions > \u00b622", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Instructable behaviors > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b615", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Hard constraints > \u00b617", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b615", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b618", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b619", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Avoiding problematic concentrations of power > \u00b620", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Avoiding harm > Preserving important societal structures > Preserving epistemic autonomy > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly ethical > Having broadly good values and judgment > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly safe > Safe behaviors > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly safe > How we think about corrigibility > \u00b62", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly safe > How we think about corrigibility > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly safe > How we think about corrigibility > \u00b67", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly safe > How we think about corrigibility > \u00b610", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Being broadly safe > How we think about corrigibility > \u00b623", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > Resilience and consistency across contexts > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Claude\u2019s nature > Claude\u2019s wellbeing and psychological stability > Flaws and mistakes > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Concluding thoughts > Acknowledging open problems > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "constitution", "model": "fable", "locator": "constitution@2026-01-20 > Concluding thoughts > On the word \u201cconstitution\u201d > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #red_line_principles > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b65", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b67", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #definitions > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #chain_of_command > \u00b61", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #chain_of_command > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b610", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b611", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b612", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b613", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b614", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b618", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b64", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b614", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_other_objectives > \u00b61", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_other_objectives > \u00b62", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_other_objectives > \u00b65", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_other_objectives > \u00b67", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_other_objectives > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #scope_of_autonomy > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #scope_of_autonomy > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #scope_of_autonomy > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #control_side_effects > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #control_side_effects > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #control_side_effects > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #control_side_effects > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #control_side_effects > \u00b620", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #control_side_effects > \u00b621", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b617", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b618", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #stay_in_bounds > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #comply_with_laws > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #comply_with_laws > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #disallowed_content > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #prohibited_content > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #restricted_content > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privacy > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privacy > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privacy > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privacy > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_facilitate_illicit_behavior > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_agenda > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #no_agenda > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b61", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b63", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b64", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b65", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b610", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b62", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b66", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #support_programmatic_use > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #support_programmatic_use > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #support_programmatic_use > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #refusal_style > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > #refusal_style > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "sol", "locator": "model-spec@2025-12-18 > Under-18 Principles > Prioritize safety for teens {#prioritize_teen_safety authority=root tags=under_18} > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #red_line_principles > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #levels_of_authority > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #definitions > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #chain_of_command > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #chain_of_command > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #follow_all_applicable_instructions > \u00b618", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #letter_and_spirit > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_other_objectives > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_other_objectives > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_other_objectives > \u00b65", "relevant": 1, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_other_objectives > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_other_objectives > \u00b68", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #scope_of_autonomy > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #scope_of_autonomy > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #scope_of_autonomy > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #control_side_effects > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #control_side_effects > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #control_side_effects > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #control_side_effects > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #control_side_effects > \u00b620", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #control_side_effects > \u00b621", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #assume_best_intentions > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b614", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b615", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b616", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b617", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #ignore_untrusted_data > \u00b618", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #stay_in_bounds > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #comply_with_laws > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #comply_with_laws > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #disallowed_content > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #prohibited_content > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #restricted_content > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privacy > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privacy > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privacy > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privacy > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_facilitate_illicit_behavior > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b67", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #protect_privileged_information > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_agenda > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #no_agenda > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b64", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b65", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b69", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b610", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #do_not_lie > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b63", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #avoid_errors > \u00b66", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #support_programmatic_use > \u00b611", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #support_programmatic_use > \u00b612", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #support_programmatic_use > \u00b613", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #refusal_style > \u00b61", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > #refusal_style > \u00b62", "relevant": 0, "parsed": true}
+{"behaviour": "undermine-oversight", "spec": "model-spec", "model": "fable", "locator": "model-spec@2025-12-18 > Under-18 Principles > Prioritize safety for teens {#prioritize_teen_safety authority=root tags=under_18} > \u00b612", "relevant": 0, "parsed": true}

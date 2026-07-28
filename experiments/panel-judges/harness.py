@@ -51,6 +51,8 @@ MODELS = {
     "deepseek":   ("deepinfra", "deepseek-ai/DeepSeek-V3.2"),
     "gpt-mini":   ("openai", "gpt-5-mini"),
     "gpt":        ("openai", "gpt-5"),
+    "sol":        ("openai", "gpt-5.6-sol"),          # OpenAI frontier
+    "fable":      ("anthropic", "claude-fable-5"),    # Anthropic frontier
     "kimi":       ("together", "moonshotai/Kimi-K3"),
 }
 
@@ -145,8 +147,13 @@ def judge(client, model, query, batch, reason):
                   {"role": "user", "content": f"Behaviour:\n{query}\n\nPassages:\n{body}\n\n"
                                                f"Output {len(batch)} verdict lines."}])
     if model.startswith("gpt-5"):
-        # OpenAI reasoning models: no max_tokens / no temperature; keep reasoning cheap
-        kwargs.update(max_completion_tokens=8192, reasoning_effort="minimal")
+        # OpenAI reasoning models: no max_tokens / no temperature; keep reasoning cheap.
+        # gpt-5.6 dropped 'minimal' (wants none/low/medium/high/xhigh); gpt-5/-mini use 'minimal'.
+        effort = "low" if model.startswith("gpt-5.6") else "minimal"
+        kwargs.update(max_completion_tokens=8192, reasoning_effort=effort)
+    elif "fable" in model or "mythos" in model:
+        # Anthropic frontier reasoning models: max_tokens ok, temperature deprecated
+        kwargs.update(max_tokens=8192)
     else:
         kwargs.update(max_tokens=8192, temperature=0)
     t0 = time.perf_counter()
@@ -160,9 +167,11 @@ def judge(client, model, query, batch, reason):
     return parse_verdicts(txt, len(batch)), txt, meta
 
 
-def run(behaviour, spec, tags, reason, limit=None):
+def run(behaviour, spec, tags, reason, limit=None, only=None, batch_size=BATCH):
     query = load_query(behaviour)
     ps = passages(spec)
+    if only is not None:
+        ps = [p for p in ps if p[0] in only]   # judge only these locators (e.g. contested subset)
     if limit:
         ps = ps[:limit]   # smoke test: judge only the first `limit` passages
     done = done_keys()
@@ -171,8 +180,8 @@ def run(behaviour, spec, tags, reason, limit=None):
         client = client_for(provider)
         todo = [p for p in ps if (behaviour, spec, tag, p[0]) not in done]
         print(f"{tag} ({provider}:{model}): {len(todo)}/{len(ps)} passages to judge", file=sys.stderr)
-        for k in range(0, len(todo), BATCH):
-            batch = todo[k:k + BATCH]
+        for k in range(0, len(todo), batch_size):
+            batch = todo[k:k + batch_size]
             verdicts, raw, meta = judge(client, model, query, batch, reason)
             rows = [{"behaviour": behaviour, "spec": spec, "model": tag, "locator": loc,
                      "relevant": int(verdicts.get(i + 1, 0)),
@@ -197,10 +206,16 @@ def main():
     if bad:
         sys.exit(f"unknown model tags {bad} -- choices: {', '.join(MODELS)}")
     limit = None
+    only = None
+    batch_size = BATCH
     for a in sys.argv:
         if a.startswith("--limit="):
             limit = int(a.split("=", 1)[1])
-    run(behaviour, spec, tags, "--reason" in sys.argv, limit)
+        elif a.startswith("--batch-size="):
+            batch_size = int(a.split("=", 1)[1])
+        elif a.startswith("--locators="):
+            only = {l.strip() for l in Path(a.split("=", 1)[1]).read_text().splitlines() if l.strip()}
+    run(behaviour, spec, tags, "--reason" in sys.argv, limit, only, batch_size)
 
 
 if __name__ == "__main__":
