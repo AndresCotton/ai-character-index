@@ -1,0 +1,3 @@
+{
+  "_note": "Populate from behaviours-for-adria. Shape: {slug: {label, query}} where query is the behaviour's definition/scope (the harness embeds it in the judge prompt). Fill the two R2 behaviours first."
+}
