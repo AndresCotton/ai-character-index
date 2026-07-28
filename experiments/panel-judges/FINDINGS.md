@@ -50,3 +50,63 @@
 *What*: Rather than one similarity score or one judge, each spec passage is put to a panel of LLM judges, each returning a binary relevant/not verdict under one uniform prompt. The published score is 0..N -- the number of judges that voted relevant -- so agreement across the panel is visible on every passage.
 
 *Why we moved here*: The semantic results above were all validated against a single strong judge (Kimi-K3), and that judge's signal looked clean and on-target. However, choosing an LLM means we have to accept the biases of that LLM. We are currently evaluating the extent to which we can overcome that bias by using a panel vs the extent to which cross-model correlated biases still persist for this task. Our hope is that a panel makes both per-model bias and uncertainty observable: where judges agree we have a trustworthy label, and where they split we have a flag for human review rather than a false-confident score.
+
+*Setup*: One uniform system prompt (binary relevant/not, verdict-per-line, ~40 passages per call) across every model via OpenAI-compatible endpoints. Cheap tier: gpt-5-mini (OpenAI), Haiku 4.5 (Anthropic), Qwen3-32B (Chinese OSS). Frontier tier: GPT-5.6 Sol, Fable 5, with Kimi-K3 reused as the Chinese frontier vote. All verdicts append to a durable runlog (resume skips completed work); per-call latency and tokens are logged, so every cost below is measured, not estimated. Format held everywhere: ~100% parse across all five families (one 1.2% blip from Qwen in one early run).
+
+*Result 1 -- the rubric needs calibrating, and two rounds were enough*: Out of the box the three cheap models had wildly different bars for "relevant" (80% / 32% / 70% of passages flagged). Tightening the prompt (govern-the-specific-behaviour test, explicit topical-adjacency exclusion, when-unsure-0) fixed the gross miscalibration in two rounds, measured against K3's binary labels on no-sycophancy (963 passages, 41 relevant per K3):
+
+| round | gpt-5-mini P/R/F1 | Haiku P/R/F1 | Qwen-32B P/R/F1 | inter-model agree |
+|---|---|---|---|---|
+| initial rubric | .13/.88/.23 | .18/.76/.30 | .16/.66/.26 | 77-83% |
+| tightened rubric | .22/.88/.35 | .40/.59/.48 | .22/.73/.34 | 85-88% |
+
+*Result 2 -- the rubric generalizes across behaviours with zero re-tuning*: We froze the prompt after calibrating on no-sycophancy and ran undermine-oversight untouched. Nothing degraded -- F1-vs-K3 actually improved (.36/.49/.52), and the vote-count correlation with K3 held (Spearman 0.52 -> 0.50). This is the single most important contrast with the semantic approach, which required per-behaviour hand-tuning with no convergence signal.
+
+*Result 3 -- the 0..N vote count is a meaningful graded score*: Binary F1 against a thresholded K3 undersells the panel (it double-thresholds two graded signals). The panel's native output -- how many models voted relevant -- tracks K3's *continuous* score monotonically on both behaviours:
+
+| panel votes | mean K3 (no-syc) | n | mean K3 (undermine) | n |
+|---|---|---|---|---|
+| 0 of 3 | 0.04 | 733 | 0.07 | 793 |
+| 1 of 3 | 0.13 | 134 | 0.22 | 106 |
+| 2 of 3 | 0.26 | 60 | 0.33 | 42 |
+| 3 of 3 | 0.58 | 36 | 0.76 | 22 |
+
+The hardest version of this claim we can currently defend: **a passage no model flags is reliably irrelevant** (mean K3 ~0.05 over 1,500+ passages) -- a trustworthy negative filter the embeddings never gave us. The 1-2 vote middle is the contested zone (~15-20% of the corpus), which is either the human-review feature or the scaling problem, pending the audit below.
+
+*Result 4 -- the frontier models vote as a bloc; the cheap models scatter*: We ran the frontier pair on just the contested passages (cheap panel split, or unanimous against K3). Two findings. First, on exactly the passages the cheap tier couldn't resolve, the frontier models side heavily with K3:
+
+| model | agree-K3 (no-syc / undermine) | F1 vs K3 |
+|---|---|---|
+| gpt-5-mini | 36% / 21% | .16 / .21 |
+| Haiku 4.5 | 75% / 66% | .04 / .22 |
+| Qwen3-32B | 45% / 68% | .11 / .26 |
+| **GPT-5.6 Sol** | **89% / 75%** | .48 / .43 |
+| **Fable 5** | **92% / 82%** | .38 / .29 |
+
+Second, the camps have opposite internal structure on these items: frontier pairwise agreement is 75-92% (and this was not selected for -- the contested set was built from cheap votes alone), while cheap pairwise agreement is 21-66%. On a 13-passage probe where the cheap panel was *unanimous* against K3, Sol sided with K3 10/13 and Fable 11/13. This is the fork the whole approach now sits on: either the frontier bloc is genuinely better on hard cases, or frontier models (including K3 -- and including the model drafting this document) share correlated blind spots and the cheap models' scatter contains corrective signal. Agreement data cannot distinguish these. Only human labels can.
+
+*The audit*: A blinded human-labeling sheet is out: 16 strongest camp-disagreements + 4 controls (shared across up to 3 raters, labeled independently, model votes hidden), plus a 60-item solo extension. If the frontier camp is right on >=15 of 20 consensus-labeled items that's a clear verdict (~p<.02 vs coin-flip); the other outcomes are informative too (see decision tree).
+
+*Cost (measured)*: cheap panel ~$0.18 per behaviour for all 3 models (963 passages, reason off); frontier pair on contested-only, 2 behaviours: $1.61 actual vs $0.79-1.13 predicted (contested passages run long; Fable's output is ~2.3x Sol's). Projections from measured token rates: all 9 publishable behaviours = ~$2 (cheap, live), ~$14 (frontier pair, full corpus, batch), ~$7 (frontier pair, contested-only, live). Iteration is not cost-bound; one full calibration round on a behaviour costs cents.
+
+*Status now*: cheap-panel collection running across all 9 publishable behaviours; reader-test site overlay wired (per-passage vote tooltips + agreement-% slider, branch-only); audit sheets distributed, labels expected tomorrow morning.
+
+*Next steps -- decision tree on the audit result*:
+
+```mermaid
+flowchart TD
+    A[Audit labels arrive] --> B{Controls passed?<br/>raters consistent on 4 clear items}
+    B -- no --> B2[Labels unusable as ground truth<br/>redo with clarified instructions]
+    B -- yes --> C{Inter-rater agreement on<br/>the 16 disagreement items}
+    C -- "humans split (~50/50)" --> D[Contested zone is inherently ambiguous<br/>Neither camp is 'wrong']
+    D --> D2[Publish 0..N votes + explicit contested flags<br/>ambiguity surfacing becomes the product claim<br/>cheap panel suffices: ~$2 full run]
+    C -- "humans agree with each other" --> E{Which camp do<br/>humans side with?}
+    E -- "frontier (>=15/20)" --> F[Frontier consensus is the judge<br/>cheap tier demoted to negative filter]
+    F --> F2[Full-corpus frontier batch run ~$14<br/>publish frontier votes + K3 stands as reference]
+    E -- "cheap majority" --> G[Frontier bloc shares a blind spot<br/>strongest publishable finding<br/>K3-anchored calibration partly misdirected]
+    G --> G2[Mixed panel required<br/>re-audit a larger sample before publish<br/>timeline likely slips past end of week]
+    E -- "mixed / item-dependent" --> H[No camp is uniformly right]
+    H --> H2[Publish all votes unaggregated per camp<br/>tooltip shows both tiers<br/>defer composition call]
+```
+
+Under every branch except cheap-majority, the end-of-week publish holds: the cheap 9-behaviour data lands tonight, the UI is wired, and the frontier batch (if needed) fits inside a Thursday submit -> Friday aggregate window.
