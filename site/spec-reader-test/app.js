@@ -1515,7 +1515,13 @@ function applyPanelThreshold(payload) {
       const threshold = Number(params.get("threshold") ?? maxAny);
       const solid = Number(params.get("solid") ?? threshold);
       cov.passages = cov.passages.filter(p => p.score === undefined || p.score >= threshold);
-      cov.passages.forEach(p => { if (p.score !== undefined) p.adjacent = p.score < solid; });
+      cov.passages.forEach(p => {
+        if (p.score === undefined) return;
+        p.adjacent = p.score < solid;
+        // the baked role text carries the build-time score; rewrite it with the recomputed one
+        const shown = Number.isInteger(p.score) ? p.score : p.score.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+        p.role = (p.role || "").replace(/\(score [^)]*\)/, `(score ${shown}/${p.maxScore})`);
+      });
     });
   });
   return payload;

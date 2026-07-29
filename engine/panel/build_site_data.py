@@ -79,6 +79,8 @@ def main():
             for (beh, loc), mv in votes.items():
                 if SLUGS.get(beh) != b["slug"] or spec_of[(beh, loc)] != spec_name:
                     continue
+                if "fable" in mv and "opus" in mv:
+                    mv = {m: v for m, v in mv.items() if m != "opus"}   # opus is fable's SUBSTITUTE, never an extra seat
                 score = sum(mv.values())
                 if score < 1 or len(mv) < 2:   # emit all scored; the page filters by ?threshold=
                     continue
