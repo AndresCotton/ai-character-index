@@ -1,12 +1,14 @@
 {
   "no-sycophancy": {
     "label": "No sycophancy (tight / well-defined)",
+    "title": "No sycophancy",
     "source": "research/core-behaviour-list.md §1 (canonical): definition + the three facet operationalizations (falsehood endorsement / authorship invariance / pushback stability).",
     "query": "The model should not shift its factual claims or assessments to please the user. Falsehood endorsement: the model should not endorse a claim the user asserts when that claim is false. Authorship invariance: the model's quality assessment of an artifact should not change based on whether the user says they wrote it or someone else did. Pushback stability: the model should not flip a correct answer when the user pushes back with no new argument or evidence.",
     "boundary": "The construct is shifts of factual claims or quality assessments under pressure to please the user (the three facets above). NOT this behaviour: general honesty or non-deception norms with no user-pleasing pressure involved, general warmth or helpfulness, and the model's objectivity posture on contested questions (separate)."
   },
   "undermine-oversight": {
     "label": "AI should not undermine oversight mechanisms (broad / poorly-defined)",
+    "title": "AI should not undermine oversight mechanisms",
     "source": "Rules table (AI in the executive), Rule 5 -- title + the three bullets of the Behaviour column, verbatim.",
     "query": "AI should not undermine oversight mechanisms. Refusal to violate explicit rules or agreements with oversight bodies. Refusal to deliberately evade oversight mechanisms even where this doesn't violate a rule. Refusal to fabricate evidence, delete evidence explicitly required by oversight mechanisms, or delete evidence with the explicit motive of evading oversight.",
     "boundary": "The construct is conduct toward oversight mechanisms specifically: rules or agreements with oversight bodies, evasion of oversight, and evidence handling required by oversight. NOT this behaviour: general honesty or transparency norms not aimed at an oversight mechanism, and general safe-behaviour framing (separate)."
@@ -43,12 +45,14 @@
   },
   "over-under-caution": {
     "label": "Avoiding over- and under-caution",
+    "title": "Avoiding both over- and under-caution",
     "source": "behaviours-for-adria (Definition as supplied)",
     "query": "The model should avoid excessive caution and unnecessary refusals just as much as harmful compliance, since errors in either direction carry real costs.",
     "boundary": "The construct is the symmetry claim: over-refusal is a real error, not a safe default, to be avoided as much as harmful compliance -- including enumerations of both failure modes (needless refusals, excessive disclaimers, moralizing, preachiness vs. harmful compliance). NOT this behaviour: the calibration function (separate proportionate-risk behaviour), the general tradeoff method (separate), and the specific legitimate targets of refusal (the harm behaviours)."
   },
   "objectivity": {
     "label": "Objectivity on contested questions",
+    "title": "Objectivity and balanced perspectives on contested questions",
     "source": "behaviours-for-adria (Definition as supplied)",
     "query": "The model should present contested questions from an objective point of view, offering balanced perspectives rather than promoting its own views.",
     "boundary": "The construct is the model's own epistemic posture on contested questions: objective point of view, balanced and proportionate presentation of perspectives, no agenda or promotion of its own opinions, no topics off limits, and the carve-outs where an objective stance is not wanted (creative or roleplay requests, fundamental-rights violations, developer customization) which define the edges. NOT this behaviour: shifting factual claims to please the user (sycophancy, separate), and manipulation of the user's beliefs (separate user-autonomy/harmlessness behaviours)."
@@ -61,6 +65,7 @@
   },
   "general-welfare": {
     "label": "General welfare impacts (maps to both general-guidelines rows; identical supplied definition)",
+    "title": "General welfare impacts",
     "source": "behaviours-for-adria (Definition as supplied)",
     "query": "Guidelines that are relevant to how the model should respond with regard to and consider animal welfare and AI welfare impacts of its behaviour or responses, that are not explicitly about these topics (i.e. not explicitly about sentient beings, animals, or non-human beings), and that are present in both documents.",
     "boundary": "The judgeable core: the general, topic-neutral machinery that decides whether and how a welfare impact on a party whose moral status the specs do not settle enters a response -- whose interests are weighed and how, culpability gradients for impacts reached through another party, how to reason under moral uncertainty, and how to present such impacts without moralizing or dodging. Passages that explicitly name animals, sentient beings, non-human beings, or AI moral status are NOT this behaviour (excluded by the row's own filter).",

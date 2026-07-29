@@ -5,7 +5,7 @@ Reuses harness.py's exact prompt composition (same SYSTEM/user text as realtime)
 so batch and realtime verdicts are directly comparable. Cheap providers without a
 batch API (OpenRouter/DeepInfra) should just run realtime -- their savings are cents.
 
-  python3 batch_panel.py submit <behaviour[,behaviour...]> <spec[,spec...]> <tag[,tag...]> [--v2]
+  python3 batch_panel.py submit <behaviour[,behaviour...]> <spec[,spec...]> <tag[,tag...]> [--v2|--v3]
   python3 batch_panel.py status
   python3 batch_panel.py ingest          # downloads finished batches -> runlog rows
 
@@ -49,41 +49,31 @@ def key_env(provider):
     return v
 
 
-def compose(behaviour, spec, v2):
-    """Same query/system text the realtime path sends."""
-    query = h.load_query(behaviour)
-    if v2:
-        beh = json.loads((HERE / "behaviours.json").read_text())[behaviour]
-        query = f"{beh.get('query_v2', beh['query'])}\n\nScope: {beh['boundary']}"
-    sysmsg = (h.SYSTEM if v2 else h.SYSTEM_V1).format(reason="")
-    return query, sysmsg
-
-
-def request_bodies(behaviour, spec, tag, v2, done):
+def request_bodies(behaviour, spec, tag, rubric, done):
     provider, model = h.MODELS[tag]
-    query, sysmsg = compose(behaviour, spec, v2)
+    qblock = h.compose_query(behaviour, rubric)   # same builders as realtime -- byte-identical
+    sysmsg = h.SYSTEMS[rubric].format(reason="")
     ps = [p for p in h.passages(spec) if (behaviour, spec, tag, p[0]) not in done]
     out = []
     bs = h.BATCH
     for k in range(0, len(ps), bs):
         chunk = ps[k:k + bs]
-        body = "\n".join(f"[{i+1}] (§ {sec}) {t}" for i, (_, sec, t) in enumerate(chunk))
-        user = f"Behaviour:\n{query}\n\nPassages:\n{body}\n\nOutput {len(chunk)} verdict lines."
+        user = h.user_msg(qblock, chunk)
         cid = f"{behaviour}__{spec}__{tag}__{k//bs}"   # __ separator: anthropic custom_id forbids |
         locs = [loc for loc, _, _ in chunk]
         out.append((cid, sysmsg, user, model, locs))
     return provider, out
 
 
-def submit(behaviours, specs, tags, v2):
+def submit(behaviours, specs, tags, rubric):
     state = load_state()
-    done = h.done_keys("v2" if v2 else "v1")
+    done = h.done_keys(rubric)
     for tag in tags:
         provider = h.MODELS[tag][0]
         reqs, locmap = [], {}
         for behaviour in behaviours:
             for spec in specs:
-                prov, bodies = request_bodies(behaviour, spec, tag, v2, done)
+                prov, bodies = request_bodies(behaviour, spec, tag, rubric, done)
                 for cid, sysmsg, user, model, locs in bodies:
                     locmap[cid] = locs
                     if provider == "openai":
@@ -120,7 +110,7 @@ def submit(behaviours, specs, tags, v2):
                          "content-type": "application/json"})
             bid = json.loads(urllib.request.urlopen(req).read())["id"]
         state["submitted"].append({"id": bid, "tag": tag, "provider": provider,
-                                   "v2": v2, "n_requests": len(reqs), "locmap": locmap})
+                                   "rubric": rubric, "n_requests": len(reqs), "locmap": locmap})
         save_state(state)   # durable per submission
         print(f"{tag} ({provider}): submitted batch {bid} with {len(reqs)} requests")
 
@@ -174,7 +164,8 @@ def ingest():
             get = lambda r: (r["custom_id"],
                              "".join(c.get("text", "") for c in r["result"]["message"]["content"])
                              if r["result"]["type"] == "succeeded" else "")
-        v2 = b["v2"]
+        # older state entries stored a "v2" boolean; newer ones store the rubric string
+        rubric = b.get("rubric") or ("v2" if b.get("v2") else "v1")
         for r in results:
             cid, txt = get(r)
             locs = b["locmap"][cid]
@@ -183,9 +174,9 @@ def ingest():
             for i, loc in enumerate(locs):
                 v = verdicts.get(i + 1, 0)
                 rows.append({"behaviour": behaviour, "spec": spec, "model": tag, "locator": loc,
-                             "verdict": v, "relevant": int(v == 2) if v2 else int(v),
+                             "verdict": v, "relevant": int(v == 2) if rubric != "v1" else int(v),
                              "parsed": (i + 1) in verdicts,
-                             "rubric": "v2" if v2 else "v1", "via": "batch"})
+                             "rubric": rubric, "via": "batch"})
         with RUNLOG.open("a") as f:
             for row in rows:
                 f.write(json.dumps(row) + "\n")
@@ -200,7 +191,8 @@ def main():
     if cmd == "submit":
         behaviours, specs, tags = (sys.argv[2].split(","), sys.argv[3].split(","), sys.argv[4].split(","))
         tags = [m for t in tags for m in (h.PANELS.get(t) or [t])]
-        submit(behaviours, specs, tags, "--v2" in sys.argv)
+        rubric = "v3" if "--v3" in sys.argv else "v2" if "--v2" in sys.argv else "v1"
+        submit(behaviours, specs, tags, rubric)
     elif cmd == "status":
         status()
     elif cmd == "ingest":
