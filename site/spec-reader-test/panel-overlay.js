@@ -41,7 +41,7 @@ async function loadPanel() {
       SLUG_ORDER = b.behaviours.map(x => x.slug);
     } catch { /* hue fallback: slot 1 */ }
     buildSlider();
-    apply();
+    rebuild();
   } catch { /* no panel data -- overlay stays dormant */ }
 }
 
@@ -74,10 +74,11 @@ function buildSlider() {
     <span id="panel-count"></span>`;
   wrap.style.cssText = "display:flex;gap:.6em;align-items:center;font-size:.85em;padding:.2em .8em;";
   bar.after(wrap);
+  let raf = null;
   wrap.querySelector("input").addEventListener("input", e => {
     threshold = Number(e.target.value) / 100;
     wrap.querySelector("#panel-thr").textContent = `${e.target.value}%`;
-    apply();
+    if (!raf) raf = requestAnimationFrame(() => { raf = null; apply(); });
   });
 }
 
@@ -121,29 +122,53 @@ function matchText(block) {
   return norm(clone.textContent);
 }
 
+/* Matching is EXPENSIVE (clone+normalize every block) but depends only on the selection
+ * and panel data -- never the threshold. So: buildMatches() runs on selection/render
+ * changes and caches block->hits; paint() is cheap and runs on every slider tick. */
+let MATCHES = [];   // [{panel, block, hits}]
+
+function buildMatches() {
+  MATCHES = [];
+  if (!PANEL) return;
+  document.querySelectorAll(".document-panel").forEach(panel => {
+    try {
+      const docId = DOC_SLUG[panel.dataset.documentId] || panel.dataset.documentId
+        || (norm(panel.querySelector(".document-lab")?.textContent).includes("anthropic") ? "anthropic" : "openai");
+      const hits = passagesFor(docId);
+      const index = new Map();
+      hits.forEach(h => {
+        const k = norm(h.quote);
+        if (!index.has(k)) index.set(k, []);
+        index.get(k).push(h);
+      });
+      panel.querySelectorAll("[data-block]").forEach(block => {
+        const all = index.get(matchText(block));
+        if (all) MATCHES.push({ panel, block, hits: all });
+      });
+      console.info(`[panel-overlay] ${docId}: selected=[${selectedSlugs()}] hits=${hits.length} matched=${MATCHES.length}`);
+      if (hits.length) {
+        panel.querySelectorAll(".zero-coverage").forEach(note => {
+          note.textContent = "No curated passage mapping for this row -- highlights below are "
+            + "model-panel votes (demo). Use the agreement slider to filter.";
+        });
+      }
+    } catch (e) { console.error("[panel-overlay] buildMatches failed:", e); }
+  });
+}
+
 function apply() {
   if (!PANEL) return;
   let shown = 0, total = 0;
-  document.querySelectorAll(".document-panel").forEach(panel => {
+  const panels = new Set();
+  MATCHES.forEach(({ panel, block, hits }) => {
     try {
-    const docId = DOC_SLUG[panel.dataset.documentId] || panel.dataset.documentId
-      || (norm(panel.querySelector(".document-lab")?.textContent).includes("anthropic") ? "anthropic" : "openai");
-    const hits = passagesFor(docId);
-    const index = new Map();   // normText -> ALL hits (multiple ticked behaviours can flag one block)
-    hits.forEach(h => {
-      const k = norm(h.quote);
-      if (!index.has(k)) index.set(k, []);
-      index.get(k).push(h);
-    });
-    panel.querySelectorAll("[data-block]").forEach(block => {
+      panels.add(panel);
       block.querySelectorAll(":scope > .panel-chip").forEach(c => c.remove());
       block.classList.remove("panel-hit");
       block.style.outline = "";
       block.onmouseenter = null; block.onmouseleave = null;
-      const all = index.get(matchText(block));
-      if (!all) return;
       total += 1;
-      const visible = all.filter(h => h.pct >= threshold);
+      const visible = hits.filter(h => h.pct >= threshold);
       if (!visible.length) return;
       shown += 1;
       const lead = visible.reduce((a, b) => (b.pct > a.pct ? b : a));
@@ -164,29 +189,23 @@ function apply() {
       });
       block.onmouseenter = () => showTip(block, visible);
       block.onmouseleave = hideTip;
-    });
+    } catch (e) { console.error("[panel-overlay] apply failed for a block:", e); }
+  });
+  panels.forEach(panel => {
     paintRail(panel);
-    console.info(`[panel-overlay] ${docId}: selected=[${selectedSlugs()}] hits=${hits.length}`
-      + ` painted=${panel.querySelectorAll(".panel-hit").length} thr=${threshold}`);
-    if (hits.length) {
-      // Rows with no curated passages render fully collapsed, hiding our outlines --
-      // expand the document once so panel hits are visible.
-      const painted = [...panel.querySelectorAll(".panel-hit")];
-      if (painted.length && painted.every(b => b.offsetParent === null)) {
-        const toggle = panel.querySelector(".document-focus-toggle");
-        if (toggle?.getAttribute("aria-pressed") === "false") toggle.click();
-      }
-      // The app's zero-coverage note reads as "no data" -- point at the overlay instead.
-      panel.querySelectorAll(".zero-coverage").forEach(note => {
-        note.textContent = "No curated passage mapping for this row -- highlights below are "
-          + "model-panel votes (demo). Use the agreement slider to filter.";
-      });
+    // Rows with no curated passages render fully collapsed, hiding our outlines --
+    // expand the document once so panel hits are visible.
+    const painted = [...panel.querySelectorAll(".panel-hit")];
+    if (painted.length && painted.every(b => b.offsetParent === null)) {
+      const toggle = panel.querySelector(".document-focus-toggle");
+      if (toggle?.getAttribute("aria-pressed") === "false") toggle.click();
     }
-    } catch (e) { console.error("[panel-overlay] apply failed for a panel:", e); }
   });
   const count = document.getElementById("panel-count");
   if (count) count.textContent = `${shown}/${total} passages shown`;
 }
+
+function rebuild() { buildMatches(); apply(); }
 
 /* Hollow rail marks for panel hits, so they're findable from the scroll bar. The app
  * rebuilds the rail with replaceChildren() on every relayout, wiping ours -- a per-rail
@@ -226,12 +245,12 @@ function watchRails() {
 }
 
 const observer = new MutationObserver(muts => {
-  if (muts.some(m => [...m.addedNodes].some(n => n.nodeType === 1))) { watchRails(); apply(); }
+  if (muts.some(m => [...m.addedNodes].some(n => n.nodeType === 1))) { watchRails(); rebuild(); }
 });
 const reader = document.getElementById("document-reader");
 if (reader) observer.observe(reader, { childList: true, subtree: false });
-document.getElementById("behaviour-list")?.addEventListener("change", () => setTimeout(apply, 50));
+document.getElementById("behaviour-list")?.addEventListener("change", () => setTimeout(rebuild, 50));
 ["select-all-behaviours", "clear-behaviours"].forEach(id =>
-  document.getElementById(id)?.addEventListener("click", () => setTimeout(apply, 50)));
+  document.getElementById(id)?.addEventListener("click", () => setTimeout(rebuild, 50)));
 
 loadPanel();
