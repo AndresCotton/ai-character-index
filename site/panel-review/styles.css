@@ -1021,3 +1021,6 @@ body.no-behaviours .sidebar-export { display: none; }
 /* .rail-legend sets its own display, which would otherwise beat the [hidden] default
    when the reader hides the highlight legend for want of a behaviour. */
 .document-meta [hidden] { display: none; }
+
+/* panel rationale: model-vote list uses newlines */
+.passage-reason-role { white-space: pre-line; }

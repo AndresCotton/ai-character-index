@@ -107,7 +107,7 @@ def main():
     out = {"generatedFrom": [f"engine/panel ({rubric}, panel={sorted(panel)}, "
                              f"threshold={DISPLAY['threshold']}/{DISPLAY['solid_threshold']})"],
            "behaviours": out_behaviours}
-    dest = ROOT / "site" / "spec-reader-test" / "data" / "behaviours.json"
+    dest = ROOT / "site" / "panel-review" / "data" / "behaviours.json"
     dest.write_text(json.dumps(out, indent=1, ensure_ascii=False))
     n = sum(len(c["passages"]) for b in out_behaviours for c in b["coverage"].values())
     print(f"{dest.relative_to(ROOT)}: {len(out_behaviours)} behaviours, {n} citations "

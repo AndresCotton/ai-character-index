@@ -1324,6 +1324,10 @@ function applyHighlights() {
   elements.readerStatus.textContent = missing.length
     ? `${missing.length} cached passage ${missing.length === 1 ? "anchor could" : "anchors could"} not be resolved against this document version.`
     : "";
+  if (missing.length) {
+    elements.readerStatus.title = missing.join(" ; ");
+    console.info("[anchors] unresolved:", missing);
+  }
   updateFindingBar(overlaps);
 
   requestAnimationFrame(() => {
@@ -1487,6 +1491,42 @@ window.addEventListener("resize", () => {
   requestAnimationFrame(updateRails);
 });
 
+/* Panel-score display filter -- URL params only, no UI change:
+ *   ?related=W    weight of a "related" (1) verdict when scoring; core is always 2.
+ *                 [default 1 -> max score 6; try 0.5 (max 4.5) or 0 (core-only, max 6 in steps of 2)]
+ *   ?threshold=N  minimum recomputed score to show a passage [default: max possible = only
+ *                 unanimous-highest passages, per review feedback "25 is already a lot"]
+ *   ?solid=N      score at/above which a passage renders Core-style (below: Related-style)
+ *                 [default: same as threshold]
+ * Scores are recomputed from each citation's per-model verdicts, so the params compose. */
+function applyPanelThreshold(payload) {
+  const params = new URLSearchParams(location.search);
+  const related = Number(params.get("related") ?? 1);
+  (payload.behaviours || []).forEach(behaviour => {
+    Object.values(behaviour.coverage || {}).forEach(cov => {
+      if (!cov.passages) return;
+      cov.passages.forEach(p => {
+        if (!p.verdicts) return;
+        const vs = Object.values(p.verdicts);
+        p.score = vs.reduce((a, v) => a + (v === 2 ? 2 : v === 1 ? related : 0), 0);
+        p.maxScore = 2 * vs.length;
+      });
+      const maxAny = Math.max(0, ...cov.passages.map(p => p.maxScore || 0));
+      const threshold = Number(params.get("threshold") ?? maxAny);
+      const solid = Number(params.get("solid") ?? threshold);
+      cov.passages = cov.passages.filter(p => p.score === undefined || p.score >= threshold);
+      cov.passages.forEach(p => {
+        if (p.score === undefined) return;
+        p.adjacent = p.score < solid;
+        // the baked role text carries the build-time score; rewrite it with the recomputed one
+        const shown = Number.isInteger(p.score) ? p.score : p.score.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+        p.role = (p.role || "").replace(/\(score [^)]*\)/, `(score ${shown}/${p.maxScore})`);
+      });
+    });
+  });
+  return payload;
+}
+
 async function loadJSON(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
@@ -1500,10 +1540,10 @@ async function initialize() {
       loadJSON(DOCUMENTS_URL),
       loadJSON(BEHAVIOURS_URL),
     ]);
-    state.payload = {
+    state.payload = applyPanelThreshold({
       documents: documents.documents,
       behaviours: behaviours.behaviours || [],
-    };
+    });
     const bench = state.payload.behaviours;
     state.documentFocus = { anthropic: bench.length > 0, openai: bench.length > 0 };
     const params = initialParams;
