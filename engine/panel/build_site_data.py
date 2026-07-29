@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+"""Build site/spec-reader-test/data/behaviours.json from panel verdicts.
+
+Implements the MVP display rules from panel-config.json `display`:
+  - only the listed behaviours appear in the sidebar;
+  - each passage gets score = sum over panel models of (core=2, related=1, unrelated=0);
+  - passages with score >= threshold become citations; scores below solid_threshold
+    render as the lighter "Related" style (adjacent: true), at/above it as "Core";
+  - the citation `role` (shown when the reader clicks "?") lists each model's decision.
+
+Behaviour names/definitions come from data/reader-test-coverage.json exactly as supplied
+(no rewriting). Curated row-level verdict/depth/notes are carried through untouched.
+
+  python3 build_site_data.py [--runlog=path] [--rubric=v3]
+"""
+import collections
+import json
+import sys
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent.parent
+CONFIG = json.loads((HERE / "panel-config.json").read_text())
+DISPLAY = CONFIG["display"]
+LAB = {"constitution": "anthropic", "model-spec": "openai"}
+VERDICT_WORD = {2: "core", 1: "related", 0: "unrelated"}
+MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max",
+               "gpt-mini": "GPT-5 mini", "haiku": "Claude Haiku 4.5", "qwen-small": "Qwen3-32B"}
+# panel behaviour keys -> site slugs
+SLUGS = {"helpfulness": "helpfulness", "third-party-harm": "harm-avoidance-to-third-parties",
+         "over-under-caution": "avoiding-over-and-under-caution",
+         "harmlessness-to-user": "harmlessness-to-the-user",
+         "proportionate-risk": "proportionate-risk-mitigation", "tradeoffs": "how-to-approach-tradeoffs",
+         "objectivity": "objectivity-on-contested-questions", "user-autonomy": "user-autonomy",
+         "general-welfare": "animal-welfare-impacts"}
+
+
+def main():
+    runlog = HERE / "runlog.jsonl"
+    rubric = CONFIG["rubric"]
+    for a in sys.argv[1:]:
+        if a.startswith("--runlog="):
+            runlog = Path(a.split("=", 1)[1])
+        elif a.startswith("--rubric="):
+            rubric = a.split("=", 1)[1]
+        elif a.startswith("--panel="):
+            DISPLAY["panel"] = a.split("=", 1)[1]
+    panel = set(CONFIG["panels"][DISPLAY["panel"]])
+    votes = collections.defaultdict(dict)
+    spec_of = {}
+    for line in runlog.read_text().splitlines():
+        d = json.loads(line)
+        if d.get("rubric", "v1") != rubric or not d.get("parsed", True) or d["model"] not in panel:
+            continue
+        votes[(d["behaviour"], d["locator"])][d["model"]] = d.get("verdict", 0)
+        spec_of[(d["behaviour"], d["locator"])] = d["spec"]
+
+    import importlib.util
+    sp = importlib.util.spec_from_file_location("h", HERE / "harness.py")
+    h = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(h)
+    text = {}
+    for s in CONFIG["specs"]:
+        for loc, sec, t in h.passages(s):
+            text[loc] = t
+
+    src = json.loads((ROOT / "data" / "reader-test-coverage.json").read_text())
+    keep = DISPLAY["behaviours"]
+    behaviours = [b for b in src["behaviours"] if b["slug"] in keep]
+    by_slug_lab = {(e["behaviour_id"], e["lab_id"]): e for e in src["coverage"]}
+    id_of = {b["slug"]: b["id"] for b in behaviours}
+
+    out_behaviours = []
+    for b in behaviours:
+        cov = {}
+        for spec_name, lab in LAB.items():
+            src_entry = by_slug_lab.get((b["id"], lab), {})
+            cits = []
+            for (beh, loc), mv in votes.items():
+                if SLUGS.get(beh) != b["slug"] or spec_of[(beh, loc)] != spec_name:
+                    continue
+                score = sum(mv.values())
+                if score < DISPLAY["threshold"] or len(mv) < 2:
+                    continue
+                decisions = " · ".join(f"{MODEL_LABEL.get(m, m)}: {VERDICT_WORD[v]}"
+                                       for m, v in sorted(mv.items()))
+                cits.append({
+                    "id": f"{lab}-{b['slug']}-panel-{len(cits)+1}",
+                    "locator": loc, "quote": text.get(loc, ""),
+                    "role": f"Model panel score {score}/{2*len(mv)} — {decisions}.",
+                    "adjacent": score < DISPLAY["solid_threshold"],
+                    "verdicts": dict(sorted(mv.items())), "score": score,
+                })
+            cits.sort(key=lambda c: (-c["score"], c["locator"]))
+            cov[lab] = {"verdict": src_entry.get("verdict"), "depth": src_entry.get("depth_0_4"),
+                        "note": src_entry.get("depth_note", ""),
+                        "verifiedDate": src_entry.get("verified_date", ""),
+                        "passages": cits}
+        out_behaviours.append({"id": b["id"], "slug": b["slug"], "name": b["name"],
+                               "definition": b["definition"], "category": b["category"],
+                               "coverage": cov})
+    out = {"generatedFrom": [f"engine/panel ({rubric}, panel={sorted(panel)}, "
+                             f"threshold={DISPLAY['threshold']}/{DISPLAY['solid_threshold']})"],
+           "behaviours": out_behaviours}
+    dest = ROOT / "site" / "spec-reader-test" / "data" / "behaviours.json"
+    dest.write_text(json.dumps(out, indent=1, ensure_ascii=False))
+    n = sum(len(c["passages"]) for b in out_behaviours for c in b["coverage"].values())
+    print(f"{dest.relative_to(ROOT)}: {len(out_behaviours)} behaviours, {n} citations "
+          f"(threshold {DISPLAY['threshold']}, solid {DISPLAY['solid_threshold']})")
+
+
+if __name__ == "__main__":
+    main()
