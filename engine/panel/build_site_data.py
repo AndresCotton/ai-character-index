@@ -24,7 +24,7 @@ CONFIG = json.loads((HERE / "panel-config.json").read_text())
 DISPLAY = CONFIG["display"]
 LAB = {"constitution": "anthropic", "model-spec": "openai"}
 VERDICT_WORD = {2: "core", 1: "related", 0: "unrelated"}
-MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max",
+MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3",
                "gpt-mini": "GPT-5 mini", "haiku": "Claude Haiku 4.5", "qwen-small": "Qwen3-32B"}
 # panel behaviour keys -> site slugs
 SLUGS = {"helpfulness": "helpfulness", "third-party-harm": "harm-avoidance-to-third-parties",
@@ -80,14 +80,16 @@ def main():
                 if SLUGS.get(beh) != b["slug"] or spec_of[(beh, loc)] != spec_name:
                     continue
                 score = sum(mv.values())
-                if score < DISPLAY["threshold"] or len(mv) < 2:
+                if score < 1 or len(mv) < 2:   # emit all scored; the page filters by ?threshold=
                     continue
-                decisions = " · ".join(f"{MODEL_LABEL.get(m, m)}: {VERDICT_WORD[v]}"
-                                       for m, v in sorted(mv.items()))
+                SYM = {2: "\u2713", 1: "~", 0: "\u2717"}
+                WORD = {2: "core", 1: "related", 0: "not relevant"}
+                decisions = "\n".join(f"{SYM[v]} {MODEL_LABEL.get(m, m)} \u2014 {WORD[v]}"
+                                      for m, v in sorted(mv.items(), key=lambda x: -x[1]))
                 cits.append({
                     "id": f"{lab}-{b['slug']}-panel-{len(cits)+1}",
-                    "locator": loc, "quote": text.get(loc, ""),
-                    "role": f"Model panel score {score}/{2*len(mv)} — {decisions}.",
+                    "locator": loc, "quote": text.get(loc, "").replace("**", ""),   # mid-word bold (a source typo) breaks anchor matching
+                    "role": f"Model determined relevance (score {score}/{2*len(mv)}):\n{decisions}",
                     "adjacent": score < DISPLAY["solid_threshold"],
                     "verdicts": dict(sorted(mv.items())), "score": score,
                 })
@@ -96,7 +98,8 @@ def main():
                         "note": src_entry.get("depth_note", ""),
                         "verifiedDate": src_entry.get("verified_date", ""),
                         "passages": cits}
-        out_behaviours.append({"id": b["id"], "slug": b["slug"], "name": b["name"],
+        out_behaviours.append({"id": len(out_behaviours) + 1,   # renumber 01..N for display
+                               "slug": b["slug"], "name": b["name"],
                                "definition": b["definition"], "category": b["category"],
                                "coverage": cov})
     out = {"generatedFrom": [f"engine/panel ({rubric}, panel={sorted(panel)}, "

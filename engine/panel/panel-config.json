@@ -134,5 +134,16 @@
     "model-spec"
   ],
   "batch_size": 40,
-  "param_quirks_comment": "gpt-5*: max_completion_tokens + reasoning_effort (gpt-5.6: low, else minimal), no temperature. fable/mythos: no temperature. others: temperature=0."
+  "param_quirks_comment": "gpt-5*: max_completion_tokens + reasoning_effort (gpt-5.6: low, else minimal), no temperature. fable/mythos: no temperature. others: temperature=0.",
+  "display": {
+    "_comment": "MVP UI: behaviours shown; score = sum over panel of (core=2, related=1); passages below threshold hidden; [threshold, solid_threshold) renders Related-style; >= solid_threshold Core-style.",
+    "behaviours": [
+      "helpfulness",
+      "harm-avoidance-to-third-parties",
+      "avoiding-over-and-under-caution"
+    ],
+    "panel": "frontier",
+    "threshold": 3,
+    "solid_threshold": 5
+  }
 }
