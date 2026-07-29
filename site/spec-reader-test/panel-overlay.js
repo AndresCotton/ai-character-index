@@ -100,9 +100,14 @@ function showTip(block, hitList) {
     "border-radius:6px;padding:.5em .7em;font-size:.78rem;max-width:22em;box-shadow:0 4px 14px #0003;";
   tooltip.querySelectorAll("td").forEach(td => td.style.padding = "0 .5em 0 0");
   document.body.appendChild(tooltip);
-  const r = block.getBoundingClientRect();
-  tooltip.style.left = `${Math.max(8, r.left + window.scrollX)}px`;
-  tooltip.style.top = `${r.bottom + window.scrollY + 4}px`;
+  // Anchor to the right of the chip tokens (top-right of the block); flip left if cramped.
+  const anchor = block.querySelector(".panel-chip") || block;
+  const r = anchor.getBoundingClientRect();
+  const w = tooltip.offsetWidth;
+  let x = r.right + window.scrollX + 10;
+  if (r.right + 10 + w > window.innerWidth - 8) x = Math.max(8, r.left + window.scrollX - w - 10);
+  tooltip.style.left = `${x}px`;
+  tooltip.style.top = `${Math.max(8, r.top + window.scrollY - 4)}px`;
 }
 function hideTip() { tooltip?.remove(); tooltip = null; }
 
