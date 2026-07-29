@@ -93,7 +93,7 @@ v2 results: on the K3-referenced behaviours the ternary core verdicts held or im
 
 *Cost (measured)*: cheap panel ~$0.18 per behaviour for all 3 models (963 passages, reason off); frontier pair on contested-only, 2 behaviours: $1.61 actual vs $0.79-1.13 predicted (contested passages run long; Fable's output is ~2.3x Sol's). Projections from measured token rates: all 9 publishable behaviours = ~$2 (cheap, live), ~$14 (frontier pair, full corpus, batch), ~$7 (frontier pair, contested-only, live). Iteration is not cost-bound; one full calibration round on a behaviour costs cents.
 
-*Status now*: v1 (binary, definition-only) collection COMPLETE for all 9 publishable behaviours and live in the reader-test site overlay (behaviour-hue outlines + vote chips + tooltips + agreement slider + rail marks, branch-only). v2 (ternary + scope clauses) collection 9/11 complete, remainder finishing overnight; the demo flips to v2 data when it lands. Audit sheets distributed, labels expected tomorrow morning. Total spend to date $6.33 across all experiments (exact, from logged token counts).
+*Status now*: v1 (binary, definition-only) collection COMPLETE for all 9 publishable behaviours and live in the reader-test site overlay (behaviour-hue outlines + vote chips + tooltips + agreement slider + rail marks, branch-only). v2 (ternary + scope clauses) collection COMPLETE for all 11 behaviours (31,779 verdicts, 0 unparsed) and now live in the demo (core votes; the adjacent band is collected but not yet surfaced in the UI). Audit sheets distributed, labels expected tomorrow morning. Total spend to date $6.33 across all experiments (exact, from logged token counts).
 
 *Next steps -- decision tree on the audit result*:
 

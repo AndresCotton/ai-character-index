@@ -58,7 +58,9 @@ def main():
     votes = collections.defaultdict(dict)   # (behaviour, locator) -> {model: 0/1}
     spec_of = {}
     counts = collections.Counter()
-    for line in (HERE / "runlog.jsonl").read_text().splitlines():
+    logs = ["runlog.jsonl", "runlog-v2.jsonl"] if "--v2" in sys.argv else ["runlog.jsonl"]
+    for line in (l for f in logs if (HERE / f).exists()
+                 for l in (HERE / f).read_text().splitlines()):
         d = json.loads(line)
         if d.get("rubric", "v1") != ("v2" if "--v2" in sys.argv else "v1"):
             continue
