@@ -12,7 +12,17 @@
 
 const DOC_SLUG = { anthropic: "anthropic", openai: "openai" };
 let PANEL = null;
+let SLUG_ORDER = [];   // sidebar order -> same hue slots the app assigns
 let threshold = 0.5;   // default: majority agreement -- drag left to see contested 1-of-N calls
+
+/* Same hue the app gives this behaviour's curated tint (index into --hue-1..12). */
+function hueFor(slug) {
+  const i = Math.max(0, SLUG_ORDER.indexOf(slug));
+  return `var(--hue-${(i % 12) + 1})`;
+}
+/* Agreement is encoded in the outline STYLE (hue now belongs to the behaviour):
+ * solid = unanimous, dashed = majority, dotted = below majority. */
+const strokeFor = pct => pct >= 1 ? "solid" : pct >= 0.5 ? "dashed" : "dotted";
 
 /* Panel quotes are source markdown; rendered blocks are its text. Strip markdown
  * syntax from both sides so they compare equal. */
@@ -26,6 +36,10 @@ async function loadPanel() {
     const res = await fetch("./data/panel.json", { cache: "no-store" });
     if (!res.ok) return;
     PANEL = await res.json();
+    try {
+      const b = await fetch("./data/behaviours.json", { cache: "no-store" }).then(r => r.json());
+      SLUG_ORDER = b.behaviours.map(x => x.slug);
+    } catch { /* hue fallback: slot 1 */ }
     buildSlider();
     apply();
   } catch { /* no panel data -- overlay stays dormant */ }
@@ -127,22 +141,26 @@ function apply() {
       const visible = all.filter(h => h.pct >= threshold);
       if (!visible.length) return;
       shown += 1;
-      const top = Math.max(...visible.map(h => h.pct));
+      const lead = visible.reduce((a, b) => (b.pct > a.pct ? b : a));
       block.classList.add("panel-hit");
-      block.style.outline = `2px solid hsl(${120 * top} 70% 45% / .55)`;
+      // Behaviour's own hue (matches its curated tint); agreement lives in the stroke style.
+      block.style.outline = `2px ${strokeFor(lead.pct)} hsl(${hueFor(lead.slug)} 65% 45% / .8)`;
       block.style.outlineOffset = "2px";
+      block.dataset.panelLead = lead.slug;
+      block.dataset.panelPct = lead.pct;
       visible.forEach(hit => {
         const chip = document.createElement("span");
         chip.className = "panel-chip";
         chip.textContent = `${shortName(hit.slug)} ${hit.nRelevant}/${hit.nVoters}`;
         chip.style.cssText =
           "float:right;clear:right;font-size:.68rem;padding:0 .45em;border-radius:1em;margin-left:.5em;" +
-          `background:hsl(${120 * hit.pct} 70% 45% / .18);border:1px solid hsl(${120 * hit.pct} 70% 35% / .5);`;
+          `background:hsl(${hueFor(hit.slug)} 65% 45% / .15);border:1px ${strokeFor(hit.pct)} hsl(${hueFor(hit.slug)} 65% 40% / .6);`;
         block.prepend(chip);
       });
       block.onmouseenter = () => showTip(block, visible);
       block.onmouseleave = hideTip;
     });
+    paintRail(panel);
     console.info(`[panel-overlay] ${docId}: selected=[${selectedSlugs()}] hits=${hits.length}`
       + ` painted=${panel.querySelectorAll(".panel-hit").length} thr=${threshold}`);
     if (hits.length) {
@@ -165,8 +183,45 @@ function apply() {
   if (count) count.textContent = `${shown}/${total} passages shown`;
 }
 
+/* Hollow rail marks for panel hits, so they're findable from the scroll bar. The app
+ * rebuilds the rail with replaceChildren() on every relayout, wiping ours -- a per-rail
+ * observer re-adds them (guarded so our own insertions don't loop). */
+function paintRail(panel) {
+  const rail = panel.querySelector(".passage-rail");
+  const body = panel.querySelector(".document-body");
+  if (!rail || !body || !body.scrollHeight) return;
+  rail.querySelectorAll(".panel-rail-mark").forEach(m => m.remove());
+  panel.querySelectorAll(".panel-hit").forEach(block => {
+    const mark = document.createElement("span");
+    mark.className = "panel-rail-mark";
+    mark.title = `panel: ${block.dataset.panelLead}`;
+    mark.style.cssText =
+      "position:absolute;left:0;right:0;border-radius:2px;cursor:pointer;background:transparent;" +
+      `border:1.5px ${strokeFor(Number(block.dataset.panelPct))} hsl(${hueFor(block.dataset.panelLead)} 65% 45% / .9);` +
+      `top:${Math.min(98, (block.offsetTop / body.scrollHeight) * 100)}%;` +
+      `height:max(5px,${(block.offsetHeight / body.scrollHeight) * 100}%);`;
+    mark.onclick = () => block.scrollIntoView({ block: "center", behavior: "smooth" });
+    rail.appendChild(mark);
+  });
+}
+
+const railObserver = new MutationObserver(muts => {
+  for (const m of muts) {
+    const rail = m.target;
+    // re-add only if the app wiped us (avoid reacting to our own inserts)
+    if (rail.classList?.contains("passage-rail") && !rail.querySelector(".panel-rail-mark")) {
+      const panel = rail.closest(".document-panel");
+      if (panel?.querySelector(".panel-hit")) requestAnimationFrame(() => paintRail(panel));
+    }
+  }
+});
+function watchRails() {
+  document.querySelectorAll(".passage-rail").forEach(r =>
+    railObserver.observe(r, { childList: true }));
+}
+
 const observer = new MutationObserver(muts => {
-  if (muts.some(m => [...m.addedNodes].some(n => n.nodeType === 1))) apply();
+  if (muts.some(m => [...m.addedNodes].some(n => n.nodeType === 1))) { watchRails(); apply(); }
 });
 const reader = document.getElementById("document-reader");
 if (reader) observer.observe(reader, { childList: true, subtree: false });
