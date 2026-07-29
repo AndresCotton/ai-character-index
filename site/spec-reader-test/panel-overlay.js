@@ -144,7 +144,7 @@ function apply() {
       const lead = visible.reduce((a, b) => (b.pct > a.pct ? b : a));
       block.classList.add("panel-hit");
       // Behaviour's own hue (matches its curated tint); agreement lives in the stroke style.
-      block.style.outline = `2px ${strokeFor(lead.pct)} hsl(${hueFor(lead.slug)} 65% 45% / .8)`;
+      block.style.outline = `2px ${strokeFor(lead.pct)} rgb(${hueFor(lead.slug)} / .8)`;
       block.style.outlineOffset = "2px";
       block.dataset.panelLead = lead.slug;
       block.dataset.panelPct = lead.pct;
@@ -154,7 +154,7 @@ function apply() {
         chip.textContent = `${shortName(hit.slug)} ${hit.nRelevant}/${hit.nVoters}`;
         chip.style.cssText =
           "float:right;clear:right;font-size:.68rem;padding:0 .45em;border-radius:1em;margin-left:.5em;" +
-          `background:hsl(${hueFor(hit.slug)} 65% 45% / .15);border:1px ${strokeFor(hit.pct)} hsl(${hueFor(hit.slug)} 65% 40% / .6);`;
+          `background:rgb(${hueFor(hit.slug)} / .15);border:1px ${strokeFor(hit.pct)} rgb(${hueFor(hit.slug)} / .6);`;
         block.prepend(chip);
       });
       block.onmouseenter = () => showTip(block, visible);
@@ -197,7 +197,7 @@ function paintRail(panel) {
     mark.title = `panel: ${block.dataset.panelLead}`;
     mark.style.cssText =
       "position:absolute;left:0;right:0;border-radius:2px;cursor:pointer;background:transparent;" +
-      `border:1.5px ${strokeFor(Number(block.dataset.panelPct))} hsl(${hueFor(block.dataset.panelLead)} 65% 45% / .9);` +
+      `border:1.5px ${strokeFor(Number(block.dataset.panelPct))} rgb(${hueFor(block.dataset.panelLead)} / .9);` +
       `top:${Math.min(98, (block.offsetTop / body.scrollHeight) * 100)}%;` +
       `height:max(5px,${(block.offsetHeight / body.scrollHeight) * 100}%);`;
     mark.onclick = () => block.scrollIntoView({ block: "center", behavior: "smooth" });
