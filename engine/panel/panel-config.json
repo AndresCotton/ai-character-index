@@ -125,7 +125,8 @@
     "frontier": [
       "sol",
       "fable",
-      "kimi"
+      "kimi",
+      "opus"
     ]
   },
   "rubric": "v2",
@@ -145,5 +146,6 @@
     "panel": "frontier",
     "threshold": 3,
     "solid_threshold": 5
-  }
+  },
+  "_opus_note": "opus substitutes for fable on third-party-harm x model-spec only (fable output content-filtered there, 3 attempts); opus rows exist for no other cell."
 }

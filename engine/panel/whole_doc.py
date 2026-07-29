@@ -54,7 +54,7 @@ def main():
                                                      {"role": "user", "content": user}])
                 if model.startswith("gpt-5"):
                     kwargs.update(max_completion_tokens=32768, reasoning_effort="low")
-                elif "fable" in model or "mythos" in model:
+                elif "claude" in model or "mythos" in model:   # anthropic models: temperature deprecated
                     kwargs.update(max_tokens=32768)
                 else:
                     kwargs.update(max_tokens=65536, temperature=0)   # kimi reasons in-content
