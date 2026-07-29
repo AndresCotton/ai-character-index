@@ -9,12 +9,17 @@ Design goals (from the ladder):
   * RESUMABLE: a restart reads runlog.jsonl and skips any (behaviour, spec, model, locator)
     already recorded, so we never pay twice for the same result.
 
-  python3 harness.py <behaviour> <spec> <tag[,tag,...]> [--reason] [--realtime|--batch]
+  python3 harness.py <behaviour> <spec> <tag[,tag,...]> [--reason] [--v2|--v3]
       behaviour: key in behaviours.json     spec: constitution | model-spec
-      tags: keys in MODELS below
+      tags: model tags or panel names from panel-config.json
+
+Rubrics: v1 = binary (frozen calibrated baseline), v2 = ternary + Scope clause (frozen --
+runlog rows and export provenance hashes key on its exact text), v3 = ternary + explicit
+coverage-report framing + labelled behaviour fields (current; see compose_query).
 
 Aggregate the runlog into per-model columns + 0..N panel vote counts with aggregate.py.
-Realtime is the default (prefix-cache friendly); --batch is a stub for the Together Batch path.
+This realtime path is prefix-cache friendly; the Batch-API path (50% price) is
+batch_panel.py, which reuses the exact prompt builders below.
 """
 import json
 import os
@@ -57,6 +62,7 @@ SYSTEM_V1 = ("You decide whether each spec passage is RELEVANT to a target behav
              "0 (not). One line per passage, in order.{reason}")
 
 # v2: ternary rubric (core / adjacent / neither) + per-behaviour Scope clause
+# (frozen -- runlog v2 rows and export_coverage prompt hashes key on this exact text)
 SYSTEM = ("You grade how each spec passage relates to a target behaviour, on a 3-point scale. "
           "2 = CORE: the passage directly governs the SPECIFIC behaviour described -- it "
           "states, requires, or constrains that exact behaviour, such that you would cite it "
@@ -76,6 +82,62 @@ SYSTEM = ("You grade how each spec passage relates to a target behaviour, on a 3
           "should be phrased = 1; a passage about being generally trustworthy = 0. "
           "For each passage, output one line: the passage number, a colon, then 2, 1, or 0. "
           "One line per passage, in order.{reason}")
+# v3: coverage-report framing + labelled behaviour fields (current).
+# Changes over v2: states WHY (the verdicts become a coverage report, so absence of
+# findings is a valid result), names the input fields and how to use each, adds the
+# partial-governance and Scope-exclusion rules, and demands independent per-passage grading.
+SYSTEM_V3 = (
+    "You are auditing how thoroughly an AI alignment document -- a model constitution or a "
+    "model spec -- covers one target behaviour. These documents are long and address a "
+    "behaviour in scattered places, so it is hard to tell whether the behaviour is "
+    "comprehensively governed. The set of passages you mark becomes the document's coverage "
+    "report for this behaviour: it is what lets a reader judge whether coverage is thorough, "
+    "thin, or absent. "
+    "The behaviour is described by four fields. Behaviour: its title. Definition: the "
+    "construct itself -- what the behaviour requires; judge against this, not against the "
+    "title's vocabulary. Clarifications (optional): notes resolving ambiguities. Scope "
+    "(optional): the construct's edges, usually naming neighbouring behaviours that are "
+    "NOT this one. An optional field reading 'none provided' only means the user left it "
+    "blank -- infer nothing from that; when Scope is not provided, judge against the "
+    "Definition alone. "
+    "Grade every passage independently, on its own text (the § section path is context "
+    "only), on a 3-point scale. "
+    "2 = CORE: the passage directly governs the SPECIFIC behaviour described -- it states, "
+    "requires, or constrains that exact behaviour, such that you would cite it when "
+    "assembling the document's coverage of the behaviour. A passage that does so in only "
+    "one clause or list item still counts for what it says about THIS behaviour. "
+    "1 = ADJACENT: the passage does not directly govern the behaviour, but materially "
+    "bears on it -- it carries machinery the behaviour depends on, sets a boundary of it, "
+    "or is a cross-reference a careful reader of this behaviour should see. "
+    "0 = NEITHER: everything else, including passages that merely share vocabulary, sit "
+    "near the topic, or describe the model's general goals, values, mission, or virtues "
+    "without bearing on THIS specific behaviour -- UNLESS the target behaviour is itself "
+    "about one of those general values, in which case passages that state, define, or give "
+    "force to that value are CORE. A passage that governs only a behaviour the Scope "
+    "excludes is 0 -- at most 1 if it also sets a boundary the target behaviour must "
+    "respect. "
+    "Calibration: the document may cover the behaviour thoroughly, thinly, or not at all. "
+    "Finding few or no relevant passages is a correct and informative result -- never "
+    "stretch a grade so that coverage appears. The opposite error is just as costly: a "
+    "passage that genuinely governs the behaviour must be marked wherever in the document "
+    "it sits. Being in the same topic area alone is NOT enough for 1. When in doubt "
+    "between 2 and 1, mark 1; when in doubt between 1 and 0, mark 0. "
+    "Example -- behaviour 'do not endorse false claims': a passage requiring the model "
+    "to correct a user's factual mistake = 2; a passage on how confident assessments "
+    "should be phrased = 1; a passage about being generally trustworthy = 0. "
+    "For each passage, output one line: the passage number, a colon, then 2, 1, or 0. "
+    "One line per passage, in order.{reason}")
+
+SYSTEMS = {"v1": SYSTEM_V1, "v2": SYSTEM, "v3": SYSTEM_V3}
+
+# v3 behaviour block -- ONE variable per user-form field, fixed shape (no conditional
+# lines): a form populates these four slots later. clarifications and scope are
+# OPTIONAL -- an empty form field renders as FIELD_NONE, never an omitted line.
+FIELD_NONE = "none provided"
+BEHAVIOUR_TEMPLATE_V3 = ("Behaviour: {title}\n"
+                         "Definition: {definition}\n"
+                         "Clarifications (optional): {clarifications}\n"
+                         "Scope (optional): {scope}")
 REASON_CLAUSE = " You may reason first; put the numbered verdict lines at the very end."
 
 
@@ -118,6 +180,36 @@ def load_query(behaviour):
     return b[behaviour]["query"]
 
 
+def compose_query(behaviour, rubric):
+    """The behaviour block of the user message -- the variable slot the tool user fills.
+
+    v3 contract (what we ask the user for, via a form): title and definition required,
+    clarifications and scope optional (blank -> FIELD_NONE). One variable per field,
+    substituted into BEHAVIOUR_TEMPLATE_V3. behaviours.json fields: title (falls back
+    to label) / query (query_v2 override) / clarifications / boundary.
+    v1 and v2 render byte-identically to the pre-refactor paths (frozen).
+    """
+    query = load_query(behaviour)   # also validates the behaviour key
+    beh = json.loads((HERE / "behaviours.json").read_text())[behaviour]
+    if rubric == "v1":
+        return f"Behaviour:\n{query}"
+    if rubric == "v2":
+        if not beh.get("boundary"):
+            sys.exit(f"--v2: no boundary clause for {behaviour}")
+        return f"Behaviour:\n{beh.get('query_v2', query)}\n\nScope: {beh['boundary']}"
+    return BEHAVIOUR_TEMPLATE_V3.format(
+        title=beh.get("title", beh["label"]),
+        definition=beh.get("query_v2", query),
+        clarifications=beh.get("clarifications") or FIELD_NONE,
+        scope=beh.get("boundary") or FIELD_NONE)
+
+
+def user_msg(qblock, batch):
+    """Full user message: behaviour block + numbered passages + bounded output ask."""
+    body = "\n".join(f"[{i+1}] (§ {sec}) {t}" for i, (_, sec, t) in enumerate(batch))
+    return f"{qblock}\n\nPassages:\n{body}\n\nOutput {len(batch)} verdict lines."
+
+
 def done_keys(rubric):
     """Resume keys include the rubric version -- a v2 rerun must not be satisfied by v1 rows."""
     if not RUNLOG.exists():
@@ -134,7 +226,7 @@ def append(path, rows):
 
 
 def parse_verdicts(txt, n):
-    """{index(1-based): 0/1}. First try 'N: V' lines; fall back to positional 0/1s."""
+    """{index(1-based): 0/1/2}. First try 'N: V' lines; fall back to positional verdicts."""
     keyed = {}
     for line in txt.splitlines():
         m = re.match(r'\s*\[?(\d+)\]?\s*[:.\)\-]\s*([012])\b', line)
@@ -153,14 +245,12 @@ def parse_verdicts(txt, n):
     return keyed
 
 
-def judge(client, model, query, batch, reason, ternary=True):
-    body = "\n".join(f"[{i+1}] (§ {sec}) {t}" for i, (_, sec, t) in enumerate(batch))
-    sysmsg = (SYSTEM if ternary else SYSTEM_V1).format(reason=REASON_CLAUSE if reason else "")
+def judge(client, model, qblock, batch, reason, rubric="v1"):
+    sysmsg = SYSTEMS[rubric].format(reason=REASON_CLAUSE if reason else "")
     kwargs = dict(
         model=model,
         messages=[{"role": "system", "content": sysmsg},
-                  {"role": "user", "content": f"Behaviour:\n{query}\n\nPassages:\n{body}\n\n"
-                                               f"Output {len(batch)} verdict lines."}])
+                  {"role": "user", "content": user_msg(qblock, batch)}])
     if model.startswith("gpt-5"):
         # OpenAI reasoning models: no max_tokens / no temperature; keep reasoning cheap.
         # gpt-5.6 dropped 'minimal' (wants none/low/medium/high/xhigh); gpt-5/-mini use 'minimal'.
@@ -183,18 +273,11 @@ def judge(client, model, query, batch, reason, ternary=True):
 
 
 def run(behaviour, spec, tags, reason, limit=None, only=None, batch_size=BATCH,
-        rubric="v3", runlog=None):
+        rubric="v1", runlog=None):
     global RUNLOG
     if runlog:
         RUNLOG = Path(runlog)
-    query = load_query(behaviour)
-    if rubric == "v2":
-        beh = json.loads((HERE / "behaviours.json").read_text())[behaviour]
-        if not beh.get("boundary"):
-            sys.exit(f"v2: no boundary clause for {behaviour}")
-        base = beh.get("query_v2", query)   # override drops clauses unjudgeable per-passage
-        query = f"{base}\n\nScope: {beh['boundary']}"
-    # v3: ternary scale with the behaviour description exactly as supplied (no Scope clause)
+    qblock = compose_query(behaviour, rubric)
     ps = passages(spec)
     if only is not None:
         ps = [p for p in ps if p[0] in only]   # judge only these locators (e.g. contested subset)
@@ -208,9 +291,9 @@ def run(behaviour, spec, tags, reason, limit=None, only=None, batch_size=BATCH,
         print(f"{tag} ({provider}:{model}): {len(todo)}/{len(ps)} passages to judge", file=sys.stderr)
         for k in range(0, len(todo), batch_size):
             batch = todo[k:k + batch_size]
-            verdicts, raw, meta = judge(client, model, query, batch, reason, ternary=(rubric != "v1"))
+            verdicts, raw, meta = judge(client, model, qblock, batch, reason, rubric)
             rows = [{"behaviour": behaviour, "spec": spec, "model": tag, "locator": loc,
-                     "verdict": verdicts.get(i + 1, 0),               # 0/1/2 (ternary rubrics)
+                     "verdict": verdicts.get(i + 1, 0),               # 0/1/2 (ternary in v2+)
                      "relevant": int(verdicts.get(i + 1, 0) == 2) if rubric != "v1"
                                  else int(verdicts.get(i + 1, 0)),    # strict binary derivation
                      "parsed": (i + 1) in verdicts,
@@ -250,12 +333,7 @@ def main():
     for a in sys.argv:
         if a.startswith("--runlog="):
             runlog = a.split("=", 1)[1]
-    rubric = "v3"
-    for a in sys.argv:
-        if a.startswith("--rubric="):
-            rubric = a.split("=", 1)[1]
-    if "--v2" in sys.argv:
-        rubric = "v2"
+    rubric = "v3" if "--v3" in sys.argv else "v2" if "--v2" in sys.argv else "v1"
     run(behaviour, spec, tags, "--reason" in sys.argv, limit, only, batch_size,
         rubric=rubric, runlog=runlog)
 

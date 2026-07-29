@@ -5,7 +5,7 @@ Reuses harness.py's exact prompt composition (same SYSTEM/user text as realtime)
 so batch and realtime verdicts are directly comparable. Cheap providers without a
 batch API (OpenRouter/DeepInfra) should just run realtime -- their savings are cents.
 
-  python3 batch_panel.py submit <behaviour[,behaviour...]> <spec[,spec...]> <tag[,tag...]> [--v2]
+  python3 batch_panel.py submit <behaviour[,behaviour...]> <spec[,spec...]> <tag[,tag...]> [--v2|--v3]
   python3 batch_panel.py status
   python3 batch_panel.py ingest          # downloads finished batches -> runlog rows
 
@@ -26,7 +26,7 @@ h = importlib.util.module_from_spec(spec_)
 spec_.loader.exec_module(h)
 
 STATE = HERE / "batches.json"
-RUNLOG = HERE / "runlog-v2.jsonl"   # batch path is v2-era; override with --runlog=
+RUNLOG = HERE / "runlog-v3.jsonl"   # default; --runlog= overrides (submit resume + ingest both use it)
 
 
 def load_state():
@@ -49,26 +49,16 @@ def key_env(provider):
     return v
 
 
-def compose(behaviour, spec, rubric):
-    """Same query/system text the realtime path sends."""
-    query = h.load_query(behaviour)
-    if rubric == "v2":
-        beh = json.loads((HERE / "behaviours.json").read_text())[behaviour]
-        query = f"{beh.get('query_v2', beh['query'])}\n\nScope: {beh['boundary']}"
-    sysmsg = (h.SYSTEM if rubric != "v1" else h.SYSTEM_V1).format(reason="")
-    return query, sysmsg
-
-
 def request_bodies(behaviour, spec, tag, rubric, done):
     provider, model = h.MODELS[tag]
-    query, sysmsg = compose(behaviour, spec, rubric)
+    qblock = h.compose_query(behaviour, rubric)   # same builders as realtime -- byte-identical
+    sysmsg = h.SYSTEMS[rubric].format(reason="")
     ps = [p for p in h.passages(spec) if (behaviour, spec, tag, p[0]) not in done]
     out = []
     bs = h.BATCH
     for k in range(0, len(ps), bs):
         chunk = ps[k:k + bs]
-        body = "\n".join(f"[{i+1}] (§ {sec}) {t}" for i, (_, sec, t) in enumerate(chunk))
-        user = f"Behaviour:\n{query}\n\nPassages:\n{body}\n\nOutput {len(chunk)} verdict lines."
+        user = h.user_msg(qblock, chunk)
         cid = f"{behaviour}__{spec}__{tag}__{k//bs}"   # __ separator: anthropic custom_id forbids |
         locs = [loc for loc, _, _ in chunk]
         out.append((cid, sysmsg, user, model, locs))
@@ -77,6 +67,7 @@ def request_bodies(behaviour, spec, tag, rubric, done):
 
 def submit(behaviours, specs, tags, rubric):
     state = load_state()
+    h.RUNLOG = RUNLOG          # resume-skip against the SAME file ingest appends to
     done = h.done_keys(rubric)
     for tag in tags:
         provider = h.MODELS[tag][0]
@@ -174,7 +165,8 @@ def ingest():
             get = lambda r: (r["custom_id"],
                              "".join(c.get("text", "") for c in r["result"]["message"]["content"])
                              if r["result"]["type"] == "succeeded" else "")
-        rubric = b.get("rubric", "v2" if b.get("v2") else "v1")
+        # older state entries stored a "v2" boolean; newer ones store the rubric string
+        rubric = b.get("rubric") or ("v2" if b.get("v2") else "v1")
         for r in results:
             cid, txt = get(r)
             locs = b["locmap"][cid]
@@ -196,16 +188,15 @@ def ingest():
 
 
 def main():
+    global RUNLOG
+    for a in sys.argv:
+        if a.startswith("--runlog="):
+            RUNLOG = Path(a.split("=", 1)[1])
     cmd = sys.argv[1] if len(sys.argv) > 1 else ""
     if cmd == "submit":
         behaviours, specs, tags = (sys.argv[2].split(","), sys.argv[3].split(","), sys.argv[4].split(","))
         tags = [m for t in tags for m in (h.PANELS.get(t) or [t])]
-        rubric = "v3"
-        for a in sys.argv:
-            if a.startswith("--rubric="):
-                rubric = a.split("=", 1)[1]
-        if "--v2" in sys.argv:
-            rubric = "v2"
+        rubric = "v3" if "--v3" in sys.argv else "v2" if "--v2" in sys.argv else "v1"
         submit(behaviours, specs, tags, rubric)
     elif cmd == "status":
         status()
