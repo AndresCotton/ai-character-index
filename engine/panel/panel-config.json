@@ -125,7 +125,7 @@
     "frontier": [
       "sol",
       "fable",
-      "qwen-max"
+      "kimi"
     ]
   },
   "rubric": "v2",
@@ -145,5 +145,6 @@
     "panel": "frontier",
     "threshold": 3,
     "solid_threshold": 5
-  }
+  },
+  "_frontier_note": "kimi (K3) chosen over qwen-max to reduce churn (already wired via Together; no new key). Together has no batch path here -- kimi runs realtime (~$1.5-2 for 3 behaviours)."
 }
