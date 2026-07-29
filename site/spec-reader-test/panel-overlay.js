@@ -74,11 +74,16 @@ function buildSlider() {
     <span id="panel-count"></span>`;
   wrap.style.cssText = "display:flex;gap:.6em;align-items:center;font-size:.85em;padding:.2em .8em;";
   bar.after(wrap);
-  let raf = null;
+  // Keep the drag responsive: update the label instantly, defer the (heavy) repaint
+  // until the user pauses, and show an updating state meanwhile.
+  let timer = null;
   wrap.querySelector("input").addEventListener("input", e => {
     threshold = Number(e.target.value) / 100;
     wrap.querySelector("#panel-thr").textContent = `${e.target.value}%`;
-    if (!raf) raf = requestAnimationFrame(() => { raf = null; apply(); });
+    const count = wrap.querySelector("#panel-count");
+    if (count) count.textContent = "updating…";
+    clearTimeout(timer);
+    timer = setTimeout(apply, 180);
   });
 }
 
