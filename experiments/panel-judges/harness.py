@@ -33,28 +33,12 @@ METRICS = HERE / "metrics.jsonl"   # per-call latency + token usage (for cost/ti
 SPECS = ("constitution", "model-spec")
 BATCH = 40   # passages per prompt -- bounded output (compact format stays coherent)
 
-# Every provider is reached through the OpenAI SDK by swapping base_url + key.
-PROVIDERS = {
-    "openai":    (None, "OPENAI_API_KEY"),
-    "anthropic": ("https://api.anthropic.com/v1/", "ANTHROPIC_API_KEY"),        # OpenAI-compat
-    "deepinfra": ("https://api.deepinfra.com/v1/openai", "DEEPINFRA_API_KEY"),
-    "together":  ("https://api.together.xyz/v1", "TOGETHER_API_KEY"),
-    "gemini":    ("https://generativelanguage.googleapis.com/v1beta/openai/", "GEMINI_API_KEY"),
-}
-
-# Candidate panel: tag -> (provider, model id). Confirm/adjust ids in R1 (format smoke test).
-MODELS = {
-    "haiku":      ("anthropic", "claude-haiku-4-5-20251001"),
-    "opus":       ("anthropic", "claude-opus-4-8"),
-    "qwen-small": ("deepinfra", "Qwen/Qwen3-32B"),
-    "qwen-big":   ("deepinfra", "Qwen/Qwen3-235B-A22B-Instruct-2507"),
-    "deepseek":   ("deepinfra", "deepseek-ai/DeepSeek-V3.2"),
-    "gpt-mini":   ("openai", "gpt-5-mini"),
-    "gpt":        ("openai", "gpt-5"),
-    "sol":        ("openai", "gpt-5.6-sol"),          # OpenAI frontier
-    "fable":      ("anthropic", "claude-fable-5"),    # Anthropic frontier
-    "kimi":       ("together", "moonshotai/Kimi-K3"),
-}
+# Providers/models/panels come from panel-config.json (credentials are env-var NAMES there,
+# never values). The old hardcoded tables are gone; edit the config, not this file.
+CONFIG = json.loads((HERE / "panel-config.json").read_text())
+PROVIDERS = {name: (p["base_url"], p["key_env"]) for name, p in CONFIG["providers"].items()}
+MODELS = {tag: (m["provider"], m["id"]) for tag, m in CONFIG["models"].items()}
+PANELS = CONFIG.get("panels", {})
 
 # v1: binary rubric (frozen -- the calibrated baseline; do not edit)
 SYSTEM_V1 = ("You decide whether each spec passage is RELEVANT to a target behaviour. "
@@ -244,6 +228,8 @@ def main():
     if len(sys.argv) < 4:
         sys.exit("usage: harness.py <behaviour> <spec> <tag[,tag,...]> [--reason]")
     behaviour, spec, tags = sys.argv[1], sys.argv[2], sys.argv[3].split(",")
+    # a panel name (e.g. "cheap", "frontier") expands to its model list
+    tags = [m for t in tags for m in (PANELS.get(t) or [t])]
     if spec not in SPECS:
         sys.exit(f"spec must be one of {SPECS}")
     bad = [t for t in tags if t not in MODELS]
