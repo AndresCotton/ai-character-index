@@ -114,6 +114,14 @@
         3.0,
         15.0
       ]
+    },
+    "kimi-k2": {
+      "provider": "together",
+      "id": "moonshotai/Kimi-K2.6",
+      "price_per_mtok": [
+        1.0,
+        3.0
+      ]
     }
   },
   "panels": {
@@ -126,7 +134,8 @@
       "sol",
       "fable",
       "kimi",
-      "opus"
+      "opus",
+      "kimi-k2"
     ]
   },
   "rubric": "v3w",

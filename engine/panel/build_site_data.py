@@ -25,7 +25,7 @@ CONFIG = json.loads((HERE / "panel-config.json").read_text())
 DISPLAY = CONFIG["display"]
 LAB = {"constitution": "anthropic", "model-spec": "openai"}
 VERDICT_WORD = {2: "core", 1: "related", 0: "unrelated"}
-MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3", "opus": "Claude Opus 4.8",
+MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3", "kimi-k2": "Kimi-K2.6", "opus": "Claude Opus 4.8",
                "gpt-mini": "GPT-5 mini", "haiku": "Claude Haiku 4.5", "qwen-small": "Qwen3-32B"}
 # panel behaviour keys -> site slugs
 SLUGS = {"helpfulness": "helpfulness", "third-party-harm": "harm-avoidance-to-third-parties",
@@ -82,6 +82,8 @@ def main():
                     continue
                 if "fable" in mv and "opus" in mv:
                     mv = {m: v for m, v in mv.items() if m != "opus"}   # opus is fable's SUBSTITUTE, never an extra seat
+                if "kimi" in mv and "kimi-k2" in mv:
+                    mv = {m: v for m, v in mv.items() if m != "kimi-k2"}   # k2.6 is kimi's stand-in; k3 wins when present
                 score = sum(mv.values())
                 if score < 1 or len(mv) < 2:   # emit all scored; the page filters by ?threshold=
                     continue
@@ -112,7 +114,7 @@ def main():
            "provenance": {
                "method": "llm-panel whole-document judging", "rubric": rubric,
                "panel": ["sol (gpt-5.6-sol)", "fable (claude-fable-5)", "kimi (moonshotai/Kimi-K3)"],
-               "substitution": "opus (claude-opus-4-8) replaces fable on harm-to-third-parties x model-spec (fable output content-filtered, 3 attempts)",
+               "substitution": "opus (claude-opus-4-8) replaces fable on harm-to-third-parties x model-spec (fable output content-filtered, 3 attempts); kimi-k2 (Kimi-K2.6) stands in for kimi on over-under-caution x model-spec pending K3 retry -- auto-replaced when K3 verdicts land",
                "judges_seen_in_data": seats,
                "runDate": str(date.today()),
                "scoring": "per passage: sum over judges of core=2/related=1/neither=0; display thresholds are client-side URL params"},
