@@ -107,18 +107,19 @@ This is the heart of the job. Each step names the file(s) it touches.
    has an id, name, definition, and facets. That prose is the sole input to a
    coverage pass. (It is mirrored from a Notion page, but for your purposes the
    markdown file is the source.)
-2. **Extract the passages.** Against the two mirrored specs in `specs/`, you run
-   a **term sweep** (a fixed, published list of search terms -- the behaviour's
-   own words, synonyms, antonym-phrasings, each spec's register for the idea),
-   read the enclosing section of every hit, and keep every passage that bears on
-   the behaviour. Every kept passage becomes an **exact, unabridged quote** under
-   a **locator** that pins the spec version, section, paragraph, and sentence
-   range. The rules for all of this are `Skill 4` and `specs/CITATION.md`; the
-   quotes are produced mechanically by `engine/spec-cite/cite.py` (never typed by
-   hand). Each spec then gets a **verdict** (covered / partial / not-in-spec) and
-   a **depth 0-4** scored against `research/spec-coverage-depth-rubric.md`.
-   *The term sweep itself is currently a manual `grep`, with no script -- see
-   "The term sweep in detail" below, and the reproducibility TODO in §7.*
+2. **Score the passages.** Against the two mirrored specs in `specs/`, every
+   passage is graded for relevance to the behaviour by a **panel of three
+   frontier LLMs** (2 core / 1 related / 0 neither per judge; a passage's score
+   is the sum, max 6). The pipeline lives in `engine/panel/` and is run per
+   behaviour with a dry-run-first driver; each kept passage carries a **locator**
+   that pins the spec version and section, an exact quote produced by
+   `engine/spec-cite/cite.py`, and every judge's named verdict. The procedure is
+   `Skill 4`; locator rules are `specs/CITATION.md`. Each spec then gets a
+   **verdict** (covered / partial / not-in-spec) and a **depth 0-4** scored
+   against `research/spec-coverage-depth-rubric.md` -- these remain authored
+   judgments, made from the panel's citation set.
+   *This replaced the manual term sweep in July 2026 -- see "From term sweep to
+   panel" below for what changed and why.*
 
 3. **The Stage-4 artifact.** All of the above is written to
    `research/sweeps/NN-<slug>/4-spec-coverage.md`. This file is both the human
@@ -149,56 +150,27 @@ commit at each step on a per-behaviour branch merged by PR, is the
 `spec-coverage-pass` skill (`.claude/skills/spec-coverage-pass/SKILL.md`). Read
 it to see the exact ordering, commit messages, and verification commands.
 
-### The term sweep in detail (step 2) -- and why it is the headline TODO
+### From term sweep to panel (step 2) -- what changed and why
 
-The term sweep is the least-automated step, the one newcomers most often assume
-is a script, and the one this collaboration most wants to fix. **Today it is run
-by hand.** There is no term-sweep `.py`; the only scripts in the repo are
-`cite.py`, `publish-coverage.py`, `build-spec-reader-data.py`,
-`verify-spec-reader.mjs`, and `spec-watch/pull-latest.sh`, none of which does
-discovery.
+Until July 2026 step 2 was a **manual term sweep**: the agent authored a term
+list (the behaviour's words, synonyms, antonym-phrasings, each spec's register),
+hand-grepped both mirrors, and curated the hits. It had two structural problems.
+First, recall was bounded by the term list: a passage that bears on the behaviour
+but shares no vocabulary with it is invisible to any grep (behaviour 1's
+invariance rule contains no sycophancy term at all). Second, none of it was
+reproducible -- re-running the sweep was a fresh manual pass, not a command.
 
-**How the search terms are generated (agent judgement).** Before any grep, the
-agent builds a term list for the behaviour. It is deliberately *not* just the
-behaviour's name -- grepping the name alone finds the labelling passages and
-misses the operational ones (for behaviour 1, the invariance rule that does the
-real work contains no sycophancy term at all). The list is assembled from five
-buckets:
-
-1. the behaviour's own words (e.g. `calibrat`, `sycophan`);
-2. synonyms and register variants (`confiden`, `uncertain`, `hedg`, `probab`);
-3. antonym- and failure-phrasings (`overconfiden`, `overclaim`, `wishy`, `vague`);
-4. each spec's own register for the idea -- how the document actually phrases it
-   (`express uncertainty`, `not sure`, `t know`, `acknowledg`);
-5. failure-mode neighbours worth probing (`hallucinat`, `sandbagg`).
-
-This is genuine judgement work, which is why the agent does it. The finished list
-is then **published in full in the artifact** (the `| Term | constitution hits |
-model-spec hits |` table), zero-hit terms included -- the empty probes are the
-evidence that the search looked everywhere. A real 35-term example is in
-`research/sweeps/02-calibration/4-spec-coverage.md`.
-
-**How the agent greps today (manual, and error-prone).** With the list in hand,
-the agent runs each term over both mirrors at the shell, hand-counts the hits and
-types them into the table, then reads the enclosing section of every hit (the
-operational rule is often a paragraph away from the matched word). The sweep is
-not a structured regex program: terms are stems / substrings and `grep` is used
-for plain substring matching. The one real subtlety is done entirely by hand --
-you must search **apostrophe-free, dash-free substrings**, because the specs'
-curly quotes and em dashes break naive greps (e.g. grep `t know` to catch both
-straight and curly "don't know", and word-bound short ambiguous terms). Every one
-of those manual acts -- transcribing counts, remembering the punctuation trick,
-word-bounding by eye -- is a place the sweep can silently miss a passage, and none
-of it is reproducible: re-running it is a fresh manual pass, not a command.
-
-**Where this is going (the target).** Keep the split that already exists and make
-only the mechanical half a script: **the agent still authors the term list
-(judgement), but a script then runs it (reproducible).** The folding the manual
-trick approximates already exists in `cite.py` as `match_normalize()` -- but only
-the `find` command uses it, not the sweep. A `cite.py sweep` (or a standalone)
-that ingests the agent's term list and emits the exact hit-count table would turn
-"we searched everywhere, here is the table" from a hand-assembled claim into a
-re-runnable one. The full spec is the **headline TODO in §7** -- start there.
+Step 2 is now the **LLM panel** (`engine/panel/`): every passage of both specs is
+graded against the behaviour's definition by three frontier models, so nothing
+depends on term choice and a re-run against the same spec version reproduces the
+same verdicts. What was judgement in the old sweep (which words to probe) is now
+judgement in the behaviour's definition fields (`behaviours.json`: definition,
+optional clarifications and scope); what was manual mechanics is now a script
+with an append-only run log and resume. Provider failures are caught, named, and
+substituted openly -- see the failure modes and substitution rules in `Skill 4`.
+The historical sweeps and their term tables remain under `research/sweeps/` and
+`behaviours-for-adria/` as the record of the old method and the source of the
+supplied definitions.
 
 ---
 
@@ -340,25 +312,15 @@ Notion sync is Phase 3 and not built.
 The first item is the headline objective of this collaboration; the rest are
 secondary observations.
 
-- **★ HEADLINE TODO -- make the term sweep reproducible and documented.** Today
-  the term sweep (§3) is entirely manual: the agent proposes the term list, then
-  hand-greps both specs and hand-assembles the hit-count table. Keep the
-  human-judgement half; automate the mechanical half.
-  - *Keep:* the agent authors the term list -- deciding which words, synonyms,
-    antonyms, and spec-register phrasings to probe is judgement, not automation.
-  - *Build:* a script (natural home: a `cite.py sweep` subcommand) that **takes
-    the agent's term list as input**, runs every term over both spec mirrors using
-    the apostrophe/dash-insensitive folding `match_normalize()` already
-    implements, word-bounds short/ambiguous terms, and prints the per-mirror
-    hit-count table -- **zero-hit terms included** -- in the exact shape the
-    artifact's term-sweep table expects (ideally with a candidate locator per hit,
-    to hand straight into the `find` → `show` → `resolve` excerpt workflow).
-  - *Document:* the term list becomes a committed input (e.g. a small file in the
-    behaviour's `research/sweeps/NN-<slug>/` dir), and `Skill 4` is updated so the
-    procedure reads "author the list, run the script" instead of "grep by hand".
-  - *Done when:* re-running the script for an already-published behaviour
-    regenerates that behaviour's term-sweep table byte-for-byte -- the sweep is
-    then reproducible and auditable rather than a one-off manual pass.
+- **★ DONE (July 2026) -- the term sweep is replaced by the LLM panel.** The
+  former headline TODO asked for a reproducible term sweep. The resolution went
+  further: step 2 no longer uses search terms at all. Every passage of both specs
+  is scored against the behaviour definition by a three-judge frontier panel
+  (`engine/panel/`), with a dry-run-first driver, an append-only run log, resume,
+  and provenance in the published data. Re-running a behaviour against the same
+  spec version reproduces its verdicts, which was the point of the TODO. `Skill 4`
+  documents the procedure; the site consumes the scores in
+  `site/llm-panel-review/`.
 - **CI is empty.** `.github/workflows/` has no workflows, and `data/schema/`
   holds no schemas -- yet `PLAN.md`, `README.md`, and `data/README.md` all
   describe CI that validates `data/*.json` against schemas and re-resolves every

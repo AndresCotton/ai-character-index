@@ -16,6 +16,11 @@ environment or a gitignored `.env` in this directory.
 - `select_strata.py` + `smoke-*.txt` -- stratified validation sample (pinned).
 - `build_site_data.py` -- runlog -> `site/llm-panel-review/data/behaviours.json`.
 
+## The procedure
+The end-to-end stage-4 procedure (dry run, execution, failure substitutions,
+Gate 4 checks) is `.claude/skills/4-sweep-spec-coverage/SKILL.md`. This README
+covers only the mechanics of the individual scripts.
+
 ## Reproducing the shipped data
 1. Verdicts: `python3 whole_doc.py <behaviour> <spec> sol,fable,kimi` per cell
    (runlog is append-only + resume-safe; rerunning skips banked cells).
