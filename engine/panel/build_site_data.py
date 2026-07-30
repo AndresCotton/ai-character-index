@@ -34,6 +34,7 @@ SLUGS = {"helpfulness": "helpfulness", "third-party-harm": "harm-avoidance-to-th
          "proportionate-risk": "proportionate-risk-mitigation", "tradeoffs": "how-to-approach-tradeoffs",
          "objectivity": "objectivity-on-contested-questions", "user-autonomy": "user-autonomy",
          "general-welfare": "animal-welfare-impacts"}
+SLUGS_EXTRA = {"general-welfare": ["general-welfare-impacts-strict"]}   # one run feeds both general-guidelines rows
 
 
 def main():
@@ -78,7 +79,9 @@ def main():
             src_entry = by_slug_lab.get((b["id"], lab), {})
             cits = []
             for (beh, loc), mv in votes.items():
-                if SLUGS.get(beh) != b["slug"] or spec_of[(beh, loc)] != spec_name:
+                slug_matches = (SLUGS.get(beh) == b["slug"]
+                                or b["slug"] in SLUGS_EXTRA.get(beh, []))
+                if not slug_matches or spec_of[(beh, loc)] != spec_name:
                     continue
                 if "fable" in mv and "opus" in mv:
                     mv = {m: v for m, v in mv.items() if m != "opus"}   # opus is fable's SUBSTITUTE, never an extra seat
