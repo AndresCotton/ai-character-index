@@ -93,7 +93,13 @@ def main():
                                       for m, v in sorted(mv.items(), key=lambda x: -x[1]))
                 cits.append({
                     "id": f"{lab}-{b['slug']}-panel-{len(cits)+1}",
-                    "locator": loc, "quote": text.get(loc, "").replace("**", ""),   # mid-word bold (a source typo) breaks anchor matching
+                    "locator": loc,
+                    # mid-word bold (a source typo) breaks anchor matching; fenced examples
+                    # render as code the matcher cannot see -- quote the caption line and
+                    # let exampleBlock extend the highlight (curated-data convention)
+                    "quote": (text.get(loc, "").split("~~~")[0].strip() if "~~~" in text.get(loc, "")
+                              else text.get(loc, "")).replace("**", ""),
+                    "exampleBlock": "~~~" in text.get(loc, ""),
                     "role": f"Model determined relevance (score {score}/{2*len(mv)}):\n{decisions}",
                     "adjacent": score < DISPLAY["solid_threshold"],
                     "verdicts": dict(sorted(mv.items())), "score": score,
