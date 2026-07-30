@@ -66,11 +66,12 @@ def main():
             behaviours = a.split("=", 1)[1].split(",")
         elif a.startswith("--panel="):
             panel_name = a.split("=", 1)[1]
-            if panel_name not in CONFIG["panels"]:
+            if (panel_name.startswith("_") or panel_name not in CONFIG["panels"]
+                    or not isinstance(CONFIG["panels"][panel_name], list)):
                 sys.exit(f"unknown panel {panel_name!r} -- panels: {[k for k in CONFIG['panels'] if not k.startswith('_')]}")
             globals()["PANEL"] = CONFIG["panels"][panel_name]
         elif a != "--go":
-            sys.exit(f"unknown argument {a!r} -- valid: --go --runlog= --behaviours=")
+            sys.exit(f"unknown argument {a!r} -- valid: --go --runlog= --behaviours= --panel=")
     known = {k for k, v in json.loads((HERE / "behaviours.json").read_text()).items()
              if isinstance(v, dict)}
     bad = [b for b in behaviours if b not in known]

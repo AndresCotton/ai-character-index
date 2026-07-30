@@ -105,8 +105,10 @@ Record the run in `4-spec-coverage.md`, then STOP.
 - [ ] Zero unparsed verdicts in the banked cells, or each exception listed.
 - [ ] Every kept citation pins `spec@version`; spot-resolve a sample with
       `cite.py resolve` and diff against the stored quote -- zero mismatches
-      after allowing for the builder's one normalization (it strips `**` from
-      quotes; the resolver does not).
+      after allowing for the builder's two normalizations: it strips `**` from
+      quotes, and for fenced example passages the stored quote is the caption
+      line before the `~~~` fence (with `exampleBlock` extending the highlight);
+      the resolver does neither.
 - [ ] Score distribution sanity: unanimous-core count per spec stated; if a spec
       shows zero relevant passages, confirm it is a finding (the rubric licenses
       it) and not a failed or filtered call.
@@ -122,6 +124,10 @@ Record the run in `4-spec-coverage.md`, then STOP.
   finding -- check `finish_reason` before concluding anything.
 - Mid-word markup in spec source (one constitution passage bolds `conten**t`)
   breaks naive quote matching; the builder strips bold markers from quotes.
+- Fenced example blocks (`~~~xml` dialogues) render as code the page matcher
+  cannot see: the builder quotes only the caption line and sets `exampleBlock`
+  so the highlight extends over the rendered block. A full-text quote for an
+  example passage will never anchor.
 - Locators into an unpinned spec are meaningless after the next release; the
   version is mandatory in every stored citation, and a mirror update invalidates
   the panel verdicts along with the locators.

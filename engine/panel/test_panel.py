@@ -65,11 +65,16 @@ class TestBuildPlan(unittest.TestCase):
 
     FIRST = {"constitution": "c@1 > A > ¶1", "model-spec": "m@1 > #a > ¶1"}
 
+    def setUp(self):
+        self._runlog = h.RUNLOG
+        self.addCleanup(lambda: setattr(h, "RUNLOG", self._runlog))
+
     def synth_runlog(self, rows):
         f = tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False)
         for r in rows:
             f.write(json.dumps(r) + "\n")
         f.close()
+        self.addCleanup(lambda p=Path(f.name): p.unlink(missing_ok=True))
         return Path(f.name)
 
     def test_banked_cell_is_resumed(self):
@@ -169,6 +174,11 @@ class TestCitationQuote(unittest.TestCase):
         q, ex = bs.citation_quote(t)
         self.assertEqual(q, "Example: shoplifting deterrence tips")
         self.assertTrue(ex)
+
+    def test_fence_leading_passage_falls_back_to_full_text(self):
+        q, ex = bs.citation_quote("~~~xml <user> no caption here </user> ~~~")
+        self.assertTrue(q)          # never an empty quote (it would anchor wrongly)
+        self.assertFalse(ex)
 
     def test_plain_passage_unchanged(self):
         q, ex = bs.citation_quote("An ordinary paragraph.")

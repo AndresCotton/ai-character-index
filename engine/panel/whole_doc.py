@@ -106,7 +106,7 @@ def main():
                          "via": "wholedoc-sparse" if sparse else "wholedoc"}
                         for i, (loc, _, _) in enumerate(ps)]
                 with RUNLOG.open("a") as f:
-                    f.write("".join(json.dumps(row) + "\n" for row in rows))   # one write: no half-cells on interrupt
+                    f.write("".join(json.dumps(row) + "\n" for row in rows))   # one buffered write: interrupt-resistant (not strictly atomic)
                 print(f"{behaviour}/{spec}/{tag}: {len(ps)} verdicts ({sum(1 for x in rows if x['verdict']>0)} positive), "
                       f"{dt:.0f}s, in={meta['prompt_tokens']} out={meta['completion_tokens']}")
 

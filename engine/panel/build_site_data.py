@@ -52,7 +52,9 @@ def citation_quote(text):
     matcher cannot see, so -- like the curated data -- the quote is the caption
     line before the fence and the exampleBlock flag extends the highlight."""
     if "~~~" in text:
-        return clean_quote(text.split("~~~")[0].strip()), True
+        caption = clean_quote(text.split("~~~")[0].strip())
+        if caption:                       # a fence-leading passage has no caption --
+            return caption, True          # an empty quote would anchor to the wrong block
     return clean_quote(text), False
 
 
@@ -136,7 +138,9 @@ def main():
     out = {"generatedFrom": [f"engine/panel/build_site_data.py ({rubric})"],
            "provenance": {
                "method": "llm-panel whole-document judging", "rubric": rubric,
-               "panel": ["sol (gpt-5.6-sol)", "fable (claude-fable-5)", "kimi (moonshotai/Kimi-K3)"],
+               "panel_config": DISPLAY["panel"],
+               "panel": ["sol (gpt-5.6-sol)", "fable (claude-fable-5)", "kimi (moonshotai/Kimi-K3)"]
+                        if DISPLAY["panel"] == "frontier" else sorted(panel),
                "substitution": "opus (claude-opus-4-8) replaces fable on harm-to-third-parties x model-spec (fable output content-filtered, 3 attempts); kimi-k2 (Kimi-K2.6) replaces kimi on over-under-caution x model-spec (K3 exhausted a 65k output budget on reasoning without emitting verdicts, finish_reason length)",
                "judges_seen_in_data": seats,
                "runDate": str(date.today()),

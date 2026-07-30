@@ -42,7 +42,7 @@ need it, but §1 and §2 give the context.
   procedure. It defines how a behaviour's spec passages are extracted.
 - The citation resolver (`engine/spec-cite/cite.py`) and its convention
   (`specs/CITATION.md`).
-- The depth rubric (`research/spec-coverage-depth-rubric.md`).
+- The depth rubric (`methodology/spec-coverage-depth-rubric.md`).
 - The publish + verify tooling (`engine/publish-coverage.py`,
   `engine/build-spec-reader-data.py`, `engine/verify-spec-reader.mjs`).
 - The coverage data (`data/coverage.json`) and the spec reader
@@ -84,7 +84,7 @@ This is the heart of the job. Each step names the file(s) it touches.
         │  Skill 4  +  specs/CITATION.md  +  engine/spec-cite/cite.py
         ▼
  (2) SCORE PASSAGES         specs/*  (ground truth)  →  LLM panel, cite, author verdict
-        │                   research/spec-coverage-depth-rubric.md  (score depth 0-4)
+        │                   methodology/spec-coverage-depth-rubric.md  (score depth 0-4)
         ▼
  (3) STAGE-4 ARTIFACT       research/sweeps/NN-<slug>/4-spec-coverage.md
         │                   (verdict + depth + every excerpt, resolver-verbatim)
@@ -183,7 +183,7 @@ supplied definitions.
 | **Spec mirrors (ground truth)** | `specs/claude-constitution/20260120-constitution.md`, `specs/openai-model-spec/model_spec.md` | the exact text all quotes resolve against |
 | **Citation convention** | `specs/CITATION.md` | locator grammar, block/sentence rules, normalizations |
 | **Resolver** | `engine/spec-cite/cite.py` | `outline` / `show` / `resolve` / `find`; every quote is its output |
-| **Depth rubric** | `research/spec-coverage-depth-rubric.md` | anchors the 0-4 depth score + boundary tests + precedent |
+| **Depth rubric** | `methodology/spec-coverage-depth-rubric.md` | anchors the 0-4 depth score + boundary tests + precedent |
 | **Skill 4 (extraction procedure)** | `.claude/skills/4-sweep-spec-coverage/SKILL.md` | how a passage set is built and gated |
 | **End-to-end campaign skill** | `.claude/skills/spec-coverage-pass/SKILL.md` | one behaviour, extract → publish → verify → PR |
 | **Stage-4 artifact (per behaviour)** | `research/sweeps/NN-<slug>/4-spec-coverage.md` | the passage set + verdict + depth; a parsing contract |
@@ -376,7 +376,7 @@ file at least as legible as you found it.
    specs until locators feel natural.
 3. `.claude/skills/4-sweep-spec-coverage/SKILL.md` -- the extraction procedure
    you own.
-4. `research/spec-coverage-depth-rubric.md` -- how the 0-4 depth score is decided.
+4. `methodology/spec-coverage-depth-rubric.md` -- how the 0-4 depth score is decided.
 5. `research/sweeps/02-calibration/4-spec-coverage.md` -- a real artifact, the
    template for the format.
 6. `engine/publish-coverage.py` then `engine/build-spec-reader-data.py` then

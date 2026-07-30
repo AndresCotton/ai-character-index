@@ -14,6 +14,7 @@ environment or a gitignored `.env` in this directory.
   in one response; rubric tag `v3w`). This mode produced the shipped data, winning
   an empirical dense-vs-sparse comparison.
 - `select_strata.py` + `smoke-*.txt` -- stratified validation sample (pinned).
+- `run_rollout.py` -- the driver: full-dataset plan, dry-run by default, --go to spend.
 - `build_site_data.py` -- runlog -> `site/llm-panel-review/data/behaviours.json`.
 
 ## The procedure
