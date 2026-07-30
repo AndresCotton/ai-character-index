@@ -7,8 +7,9 @@ environment or a gitignored `.env` in this directory.
 
 ## Pieces
 - `panel-config.json` -- providers, model tags, panels, rubric, display behaviours.
-- `harness.py` -- batched judging (40 passages/prompt) + shared prompt builders
-  (rubrics v1 binary / v2 ternary+scope / v3 ternary+form-fields).
+- `harness.py` -- shared library: config load, prompt builders (rubrics v1 binary /
+  v2 ternary+scope / v3 ternary+form-fields, frozen for provenance), verdict
+  parsing, run-log resume conventions. Not a CLI.
 - `whole_doc.py` -- whole-document judging (entire spec in one prompt, all verdicts
   in one response; rubric tag `v3w`). This mode produced the shipped data, winning
   an empirical dense-vs-sparse comparison.
