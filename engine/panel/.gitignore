@@ -5,4 +5,3 @@ runlog*.jsonl
 metrics*.jsonl
 batches.json
 batch-input-*.jsonl
-smoke-*.txt

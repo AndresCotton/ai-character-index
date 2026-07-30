@@ -1290,14 +1290,21 @@ function updatePanelMeta(panel, doc) {
     .reduce((total, behaviour) => total + (behaviour.coverage?.[doc.id]?.passages.length || 0), 0);
   if (tracking && published === 0) {
     const several = selectedBehaviours().length > 1;
+    const filtered = selectedBehaviours()
+      .reduce((total, behaviour) => total + (behaviour.coverage?.[doc.id]?.panelFiltered || 0), 0);
     panel.querySelector(".document-body").insertAdjacentHTML(
       "afterbegin",
-      `<div class="zero-coverage" role="note">
-        <strong>${several
-          ? "None of the selected behaviors map to a passage in this specification."
-          : "No mapped passages in this specification."}</strong>
-        <span>Absence of coverage is an index finding, not missing data.</span>
-      </div>`,
+      filtered > 0
+        ? `<div class="zero-coverage" role="note">
+            <strong>No passages at the current display threshold.</strong>
+            <span>${filtered} scored ${filtered === 1 ? "passage is" : "passages are"} below it — lower ?threshold= to see them.</span>
+          </div>`
+        : `<div class="zero-coverage" role="note">
+            <strong>${several
+              ? "None of the selected behaviors map to a passage in this specification."
+              : "No mapped passages in this specification."}</strong>
+            <span>Absence of coverage is an index finding, not missing data.</span>
+          </div>`,
     );
   }
 }
@@ -1493,11 +1500,11 @@ window.addEventListener("resize", () => {
 
 /* Panel-score display filter -- URL params only, no UI change:
  *   ?related=W    weight of a "related" (1) verdict when scoring; core is always 2.
- *                 [default 1 -> max score 6; try 0.5 (max 4.5) or 0 (core-only, max 6 in steps of 2)]
- *   ?threshold=N  minimum recomputed score to show a passage [default: max possible = only
- *                 unanimous-highest passages, per review feedback "25 is already a lot"]
+ *                 [default 1; try 0.5 to demote related votes, or 0 for core-votes-only]
+ *   ?threshold=N  minimum recomputed score to show a passage [default 6, clamped to the cell's
+ *                 max possible where a judge's votes are pending]
  *   ?solid=N      score at/above which a passage renders Core-style (below: Related-style)
- *                 [default: same as threshold]
+ *                 [default 6, clamped like threshold]
  * Scores are recomputed from each citation's per-model verdicts, so the params compose. */
 function applyPanelThreshold(payload) {
   const params = new URLSearchParams(location.search);
@@ -1511,9 +1518,14 @@ function applyPanelThreshold(payload) {
         p.score = vs.reduce((a, v) => a + (v === 2 ? 2 : v === 1 ? related : 0), 0);
         p.maxScore = 2 * vs.length;
       });
-      const threshold = Number(params.get("threshold") ?? 6);
-      const solid = Number(params.get("solid") ?? 6);
+      const maxCell = Math.max(0, ...cov.passages.map(p => p.maxScore || 0));
+      // default = unanimous-core FOR THIS CELL: 6 with a full 3-judge panel, clamped
+      // down where a judge's votes are still pending so the cell never blanks falsely
+      const threshold = Math.min(Number(params.get("threshold") ?? 6), maxCell || 6);
+      const solid = Math.min(Number(params.get("solid") ?? 6), maxCell || 6);
+      const before = cov.passages.length;
       cov.passages = cov.passages.filter(p => p.score === undefined || p.score >= threshold);
+      cov.panelFiltered = before - cov.passages.length;   // hidden by display threshold, NOT absent
       cov.passages.forEach(p => {
         if (p.score === undefined) return;
         p.adjacent = p.score < solid;

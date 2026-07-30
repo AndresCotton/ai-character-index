@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""Build site/spec-reader-test/data/behaviours.json from panel verdicts.
+"""Build site/llm-panel-review/data/behaviours.json from panel verdicts.
 
 Implements the MVP display rules from panel-config.json `display`:
   - only the listed behaviours appear in the sidebar;
   - each passage gets score = sum over panel models of (core=2, related=1, unrelated=0);
-  - passages with score >= threshold become citations; scores below solid_threshold
-    render as the lighter "Related" style (adjacent: true), at/above it as "Core";
+  - every passage with score >= 1 is emitted as a citation (the page filters at
+    render time via ?threshold= / ?solid= / ?related= URL params, defaults 6/6/1);
   - the citation `role` (shown when the reader clicks "?") lists each model's decision.
 
 Behaviour names/definitions come from data/reader-test-coverage.json exactly as supplied
 (no rewriting). Curated row-level verdict/depth/notes are carried through untouched.
 
-  python3 build_site_data.py [--runlog=path] [--rubric=v3]
+  python3 build_site_data.py --runlog=<runlog> --rubric=v3w --panel=frontier
+  (the shipped data: --runlog=runlog-v3.jsonl from the experiment branch, rubric v3w)
 """
 import collections
 import json
@@ -104,8 +105,17 @@ def main():
                                "slug": b["slug"], "name": b["name"],
                                "definition": b["definition"], "category": b["category"],
                                "coverage": cov})
-    out = {"generatedFrom": [f"engine/panel ({rubric}, panel={sorted(panel)}, "
-                             f"threshold={DISPLAY['threshold']}/{DISPLAY['solid_threshold']})"],
+    from datetime import date
+    seats = sorted({m for b_ in out_behaviours for cov in b_["coverage"].values()
+                    for p in cov["passages"] for m in p.get("verdicts", {})})
+    out = {"generatedFrom": [f"engine/panel/build_site_data.py ({rubric})"],
+           "provenance": {
+               "method": "llm-panel whole-document judging", "rubric": rubric,
+               "panel": ["sol (gpt-5.6-sol)", "fable (claude-fable-5)", "kimi (moonshotai/Kimi-K3)"],
+               "substitution": "opus (claude-opus-4-8) replaces fable on harm-to-third-parties x model-spec (fable output content-filtered, 3 attempts)",
+               "judges_seen_in_data": seats,
+               "runDate": str(date.today()),
+               "scoring": "per passage: sum over judges of core=2/related=1/neither=0; display thresholds are client-side URL params"},
            "behaviours": out_behaviours}
     dest = ROOT / "site" / "llm-panel-review" / "data" / "behaviours.json"
     dest.write_text(json.dumps(out, indent=1, ensure_ascii=False))

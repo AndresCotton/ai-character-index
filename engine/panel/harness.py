@@ -17,7 +17,6 @@ Rubrics: v1 = binary (frozen calibrated baseline), v2 = ternary + Scope clause (
 runlog rows and export provenance hashes key on its exact text), v3 = ternary + explicit
 coverage-report framing + labelled behaviour fields (current; see compose_query).
 
-Aggregate the runlog into per-model columns + 0..N panel vote counts with aggregate.py.
 This realtime path is prefix-cache friendly; the Batch-API path (50% price) is
 batch_panel.py, which reuses the exact prompt builders below.
 """
@@ -256,7 +255,7 @@ def judge(client, model, qblock, batch, reason, rubric="v1"):
         # gpt-5.6 dropped 'minimal' (wants none/low/medium/high/xhigh); gpt-5/-mini use 'minimal'.
         effort = "low" if model.startswith("gpt-5.6") else "minimal"
         kwargs.update(max_completion_tokens=8192, reasoning_effort=effort)
-    elif "fable" in model or "mythos" in model:
+    elif "claude" in model or "mythos" in model:   # anthropic: temperature deprecated
         # Anthropic frontier reasoning models: max_tokens ok, temperature deprecated
         kwargs.update(max_tokens=8192)
     else:

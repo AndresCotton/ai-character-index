@@ -91,7 +91,7 @@ def main():
                     continue
                 rows = [{"behaviour": behaviour, "spec": spec, "model": tag, "locator": loc,
                          "verdict": verdicts.get(i+1, 0), "relevant": int(verdicts.get(i+1, 0) == 2),
-                         "parsed": True, "rubric": rubric,
+                         "parsed": (i + 1) in verdicts, "rubric": rubric,
                          "via": "wholedoc-sparse" if sparse else "wholedoc"}
                         for i, (loc, _, _) in enumerate(ps)]
                 with RUNLOG.open("a") as f:
