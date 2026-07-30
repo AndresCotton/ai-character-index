@@ -1511,9 +1511,8 @@ function applyPanelThreshold(payload) {
         p.score = vs.reduce((a, v) => a + (v === 2 ? 2 : v === 1 ? related : 0), 0);
         p.maxScore = 2 * vs.length;
       });
-      const maxAny = Math.max(0, ...cov.passages.map(p => p.maxScore || 0));
-      const threshold = Number(params.get("threshold") ?? maxAny);
-      const solid = Number(params.get("solid") ?? threshold);
+      const threshold = Number(params.get("threshold") ?? 6);
+      const solid = Number(params.get("solid") ?? 6);
       cov.passages = cov.passages.filter(p => p.score === undefined || p.score >= threshold);
       cov.passages.forEach(p => {
         if (p.score === undefined) return;
