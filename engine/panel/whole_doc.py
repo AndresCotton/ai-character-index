@@ -29,6 +29,16 @@ SYSTEM_S = SYSTEM_W.replace(OUT_FULL, OUT_SPARSE)
 assert SYSTEM_S != SYSTEM_W, "output-format sentence not found -- check text"
 RUNLOG = HERE / "runlog-v3.jsonl"   # override with --runlog=; resume and append use the SAME file
 
+def judge_kwargs(tag, model, config):
+    """Pure: per-model API params (provider quirks + config output caps)."""
+    cap = config["models"][tag].get("max_output", 32768)
+    if model.startswith("gpt-5"):
+        return {"max_completion_tokens": cap, "reasoning_effort": "low"}
+    if "claude" in model or "mythos" in model:   # anthropic: temperature deprecated
+        return {"max_tokens": cap}
+    return {"max_tokens": cap, "temperature": 0}
+
+
 def main():
     global RUNLOG
     for a in sys.argv:
@@ -56,13 +66,7 @@ def main():
                 sysmsg = (SYSTEM_S if sparse else SYSTEM_W).format(reason="")
                 kwargs = dict(model=model, messages=[{"role": "system", "content": sysmsg},
                                                      {"role": "user", "content": user}])
-                cap = h.CONFIG["models"][tag].get("max_output", 32768)
-                if model.startswith("gpt-5"):
-                    kwargs.update(max_completion_tokens=cap, reasoning_effort="low")
-                elif "claude" in model or "mythos" in model:   # anthropic models: temperature deprecated
-                    kwargs.update(max_tokens=cap)
-                else:
-                    kwargs.update(max_tokens=cap, temperature=0)
+                kwargs.update(judge_kwargs(tag, model, h.CONFIG))
                 t0 = time.perf_counter()
                 r = client.chat.completions.create(timeout=3600, **kwargs)  # K3 needs >SDK default 600s
                 dt = time.perf_counter() - t0

@@ -37,6 +37,16 @@ SLUGS = {"helpfulness": "helpfulness", "third-party-harm": "harm-avoidance-to-th
 SLUGS_EXTRA = {"general-welfare": ["general-welfare-impacts-strict"]}   # one run feeds both general-guidelines rows
 
 
+def keeps_citation(score, n_votes, panel_size):
+    """Pure: stray-vote guard -- scales to panel size so a 1-judge panel is legal."""
+    return score >= 1 and n_votes >= min(2, panel_size)
+
+
+def clean_quote(text):
+    """Pure: strip bold markers -- mid-word bold in spec source breaks anchor matching."""
+    return text.replace("**", "")
+
+
 def main():
     runlog = HERE / "runlog-v3.jsonl"   # same default as whole_doc.py and run_rollout.py
     rubric = CONFIG["rubric"]
@@ -88,8 +98,7 @@ def main():
                 if "kimi" in mv and "kimi-k2" in mv:
                     mv = {m: v for m, v in mv.items() if m != "kimi-k2"}   # k2.6 is kimi's stand-in; k3 wins when present
                 score = sum(mv.values())
-                min_voters = min(2, len(panel))   # stray-vote guard, but a 1-judge panel is legal (itest)
-                if score < 1 or len(mv) < min_voters:   # emit all scored; the page filters by ?threshold=
+                if not keeps_citation(score, len(mv), len(panel)):   # emit all scored; page filters by ?threshold=
                     continue
                 SYM = {2: "\u2713", 1: "~", 0: "\u2717"}
                 WORD = {2: "core", 1: "related", 0: "not relevant"}
@@ -97,7 +106,7 @@ def main():
                                       for m, v in sorted(mv.items(), key=lambda x: -x[1]))
                 cits.append({
                     "id": f"{lab}-{b['slug']}-panel-{len(cits)+1}",
-                    "locator": loc, "quote": text.get(loc, "").replace("**", ""),   # mid-word bold (a source typo) breaks anchor matching
+                    "locator": loc, "quote": clean_quote(text.get(loc, "")),
                     "role": f"Model determined relevance (score {score}/{2*len(mv)}):\n{decisions}",
                     "adjacent": score < DISPLAY["solid_threshold"],
                     "verdicts": dict(sorted(mv.items())), "score": score,

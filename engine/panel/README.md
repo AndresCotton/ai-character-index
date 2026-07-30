@@ -21,6 +21,11 @@ The end-to-end stage-4 procedure (dry run, execution, failure substitutions,
 Gate 4 checks) is `.claude/skills/4-sweep-spec-coverage/SKILL.md`. This README
 covers only the mechanics of the individual scripts.
 
+## Tests
+`python3 engine/panel/test_panel.py` -- unit tests for the pure logic (verdict
+parsing, resume planning, cost estimate, per-model API params, builder guards),
+no network or keys, sub-second. Each test class names the shipped bug it guards.
+
 ## Reproducing the shipped data
 1. Verdicts: `python3 whole_doc.py <behaviour> <spec> sol,fable,kimi` per cell
    (runlog is append-only + resume-safe; rerunning skips banked cells).

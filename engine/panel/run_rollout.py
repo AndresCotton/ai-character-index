@@ -35,6 +35,25 @@ PANEL = CONFIG["panels"]["frontier_primary"]   # primaries only; substitutes run
 EST = {"sol": 0.55, "fable": 1.60, "kimi": 1.20, "opus": 0.60, "kimi-k2": 0.35}  # $ per (behaviour, both specs)
 
 
+def build_plan(behaviours, specs, panel, done, first_loc):
+    """Pure: which cells to run vs which the runlog already covers."""
+    plan, skipped = [], []
+    for beh in behaviours:
+        for spec in specs:
+            for tag in panel:
+                cell = (beh, spec, tag)
+                if (beh, spec, tag, first_loc[spec]) in done:
+                    skipped.append(cell)
+                else:
+                    plan.append(cell)
+    return plan, skipped
+
+
+def estimate(plan, n_specs):
+    """Pure: dollar estimate for a plan; unpriced tags assume cheap."""
+    return sum(EST.get(t, 0.10) / n_specs for _, _, t in plan)
+
+
 def main():
     panel_name = "frontier"
     go = "--go" in sys.argv
@@ -64,16 +83,8 @@ def main():
     done = h.done_keys(CONFIG["rubric"])
     first_loc = {s: h.passages(s)[0][0] for s in CONFIG["specs"]}
 
-    plan, skipped = [], []
-    for beh in behaviours:
-        for spec in CONFIG["specs"]:
-            for tag in PANEL:
-                cell = (beh, spec, tag)
-                if (beh, spec, tag, first_loc[spec]) in done:
-                    skipped.append(cell)
-                else:
-                    plan.append(cell)
-    est = sum(EST.get(t, 0.10) / len(CONFIG["specs"]) for _, _, t in plan)   # unpriced tags: assume cheap
+    plan, skipped = build_plan(behaviours, CONFIG["specs"], PANEL, done, first_loc)
+    est = estimate(plan, len(CONFIG["specs"]))
     print(f"plan: {len(plan)} calls ({len(skipped)} cells resumed), estimated ${est:.0f}-{est*1.5:.0f}")
     for beh, spec, tag in plan:
         print(f"  whole_doc.py {beh} {spec} {tag}")
