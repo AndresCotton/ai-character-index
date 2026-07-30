@@ -47,6 +47,15 @@ def clean_quote(text):
     return text.replace("**", "")
 
 
+def citation_quote(text):
+    """Pure: (quote, is_example_block). Fenced example blocks render as code the
+    matcher cannot see, so -- like the curated data -- the quote is the caption
+    line before the fence and the exampleBlock flag extends the highlight."""
+    if "~~~" in text:
+        return clean_quote(text.split("~~~")[0].strip()), True
+    return clean_quote(text), False
+
+
 def main():
     runlog = HERE / "runlog-v3.jsonl"   # same default as whole_doc.py and run_rollout.py
     rubric = CONFIG["rubric"]
@@ -104,9 +113,10 @@ def main():
                 WORD = {2: "core", 1: "related", 0: "not relevant"}
                 decisions = "\n".join(f"{SYM[v]} {MODEL_LABEL.get(m, m)} \u2014 {WORD[v]}"
                                       for m, v in sorted(mv.items(), key=lambda x: -x[1]))
+                quote, is_example = citation_quote(text.get(loc, ""))
                 cits.append({
                     "id": f"{lab}-{b['slug']}-panel-{len(cits)+1}",
-                    "locator": loc, "quote": clean_quote(text.get(loc, "")),
+                    "locator": loc, "quote": quote, "exampleBlock": is_example,
                     "role": f"Model determined relevance (score {score}/{2*len(mv)}):\n{decisions}",
                     "adjacent": score < DISPLAY["solid_threshold"],
                     "verdicts": dict(sorted(mv.items())), "score": score,

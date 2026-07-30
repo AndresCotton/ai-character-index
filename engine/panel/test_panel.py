@@ -160,5 +160,21 @@ class TestCleanQuote(unittest.TestCase):
                          "Information and educational content: x")
 
 
+class TestCitationQuote(unittest.TestCase):
+    """Guards the 20-anchor demo failure: fenced examples render as code the
+    matcher cannot see; quote must be the caption line + exampleBlock flag."""
+
+    def test_example_block_quotes_caption_only(self):
+        t = "**Example**: shoplifting deterrence tips ~~~xml <user> x </user> ~~~"
+        q, ex = bs.citation_quote(t)
+        self.assertEqual(q, "Example: shoplifting deterrence tips")
+        self.assertTrue(ex)
+
+    def test_plain_passage_unchanged(self):
+        q, ex = bs.citation_quote("An ordinary paragraph.")
+        self.assertEqual(q, "An ordinary paragraph.")
+        self.assertFalse(ex)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
