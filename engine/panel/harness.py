@@ -17,8 +17,6 @@ Rubrics: v1 = binary (frozen calibrated baseline), v2 = ternary + Scope clause (
 runlog rows and export provenance hashes key on its exact text), v3 = ternary + explicit
 coverage-report framing + labelled behaviour fields (current; see compose_query).
 
-This realtime path is prefix-cache friendly; the Batch-API path (50% price) is
-batch_panel.py, which reuses the exact prompt builders below.
 """
 import json
 import os

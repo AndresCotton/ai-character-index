@@ -12,7 +12,6 @@ environment or a gitignored `.env` in this directory.
 - `whole_doc.py` -- whole-document judging (entire spec in one prompt, all verdicts
   in one response; rubric tag `v3w`). This mode produced the shipped data, winning
   an empirical dense-vs-sparse comparison.
-- `batch_panel.py` -- provider Batch-API path (OpenAI + Anthropic) for the batched mode.
 - `select_strata.py` + `smoke-*.txt` -- stratified validation sample (pinned).
 - `build_site_data.py` -- runlog -> `site/llm-panel-review/data/behaviours.json`.
 
