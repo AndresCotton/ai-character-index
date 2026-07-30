@@ -56,12 +56,13 @@ def main():
                 sysmsg = (SYSTEM_S if sparse else SYSTEM_W).format(reason="")
                 kwargs = dict(model=model, messages=[{"role": "system", "content": sysmsg},
                                                      {"role": "user", "content": user}])
+                cap = h.CONFIG["models"][tag].get("max_output", 32768)
                 if model.startswith("gpt-5"):
-                    kwargs.update(max_completion_tokens=32768, reasoning_effort="low")
+                    kwargs.update(max_completion_tokens=cap, reasoning_effort="low")
                 elif "claude" in model or "mythos" in model:   # anthropic models: temperature deprecated
-                    kwargs.update(max_tokens=32768)
+                    kwargs.update(max_tokens=cap)
                 else:
-                    kwargs.update(max_tokens=65536, temperature=0)   # kimi reasons in-content
+                    kwargs.update(max_tokens=cap, temperature=0)
                 t0 = time.perf_counter()
                 r = client.chat.completions.create(timeout=3600, **kwargs)  # K3 needs >SDK default 600s
                 dt = time.perf_counter() - t0

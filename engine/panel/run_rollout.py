@@ -4,7 +4,7 @@
 DRY-RUN BY DEFAULT: prints the exact call plan, what resume will skip, and a cost
 estimate. Nothing is sent to any API unless --go is passed.
 
-  python3 run_rollout.py [--go] [--runlog=path] [--behaviours=key,key]
+  python3 run_rollout.py [--go] [--runlog=path] [--behaviours=key,key] [--panel=name]
 
 Judging is whole-document mode (whole_doc.py), resume-safe: rerunning after a crash
 or provider failure only executes missing cells. Known provider quirks and their
@@ -28,7 +28,7 @@ CONFIG = json.loads((HERE / "panel-config.json").read_text())
 # undermine-oversight), which were the rubric-development vehicles, not index rows.
 ROLLOUT = ["helpfulness", "harmlessness-to-user", "third-party-harm", "proportionate-risk",
            "tradeoffs", "over-under-caution", "objectivity", "user-autonomy", "general-welfare"]
-PANEL = CONFIG["panels"]["frontier_primary"]   # primaries only; substitutes run manually (Skill 4)
+PANEL = CONFIG["panels"]["frontier_primary"]   # primaries only; substitutes run manually (Skill 4); --panel= overrides
 # measured on the first three behaviours (whole-doc mode); the x1.5 band in the
 # printout covers retries and long-output cells. Substitutes included so editing
 # PANEL never KeyErrors the dry run.
@@ -36,6 +36,7 @@ EST = {"sol": 0.55, "fable": 1.60, "kimi": 1.20, "opus": 0.60, "kimi-k2": 0.35} 
 
 
 def main():
+    panel_name = "frontier"
     go = "--go" in sys.argv
     runlog = HERE / "runlog-v3.jsonl"   # the SAME file whole_doc.py appends to
     behaviours = ROLLOUT
@@ -44,6 +45,11 @@ def main():
             runlog = Path(a.split("=", 1)[1])
         elif a.startswith("--behaviours="):
             behaviours = a.split("=", 1)[1].split(",")
+        elif a.startswith("--panel="):
+            panel_name = a.split("=", 1)[1]
+            if panel_name not in CONFIG["panels"]:
+                sys.exit(f"unknown panel {panel_name!r} -- panels: {[k for k in CONFIG['panels'] if not k.startswith('_')]}")
+            globals()["PANEL"] = CONFIG["panels"][panel_name]
         elif a != "--go":
             sys.exit(f"unknown argument {a!r} -- valid: --go --runlog= --behaviours=")
     known = {k for k, v in json.loads((HERE / "behaviours.json").read_text()).items()
@@ -67,7 +73,7 @@ def main():
                     skipped.append(cell)
                 else:
                     plan.append(cell)
-    est = sum(EST[t] / len(CONFIG["specs"]) for _, _, t in plan)
+    est = sum(EST.get(t, 0.10) / len(CONFIG["specs"]) for _, _, t in plan)   # unpriced tags: assume cheap
     print(f"plan: {len(plan)} calls ({len(skipped)} cells resumed), estimated ${est:.0f}-{est*1.5:.0f}")
     for beh, spec, tag in plan:
         print(f"  whole_doc.py {beh} {spec} {tag}")
@@ -99,7 +105,7 @@ def main():
             print(f"  retry: whole_doc.py {b} {sp} {t} --runlog={runlog}{alt}")
     else:
         print(f"\nCOMPLETE -- every cell banked. Next: python3 build_site_data.py "
-              f"--runlog={runlog} --rubric={CONFIG['rubric']} --panel=frontier")
+              f"--runlog={runlog} --rubric={CONFIG['rubric']} --panel={panel_name}")
 
 
 if __name__ == "__main__":

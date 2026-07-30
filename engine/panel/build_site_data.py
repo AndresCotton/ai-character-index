@@ -25,7 +25,7 @@ CONFIG = json.loads((HERE / "panel-config.json").read_text())
 DISPLAY = CONFIG["display"]
 LAB = {"constitution": "anthropic", "model-spec": "openai"}
 VERDICT_WORD = {2: "core", 1: "related", 0: "unrelated"}
-MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3", "kimi-k2": "Kimi-K2.6", "opus": "Claude Opus 4.8",
+MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3", "kimi-k2": "Kimi-K2.6", "qwen-big": "Qwen3-235B", "opus": "Claude Opus 4.8",
                "gpt-mini": "GPT-5 mini", "haiku": "Claude Haiku 4.5", "qwen-small": "Qwen3-32B"}
 # panel behaviour keys -> site slugs
 SLUGS = {"helpfulness": "helpfulness", "third-party-harm": "harm-avoidance-to-third-parties",
@@ -88,7 +88,8 @@ def main():
                 if "kimi" in mv and "kimi-k2" in mv:
                     mv = {m: v for m, v in mv.items() if m != "kimi-k2"}   # k2.6 is kimi's stand-in; k3 wins when present
                 score = sum(mv.values())
-                if score < 1 or len(mv) < 2:   # emit all scored; the page filters by ?threshold=
+                min_voters = min(2, len(panel))   # stray-vote guard, but a 1-judge panel is legal (itest)
+                if score < 1 or len(mv) < min_voters:   # emit all scored; the page filters by ?threshold=
                     continue
                 SYM = {2: "\u2713", 1: "~", 0: "\u2717"}
                 WORD = {2: "core", 1: "related", 0: "not relevant"}
