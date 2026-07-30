@@ -64,9 +64,9 @@ pipeline without ever touching an eval.
 above all -- **reproducible and well-documented** spec-coverage process: the same
 behaviour run against the same specs should always yield the same coverage
 assessment, and every step should be documented well enough that someone else can
-re-run it and reproduce the result. The biggest gap today is the **term sweep**,
-which is still done entirely by hand (§3 explains it) -- turning it into a
-script-driven, reproducible step is the **headline TODO** (§7). This is about
+re-run it and reproduce the result. The former biggest gap -- a term sweep done
+entirely by hand -- was closed in July 2026 when step 2 became the LLM panel
+(§3 explains the method; §7 records the resolution). This is about
 cleaner process and code, not new features.
 
 **This collaboration could be expanded** into building better tooling for
@@ -83,7 +83,7 @@ This is the heart of the job. Each step names the file(s) it touches.
         │
         │  Skill 4  +  specs/CITATION.md  +  engine/spec-cite/cite.py
         ▼
- (2) EXTRACT PASSAGES       specs/*  (ground truth)  →  term sweep, read, cite
+ (2) SCORE PASSAGES         specs/*  (ground truth)  →  LLM panel, cite, author verdict
         │                   research/spec-coverage-depth-rubric.md  (score depth 0-4)
         ▼
  (3) STAGE-4 ARTIFACT       research/sweeps/NN-<slug>/4-spec-coverage.md
@@ -112,11 +112,11 @@ This is the heart of the job. Each step names the file(s) it touches.
    frontier LLMs** (2 core / 1 related / 0 neither per judge; a passage's score
    is the sum, max 6). The pipeline lives in `engine/panel/` and is run per
    behaviour with a dry-run-first driver; each kept passage carries a **locator**
-   that pins the spec version and section, an exact quote produced by
-   `engine/spec-cite/cite.py`, and every judge's named verdict. The procedure is
+   that pins the spec version and section, a quote produced by
+   `engine/spec-cite/cite.py` (never typed by hand), and every judge's named verdict. The procedure is
    `Skill 4`; locator rules are `specs/CITATION.md`. Each spec then gets a
    **verdict** (covered / partial / not-in-spec) and a **depth 0-4** scored
-   against `research/spec-coverage-depth-rubric.md` -- these remain authored
+   against `methodology/spec-coverage-depth-rubric.md` -- these remain authored
    judgments, made from the panel's citation set.
    *This replaced the manual term sweep in July 2026 -- see "From term sweep to
    panel" below for what changed and why.*
@@ -162,8 +162,9 @@ reproducible -- re-running the sweep was a fresh manual pass, not a command.
 
 Step 2 is now the **LLM panel** (`engine/panel/`): every passage of both specs is
 graded against the behaviour's definition by three frontier models, so nothing
-depends on term choice and a re-run against the same spec version reproduces the
-same verdicts. What was judgement in the old sweep (which words to probe) is now
+depends on term choice, and a re-run against the same spec version is a single
+logged command whose per-judge verdicts can be compared cell by cell (the judges
+themselves are not bit-deterministic). What was judgement in the old sweep (which words to probe) is now
 judgement in the behaviour's definition fields (`behaviours.json`: definition,
 optional clarifications and scope); what was manual mechanics is now a script
 with an append-only run log and resume. Provider failures are caught, named, and
@@ -317,8 +318,10 @@ secondary observations.
   further: step 2 no longer uses search terms at all. Every passage of both specs
   is scored against the behaviour definition by a three-judge frontier panel
   (`engine/panel/`), with a dry-run-first driver, an append-only run log, resume,
-  and provenance in the published data. Re-running a behaviour against the same
-  spec version reproduces its verdicts, which was the point of the TODO. `Skill 4`
+  and provenance in the published data. Re-running a behaviour is now a single
+  logged, resumable command with every verdict banked per judge -- the
+  reproducibility the TODO asked for, with judge stability left as an empirical
+  check rather than a guarantee. `Skill 4`
   documents the procedure; the site consumes the scores in
   `site/llm-panel-review/`.
 - **CI is empty.** `.github/workflows/` has no workflows, and `data/schema/`
@@ -342,9 +345,8 @@ secondary observations.
   `verify-spec-reader.mjs`. The sentence splitter, block segmenter, and locator
   parser are the trickiest code in the repo and would benefit from direct tests.
 
-The headline TODO is agreed and greenlit -- start there. Treat the rest as
-observations, not a backlog; confirm the direction with Andrés before large
-refactors. The whole point is *cleaner, reproducible* structure, so leave each
+The headline TODO above is done. Treat the rest as observations, not a
+backlog; confirm the direction with Andrés before large refactors. The whole point is *cleaner, reproducible* structure, so leave each
 file at least as legible as you found it.
 
 ---
