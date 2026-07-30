@@ -38,7 +38,7 @@ SLUGS_EXTRA = {"general-welfare": ["general-welfare-impacts-strict"]}   # one ru
 
 
 def main():
-    runlog = HERE / "runlog.jsonl"
+    runlog = HERE / "runlog-v3.jsonl"   # same default as whole_doc.py and run_rollout.py
     rubric = CONFIG["rubric"]
     for a in sys.argv[1:]:
         if a.startswith("--runlog="):
