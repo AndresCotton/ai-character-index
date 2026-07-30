@@ -20,7 +20,7 @@ when you reach its stage -- this file only sequences them.
 | 1 | `1-sweep-discover` | `register.md`, `1-dossiers.md` | G1: evidence base is real and complete |
 | 2 | `2-sweep-curate` | `2-curation.md`, dispositions final | G2: curation is legible; the human owns the set |
 | 3 | `3-sweep-score` | `3-scores.md` | G3: scores are auditable |
-| 4 | `4-sweep-spec-coverage` | `4-spec-coverage.md` | G4: quotes are mechanical, not remembered |
+| 4 | `4-sweep-spec-coverage` | `4-spec-coverage.md` | G4: verdicts are mechanical, not remembered |
 | 5 | `5-sweep-publish` | three internal surfaces + `research/sweeps/NN-<slug>.md` | G5: internal publication faithful to the artifacts |
 | 6 | `6-sweep-verify` | `verify.md` | G6: sweep complete (fresh-context audit) -> public site deploy |
 
