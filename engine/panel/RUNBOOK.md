@@ -1,7 +1,7 @@
 # Runbook: producing panel coverage data
 
 How to score behaviours against the specs with the LLM panel, from a standing start.
-An L4 engineer with repo access and API keys should be able to follow this end to end.
+Anyone with repo access and API keys can follow this end to end; no prior context on the pipeline is assumed.
 
 ## One-time setup
 1. Put API keys in `engine/panel/.env` (gitignored). The variable names are listed in
