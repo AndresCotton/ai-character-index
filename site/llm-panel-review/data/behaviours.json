@@ -5,6 +5,7 @@
  "provenance": {
   "method": "llm-panel whole-document judging",
   "rubric": "v3w",
+  "panel_config": "frontier",
   "panel": [
    "sol (gpt-5.6-sol)",
    "fable (claude-fable-5)",
