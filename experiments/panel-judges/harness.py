@@ -150,6 +150,17 @@ def env(name):
     return v
 
 
+def resolve(tag):
+    """(provider, model_id): the native route from panel-config, falling back to that model's
+    `openrouter` mirror when its own key is missing and we hold an OpenRouter one."""
+    m = CONFIG["models"][tag]
+    keyname, mirror = PROVIDERS[m["provider"]][1], m.get("openrouter")
+    if not env(keyname) and mirror and env(PROVIDERS["openrouter"][1]):
+        print(f"note: no {keyname} -- routing {tag} via openrouter", file=sys.stderr)
+        return "openrouter", mirror["id"]
+    return m["provider"], m["id"]
+
+
 def client_for(provider):
     base, keyname = PROVIDERS[provider]
     key = env(keyname)
@@ -251,12 +262,13 @@ def judge(client, model, qblock, batch, reason, rubric="v1"):
         model=model,
         messages=[{"role": "system", "content": sysmsg},
                   {"role": "user", "content": user_msg(qblock, batch)}])
-    if model.startswith("gpt-5"):
+    bare = model.rsplit("/", 1)[-1]   # drop any OpenRouter vendor prefix before the quirk checks
+    if bare.startswith("gpt-5"):
         # OpenAI reasoning models: no max_tokens / no temperature; keep reasoning cheap.
         # gpt-5.6 dropped 'minimal' (wants none/low/medium/high/xhigh); gpt-5/-mini use 'minimal'.
-        effort = "low" if model.startswith("gpt-5.6") else "minimal"
+        effort = "low" if bare.startswith("gpt-5.6") else "minimal"
         kwargs.update(max_completion_tokens=8192, reasoning_effort=effort)
-    elif "fable" in model or "mythos" in model:
+    elif "fable" in bare or "mythos" in bare:
         # Anthropic frontier reasoning models: max_tokens ok, temperature deprecated
         kwargs.update(max_tokens=8192)
     else:
@@ -285,7 +297,7 @@ def run(behaviour, spec, tags, reason, limit=None, only=None, batch_size=BATCH,
         ps = ps[:limit]   # smoke test: judge only the first `limit` passages
     done = done_keys(rubric)
     for tag in tags:
-        provider, model = MODELS[tag]
+        provider, model = resolve(tag)   # native route by default; openrouter only as fallback
         client = client_for(provider)
         todo = [p for p in ps if (behaviour, spec, tag, p[0]) not in done]
         print(f"{tag} ({provider}:{model}): {len(todo)}/{len(ps)} passages to judge", file=sys.stderr)

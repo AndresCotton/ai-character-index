@@ -50,7 +50,7 @@ def key_env(provider):
 
 
 def request_bodies(behaviour, spec, tag, rubric, done):
-    provider, model = h.MODELS[tag]
+    provider, model = h.resolve(tag)
     qblock = h.compose_query(behaviour, rubric)   # same builders as realtime -- byte-identical
     sysmsg = h.SYSTEMS[rubric].format(reason="")
     ps = [p for p in h.passages(spec) if (behaviour, spec, tag, p[0]) not in done]
@@ -69,7 +69,7 @@ def submit(behaviours, specs, tags, rubric):
     state = load_state()
     done = h.done_keys(rubric)
     for tag in tags:
-        provider = h.MODELS[tag][0]
+        provider = h.resolve(tag)[0]   # openrouter-resolved tags have no batch path (below)
         reqs, locmap = [], {}
         for behaviour in behaviours:
             for spec in specs:

@@ -13,10 +13,18 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 
-PRICES = {   # $ per 1M tokens (input, output) -- loaded from panel-config.json
-    m["id"]: tuple(m["price_per_mtok"])
-    for m in __import__("json").loads((HERE / "panel-config.json").read_text())["models"].values()
-}
+def _prices():
+    """$ per 1M tokens by model_id -- native and OpenRouter-mirror ids, since metrics.jsonl
+    records whichever route actually ran."""
+    out = {}
+    for m in json.loads((HERE / "panel-config.json").read_text())["models"].values():
+        out[m["id"]] = tuple(m["price_per_mtok"])
+        if "openrouter" in m:
+            out[m["openrouter"]["id"]] = tuple(m["openrouter"]["price_per_mtok"])
+    return out
+
+
+PRICES = _prices()
 
 
 def main():
