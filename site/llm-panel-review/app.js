@@ -49,6 +49,8 @@ function behaviourTexture(behaviour) {
 
 const state = {
   payload: null,
+  rawBehaviours: null,   // unfiltered panel data; the tier slider re-filters from this
+  tier: null,            // "defining" | "core" | "adjacent"; null = legacy ?threshold=/?solid= mode
   selectedSlugs: [],
   selectedSpec: "anthropic",
   comparing: false,
@@ -81,7 +83,15 @@ const elements = {
   sidebarResizer: document.querySelector("#sidebar-resizer"),
   sourceLink: document.querySelector("#source-link"),
   template: document.querySelector("#document-template"),
+  tierLabel: document.querySelector("#tier-label"),
+  tierSlider: document.querySelector("#tier-slider"),
 };
+
+/* Display tiers for panel-scored passages, coarsest first. Per cell with j judges:
+ * defining shows score >= 2j+1 (a "3" vote must be present -- on 3-point data this
+ * clamps to unanimous core), core adds score >= j+1, adjacent shows every citation. */
+const TIERS = ["defining", "core", "adjacent"];
+const TIER_LABEL = { defining: "Defining", core: "+ Core", adjacent: "+ Adjacent" };
 
 const initialParams = new URLSearchParams(location.search);
 state.embedded = initialParams.get("embedded") === "1";
@@ -115,6 +125,11 @@ function syncURL() {
   params.set("spec", state.selectedSpec);
   if (state.comparing) params.set("compare", "1");
   else params.delete("compare");
+  if (state.tier) {
+    params.set("tier", state.tier);
+    params.delete("threshold");   // the slider supersedes the legacy score params
+    params.delete("solid");
+  }
   if (state.embedded) params.set("embedded", "1");
   else params.delete("embedded");
   history.replaceState(null, "", `${location.pathname}?${params}${location.hash}`);
@@ -1527,10 +1542,18 @@ function applyPanelThreshold(payload) {
         p.maxScore = maxVerdict * vs.length;
       });
       const maxCell = Math.max(0, ...cov.passages.map(p => p.maxScore || 0));
+      // Tier mode (the slider): per-cell cuts derived from the judge count, so the same
+      // position means the same thing on 3-point and 4-point cells alike.
+      const judges = Math.max(1, ...cov.passages.map(p => p.verdicts ? Object.values(p.verdicts).length : 0));
+      const tierCut = { defining: 2 * judges + 1, core: judges + 1, adjacent: 1 };
       // default = unanimous-core FOR THIS CELL: 6 with a full 3-judge panel, clamped
       // down where a judge's votes are still pending so the cell never blanks falsely
-      const threshold = Math.min(Number(params.get("threshold") ?? 6), maxCell || 6);
-      const solid = Math.min(Number(params.get("solid") ?? 6), maxCell || 6);
+      const threshold = state.tier
+        ? Math.min(tierCut[state.tier], maxCell || 6)
+        : Math.min(Number(params.get("threshold") ?? 6), maxCell || 6);
+      const solid = state.tier
+        ? Math.min(tierCut.defining, maxCell || 6)
+        : Math.min(Number(params.get("solid") ?? 6), maxCell || 6);
       const before = cov.passages.length;
       cov.passages = cov.passages.filter(p => p.score === undefined || p.score >= threshold);
       cov.panelFiltered = before - cov.passages.length;   // hidden by display threshold, NOT absent
@@ -1546,6 +1569,32 @@ function applyPanelThreshold(payload) {
   return payload;
 }
 
+function syncTierControl() {
+  if (!elements.tierSlider) return;
+  let shown = state.tier;
+  if (!shown) {   // legacy ?threshold= mode: position the slider by the nearest tier
+    const t = Number(initialParams.get("threshold") ?? 6);
+    shown = t >= 6 ? "defining" : t >= 4 ? "core" : "adjacent";
+  }
+  elements.tierSlider.value = String(Math.max(0, TIERS.indexOf(shown)));
+  elements.tierLabel.textContent = TIER_LABEL[shown];
+}
+
+function setTier(tier) {
+  if (!state.rawBehaviours) return;   // data not loaded yet
+  state.tier = tier;
+  syncTierControl();
+  state.payload.behaviours =
+    applyPanelThreshold({ behaviours: structuredClone(state.rawBehaviours) }).behaviours;
+  updateFindingBar();
+  syncURL();
+  rebuildReader();
+}
+
+elements.tierSlider?.addEventListener("input", () => {
+  setTier(TIERS[Number(elements.tierSlider.value)] ?? "defining");
+});
+
 async function loadJSON(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
@@ -1559,10 +1608,16 @@ async function initialize() {
       loadJSON(DOCUMENTS_URL),
       loadJSON(BEHAVIOURS_URL),
     ]);
-    state.payload = applyPanelThreshold({
+    state.rawBehaviours = behaviours.behaviours || [];
+    const requestedTier = initialParams.get("tier");
+    if (TIERS.includes(requestedTier)) state.tier = requestedTier;
+    else if (!initialParams.has("threshold") && !initialParams.has("solid")) state.tier = "defining";
+    // else: explicit legacy score params stay in charge until the slider is first moved
+    syncTierControl();
+    state.payload = {
       documents: documents.documents,
-      behaviours: behaviours.behaviours || [],
-    });
+      behaviours: applyPanelThreshold({ behaviours: structuredClone(state.rawBehaviours) }).behaviours,
+    };
     const bench = state.payload.behaviours;
     state.documentFocus = { anthropic: bench.length > 0, openai: bench.length > 0 };
     const params = initialParams;

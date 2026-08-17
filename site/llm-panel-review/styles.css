@@ -493,6 +493,31 @@ body.resizing-columns {
 .spec-option.active { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px var(--shadow); }
 
 .view-actions { display: flex; align-items: center; gap: 7px; }
+.tier-control {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.tier-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  min-width: 62px;
+}
+.tier-control input[type="range"] {
+  width: 74px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.tier-control:hover { border-color: var(--muted); }
 .compare-toggle, .source-link {
   min-height: 34px;
   padding: 8px 12px;

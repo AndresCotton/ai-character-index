@@ -84,6 +84,18 @@
         </div>
 
         <div class="view-actions">
+          <label class="tier-control" title="Which panel tiers to show">
+            <span id="tier-label" class="tier-label">Defining</span>
+            <input
+              id="tier-slider"
+              type="range"
+              min="0"
+              max="2"
+              step="1"
+              value="0"
+              aria-label="Passage tiers shown: defining only, plus core, or plus adjacent"
+            />
+          </label>
           <button id="compare-toggle" class="compare-toggle" type="button" aria-pressed="false">
             <span class="split-icon" aria-hidden="true"></span>
             Compare
