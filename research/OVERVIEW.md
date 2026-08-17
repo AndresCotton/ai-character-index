@@ -17,7 +17,7 @@ Defines the behaviours the index measures (`core-behaviour-list.md`), their prov
 | `sweeps/03-action-honesty/` | Stage 4 only, same shape (constitution 3 / model spec 3), Gate 4 signed 2026-07-20 |
 
 ## Relationships
-Sweeps take their behaviour definitions from `research/core-behaviour-list.md` and quotes from the `specs/` mirrors via `specs/CITATION.md` + `engine/spec-cite/cite.py`. The staged procedure lives in `.claude/skills/` (1-discover → 2-curate → 3-score → 4-spec-coverage → 5-publish → 6-verify, plus the `spec-coverage-pass` loop). Stage 5 transcribes approved artifacts to `data/coverage.json` and `data/evals.json` (the 02/03 Gate-4 entries authorized a scoped publish via `engine/publish-coverage.py` ahead of stages 1–3); `site/spec-reader/` and `site/index.html` render that data. `behaviours-for-adria/` is a separate stage-4 batch that explicitly does not feed `research/`, Notion, or `data/coverage.json`.
+Sweeps take their behaviour definitions from `research/core-behaviour-list.md` and quotes from the `specs/` mirrors via `specs/CITATION.md` + `engine/spec-cite/cite.py`. The staged procedure lives in `.claude/skills/` (1-discover → 2-curate → 3-score → 4-spec-coverage → 5-publish → 6-verify, plus the `spec-coverage-pass` loop). Stage 5 transcribes approved artifacts to `data/coverage.json` and `data/evals.json` (the 02/03 Gate-4 entries authorized a scoped publish via `engine/publish-coverage.py` ahead of stages 1–3); `site/spec-reader/` renders `coverage.json` (via `documents.json`). `site/index.html` renders hand-maintained inline data and reads nothing from `data/`; `data/evals.json` is rendered by no surface. `behaviours-for-adria/` is a separate stage-4 batch that explicitly does not feed `research/`, Notion, or `data/coverage.json`.
 
 ## Dependency map
 ```mermaid
@@ -27,12 +27,12 @@ graph LR
   SPECS["specs/ mirrors"] -->|verbatim quotes| SW
   SK[".claude/skills/ stage procedure"] -->|gates govern| SW
   SW -->|stage 5 publish| DATA["data/coverage.json + evals.json"]
-  DATA -->|rendered by| SITE["site/spec-reader + site/index.html"]
+  DATA -->|"coverage.json rendered by"| SITE["site/spec-reader"]
 ```
 
 ## As-is observations
 - The root `README.md` labels the sweep records "evals/" while linking to `research/sweeps/` — a dead label.
-- `sweeps/02-calibration/gates.md`, `sweeps/03-action-honesty/gates.md` and `03-action-honesty/4-spec-coverage.md` cite the rubric at `research/spec-coverage-depth-rubric.md`; the rubric lives at `methodology/spec-coverage-depth-rubric.md`.
+- The two `sweeps/03-action-honesty/` records (`gates.md`, `4-spec-coverage.md`) reference the rubric by its earlier `research/spec-coverage-depth-rubric.md` path, annotated with the current location `methodology/spec-coverage-depth-rubric.md`.
 - Behaviour 1 exists twice: the standalone write-up (`01-no-sycophancy.md`, still the stage-5 content template) and the staged folder `01-no-sycophancy/`, which holds stage-1 artifacts only (Gate 1 unsigned). No `2-curation.md` or `3-scores.md` exists anywhere in `sweeps/`.
 - Only behaviours 1–3 have sweep folders; there is no `04-instruction-hierarchy` although behaviour 4 is Tier 1.
 - `data/coverage.json` covers only behaviours 1–3 (6 rows); `data/evals.json` covers only behaviour 1 (5 curated + 9 rejected, `human_reviewed: false`, sweep date 2026-07-12). The planned `data/behaviours.json` (sourced from `core-behaviour-list.md` per `data/README.md`) does not exist yet.

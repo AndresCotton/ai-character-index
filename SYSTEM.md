@@ -20,7 +20,7 @@ graph TB
   sweeps -->|"stage-4 markdown (regex-scraped)"| pub["engine/publish-coverage.py"]
   cite -->|"quote re-verification"| pub
   pub --> cov["data/coverage.json"]
-  sweeps -->|"stage-5 transcribe"| unused["data/evals.json + labs.json (no code consumers)"]
+  sweeps -->|"stage-5 transcribe"| unused["data/evals.json (no code consumers; nothing reads hand-maintained labs.json either)"]
   panel -->|"runlog-v3.jsonl (gitignored)"| bsd["engine/panel/build_site_data.py"]
   rtc["data/reader-test-coverage.json (hand-transcribed)"] --> bsd
   rtc --> brt["engine/build-reader-test-data.py"]
@@ -31,7 +31,7 @@ graph TB
   bsd --> panelview["site/llm-panel-review/ (unlinked)"]
   adria["behaviours-for-adria/ (reviewer batch)"] -->|"hand transcription"| rtc
   proto["site/index.html (inline hand-maintained data)"]
-  reader & bench & panelview & proto ==>|"deploy.yml, paths site/** only"| cf["Cloudflare Pages"]
+  reader & bench & panelview & proto ==>|"deploy.yml on site/** changes"| cf["Cloudflare Pages"]
   notion["Notion DBs"] -.->|"planned sync -- engine/notion-sync/ is empty"| cov
 ```
 
@@ -44,7 +44,7 @@ graph TB
 | `data/` | Canonical machine-readable data (4 JSON files, empty schema/) | [data/OVERVIEW.md](data/OVERVIEW.md) |
 | `specs/` | Version-pinned lab-spec mirrors + locator grammar | [specs/OVERVIEW.md](specs/OVERVIEW.md) |
 | `research/` | Canonical behaviour list + per-behaviour sweep records | [research/OVERVIEW.md](research/OVERVIEW.md) |
-| `behaviours-for-adria/` | Independent reviewer-batch stage-4 set (feeds only the test bench) | [behaviours-for-adria/OVERVIEW.md](behaviours-for-adria/OVERVIEW.md) |
+| `behaviours-for-adria/` | Independent reviewer-batch stage-4 set (test bench, plus 3 rows feeding the panel surface) | [behaviours-for-adria/OVERVIEW.md](behaviours-for-adria/OVERVIEW.md) |
 | `methodology/` | Depth rubric, public site copy, method-exploration findings | [methodology/OVERVIEW.md](methodology/OVERVIEW.md) |
 | `site/` | Five static surfaces, no build step | [site/OVERVIEW.md](site/OVERVIEW.md) |
 | `.github/` | One deploy workflow + two public intake forms | [.github/OVERVIEW.md](.github/OVERVIEW.md) |
@@ -60,7 +60,7 @@ graph TB
 3. **Behaviour identity** — at least six hand-synced copies: `core-behaviour-list.md` (12), `site/spec-reader/app.js GROUPS` (13), `engine/build-spec-reader-data.py BEHAVIOURS` (3), `engine/panel/behaviours.json`, `panel-config.json`, `.github/ISSUE_TEMPLATE/submit-eval.yml`. Worse, `behaviour_id` is **reused across disjoint numbering spaces**: id 1 = "No sycophancy" in `coverage.json` but "Helpfulness" in `reader-test-coverage.json`.
 4. **Runlog convention** — JSONL rows keyed by rubric version; defaults disagree between `harness.RUNLOG` and the executors; the canonical shipped runlog lives on the unmerged `experiment/panel-judges` branch.
 5. **Site payloads** — `spec-reader/data/documents.json` is shared by all three reader surfaces; panel citations carry `exampleBlock` flags anchoring example blocks.
-6. **Deploy trigger** — `site/**` paths only: data/engine changes are invisible to production until baked into committed payloads.
+6. **Deploy trigger** — pushes to main filtered to `site/**` and `.github/workflows/deploy.yml` (plus manual dispatch): data/engine changes are invisible to production until baked into committed payloads.
 
 ## Cross-cutting as-is risks (synthesized from all overviews)
 
@@ -71,7 +71,7 @@ graph TB
 5. **Hand-maintained surfaces**: `index.html` inline data (diverged from its prototype source) and hand-transcribed `reader-test-coverage.json`.
 6. **Provenance fragility**: behaviour 1's published records are currently unregenerable (missing sweep artifact); shipped panel data's runlog lives on an unmerged branch.
 7. **No Python packaging**: importlib/sys.path wiring, config read at import time, dead code and stale config in the panel modules.
-8. **Orphans and residue**: `llm-panel-review/` unlinked from all navs; 0-byte spec archives; dead rubric path cited by 4 files; `labs.json`/`evals.json` read by nothing.
+8. **Orphans and residue**: `llm-panel-review/` unlinked from all navs; 0-byte spec archives; `labs.json`/`evals.json` read by nothing; sweep records referencing the rubric at a stale path (annotated with its current `methodology/` location).
 
 ## Reading order for a cold-start agent
 

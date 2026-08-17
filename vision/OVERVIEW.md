@@ -25,7 +25,7 @@ graph LR
 
 ## As-is observations
 - The directory contains exactly one file; the filename `features to build.md` has spaces (no hyphens), so references URL-encode it as `features%20to%20build.md`.
-- The vision's own open question about "contradictions" in specs cites arXiv:2510.07686; `PLAN.md` §7 echoes this as explicitly out-of-v0-scope — the tension is unresolved, only parked.
+- The vision's own open question about "contradictions" in specs cites arXiv:2510.07686; the closing paragraph of `PLAN.md` §6 (Build phases) lists it as explicitly out-of-v0-scope — the tension is unresolved, only parked.
 - Several vision items are only partially realized in the current tree: the "submit an eval / appeal" issue forms exist under `.github/ISSUE_TEMPLATE/`, but the Future "backend that auto-scores submissions" and several workflows named in `PLAN.md` (`notion-sync.yml`, `spec-watch.yml`, `ci.yml`) are not present — only `deploy.yml` exists under `.github/workflows/`, and `engine/notion-sync/` is an empty `.gitkeep` placeholder.
 - The vision is dated (references 2026-06 sources and a "month-2 goal") and predates the staged sweep pipeline, the depth rubric, and the reader/test-bench split that now exist; it is not updated to reflect them.
 - The embedded proposal mixes product requirements with pitch content (why-I'm-a-good-fit, advisor, stakeholder questions) that has no downstream technical consumer.

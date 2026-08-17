@@ -8,7 +8,7 @@ In the spirit of AI Lab Watch, with a neutral, METR-like framing. By Andrés Cot
 
 ## How it works (short version)
 
-Notion is where we edit. A sync engine turns Notion changes into a reviewed pull request against `data/` -- merging that PR is the "push to production" step. The public site is a static page rebuilt automatically from `data/` on every merge. A weekly watcher pulls the labs' published specs and flags any coverage claims that need re-verification. Details in [PLAN.md §1](PLAN.md).
+Data changes land through reviewed pull requests against `data/` and `research/` -- merging the PR is the "push to production" act. The public site is static output committed under `site/`, deployed to Cloudflare Pages on merges that touch it; there is no build step. `engine/spec-watch/pull-latest.sh` refreshes the mirrored lab specs (run manually; automatic re-verification of coverage claims after a spec change is planned but not built). System map: [SYSTEM.md](SYSTEM.md); the original design: [PLAN.md §1](PLAN.md).
 
 Evidence enters through **behaviour sweeps**: a staged pipeline with a human sign-off gate between every stage, run one behaviour at a time; a sweep's results reach the public site only after its final verification gate. How to run one: [.claude/skills/README.md](.claude/skills/README.md).
 
@@ -16,19 +16,19 @@ Evidence enters through **behaviour sweeps**: a staged pipeline with a human sig
 
 | Folder | What it holds |
 |---|---|
-| [`research/`](research/) | The intellectual core: the [canonical behaviour list](research/core-behaviour-list.md) (synced with Notion), sweep records in [`evals/`](research/sweeps/), its [sources](research/sources/), superseded drafts in `archive/` |
+| [`research/`](research/) | The intellectual core: the [canonical behaviour list](research/core-behaviour-list.md) (synced with Notion), sweep records in [`sweeps/`](research/sweeps/), its [sources](research/sources/), superseded drafts in `archive/` |
 | [`.claude/skills/`](.claude/skills/) | The behaviour-sweep pipeline: versioned procedure files, one per stage, each ending at a human gate -- [how to run a sweep](.claude/skills/README.md) |
 | [`specs/`](specs/) | Local mirrors of the specs the index scores against (Claude constitution, OpenAI Model Spec) |
-| [`data/`](data/) | Canonical machine-readable data the site renders from; schemas in `data/schema/` |
-| [`engine/`](engine/) | The automation that keeps the index alive: `spec-watch/` (works today), `notion-sync/` (Phase 3) |
-| [`site/`](site/) | The public static site (Phase 1) |
+| [`data/`](data/) | Canonical machine-readable data the site renders from (see [`data/README.md`](data/README.md); `data/schema/` is a placeholder) |
+| [`engine/`](engine/) | The automation: `spec-cite/` (citation resolver), `panel/` (LLM panel judging), coverage/payload builders, site verifiers, `spec-watch/` (manual pulls); `notion-sync/` is a placeholder. See [`engine/README.md`](engine/README.md) |
+| [`site/`](site/) | The public static site |
 | [`design/`](design/) | Aesthetics discussion: typography, palette, reference sites |
-| `outreach/` | Communication strategy and interview guides (internal, not published) |
+| `outreach/` | Communication strategy and interview guides (internal, not published; gitignored, so it exists only in local clones) |
 | [`vision/`](vision/) | The original vision documents, including [features to build](vision/features%20to%20build.md) |
 
 ## Contributing
 
-Two channels (live once the repo is on GitHub; also linked from the site when it launches):
+Two channels (the repo is on GitHub and the issue forms are live; also linked from the site):
 
 - **Submit an eval** you think the index should track → "Submit an eval" issue form.
 - **Think we made a mistake?** → "Appeal a score" issue form. Appeals and their resolutions are public.

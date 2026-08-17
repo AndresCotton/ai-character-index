@@ -1,4 +1,4 @@
-# behaviours-for-adria/ — an external reviewer's ten-behaviour set, swept for spec coverage and published only to the reader test bench
+# behaviours-for-adria/ — an external reviewer's ten-behaviour set, swept for spec coverage; published to the reader test bench, with three rows also feeding the panel-review surface
 
 > As-is snapshot of origin/main @ 31fddca (2026-08-17). Describes what exists now, not what should exist.
 
@@ -15,7 +15,7 @@ Holds stage-4 (spec-coverage) sweep artifacts for ten behaviours supplied by an 
 | `general-guidelines/02-general-welfare-impacts-strict/` | Strict reading of the same supplied definition (keeps a passage only where both specs state the same rule) — 38 locators, covered/4 on both specs; the two rows are kept side by side as an editorial decision |
 
 ## Relationships
-These behaviours are NOT the numbered Tier-1 rows in `research/core-behaviour-list.md` (they were supplied by name + one-line definition, no pre-registered facets). They were produced with the `.claude/skills/4-sweep-spec-coverage` skill and cite `specs/` mirrors via `specs/CITATION.md` + `engine/spec-cite/cite.py`, depth-scored against `methodology/spec-coverage-depth-rubric.md`. The publish route is one hop each way: `**/4-spec-coverage.md` → `data/reader-test-coverage.json` (the ledger) → `engine/build-reader-test-data.py` → `site/spec-reader-test/data/behaviours.json`. Nothing here reaches Notion, `data/coverage.json`, `research/core-behaviour-list.md`, or the published `site/spec-reader/`. Verification uses `engine/verify-reader-test.mjs`.
+These behaviours are NOT the numbered Tier-1 rows in `research/core-behaviour-list.md` (they were supplied by name + one-line definition, no pre-registered facets). They were produced with the `.claude/skills/4-sweep-spec-coverage` skill and cite `specs/` mirrors via `specs/CITATION.md` + `engine/spec-cite/cite.py`, depth-scored against `methodology/spec-coverage-depth-rubric.md`. Publish routes: `**/4-spec-coverage.md` → `data/reader-test-coverage.json` (the ledger) → `engine/build-reader-test-data.py` → `site/spec-reader-test/data/behaviours.json`; and — for three of the ten rows (`helpfulness`, `harm-avoidance-to-third-parties`, `avoiding-over-and-under-caution`, per `panel-config.json` `display.behaviours`) — the same ledger is read by `engine/panel/build_site_data.py`, which carries their curated verdict/depth/notes through untouched into `site/llm-panel-review/data/behaviours.json`. Nothing here reaches Notion, `data/coverage.json`, `research/core-behaviour-list.md`, or the published `site/spec-reader/`. Verification uses `engine/verify-reader-test.mjs`.
 
 ## Dependency map
 ```mermaid
@@ -23,6 +23,7 @@ graph LR
   SWEEP["*/4-spec-coverage.md"] -->|transcribed unchanged| LEDGER["data/reader-test-coverage.json"]
   LEDGER -->|engine/build-reader-test-data.py| BENCH["site/spec-reader-test/data/behaviours.json"]
   BENCH -->|rendered by| TEST["site/spec-reader-test/ reader test bench"]
+  LEDGER -->|"engine/panel/build_site_data.py (3 rows)"| PANEL["site/llm-panel-review/data/behaviours.json"]
   SPECS["specs/ mirrors"] -->|resolver-verified quotes| SWEEP
   RUBRIC["methodology/spec-coverage-depth-rubric.md"] -->|depth 0-4| SWEEP
 ```

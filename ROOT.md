@@ -39,5 +39,5 @@ graph LR
 - PLAN.md §8's repo map lists `outreach/` as a repo folder, but `.gitignore` excludes `outreach/` — it can only exist in local clones, never on main.
 - README.md's repo-map row for sweep records shows the label `evals/` but links to `research/sweeps/`; no `research/evals/` exists on main.
 - PLAN.md §5's CI/CD table promises `ci.yml`, `notion-sync.yml`, `spec-watch.yml` alongside `deploy.yml`; only `deploy.yml` exists (see `.github/OVERVIEW.md`).
-- `deploy:site` is referenced only in `.github/workflows/README.md`; nothing in `.github/` invokes it — CI calls the wrangler action directly.
+- `deploy:site` is referenced in `.github/workflows/README.md` and in three skill files (`.claude/skills/README.md`, `behaviour-sweep/SKILL.md`, `6-sweep-verify/SKILL.md`); nothing in `.github/` invokes it — CI calls the wrangler action directly.
 - `engines`/`scripts` nothing calls: none — both devDeps have consumers (`deploy.yml`/`deploy:site` use wrangler; the two `engine/verify-*.mjs` use playwright-core), though the playwright consumers run manually only.

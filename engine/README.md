@@ -23,7 +23,20 @@ python3 engine/spec-cite/cite.py resolve "model-spec@2025-12-18 > #avoid_sycopha
 python3 engine/spec-cite/cite.py find model-spec "some remembered phrase"   # text → locator
 ```
 
-In Phase 1, CI re-resolves every locator in `data/coverage.json` against `specs/`, so a spec update that moves text fails loudly instead of silently; combined with spec-watch, this is what keeps coverage claims verifiable over time.
+No CI re-resolves locators today (the only workflow is `.github/workflows/deploy.yml`). Re-resolution happens when `engine/publish-coverage.py` runs — it verifies every quote through `cite.py` before writing `data/coverage.json` — and a PR-time locator check is on the pre-publication punch list. Combined with spec-watch, that is what keeps coverage claims verifiable over time.
+
+## publish-coverage.py (works today)
+
+Publishes one behaviour's gate-approved stage-4 artifact (`research/sweeps/NN-<slug>/4-spec-coverage.md`) into `data/coverage.json`, re-resolving every stored quote through `cite.py` first:
+
+```sh
+python3 engine/publish-coverage.py research/sweeps/02-calibration            # write
+python3 engine/publish-coverage.py research/sweeps/02-calibration --check    # verify only
+```
+
+## panel/ (works today)
+
+The LLM panel judging pipeline: whole-spec judging calls, verdict parsing, the rollout driver, and the `site/llm-panel-review/` payload builder. See [`panel/README.md`](panel/README.md) for mechanics and reproduction; `python3 engine/panel/test_panel.py` runs its 27 offline unit tests.
 
 ## site builders and checks (work today)
 

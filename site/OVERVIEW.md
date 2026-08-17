@@ -4,7 +4,7 @@
 
 ## Purpose
 
-The public presentation layer: renders engine-generated JSON payloads into static pages. Plain HTML + vanilla ES-module JS everywhere — no framework, no build step (the Astro stack PLAN.md recommended was never adopted). Deploys to Cloudflare Pages via `.github/workflows/deploy.yml` on merges that touch `site/**`, or manually via `pnpm deploy:site`.
+The public presentation layer: renders engine-generated JSON payloads into static pages. Plain HTML + vanilla JS everywhere — the three reader apps are ES modules (`<script type="module" src="./app.js">`), while `index.html` and `methodology.html` use inline classic scripts. No framework, no build step (the Astro stack PLAN.md recommended was never adopted). Deploys to Cloudflare Pages via `.github/workflows/deploy.yml` on merges that touch `site/**`, or manually via `pnpm deploy:site`.
 
 ## Contents
 
@@ -21,7 +21,7 @@ The public presentation layer: renders engine-generated JSON payloads into stati
 
 - All dynamic content arrives as committed JSON under each app's `data/`; the deploy's `paths: site/**` filter works precisely because payloads live inside `site/`.
 - Producer map: `engine/build-spec-reader-data.py` → spec-reader payload; `engine/build-reader-test-data.py` → test-bench payload; `engine/panel/build_site_data.py` → panel payload.
-- `engine/verify-spec-reader.mjs` / `verify-reader-test.mjs` are the only tests: they boot Chrome against these pages and assert every passage anchors; they hardcode the DOM selectors used here.
+- `engine/verify-spec-reader.mjs` / `verify-reader-test.mjs` are the only tests of these surfaces (repo-wide, `engine/panel/test_panel.py` covers the panel pipeline): they boot Chrome against these pages and assert every passage anchors; they hardcode the DOM selectors used here.
 - `index.html` is connected to **no** pipeline — its inline data is hand-maintained.
 
 ## Dependency map
