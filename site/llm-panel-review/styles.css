@@ -492,10 +492,33 @@ body.resizing-columns {
 .spec-option small { display: block; margin-top: 2px; font-size: 10px; letter-spacing: .02em; }
 .spec-option.active { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px var(--shadow); }
 
-.view-actions { display: flex; align-items: center; gap: 7px; }
+/* Bottom-aligned so the gauge sits on the buttons' line while its caption floats above. */
+.view-actions { display: flex; align-items: flex-end; gap: 7px; }
 /* Tier gauge: three stops in the same well as the spec switcher. The paper fill
    grows rightward as tiers are added, so the control reads as an extent -- how far
-   down the panel's scale the reader is willing to go -- not as pick-one tabs. */
+   down the panel's scale the reader is willing to go -- not as pick-one tabs. The
+   caption names the axis; the scale annotation gives its direction. */
+.tier-block { display: flex; flex-direction: column; gap: 3px; }
+.tier-caption {
+  padding: 0 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+}
+.tier-heading {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.tier-scale {
+  color: var(--faint);
+  font-size: 11px;
+  font-style: italic;
+  letter-spacing: .02em;
+}
 .tier-control {
   height: 34px;
   padding: 3px;
@@ -508,11 +531,11 @@ body.resizing-columns {
   position: relative;
   display: inline-flex;
   align-items: center;
-  padding: 0 11px;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: .06em;
-  text-transform: uppercase;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-caps: all-small-caps;
+  letter-spacing: .08em;
   white-space: nowrap;
   color: var(--faint);
   cursor: pointer;

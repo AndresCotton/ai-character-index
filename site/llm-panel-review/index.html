@@ -84,19 +84,25 @@
         </div>
 
         <div class="view-actions">
-          <div id="tier-control" class="tier-control" role="radiogroup" aria-label="Passage tiers shown">
-            <label class="tier-option" title="Only the passages the panel scored as defining for the behavior">
-              <input class="tier-check" type="radio" name="tier" value="defining" checked />
-              <span>Defining</span>
-            </label>
-            <label class="tier-option" title="Adds the passages the panel scored as core">
-              <input class="tier-check" type="radio" name="tier" value="core" />
-              <span>+ Core</span>
-            </label>
-            <label class="tier-option" title="Adds every passage any judge cited">
-              <input class="tier-check" type="radio" name="tier" value="adjacent" />
-              <span>+ Adjacent</span>
-            </label>
+          <div class="tier-block">
+            <div class="tier-caption">
+              <span class="tier-heading" id="tier-heading">Panel threshold</span>
+              <span class="tier-scale" aria-hidden="true">strict → broad</span>
+            </div>
+            <div id="tier-control" class="tier-control" role="radiogroup" aria-labelledby="tier-heading">
+              <label class="tier-option" title="Strictest cut: only the passages the panel scored as defining for the behavior">
+                <input class="tier-check" type="radio" name="tier" value="defining" checked />
+                <span>Defining</span>
+              </label>
+              <label class="tier-option" title="Adds the passages the panel scored as core">
+                <input class="tier-check" type="radio" name="tier" value="core" />
+                <span>+ Core</span>
+              </label>
+              <label class="tier-option" title="Broadest cut: adds every passage any judge cited">
+                <input class="tier-check" type="radio" name="tier" value="adjacent" />
+                <span>+ Adjacent</span>
+              </label>
+            </div>
           </div>
           <button id="compare-toggle" class="compare-toggle" type="button" aria-pressed="false">
             <span class="split-icon" aria-hidden="true"></span>
