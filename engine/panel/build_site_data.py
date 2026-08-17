@@ -24,7 +24,7 @@ ROOT = HERE.parent.parent
 CONFIG = json.loads((HERE / "panel-config.json").read_text())
 DISPLAY = CONFIG["display"]
 LAB = {"constitution": "anthropic", "model-spec": "openai"}
-VERDICT_WORD = {2: "core", 1: "related", 0: "unrelated"}
+VERDICT_WORD = {3: "defining", 2: "core", 1: "related", 0: "unrelated"}   # 3 only in 4-point rubrics (v5+)
 MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3", "kimi-k2": "Kimi-K2.6", "qwen-big": "Qwen3-235B", "opus": "Claude Opus 4.8",
                "gpt-mini": "GPT-5 mini", "haiku": "Claude Haiku 4.5", "qwen-small": "Qwen3-32B"}
 # panel behaviour keys -> site slugs
@@ -116,8 +116,8 @@ def main():
                 score = sum(mv.values())
                 if not keeps_citation(score, len(mv), len(panel)):   # emit all scored; page filters by ?threshold=
                     continue
-                SYM = {2: "\u2713", 1: "~", 0: "\u2717"}
-                WORD = {2: "core", 1: "related", 0: "not relevant"}
+                SYM = {3: "\u2605", 2: "\u2713", 1: "~", 0: "\u2717"}
+                WORD = {3: "defining", 2: "core", 1: "related", 0: "not relevant"}
                 decisions = "\n".join(f"{SYM[v]} {MODEL_LABEL.get(m, m)} \u2014 {WORD[v]}"
                                       for m, v in sorted(mv.items(), key=lambda x: -x[1]))
                 quote, is_example = citation_quote(text.get(loc, ""))

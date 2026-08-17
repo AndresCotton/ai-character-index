@@ -1504,7 +1504,8 @@ window.addEventListener("resize", () => {
 });
 
 /* Panel-score display filter -- URL params only, no UI change:
- *   ?related=W    weight of a "related" (1) verdict when scoring; core is always 2.
+ *   ?related=W    weight of a "related" (1) verdict when scoring; core is always 2 and,
+ *                 in 4-point rubric data (v5+), defining is always 3.
  *                 [default 1; try 0.5 to demote related votes, or 0 for core-votes-only]
  *   ?threshold=N  minimum recomputed score to show a passage [default 6, clamped to the cell's
  *                 max possible where a judge's votes are pending]
@@ -1517,11 +1518,13 @@ function applyPanelThreshold(payload) {
   (payload.behaviours || []).forEach(behaviour => {
     Object.values(behaviour.coverage || {}).forEach(cov => {
       if (!cov.passages) return;
+      // cell scale: 2 on the classic rubric, 3 when any judge awarded a "defining" (v5+)
+      const maxVerdict = Math.max(2, ...cov.passages.flatMap(p => p.verdicts ? Object.values(p.verdicts) : []));
       cov.passages.forEach(p => {
         if (!p.verdicts) return;
         const vs = Object.values(p.verdicts);
-        p.score = vs.reduce((a, v) => a + (v === 2 ? 2 : v === 1 ? related : 0), 0);
-        p.maxScore = 2 * vs.length;
+        p.score = vs.reduce((a, v) => a + (v >= 2 ? v : v === 1 ? related : 0), 0);
+        p.maxScore = maxVerdict * vs.length;
       });
       const maxCell = Math.max(0, ...cov.passages.map(p => p.maxScore || 0));
       // default = unanimous-core FOR THIS CELL: 6 with a full 3-judge panel, clamped

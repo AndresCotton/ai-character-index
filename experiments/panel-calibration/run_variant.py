@@ -10,7 +10,7 @@ with --rubric=<variant>.
 
 Default runlog: runlog-<variant>.jsonl beside this script (append + resume, like prod).
 """
-import importlib.util, json, sys, time
+import importlib.util, json, re, sys, time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -19,6 +19,23 @@ sp = importlib.util.spec_from_file_location("h", PANEL / "harness.py")
 h = importlib.util.module_from_spec(sp); sp.loader.exec_module(h)
 sw = importlib.util.spec_from_file_location("w", PANEL / "whole_doc.py")
 w = importlib.util.module_from_spec(sw); sw.loader.exec_module(w)
+
+
+def parse_verdicts4(txt, n):
+    """Like harness.parse_verdicts but on a 0-3 scale (superset of 0-2 rubrics)."""
+    keyed = {}
+    for line in txt.splitlines():
+        m = re.match(r'\s*\[?(\d+)\]?\s*[:.\)\-]\s*([0123])\b', line)
+        if m:
+            keyed[int(m.group(1))] = int(m.group(2))
+    keyed = {k: v for k, v in keyed.items() if 1 <= k <= n}
+    if len(keyed) >= n * 0.9:
+        return keyed
+    tail = txt.splitlines()[-(n + 5):]
+    seq = re.findall(r'(?<![.\d\[])([0123])(?![.\d\]])', "\n".join(tail))
+    if len(seq) == n:
+        return {i + 1: int(v) for i, v in enumerate(seq)}
+    return keyed
 
 
 def main():
@@ -52,7 +69,7 @@ def main():
                 dt = time.perf_counter() - t0
                 txt = r.choices[0].message.content or ""
                 finish = getattr(r.choices[0], "finish_reason", None)
-                verdicts = h.parse_verdicts(txt, len(ps))
+                verdicts = parse_verdicts4(txt, len(ps))
                 miss = sum(1 for i in range(len(ps)) if (i + 1) not in verdicts)
                 ok = miss / len(ps) < 0.02
                 u = getattr(r, "usage", None)
@@ -70,7 +87,7 @@ def main():
                           f"finish_reason={finish}) -- raw saved to {fail.name}; retryable")
                     continue
                 rows = [{"behaviour": behaviour, "spec": spec, "model": tag, "locator": loc,
-                         "verdict": verdicts.get(i+1, 0), "relevant": int(verdicts.get(i+1, 0) == 2),
+                         "verdict": verdicts.get(i+1, 0), "relevant": int(verdicts.get(i+1, 0) >= 2),
                          "parsed": (i + 1) in verdicts, "rubric": variant,
                          "via": f"wholedoc-{variant}"}
                         for i, (loc, _, _) in enumerate(ps)]
