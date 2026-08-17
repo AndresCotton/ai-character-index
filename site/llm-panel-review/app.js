@@ -17,7 +17,12 @@
  */
 
 const DOCUMENTS_URL = "../spec-reader/data/documents.json";
-const BEHAVIOURS_URL = "./data/behaviours.json";
+/* ?data=<name> loads ./data/<name>.json instead of the default -- lets prompt-calibration
+ * iterations sit side by side (e.g. ?data=behaviours-v4a). Name only, no paths. */
+const BEHAVIOURS_URL = (() => {
+  const d = new URLSearchParams(location.search).get("data");
+  return d && /^[\w.-]+$/.test(d) ? `./data/${d.replace(/\.json$/, "")}.json` : "./data/behaviours.json";
+})();
 
 /* Shown for a document when no behaviour is under test. */
 const NO_COVERAGE = { verdict: null, depth: null, note: "", verifiedDate: "", passages: [] };

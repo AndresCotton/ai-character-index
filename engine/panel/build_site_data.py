@@ -61,6 +61,7 @@ def citation_quote(text):
 def main():
     runlog = HERE / "runlog-v3.jsonl"   # same default as whole_doc.py and run_rollout.py
     rubric = CONFIG["rubric"]
+    out_name = None
     for a in sys.argv[1:]:
         if a.startswith("--runlog="):
             runlog = Path(a.split("=", 1)[1])
@@ -68,6 +69,10 @@ def main():
             rubric = a.split("=", 1)[1]
         elif a.startswith("--panel="):
             DISPLAY["panel"] = a.split("=", 1)[1]
+        elif a.startswith("--behaviours="):     # site slugs, comma-separated; overrides display list
+            DISPLAY["behaviours"] = a.split("=", 1)[1].split(",")
+        elif a.startswith("--out="):            # alternate FILENAME in site data dir (iteration builds)
+            out_name = a.split("=", 1)[1]
     panel = set(CONFIG["panels"][DISPLAY["panel"]])
     votes = collections.defaultdict(dict)
     spec_of = {}
@@ -146,7 +151,7 @@ def main():
                "runDate": str(date.today()),
                "scoring": "per passage: sum over judges of core=2/related=1/neither=0; display thresholds are client-side URL params"},
            "behaviours": out_behaviours}
-    dest = ROOT / "site" / "llm-panel-review" / "data" / "behaviours.json"
+    dest = ROOT / "site" / "llm-panel-review" / "data" / (out_name or "behaviours.json")
     dest.write_text(json.dumps(out, indent=1, ensure_ascii=False))
     n = sum(len(c["passages"]) for b in out_behaviours for c in b["coverage"].values())
     print(f"{dest.relative_to(ROOT)}: {len(out_behaviours)} behaviours, {n} citations "
