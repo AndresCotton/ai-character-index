@@ -4,7 +4,9 @@
 Each test class names the shipped bug it guards against (all found in review or
 the ~2-cent integration run of 2026-07-30). Run:  python3 engine/panel/test_panel.py
 """
+import contextlib
 import importlib.util
+import io
 import json
 import tempfile
 import unittest
@@ -148,6 +150,40 @@ class TestJudgeKwargs(unittest.TestCase):
         self.assertIn("max_completion_tokens", k)
         self.assertEqual(k["reasoning_effort"], "low")
         self.assertNotIn("temperature", k)
+
+    def test_gpt5_quirks_survive_openrouter_prefix(self):
+        # fallback-routed ids carry a vendor prefix (openai/gpt-5); quirks must still apply
+        k = wd.judge_kwargs("sol", "openai/gpt-5.6-sol", self.CONFIG)
+        self.assertIn("max_completion_tokens", k)
+        self.assertNotIn("temperature", k)
+
+
+class TestResolve(unittest.TestCase):
+    """Guards the OpenRouter fallback (ported from experiment/panel-judges): native
+    keys stay preferred, and no key at all must never silently reroute."""
+
+    def fake_env(self, present):
+        real = h.env
+        h.env = lambda name: "sk-test" if name in present else None
+        self.addCleanup(lambda: setattr(h, "env", real))
+
+    def test_native_key_wins_even_with_openrouter_key(self):
+        self.fake_env({"TOGETHER_API_KEY", "OPENROUTER_API_KEY"})
+        self.assertEqual(h.resolve("kimi"), ("together", "moonshotai/Kimi-K3"))
+
+    def test_missing_native_key_falls_back_to_mirror(self):
+        self.fake_env({"OPENROUTER_API_KEY"})
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(h.resolve("kimi"), ("openrouter", "moonshotai/kimi-k3"))
+
+    def test_no_openrouter_key_keeps_native_route(self):
+        # client_for() then exits naming the missing native key -- the right error
+        self.fake_env(set())
+        self.assertEqual(h.resolve("kimi"), ("together", "moonshotai/Kimi-K3"))
+
+    def test_native_openrouter_model_unchanged(self):
+        self.fake_env({"OPENROUTER_API_KEY"})
+        self.assertEqual(h.resolve("qwen-max"), ("openrouter", "qwen/qwen3.7-max"))
 
 
 class TestBuilderGuards(unittest.TestCase):

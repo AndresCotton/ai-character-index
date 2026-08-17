@@ -32,9 +32,10 @@ RUNLOG = HERE / "runlog-v3.jsonl"   # override with --runlog=; resume and append
 def judge_kwargs(tag, model, config):
     """Pure: per-model API params (provider quirks + config output caps)."""
     cap = config["models"][tag].get("max_output", 32768)
-    if model.startswith("gpt-5"):
+    bare = model.rsplit("/", 1)[-1]   # drop any OpenRouter vendor prefix before the quirk checks
+    if bare.startswith("gpt-5"):
         return {"max_completion_tokens": cap, "reasoning_effort": "low"}
-    if "claude" in model or "mythos" in model:   # anthropic: temperature deprecated
+    if "claude" in bare or "mythos" in bare:   # anthropic: temperature deprecated
         return {"max_tokens": cap}
     return {"max_tokens": cap, "temperature": 0}
 
@@ -61,7 +62,7 @@ def main():
             for tag in tags:
                 if (behaviour, spec, tag, ps[0][0]) in done:
                     print(f"skip {behaviour}/{spec}/{tag} (resumed)"); continue
-                provider, model = h.MODELS[tag]
+                provider, model = h.resolve(tag)   # native route by default; openrouter only as fallback
                 client = h.client_for(provider)
                 sysmsg = (SYSTEM_S if sparse else SYSTEM_W).format(reason="")
                 kwargs = dict(model=model, messages=[{"role": "system", "content": sysmsg},

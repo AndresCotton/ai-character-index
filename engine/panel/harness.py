@@ -33,7 +33,6 @@ BATCH = 40   # passages per prompt -- bounded output (compact format stays coher
 # never values). The old hardcoded tables are gone; edit the config, not this file.
 CONFIG = json.loads((HERE / "panel-config.json").read_text())
 PROVIDERS = {name: (p["base_url"], p["key_env"]) for name, p in CONFIG["providers"].items()}
-MODELS = {tag: (m["provider"], m["id"]) for tag, m in CONFIG["models"].items()}
 PANELS = CONFIG.get("panels", {})
 
 # v1: binary rubric (frozen -- the calibrated baseline; do not edit)
@@ -138,6 +137,17 @@ def env(name):
             if line.strip().startswith(name + "="):
                 v = line.split("=", 1)[1].strip().strip("\"'")
     return v
+
+
+def resolve(tag):
+    """(provider, model_id): the native route from panel-config, falling back to that model's
+    `openrouter` mirror when its own key is missing and we hold an OpenRouter one."""
+    m = CONFIG["models"][tag]
+    keyname, mirror = PROVIDERS[m["provider"]][1], m.get("openrouter")
+    if not env(keyname) and mirror and env(PROVIDERS["openrouter"][1]):
+        print(f"note: no {keyname} -- routing {tag} via openrouter", file=sys.stderr)
+        return "openrouter", mirror["id"]
+    return m["provider"], m["id"]
 
 
 def client_for(provider):
