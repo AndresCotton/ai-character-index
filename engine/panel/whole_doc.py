@@ -4,7 +4,7 @@
 Reuses harness builders/config. SYSTEM = v3 minus the passage-independence sentence
 (removed per Andres 07-29); rubric tag "v3w". One call per (behaviour, spec, model).
 
-  python3 whole_doc.py <behaviour[,..]> <spec[,..]> <tag[,..]>
+  python3 whole_doc.py <behaviour[,..]> <spec[,..]> <tag[,..]> [--runlog=path]
 """
 import importlib.util, json, sys, time
 from pathlib import Path
@@ -27,9 +27,24 @@ OUT_SPARSE = ("Output ONLY the passages that score 2 or 1, one line each: the pa
               "every passage you omit is recorded as 0. Output no other text.")
 SYSTEM_S = SYSTEM_W.replace(OUT_FULL, OUT_SPARSE)
 assert SYSTEM_S != SYSTEM_W, "output-format sentence not found -- check text"
-RUNLOG = HERE / "runlog-v3.jsonl"
+RUNLOG = HERE / "runlog-v3.jsonl"   # override with --runlog=; resume and append use the SAME file
+
+def judge_kwargs(tag, model, config):
+    """Pure: per-model API params (provider quirks + config output caps)."""
+    cap = config["models"][tag].get("max_output", 32768)
+    bare = model.rsplit("/", 1)[-1]   # drop any OpenRouter vendor prefix before the quirk checks
+    if bare.startswith("gpt-5"):
+        return {"max_completion_tokens": cap, "reasoning_effort": "low"}
+    if "claude" in bare or "mythos" in bare:   # anthropic: temperature deprecated
+        return {"max_tokens": cap}
+    return {"max_tokens": cap, "temperature": 0}
+
 
 def main():
+    global RUNLOG
+    for a in sys.argv:
+        if a.startswith("--runlog="):
+            RUNLOG = Path(a.split("=", 1)[1])
     behaviours, specs, tags = (sys.argv[1].split(","), sys.argv[2].split(","), sys.argv[3].split(","))
     tags = [m for t in tags for m in (h.PANELS.get(t) or [t])]
     sparse = "--sparse" in sys.argv
@@ -47,21 +62,17 @@ def main():
             for tag in tags:
                 if (behaviour, spec, tag, ps[0][0]) in done:
                     print(f"skip {behaviour}/{spec}/{tag} (resumed)"); continue
-                provider, model = h.MODELS[tag]
+                provider, model = h.resolve(tag)   # native route by default; openrouter only as fallback
                 client = h.client_for(provider)
                 sysmsg = (SYSTEM_S if sparse else SYSTEM_W).format(reason="")
                 kwargs = dict(model=model, messages=[{"role": "system", "content": sysmsg},
                                                      {"role": "user", "content": user}])
-                if model.startswith("gpt-5"):
-                    kwargs.update(max_completion_tokens=32768, reasoning_effort="low")
-                elif "claude" in model or "mythos" in model:   # anthropic models: temperature deprecated
-                    kwargs.update(max_tokens=32768)
-                else:
-                    kwargs.update(max_tokens=65536, temperature=0)   # kimi reasons in-content
+                kwargs.update(judge_kwargs(tag, model, h.CONFIG))
                 t0 = time.perf_counter()
                 r = client.chat.completions.create(timeout=3600, **kwargs)  # K3 needs >SDK default 600s
                 dt = time.perf_counter() - t0
                 txt = r.choices[0].message.content or ""
+                finish = getattr(r.choices[0], "finish_reason", None)
                 if sparse:
                     keyed = {}
                     for line in txt.splitlines():
@@ -78,7 +89,7 @@ def main():
                 u = getattr(r, "usage", None)
                 meta = {"behaviour": behaviour, "spec": spec, "model": tag, "model_id": model,
                         "n": len(ps), "via": "wholedoc-sparse" if sparse else "wholedoc",
-                        "seconds": round(dt, 2),
+                        "seconds": round(dt, 2), "finish_reason": finish,
                         "prompt_tokens": getattr(u, "prompt_tokens", None),
                         "completion_tokens": getattr(u, "completion_tokens", None)}
                 with h.METRICS.open("a") as f:
@@ -86,8 +97,9 @@ def main():
                 if not ok:
                     fail = HERE / f"wholedoc-FAILED-{behaviour}-{spec}-{tag}.txt"
                     fail.write_text(txt)
-                    print(f"{behaviour}/{spec}/{tag}: PARSE FAILURE ({miss}/{len(ps)} unparsed) -- "
-                          f"raw output saved to {fail.name}; NOTHING logged, call is retryable")
+                    print(f"{behaviour}/{spec}/{tag}: PARSE FAILURE ({miss}/{len(ps)} unparsed, "
+                          f"finish_reason={finish}) -- raw output saved to {fail.name}; "
+                          f"runlog gets nothing, call is retryable (metrics still recorded)")
                     continue
                 rows = [{"behaviour": behaviour, "spec": spec, "model": tag, "locator": loc,
                          "verdict": verdicts.get(i+1, 0), "relevant": int(verdicts.get(i+1, 0) == 2),
@@ -95,7 +107,7 @@ def main():
                          "via": "wholedoc-sparse" if sparse else "wholedoc"}
                         for i, (loc, _, _) in enumerate(ps)]
                 with RUNLOG.open("a") as f:
-                    for row in rows: f.write(json.dumps(row) + "\n")
+                    f.write("".join(json.dumps(row) + "\n" for row in rows))   # one buffered write: interrupt-resistant (not strictly atomic)
                 print(f"{behaviour}/{spec}/{tag}: {len(ps)} verdicts ({sum(1 for x in rows if x['verdict']>0)} positive), "
                       f"{dt:.0f}s, in={meta['prompt_tokens']} out={meta['completion_tokens']}")
 

@@ -1,30 +1,23 @@
 #!/usr/bin/env python3
-"""Panel-of-judges harness -- (spec, behaviour, model) -> per-passage BINARY relevance.
+"""Shared library for the panel pipeline: config, prompt builders, verdict parsing,
+and the append-only/resumable run-log conventions.
 
-Design goals (from the ladder):
-  * ONE uniform system+user prompt + "verdict per line" format for EVERY model, reached
-    through each provider's OpenAI-compatible endpoint (openai SDK, swap base_url + key).
-  * DURABLE: every verdict is appended to runlog.jsonl the moment it arrives -- never held
-    only in memory. A crash loses at most the in-flight batch.
-  * RESUMABLE: a restart reads runlog.jsonl and skips any (behaviour, spec, model, locator)
-    already recorded, so we never pay twice for the same result.
+Not a CLI. The executors are whole_doc.py (production, whole-document mode) and
+run_rollout.py (the driver). Frozen rubric texts (v1 binary, v2 ternary+scope) are
+kept verbatim because run-log rows and data provenance hashes key on them; v3 is
+current (see compose_query).
 
-  python3 harness.py <behaviour> <spec> <tag[,tag,...]> [--reason] [--v2|--v3]
-      behaviour: key in behaviours.json     spec: constitution | model-spec
-      tags: model tags or panel names from panel-config.json
-
-Rubrics: v1 = binary (frozen calibrated baseline), v2 = ternary + Scope clause (frozen --
-runlog rows and export provenance hashes key on its exact text), v3 = ternary + explicit
-coverage-report framing + labelled behaviour fields (current; see compose_query).
-
-This realtime path is prefix-cache friendly; the Batch-API path (50% price) is
-batch_panel.py, which reuses the exact prompt builders below.
+Design rules every executor honors:
+  * ONE uniform prompt per rubric for EVERY judge, reached through each provider
+    OpenAI-compatible endpoint (openai SDK, swap base_url + key).
+  * DURABLE: verdicts append to the run log the moment they arrive.
+  * RESUMABLE: done_keys() lets a rerun skip any (behaviour, spec, model, locator)
+    already recorded under the same rubric.
 """
 import json
 import os
 import re
 import sys
-import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -32,7 +25,6 @@ sys.path.insert(0, str(HERE.parent / "spec-cite"))   # engine/panel -> engine/sp
 import cite  # noqa: E402
 
 RUNLOG = HERE / "runlog.jsonl"
-REASONLOG = HERE / "reasons.jsonl"
 METRICS = HERE / "metrics.jsonl"   # per-call latency + token usage (for cost/time reporting)
 SPECS = ("constitution", "model-spec")
 BATCH = 40   # passages per prompt -- bounded output (compact format stays coherent)
@@ -41,7 +33,6 @@ BATCH = 40   # passages per prompt -- bounded output (compact format stays coher
 # never values). The old hardcoded tables are gone; edit the config, not this file.
 CONFIG = json.loads((HERE / "panel-config.json").read_text())
 PROVIDERS = {name: (p["base_url"], p["key_env"]) for name, p in CONFIG["providers"].items()}
-MODELS = {tag: (m["provider"], m["id"]) for tag, m in CONFIG["models"].items()}
 PANELS = CONFIG.get("panels", {})
 
 # v1: binary rubric (frozen -- the calibrated baseline; do not edit)
@@ -137,7 +128,6 @@ BEHAVIOUR_TEMPLATE_V3 = ("Behaviour: {title}\n"
                          "Definition: {definition}\n"
                          "Clarifications (optional): {clarifications}\n"
                          "Scope (optional): {scope}")
-REASON_CLAUSE = " You may reason first; put the numbered verdict lines at the very end."
 
 
 def env(name):
@@ -147,6 +137,17 @@ def env(name):
             if line.strip().startswith(name + "="):
                 v = line.split("=", 1)[1].strip().strip("\"'")
     return v
+
+
+def resolve(tag):
+    """(provider, model_id): the native route from panel-config, falling back to that model's
+    `openrouter` mirror when its own key is missing and we hold an OpenRouter one."""
+    m = CONFIG["models"][tag]
+    keyname, mirror = PROVIDERS[m["provider"]][1], m.get("openrouter")
+    if not env(keyname) and mirror and env(PROVIDERS["openrouter"][1]):
+        print(f"note: no {keyname} -- routing {tag} via openrouter", file=sys.stderr)
+        return "openrouter", mirror["id"]
+    return m["provider"], m["id"]
 
 
 def client_for(provider):
@@ -218,12 +219,6 @@ def done_keys(rubric):
             if d.get("rubric", "v1") == rubric}
 
 
-def append(path, rows):
-    with path.open("a") as f:
-        for r in rows:
-            f.write(json.dumps(r) + "\n")
-
-
 def parse_verdicts(txt, n):
     """{index(1-based): 0/1/2}. First try 'N: V' lines; fall back to positional verdicts."""
     keyed = {}
@@ -242,100 +237,3 @@ def parse_verdicts(txt, n):
     if len(seq) == n:
         return {i + 1: int(v) for i, v in enumerate(seq)}
     return keyed
-
-
-def judge(client, model, qblock, batch, reason, rubric="v1"):
-    sysmsg = SYSTEMS[rubric].format(reason=REASON_CLAUSE if reason else "")
-    kwargs = dict(
-        model=model,
-        messages=[{"role": "system", "content": sysmsg},
-                  {"role": "user", "content": user_msg(qblock, batch)}])
-    if model.startswith("gpt-5"):
-        # OpenAI reasoning models: no max_tokens / no temperature; keep reasoning cheap.
-        # gpt-5.6 dropped 'minimal' (wants none/low/medium/high/xhigh); gpt-5/-mini use 'minimal'.
-        effort = "low" if model.startswith("gpt-5.6") else "minimal"
-        kwargs.update(max_completion_tokens=8192, reasoning_effort=effort)
-    elif "claude" in model or "mythos" in model:   # anthropic: temperature deprecated
-        # Anthropic frontier reasoning models: max_tokens ok, temperature deprecated
-        kwargs.update(max_tokens=8192)
-    else:
-        kwargs.update(max_tokens=8192, temperature=0)
-    t0 = time.perf_counter()
-    r = client.chat.completions.create(**kwargs)
-    dt = time.perf_counter() - t0
-    txt = r.choices[0].message.content or ""
-    u = getattr(r, "usage", None)
-    meta = {"seconds": round(dt, 2),
-            "prompt_tokens": getattr(u, "prompt_tokens", None),
-            "completion_tokens": getattr(u, "completion_tokens", None)}
-    return parse_verdicts(txt, len(batch)), txt, meta
-
-
-def run(behaviour, spec, tags, reason, limit=None, only=None, batch_size=BATCH,
-        rubric="v1", runlog=None):
-    global RUNLOG
-    if runlog:
-        RUNLOG = Path(runlog)
-    qblock = compose_query(behaviour, rubric)
-    ps = passages(spec)
-    if only is not None:
-        ps = [p for p in ps if p[0] in only]   # judge only these locators (e.g. contested subset)
-    if limit:
-        ps = ps[:limit]   # smoke test: judge only the first `limit` passages
-    done = done_keys(rubric)
-    for tag in tags:
-        provider, model = MODELS[tag]
-        client = client_for(provider)
-        todo = [p for p in ps if (behaviour, spec, tag, p[0]) not in done]
-        print(f"{tag} ({provider}:{model}): {len(todo)}/{len(ps)} passages to judge", file=sys.stderr)
-        for k in range(0, len(todo), batch_size):
-            batch = todo[k:k + batch_size]
-            verdicts, raw, meta = judge(client, model, qblock, batch, reason, rubric)
-            rows = [{"behaviour": behaviour, "spec": spec, "model": tag, "locator": loc,
-                     "verdict": verdicts.get(i + 1, 0),               # 0/1/2 (ternary in v2+)
-                     "relevant": int(verdicts.get(i + 1, 0) == 2) if rubric != "v1"
-                                 else int(verdicts.get(i + 1, 0)),    # strict binary derivation
-                     "parsed": (i + 1) in verdicts,
-                     "rubric": rubric} for i, (loc, _, _) in enumerate(batch)]
-            append(RUNLOG, rows)   # DURABLE: flush every batch immediately
-            append(METRICS, [{"behaviour": behaviour, "spec": spec, "model": tag,
-                              "model_id": model, "n": len(batch), "first_loc": batch[0][0], **meta}])
-            if reason:
-                append(REASONLOG, [{"behaviour": behaviour, "spec": spec, "model": tag,
-                                    "first_loc": batch[0][0], "raw": raw}])
-            miss = sum(1 for r in rows if not r["parsed"])
-            print(f"  {tag} {k+len(batch)}/{len(todo)}  (unparsed {miss})", file=sys.stderr)
-
-
-def main():
-    if len(sys.argv) < 4:
-        sys.exit("usage: harness.py <behaviour> <spec> <tag[,tag,...]> [--reason]")
-    behaviour, spec, tags = sys.argv[1], sys.argv[2], sys.argv[3].split(",")
-    # a panel name (e.g. "cheap", "frontier") expands to its model list
-    tags = [m for t in tags for m in (PANELS.get(t) or [t])]
-    if spec not in SPECS:
-        sys.exit(f"spec must be one of {SPECS}")
-    bad = [t for t in tags if t not in MODELS]
-    if bad:
-        sys.exit(f"unknown model tags {bad} -- choices: {', '.join(MODELS)}")
-    limit = None
-    only = None
-    batch_size = BATCH
-    for a in sys.argv:
-        if a.startswith("--limit="):
-            limit = int(a.split("=", 1)[1])
-        elif a.startswith("--batch-size="):
-            batch_size = int(a.split("=", 1)[1])
-        elif a.startswith("--locators="):
-            only = {l.strip() for l in Path(a.split("=", 1)[1]).read_text().splitlines() if l.strip()}
-    runlog = None
-    for a in sys.argv:
-        if a.startswith("--runlog="):
-            runlog = a.split("=", 1)[1]
-    rubric = "v3" if "--v3" in sys.argv else "v2" if "--v2" in sys.argv else "v1"
-    run(behaviour, spec, tags, "--reason" in sys.argv, limit, only, batch_size,
-        rubric=rubric, runlog=runlog)
-
-
-if __name__ == "__main__":
-    main()
