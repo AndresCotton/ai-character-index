@@ -81,7 +81,8 @@
       "price_per_mtok": [
         0.1,
         0.3
-      ]
+      ],
+      "max_output": 8192
     },
     "qwen-big": {
       "provider": "deepinfra",
@@ -89,7 +90,8 @@
       "price_per_mtok": [
         0.2,
         0.6
-      ]
+      ],
+      "max_output": 16384
     },
     "qwen-max": {
       "provider": "openrouter",
@@ -113,7 +115,8 @@
       "price_per_mtok": [
         3.0,
         15.0
-      ]
+      ],
+      "max_output": 65536
     },
     "kimi-k2": {
       "provider": "together",
@@ -142,7 +145,11 @@
       "fable",
       "kimi"
     ],
-    "_comment": "frontier = every tag whose rows the site builder may admit (primaries AND substitutes). frontier_primary = the judges the run driver executes; substitutes (opus, kimi-k2) are run manually per Skill 4 when a primary fails."
+    "_comment": "frontier = every tag whose rows the site builder may admit (primaries AND substitutes). frontier_primary = the judges the run driver executes; substitutes (opus, kimi-k2) are run manually per Skill 4 when a primary fails.",
+    "itest": [
+      "qwen-big"
+    ],
+    "_itest_note": "single cheap judge for end-to-end integration testing (~2 cents per behaviour); never for published data. Must be a long-context model: whole-doc prompts reach ~65k tokens (qwen-small's 41k context cannot fit them)."
   },
   "rubric": "v3w",
   "specs": [

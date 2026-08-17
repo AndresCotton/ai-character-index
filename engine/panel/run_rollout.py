@@ -4,7 +4,7 @@
 DRY-RUN BY DEFAULT: prints the exact call plan, what resume will skip, and a cost
 estimate. Nothing is sent to any API unless --go is passed.
 
-  python3 run_rollout.py [--go] [--runlog=path] [--behaviours=key,key]
+  python3 run_rollout.py [--go] [--runlog=path] [--behaviours=key,key] [--panel=name]
 
 Judging is whole-document mode (whole_doc.py), resume-safe: rerunning after a crash
 or provider failure only executes missing cells. Known provider quirks and their
@@ -28,14 +28,44 @@ CONFIG = json.loads((HERE / "panel-config.json").read_text())
 # undermine-oversight), which were the rubric-development vehicles, not index rows.
 ROLLOUT = ["helpfulness", "harmlessness-to-user", "third-party-harm", "proportionate-risk",
            "tradeoffs", "over-under-caution", "objectivity", "user-autonomy", "general-welfare"]
-PANEL = CONFIG["panels"]["frontier_primary"]   # primaries only; substitutes run manually (Skill 4)
-# measured on the first three behaviours (whole-doc mode); the x1.5 band in the
-# printout covers retries and long-output cells. Substitutes included so editing
-# PANEL never KeyErrors the dry run.
-EST = {"sol": 0.55, "fable": 1.60, "kimi": 1.20, "opus": 0.60, "kimi-k2": 0.35}  # $ per (behaviour, both specs)
+PANEL = CONFIG["panels"]["frontier_primary"]   # primaries only; substitutes run manually (Skill 4); --panel= overrides
+# Cost is derived from config, not a hardcoded table: input is deterministic
+# (spec token count times price_per_mtok); output is a range, bare verdict lines
+# up to the model's max_output ceiling (models differ this much: 3k to 48k).
+OUT_TOKENS_PER_PASSAGE = 8   # floor: "N: v" verdict lines only
+
+
+def build_plan(behaviours, specs, panel, done, first_loc):
+    """Pure: which cells to run vs which the runlog already covers."""
+    plan, skipped = [], []
+    for beh in behaviours:
+        for spec in specs:
+            for tag in panel:
+                cell = (beh, spec, tag)
+                if (beh, spec, tag, first_loc[spec]) in done:
+                    skipped.append(cell)
+                else:
+                    plan.append(cell)
+    return plan, skipped
+
+
+def estimate(plan, spec_tokens, n_passages, models):
+    """Pure: (low, high) dollar range for a plan, derived from config prices.
+
+    low = input + verdict-lines-only output; high = input + the model's
+    max_output ceiling. Both ends come from per-model config; nothing is guessed."""
+    low = high = 0.0
+    for _, spec, tag in plan:
+        m = models[tag]
+        p_in, p_out = m["price_per_mtok"]
+        cin = spec_tokens[spec] / 1e6 * p_in
+        low += cin + n_passages[spec] * OUT_TOKENS_PER_PASSAGE / 1e6 * p_out
+        high += cin + m.get("max_output", 32768) / 1e6 * p_out
+    return low, high
 
 
 def main():
+    panel_name = "frontier"
     go = "--go" in sys.argv
     runlog = HERE / "runlog-v3.jsonl"   # the SAME file whole_doc.py appends to
     behaviours = ROLLOUT
@@ -44,8 +74,14 @@ def main():
             runlog = Path(a.split("=", 1)[1])
         elif a.startswith("--behaviours="):
             behaviours = a.split("=", 1)[1].split(",")
+        elif a.startswith("--panel="):
+            panel_name = a.split("=", 1)[1]
+            if (panel_name.startswith("_") or panel_name not in CONFIG["panels"]
+                    or not isinstance(CONFIG["panels"][panel_name], list)):
+                sys.exit(f"unknown panel {panel_name!r} -- panels: {[k for k in CONFIG['panels'] if not k.startswith('_')]}")
+            globals()["PANEL"] = CONFIG["panels"][panel_name]
         elif a != "--go":
-            sys.exit(f"unknown argument {a!r} -- valid: --go --runlog= --behaviours=")
+            sys.exit(f"unknown argument {a!r} -- valid: --go --runlog= --behaviours= --panel=")
     known = {k for k, v in json.loads((HERE / "behaviours.json").read_text()).items()
              if isinstance(v, dict)}
     bad = [b for b in behaviours if b not in known]
@@ -56,19 +92,15 @@ def main():
     sp.loader.exec_module(h)
     h.RUNLOG = runlog
     done = h.done_keys(CONFIG["rubric"])
-    first_loc = {s: h.passages(s)[0][0] for s in CONFIG["specs"]}
+    all_ps = {s: h.passages(s) for s in CONFIG["specs"]}
+    first_loc = {s: ps[0][0] for s, ps in all_ps.items()}
+    spec_tokens = {s: sum(len(t) for _, _, t in ps) // 4 for s, ps in all_ps.items()}
+    n_passages = {s: len(ps) for s, ps in all_ps.items()}
 
-    plan, skipped = [], []
-    for beh in behaviours:
-        for spec in CONFIG["specs"]:
-            for tag in PANEL:
-                cell = (beh, spec, tag)
-                if (beh, spec, tag, first_loc[spec]) in done:
-                    skipped.append(cell)
-                else:
-                    plan.append(cell)
-    est = sum(EST[t] / len(CONFIG["specs"]) for _, _, t in plan)
-    print(f"plan: {len(plan)} calls ({len(skipped)} cells resumed), estimated ${est:.0f}-{est*1.5:.0f}")
+    plan, skipped = build_plan(behaviours, CONFIG["specs"], PANEL, done, first_loc)
+    low, high = estimate(plan, spec_tokens, n_passages, CONFIG["models"])
+    print(f"plan: {len(plan)} calls ({len(skipped)} cells resumed), estimated "
+          f"${low:.0f}-{high:.0f} (config-derived: exact input cost; output floor vs ceiling)")
     for beh, spec, tag in plan:
         print(f"  whole_doc.py {beh} {spec} {tag}")
     if not go:
@@ -99,7 +131,7 @@ def main():
             print(f"  retry: whole_doc.py {b} {sp} {t} --runlog={runlog}{alt}")
     else:
         print(f"\nCOMPLETE -- every cell banked. Next: python3 build_site_data.py "
-              f"--runlog={runlog} --rubric={CONFIG['rubric']} --panel=frontier")
+              f"--runlog={runlog} --rubric={CONFIG['rubric']} --panel={panel_name}")
 
 
 if __name__ == "__main__":
