@@ -492,90 +492,7 @@ body.resizing-columns {
 .spec-option small { display: block; margin-top: 2px; font-size: 10px; letter-spacing: .02em; }
 .spec-option.active { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px var(--shadow); }
 
-/* Bottom-aligned so the gauge sits on the buttons' line while its caption floats above. */
-.view-actions { display: flex; align-items: flex-end; gap: 7px; }
-/* Tier gauge: three stops in the same well as the spec switcher. The paper fill
-   grows rightward as tiers are added, so the control reads as an extent -- how far
-   down the panel's scale the reader is willing to go -- not as pick-one tabs. The
-   caption names the axis; the scale annotation gives its direction. */
-.tier-block { display: flex; flex-direction: column; gap: 3px; }
-.tier-caption {
-  padding: 0 4px;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 14px;
-}
-.tier-heading {
-  color: var(--muted);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-}
-.tier-scale {
-  color: var(--faint);
-  font-size: 11px;
-  font-style: italic;
-  letter-spacing: .02em;
-}
-.tier-control {
-  height: 34px;
-  padding: 3px;
-  display: inline-flex;
-  align-items: stretch;
-  border-radius: 8px;
-  background: var(--chrome-deep);
-}
-.tier-option {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 12px;
-  font-size: 13px;
-  font-weight: 600;
-  font-variant-caps: all-small-caps;
-  letter-spacing: .08em;
-  white-space: nowrap;
-  color: var(--faint);
-  cursor: pointer;
-  transition: background-color .15s ease, color .15s ease;
-}
-.tier-option:hover { color: var(--muted); }
-.tier-check {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-/* The filled run: every stop up to and including the checked one. */
-.tier-option:has(.tier-check:checked),
-.tier-option:has(~ .tier-option .tier-check:checked) {
-  background: var(--paper);
-  color: var(--ink);
-  box-shadow: 0 1px 2px var(--shadow);
-}
-.tier-option:first-child { border-radius: 5px 0 0 5px; }
-.tier-option:last-child,
-.tier-option:has(.tier-check:checked) { border-radius: 0 5px 5px 0; }
-.tier-option:first-child:has(.tier-check:checked) { border-radius: 5px; }
-/* Hairline ticks between filled stops, so the run stays legible as three targets. */
-.tier-option:not(:first-child):has(.tier-check:checked)::before,
-.tier-option:not(:first-child):has(~ .tier-option .tier-check:checked)::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 7px;
-  bottom: 7px;
-  width: 1px;
-  background: var(--line-light);
-}
-.tier-option:has(.tier-check:focus-visible) {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-}
+.view-actions { display: flex; align-items: center; gap: 7px; }
 .compare-toggle, .source-link {
   min-height: 34px;
   padding: 8px 12px;
@@ -705,6 +622,32 @@ body.resizing-columns {
 /* Neutral: the legend explains intensity, and the colour belongs to the behaviour. */
 .legend-mark { width: 3px; height: 9px; display: inline-block; border-radius: 2px; background: var(--muted); }
 .legend-mark.adjacent { margin-left: 3px; opacity: .4; }
+
+/* Tier toggles: the legend is the control. Each mark-and-word pair is a button; a
+   pressed pair sits enclosed in a small bordered well, an unpressed one fades but
+   keeps its footprint. Mark weight orders the tiers: heavy bar = defining, solid =
+   core, faint = related -- the same weights the passage rail carries. */
+.tier-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+  transition: color .12s ease, border-color .12s ease, background-color .12s ease;
+}
+.tier-toggle .legend-mark { background: currentColor; }
+.tier-toggle .legend-mark.adjacent { margin-left: 0; }
+.tier-toggle:hover { color: var(--muted); border-color: var(--line-light); }
+.tier-toggle[aria-pressed="true"] {
+  border-color: var(--line);
+  background: var(--chrome-deep);
+  color: var(--ink);
+}
+.legend-mark.defining { width: 5px; }
 .document-scroll { position: relative; flex: 1; min-height: 0; overflow: auto; scroll-behavior: smooth; }
 
 .document-body {
@@ -1066,7 +1009,7 @@ button:focus-visible, a:focus-visible, .column-resizer:focus-visible {
   .reader-toolbar { padding: 10px; }
   .spec-switcher { width: 100%; }
   .spec-option { min-width: 0; flex: 1; }
-  .view-actions { width: 100%; justify-content: space-between; flex-wrap: wrap; }
+  .view-actions { width: 100%; justify-content: space-between; }
   .finding-bar { padding: 8px 12px; }
   .document-header { padding: 11px 15px; }
   /* Asymmetric on a phone: the right margin has to hold the passage rules and the rail,

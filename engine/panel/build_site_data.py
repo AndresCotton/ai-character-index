@@ -116,7 +116,7 @@ def main():
                 score = sum(mv.values())
                 if not keeps_citation(score, len(mv), len(panel)):   # emit all scored; page filters by ?threshold=
                     continue
-                SYM = {3: "\u2605", 2: "\u2713", 1: "~", 0: "\u2717"}
+                SYM = {3: "\u2713\u2713", 2: "\u2713", 1: "~", 0: "\u2717"}   # defining = doubled core tick, no star
                 WORD = {3: "defining", 2: "core", 1: "related", 0: "not relevant"}
                 decisions = "\n".join(f"{SYM[v]} {MODEL_LABEL.get(m, m)} \u2014 {WORD[v]}"
                                       for m, v in sorted(mv.items(), key=lambda x: -x[1]))

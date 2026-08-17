@@ -49,8 +49,8 @@ function behaviourTexture(behaviour) {
 
 const state = {
   payload: null,
-  rawBehaviours: null,   // unfiltered panel data; the tier control re-filters from this
-  tier: null,            // "defining" | "core" | "adjacent"; null = legacy ?threshold=/?solid= mode
+  rawBehaviours: null,   // unfiltered panel data; the tier toggles re-filter from this
+  bands: null,           // Set of "defining" | "core" | "related" -- which tiers render
   selectedSlugs: [],
   selectedSpec: "anthropic",
   comparing: false,
@@ -83,14 +83,16 @@ const elements = {
   sidebarResizer: document.querySelector("#sidebar-resizer"),
   sourceLink: document.querySelector("#source-link"),
   template: document.querySelector("#document-template"),
-  tierControl: document.querySelector("#tier-control"),
-  tierRadios: document.querySelectorAll("#tier-control input[name='tier']"),
 };
 
-/* Display tiers for panel-scored passages, coarsest first. Per cell with j judges:
- * defining shows score >= 2j+1 (a "3" vote must be present -- on 3-point data this
- * clamps to unanimous core), core adds score >= j+1, adjacent shows every citation. */
-const TIERS = ["defining", "core", "adjacent"];
+/* Display tiers for panel-scored passages, strongest first. Per cell with j judges:
+ * defining is score >= 2j+1 (a "3" vote must be present -- on 3-point data this
+ * clamps to unanimous core), core is score >= 2j (unanimous-core strength), related
+ * is score >= j+1 (at least two judges behind it). Weaker citations never render:
+ * a lone related vote is recorded in the data, not shown. Each tier is a toggle in
+ * the document headers; the defaults show defining + core. */
+const TIERS = ["defining", "core", "related"];
+const DEFAULT_BANDS = ["defining", "core"];
 
 const initialParams = new URLSearchParams(location.search);
 state.embedded = initialParams.get("embedded") === "1";
@@ -124,9 +126,10 @@ function syncURL() {
   params.set("spec", state.selectedSpec);
   if (state.comparing) params.set("compare", "1");
   else params.delete("compare");
-  if (state.tier) {
-    params.set("tier", state.tier);
-    params.delete("threshold");   // the slider supersedes the legacy score params
+  if (state.bands) {
+    params.set("tiers", TIERS.filter(t => state.bands.has(t)).join(",") || "none");
+    params.delete("tier");        // the toggles supersede the legacy score params
+    params.delete("threshold");
     params.delete("solid");
   }
   if (state.embedded) params.set("embedded", "1");
@@ -1272,6 +1275,11 @@ function renderDocument(doc) {
   panel.querySelector(".document-lab").textContent = doc.lab;
   panel.querySelector(".document-title").textContent = doc.title;
   panel.querySelector(".document-version").textContent = `Version ${doc.version}`;
+  // Toggle state comes from the shared band set; in compare mode the twin header
+  // is kept in step by the rebuild that toggleBand triggers.
+  panel.querySelectorAll(".tier-toggle").forEach(button => {
+    button.setAttribute("aria-pressed", String(Boolean(state.bands?.has(button.dataset.tier))));
+  });
   panel.querySelector(".document-body").innerHTML = renderMarkdown(doc.markdown, markdownContext);
   setupSectionFocus(panel);
   setupInternalLinks(panel);
@@ -1315,8 +1323,8 @@ function updatePanelMeta(panel, doc) {
       "afterbegin",
       filtered > 0
         ? `<div class="zero-coverage" role="note">
-            <strong>No passages at the current display threshold.</strong>
-            <span>${filtered} scored ${filtered === 1 ? "passage is" : "passages are"} below it — lower ?threshold= to see them.</span>
+            <strong>No passages in the selected tiers.</strong>
+            <span>${filtered} scored ${filtered === 1 ? "passage sits" : "passages sit"} in tiers toggled off -- turn one back on above to see them.</span>
           </div>`
         : `<div class="zero-coverage" role="note">
             <strong>${several
@@ -1517,14 +1525,12 @@ window.addEventListener("resize", () => {
   requestAnimationFrame(updateRails);
 });
 
-/* Panel-score display filter -- URL params only, no UI change:
+/* Panel-score display filter. Which tiers render is state.bands (the header toggles,
+ * ?tiers= in the URL; legacy ?tier=/?threshold= links are mapped once at load by
+ * initialBands). One score param remains, URL-only:
  *   ?related=W    weight of a "related" (1) verdict when scoring; core is always 2 and,
  *                 in 4-point rubric data (v5+), defining is always 3.
  *                 [default 1; try 0.5 to demote related votes, or 0 for core-votes-only]
- *   ?threshold=N  minimum recomputed score to show a passage [default 6, clamped to the cell's
- *                 max possible where a judge's votes are pending]
- *   ?solid=N      score at/above which a passage renders Core-style (below: Related-style)
- *                 [default 6, clamped like threshold]
  * Scores are recomputed from each citation's per-model verdicts, so the params compose. */
 function applyPanelThreshold(payload) {
   const params = new URLSearchParams(location.search);
@@ -1541,24 +1547,27 @@ function applyPanelThreshold(payload) {
         p.maxScore = maxVerdict * vs.length;
       });
       const maxCell = Math.max(0, ...cov.passages.map(p => p.maxScore || 0));
-      // Tier mode (the gauge): per-cell cuts derived from the judge count, so the same
-      // position means the same thing on 3-point and 4-point cells alike.
+      // Tier bands (the header toggles): per-cell cuts derived from the judge count, so
+      // the same tier means the same thing on 3-point and 4-point cells alike. On 3-point
+      // cells the defining cut clamps to unanimous core, whose passages then count as
+      // defining and the core band sits empty.
       const judges = Math.max(1, ...cov.passages.map(p => p.verdicts ? Object.values(p.verdicts).length : 0));
-      const tierCut = { defining: 2 * judges + 1, core: judges + 1, adjacent: 1 };
-      // default = unanimous-core FOR THIS CELL: 6 with a full 3-judge panel, clamped
-      // down where a judge's votes are still pending so the cell never blanks falsely
-      const threshold = state.tier
-        ? Math.min(tierCut[state.tier], maxCell || 6)
-        : Math.min(Number(params.get("threshold") ?? 6), maxCell || 6);
-      const solid = state.tier
-        ? Math.min(tierCut.defining, maxCell || 6)
-        : Math.min(Number(params.get("solid") ?? 6), maxCell || 6);
+      const defCut = Math.min(2 * judges + 1, maxCell || 2 * judges + 1);
+      const band = score =>
+        score >= defCut ? "defining" : score >= 2 * judges ? "core" : score >= judges + 1 ? "related" : null;
+      const shownBands = state.bands ?? new Set(DEFAULT_BANDS);
       const before = cov.passages.length;
-      cov.passages = cov.passages.filter(p => p.score === undefined || p.score >= threshold);
-      cov.panelFiltered = before - cov.passages.length;   // hidden by display threshold, NOT absent
+      let subTier = 0;   // below every tier -- never rendered, so never "toggled off"
+      cov.passages = cov.passages.filter(p => {
+        if (p.score === undefined) return true;
+        const b = band(p.score);
+        if (b === null) { subTier += 1; return false; }
+        return shownBands.has(b);
+      });
+      cov.panelFiltered = before - subTier - cov.passages.length;   // hidden by the tier toggles, NOT absent
       cov.passages.forEach(p => {
         if (p.score === undefined) return;
-        p.adjacent = p.score < solid;
+        p.adjacent = band(p.score) === "related";
         // the baked role text carries the build-time score; rewrite it with the recomputed one
         const shown = Number.isInteger(p.score) ? p.score : p.score.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
         p.role = (p.role || "").replace(/\(score [^)]*\)/, `(score ${shown}/${p.maxScore})`);
@@ -1568,20 +1577,26 @@ function applyPanelThreshold(payload) {
   return payload;
 }
 
-function syncTierControl() {
-  if (!elements.tierRadios.length) return;
-  let shown = state.tier;
-  if (!shown) {   // legacy ?threshold= mode: mark the nearest tier stop
-    const t = Number(initialParams.get("threshold") ?? 6);
-    shown = t >= 6 ? "defining" : t >= 4 ? "core" : "adjacent";
+/* Initial tier selection: ?tiers= list, else legacy single-position params mapped to
+ * the bands they showed (?tier= gauge links; ?threshold= score links), else defaults. */
+function initialBands() {
+  const listed = (initialParams.get("tiers") || "")
+    .split(",").map(part => (part.trim() === "adjacent" ? "related" : part.trim()))
+    .filter(tier => TIERS.includes(tier));
+  if (listed.length || initialParams.get("tiers") === "none") return new Set(listed);
+  const tier = initialParams.get("tier") === "adjacent" ? "related" : initialParams.get("tier");
+  if (TIERS.includes(tier)) return new Set(TIERS.slice(0, TIERS.indexOf(tier) + 1));
+  if (initialParams.has("threshold")) {   // legacy score cuts are 2j+1 / 2j / j+1
+    const t = Number(initialParams.get("threshold"));
+    return new Set(t >= 7 ? ["defining"] : t >= 6 ? ["defining", "core"] : TIERS);
   }
-  for (const radio of elements.tierRadios) radio.checked = radio.value === shown;
+  return new Set(DEFAULT_BANDS);
 }
 
-function setTier(tier) {
-  if (!state.rawBehaviours) return;   // data not loaded yet
-  state.tier = tier;
-  syncTierControl();
+function toggleBand(tier) {
+  if (!state.rawBehaviours || !state.bands) return;   // data not loaded yet
+  if (state.bands.has(tier)) state.bands.delete(tier);
+  else state.bands.add(tier);
   state.payload.behaviours =
     applyPanelThreshold({ behaviours: structuredClone(state.rawBehaviours) }).behaviours;
   updateFindingBar();
@@ -1589,8 +1604,16 @@ function setTier(tier) {
   rebuildReader();
 }
 
-elements.tierControl?.addEventListener("change", (event) => {
-  if (event.target.name === "tier" && TIERS.includes(event.target.value)) setTier(event.target.value);
+/* The toggles live in the document headers, which rebuildReader re-clones, so the
+ * listener is delegated and focus is put back on the equivalent button afterwards. */
+elements.documentReader.addEventListener("click", (event) => {
+  const button = event.target.closest?.(".tier-toggle");
+  if (!button || !TIERS.includes(button.dataset.tier)) return;
+  const panelId = button.closest(".document-panel")?.dataset.documentId;
+  toggleBand(button.dataset.tier);
+  elements.documentReader
+    .querySelector(`.document-panel[data-document-id="${panelId}"] .tier-toggle[data-tier="${button.dataset.tier}"]`)
+    ?.focus({ preventScroll: true });
 });
 
 async function loadJSON(url) {
@@ -1607,11 +1630,7 @@ async function initialize() {
       loadJSON(BEHAVIOURS_URL),
     ]);
     state.rawBehaviours = behaviours.behaviours || [];
-    const requestedTier = initialParams.get("tier");
-    if (TIERS.includes(requestedTier)) state.tier = requestedTier;
-    else if (!initialParams.has("threshold") && !initialParams.has("solid")) state.tier = "defining";
-    // else: explicit legacy score params stay in charge until the slider is first moved
-    syncTierControl();
+    state.bands = initialBands();
     state.payload = {
       documents: documents.documents,
       behaviours: applyPanelThreshold({ behaviours: structuredClone(state.rawBehaviours) }).behaviours,
