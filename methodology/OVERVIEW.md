@@ -29,7 +29,7 @@ graph LR
 
 ## As-is observations
 - The rubric's canonical location is `methodology/spec-coverage-depth-rubric.md`. The two `research/sweeps/03-action-honesty/` records reference it by its earlier `research/` path, annotated with the current location.
-- Root `README.md` and `PLAN.md` repo maps do not list `methodology/` as a top-level directory.
+- `PLAN.md` §8's repo map does not list `methodology/` as a top-level directory (the root `README.md` map does).
 - `mentee-project-archetypes.md` is self-declared provisional and notes "the repo copy of `core-behaviour-list.md` predates the 'Interaction with others' group and is stale for rows 11–13" — its behaviour numbering anticipates a list newer than the one committed.
 - The exploration doc and mentee doc are forward-looking/decision records, not consumed by any build or render step; only the depth rubric and the site copy have live downstream consumers.
 - The site copy references a live URL (`ai-character-index.pages.dev/methodology`) and states the full per-behaviour reports "will be published in the following weeks" — a publication-status claim embedded in the copy.

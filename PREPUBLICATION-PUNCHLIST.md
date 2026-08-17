@@ -8,7 +8,7 @@
 
 - [ ] Decide fate of out-of-scope material in the repo: delete, move to an archive area, or leave with a clear "not part of the deliverable" marker. Candidates: `data/evals.json`, `research/sources/`, sweep stages 1–3 artifacts, `site/index.html` evidence lens, `.github/ISSUE_TEMPLATE/submit-eval.yml`.
 - [ ] Decide what "model spec reader" means for the site surfaces: keep `spec-reader/` + `llm-panel-review/` (+ test bench?), retire `index.html` prototype and `methodology.html` as-is, or rework them.
-- [ ] `behaviours-for-adria/`: in or out? It feeds only the test bench, but it IS spec-coverage work.
+- [ ] `behaviours-for-adria/`: in or out? It feeds the test bench and — via three transcribed rows — the panel surface, and it IS spec-coverage work.
 
 ## 1. Documentation
 
@@ -28,7 +28,7 @@ As-is documentation set: `SYSTEM.md` + per-directory `OVERVIEW.md` files + `expe
 
 ## 2. Engineering debt (dual-model review, cross-checked)
 
-Two independent engineering reviews (Qwen-3.8-Max and Kimi-K3, run as external OpenRouter API calls — not this repo's panel judges; the panel's Qwen seat runs qwen3.7-max) plus adversarial cross-checks by each model of the other's findings. The list below is the reconciled ranking; agreement on items 1–3 was unanimous, and each model caught real issues the other missed (marked ★). Scope note: the panel surface is judged at Severity 3 while its place in the deliverable is undecided (§0); items rise to 4 if it stays.
+Two independent engineering reviews (Qwen-3.8-Max and Kimi-K3, run as external OpenRouter API calls — not this repo's panel judges; the seated Qwen models are qwen-small in the cheap panel and qwen-big in the itest panel, and the shipped frontier panel is sol/fable/kimi) plus adversarial cross-checks by each model of the other's findings. The list below is the reconciled ranking; agreement on items 1–3 was unanimous, and each model caught real issues the other missed (marked ★). Scope note: the panel surface is judged at Severity 3 while its place in the deliverable is undecided (§0); items rise to 4 if it stays.
 
 **Tier 1 — a single unnoticed change silently falsifies published claims:**
 

@@ -14,7 +14,7 @@ Where the site's aesthetics and interaction grammar were discussed and settled (
 | `references/2026-07-02-index-pipeline-mockup.png` | Screenshot of the v0 HTML mockup's pipeline diagram; established the border = spec coverage, fill = evidence strength encoding |
 
 ## Relationships
-`site/index.html` is served as "a snapshot of the design prototype" — `site/README.md` says to update it by "re-copying the prototype and pushing". The L4 spec-reader spec in `interaction-model.md` (focus highlights, passage tints, find rail, split view, reading-room modal) anticipates `site/spec-reader/`, whose `styles.css` carries the same Garamond/registry language, and its fork `site/spec-reader-test/`. The "data requirements" section asks for additions to `data/coverage.json` (stable anchor ids into the mirrored specs) and `data/evals.json` (per-dimension scores, featured flag, assessment note). `PLAN.md` §1.4 routes "aesthetics discussion → design/ → informs site/", and `vision/features to build.md` is the brief that asked for this folder.
+`site/index.html` is served as "a snapshot of the design prototype" — `site/README.md` documents that the two have diverged and warns against re-copying the prototype without reconciling. The L4 spec-reader spec in `interaction-model.md` (focus highlights, passage tints, find rail, split view, reading-room modal) anticipates `site/spec-reader/`, whose `styles.css` carries the same Garamond/registry language, and its fork `site/spec-reader-test/`. The "data requirements" section asks for additions to `data/coverage.json` (stable anchor ids into the mirrored specs) and `data/evals.json` (per-dimension scores, featured flag, assessment note). `PLAN.md` §1.4 routes "aesthetics discussion → design/ → informs site/", and `vision/features to build.md` is the brief that asked for this folder.
 
 ## Dependency map
 ```mermaid
@@ -32,5 +32,5 @@ graph LR
 - The decision log records same-day supersessions (constellation map → founding document; "constitutional midnight" → daylight default), so earlier entries are history, not live spec.
 - `interaction-model.md` lists the L0 group "Interaction with others (in deliberation)" as current, which does not exist in `research/core-behaviour-list.md` — the design works off a behaviour grouping that lives in Notion, ahead of the repo list.
 - The prototype's data is inline in the HTML; it reads nothing from `data/*.json`, so design renders and canonical data are connected only by hand-copying.
-- `README.md` ends with an unresolved `#TODO` (a per-spec page with behaviour-select highlighting); no corresponding design artifact or site page exists.
+- `README.md` ends with an unresolved `#TODO` (a per-spec page with behaviour-select highlighting); `site/spec-reader/` implements that shape (per-spec views + behaviour-select passage highlighting), but the design log does not reference it.
 - `references/` holds a single mockup screenshot; the genre reference sites are listed as links only, without screenshots.

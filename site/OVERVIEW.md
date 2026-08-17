@@ -43,7 +43,7 @@ graph LR
 ## As-is observations
 
 - Five surfaces, one orphan: `llm-panel-review/` is built, documented in its own README, deployed, and listed in `site/README.md` — but unreachable from every navigation.
-- `index.html` contradicts `data/README.md`'s "the site contains no data of its own" — it carries hand-maintained inline data, and the only documented update path is "re-copy the prototype and push."
+- `index.html` contradicts `data/README.md`'s "the site contains no data of its own" — it carries hand-maintained inline data; `site/README.md` documents the divergence from the prototype and warns against re-copying it without reconciling.
 - Broken anchors: spec-reader's nav points at `../#methodology` and `../#about`; `index.html` has neither anchor. Sibling apps link `../methodology.html` instead.
 - `methodology.html` describes the term-list method while the operative procedure is the LLM panel; nothing tells readers which method produced which published records (behaviours 1–3: term-list; panel-scored records live in `llm-panel-review/`).
 - Behaviour metadata drift: `spec-reader/app.js` hardcodes 13 behaviours while its payload ships 3.

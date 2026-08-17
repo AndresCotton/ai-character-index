@@ -29,12 +29,12 @@ graph LR
 ```
 
 ## As-is observations
-- `data/schema/` is empty (`.gitkeep` only) although `data/README.md` says "CI validates every PR against them"; `.github/workflows/` contains only `deploy.yml` — the `ci.yml` PLAN.md §5 describes does not exist.
-- `data/README.md` opens "Empty until Phase 1" while four JSON files exist; its planned `behaviours.json` and `meta.json` do not.
+- `data/schema/` is empty (`.gitkeep` only) and no CI validates data files; `.github/workflows/` contains only `deploy.yml` — the `ci.yml` PLAN.md §5 describes does not exist.
+- The planned `behaviours.json` (single behaviour registry) and `meta.json` do not exist; `data/README.md` documents them as planned-but-absent.
 - Behaviour IDs collide across files: `coverage.json` id 1 = "No sycophancy", `reader-test-coverage.json` id 1 = "Helpfulness"; the files share record shape but not behaviour sets.
 - The published behaviour definitions (ids 1-3) exist only as a hardcoded `BEHAVIOURS` constant in `engine/build-spec-reader-data.py`.
 - `labs.json` and `evals.json` have zero programmatic consumers; `site/index.html` is a static prototype that fetches no JSON.
-- `data/README.md` says `reader-test-coverage.json` "feeds only `site/spec-reader-test/`", but `engine/panel/build_site_data.py` also reads it.
+- `reader-test-coverage.json` has two consumers: `engine/build-reader-test-data.py` (the whole set) and `engine/panel/build_site_data.py` (three rows carried into the panel surface).
 - `evals.json` `assessment.human_reviewed` is false; all 5 evals map only to behaviour 1.
 - `research/sweeps/01-no-sycophancy/` has no `4-spec-coverage.md` (only `1-dossiers.md`, `gates.md`, `register.md`), so behaviour 1's published records cannot currently be regenerated with `publish-coverage.py`; behaviours 2-3 have their artifacts.
 - `coverage.json` `citation_format` claims quotes are exact `cite.py resolve` output; enforcement happens only when `publish-coverage.py` is run, not in CI.
