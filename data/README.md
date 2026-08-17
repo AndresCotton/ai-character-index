@@ -17,4 +17,4 @@ One file here is deliberately **not** index data: `reader-test-coverage.json`, t
 
 `schema/` is currently empty (`.gitkeep` only), and no CI validates data files (the only workflow is `.github/workflows/deploy.yml`). Rules worth encoding when schemas land: no coverage verdict without at least one citation (quote + spec version + date verified), no eval without a URL, no unknown behaviour IDs.
 
-Derived views (evidence strength per cell, the gap list) are computed client-side at render time and never stored here, so they can never go stale.
+Derived views (evidence strength per cell, the gap list) are planned but computed nowhere today; the only evidence-strength display is hand-maintained inline data in `site/index.html`. When implemented they should be computed at render time and never stored here, so they can never go stale.

@@ -23,7 +23,7 @@ As-is documentation set: `SYSTEM.md` + per-directory `OVERVIEW.md` files + `expe
   - [x] `site/README.md`: tab list missing `llm-panel-review/`; describes an Astro stack that does not exist (the site is vanilla HTML/JS, no build step).
   - [x] `docs/onboarding-spec-coverage.md` §7: "CI is empty / no workflows" stale (deploy.yml exists); behaviour count corrected to the repo list's 12 (the 13-row Notion version is noted as newer in `methodology/mentee-project-archetypes.md`).
   - [x] 3 files cited the rubric at dead path `research/spec-coverage-depth-rubric.md` (it lives in `methodology/`) — fixed/annotated.
-- [ ] **PLAN.md ruling (Matt + Andres):** rewrite as living architecture doc, mark historical, or surgically update. It is the largest doc/reality gap in the repo.
+- [ ] **PLAN.md ruling (Matt + Andres):** rewrite as living architecture doc, mark historical, or surgically update. It is the largest doc/reality gap in the repo. Confirmed specifics: §8 lists `outreach/` (gitignored, never on main); §2/§8 claim schema-enforced CI (none exists); §8's engine row omits `panel/` and the builders; §1.2 promises four workflows where one exists.
 - [ ] `site/methodology.html` + `methodology/site-copy-how-we-assess-coverage.md`: describe the term-list method while the operative procedure is the LLM panel; the panel method needs writing for the public page.
 
 ## 2. Engineering debt (dual-model review, cross-checked)

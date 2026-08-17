@@ -31,6 +31,6 @@ graph LR
 
 ## As-is observations
 
-- §7 says "CI is empty — `.github/workflows/` has no workflows", but `deploy.yml` and its README exist. Its other claims remain true: no `ci.yml`, empty `data/schema/`, no locator re-resolution in CI.
-- §3 says the behaviour list has "currently 13, grouped into 4 categories," but `research/core-behaviour-list.md` holds 12 behaviours with different rows 11–12; `methodology/mentee-project-archetypes.md` states Notion has moved ahead of the repo file.
+- §7 accurately describes the current CI state: `deploy.yml` only, no validation CI, empty `data/schema/`, no locator re-resolution in CI.
+- §3 gives the behaviour list as 12 behaviours in 5 categories, matching `research/core-behaviour-list.md`; `methodology/mentee-project-archetypes.md` notes Notion has moved ahead of the repo file (13 rows there).
 - A single-file directory: nothing here covers the panel pipeline, the site surfaces, or repo-wide orientation — those live in per-component READMEs of uneven freshness.

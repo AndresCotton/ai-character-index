@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Everything that keeps the index alive: resolves spec citations, runs LLM panel judging, transforms sweep artifacts and run logs into the JSON payloads the site renders, and verifies the rendered site end-to-end. No component here serves the public directly; all outputs land in `data/` or `site/**/data/`.
+Everything that keeps the index alive: resolves spec citations, runs LLM panel judging, transforms sweep artifacts and run logs into the JSON payloads the site renders, and verifies the rendered site end-to-end. No component here serves the public directly; outputs land in `data/`, `site/**/data/`, the `specs/` mirrors (spec-watch), and engine-local run artifacts (run logs, metrics, smoke samples, failure dumps).
 
 ## Contents
 
@@ -24,7 +24,7 @@ Everything that keeps the index alive: resolves spec citations, runs LLM panel j
 - `cite.py` is the shared foundation: imported by `panel/harness.py` (via a `sys.path` insertion) and invoked as a subprocess by `publish-coverage.py`.
 - The panel chain: `run_rollout.py` drives `whole_doc.py` → `runlog-v3.jsonl` (gitignored; the shipped runlog lives on the `experiment/panel-judges` branch) → `build_site_data.py` → `site/llm-panel-review/data/behaviours.json`. The builder also reads `data/reader-test-coverage.json` for behaviour names/slugs.
 - The curated chain: sweep stage-4 markdown → `publish-coverage.py` → `data/coverage.json` → `build-spec-reader-data.py` → `site/spec-reader/data/documents.json`.
-- `spec-watch` overwrites `specs/`, which `cite.py` and both reader builders consume.
+- `spec-watch` overwrites `specs/`, which `cite.py` and `build-spec-reader-data.py` consume (the test-bench builder reads only `data/reader-test-coverage.json`).
 
 ## Dependency map
 

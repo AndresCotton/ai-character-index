@@ -10,7 +10,7 @@ In the spirit of AI Lab Watch, with a neutral, METR-like framing. By Andrés Cot
 
 Data changes land through reviewed pull requests against `data/` and `research/` -- merging the PR is the "push to production" act. The public site is static output committed under `site/`, deployed to Cloudflare Pages on merges that touch it; there is no build step. `engine/spec-watch/pull-latest.sh` refreshes the mirrored lab specs (run manually; automatic re-verification of coverage claims after a spec change is planned but not built). System map: [SYSTEM.md](SYSTEM.md); the original design: [PLAN.md §1](PLAN.md).
 
-Evidence enters through **behaviour sweeps**: a staged pipeline with a human sign-off gate between every stage, run one behaviour at a time; a sweep's results reach the public site only after its final verification gate. How to run one: [.claude/skills/README.md](.claude/skills/README.md).
+Evidence enters through **behaviour sweeps**: a staged pipeline with a human sign-off gate between every stage, run one behaviour at a time. Coverage results reach the public reader after Gate 4 via the `spec-coverage-pass` route (behaviours 2–3 were published this way); the full six-stage sweep reserves the later gates for the eval, Notion, and prototype surfaces. How to run one: [.claude/skills/README.md](.claude/skills/README.md).
 
 ## Repo map
 
@@ -19,9 +19,12 @@ Evidence enters through **behaviour sweeps**: a staged pipeline with a human sig
 | [`research/`](research/) | The intellectual core: the [canonical behaviour list](research/core-behaviour-list.md) (synced with Notion), sweep records in [`sweeps/`](research/sweeps/), its [sources](research/sources/), superseded drafts in `archive/` |
 | [`.claude/skills/`](.claude/skills/) | The behaviour-sweep pipeline: versioned procedure files, one per stage, each ending at a human gate -- [how to run a sweep](.claude/skills/README.md) |
 | [`specs/`](specs/) | Local mirrors of the specs the index scores against (Claude constitution, OpenAI Model Spec) |
+| [`methodology/`](methodology/) | Depth rubric (anchors every published depth score), the editable site methodology copy, method-exploration write-ups |
+| [`behaviours-for-adria/`](behaviours-for-adria/) | External reviewer's ten-behaviour stage-4 set — feeds the reader test bench and three rows of the panel surface |
 | [`data/`](data/) | Canonical machine-readable data the site renders from (see [`data/README.md`](data/README.md); `data/schema/` is a placeholder) |
 | [`engine/`](engine/) | The automation: `spec-cite/` (citation resolver), `panel/` (LLM panel judging), coverage/payload builders, site verifiers, `spec-watch/` (manual pulls); `notion-sync/` is a placeholder. See [`engine/README.md`](engine/README.md) |
 | [`site/`](site/) | The public static site |
+| [`docs/`](docs/) | Onboarding prose (the spec-coverage track) |
 | [`design/`](design/) | Aesthetics discussion: typography, palette, reference sites |
 | `outreach/` | Communication strategy and interview guides (internal, not published; gitignored, so it exists only in local clones) |
 | [`vision/`](vision/) | The original vision documents, including [features to build](vision/features%20to%20build.md) |
