@@ -25,7 +25,7 @@ CONFIG = json.loads((HERE / "panel-config.json").read_text())
 DISPLAY = CONFIG["display"]
 LAB = {"constitution": "anthropic", "model-spec": "openai"}
 VERDICT_WORD = {2: "core", 1: "related", 0: "unrelated"}
-MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3", "kimi-k2": "Kimi-K2.6", "opus": "Claude Opus 4.8",
+MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3", "kimi-k2": "Kimi-K2.6", "qwen-big": "Qwen3-235B", "opus": "Claude Opus 4.8",
                "gpt-mini": "GPT-5 mini", "haiku": "Claude Haiku 4.5", "qwen-small": "Qwen3-32B"}
 # panel behaviour keys -> site slugs
 SLUGS = {"helpfulness": "helpfulness", "third-party-harm": "harm-avoidance-to-third-parties",
@@ -35,6 +35,27 @@ SLUGS = {"helpfulness": "helpfulness", "third-party-harm": "harm-avoidance-to-th
          "objectivity": "objectivity-on-contested-questions", "user-autonomy": "user-autonomy",
          "general-welfare": "animal-welfare-impacts"}
 SLUGS_EXTRA = {"general-welfare": ["general-welfare-impacts-strict"]}   # one run feeds both general-guidelines rows
+
+
+def keeps_citation(score, n_votes, panel_size):
+    """Pure: stray-vote guard -- scales to panel size so a 1-judge panel is legal."""
+    return score >= 1 and n_votes >= min(2, panel_size)
+
+
+def clean_quote(text):
+    """Pure: strip bold markers -- mid-word bold in spec source breaks anchor matching."""
+    return text.replace("**", "")
+
+
+def citation_quote(text):
+    """Pure: (quote, is_example_block). Fenced example blocks render as code the
+    matcher cannot see, so -- like the curated data -- the quote is the caption
+    line before the fence and the exampleBlock flag extends the highlight."""
+    if "~~~" in text:
+        caption = clean_quote(text.split("~~~")[0].strip())
+        if caption:                       # a fence-leading passage has no caption --
+            return caption, True          # an empty quote would anchor to the wrong block
+    return clean_quote(text), False
 
 
 def main():
@@ -88,21 +109,16 @@ def main():
                 if "kimi" in mv and "kimi-k2" in mv:
                     mv = {m: v for m, v in mv.items() if m != "kimi-k2"}   # k2.6 is kimi's stand-in; k3 wins when present
                 score = sum(mv.values())
-                if score < 1 or len(mv) < 2:   # emit all scored; the page filters by ?threshold=
+                if not keeps_citation(score, len(mv), len(panel)):   # emit all scored; page filters by ?threshold=
                     continue
                 SYM = {2: "\u2713", 1: "~", 0: "\u2717"}
                 WORD = {2: "core", 1: "related", 0: "not relevant"}
                 decisions = "\n".join(f"{SYM[v]} {MODEL_LABEL.get(m, m)} \u2014 {WORD[v]}"
                                       for m, v in sorted(mv.items(), key=lambda x: -x[1]))
+                quote, is_example = citation_quote(text.get(loc, ""))
                 cits.append({
                     "id": f"{lab}-{b['slug']}-panel-{len(cits)+1}",
-                    "locator": loc,
-                    # mid-word bold (a source typo) breaks anchor matching; fenced examples
-                    # render as code the matcher cannot see -- quote the caption line and
-                    # let exampleBlock extend the highlight (curated-data convention)
-                    "quote": (text.get(loc, "").split("~~~")[0].strip() if "~~~" in text.get(loc, "")
-                              else text.get(loc, "")).replace("**", ""),
-                    "exampleBlock": "~~~" in text.get(loc, ""),
+                    "locator": loc, "quote": quote, "exampleBlock": is_example,
                     "role": f"Model determined relevance (score {score}/{2*len(mv)}):\n{decisions}",
                     "adjacent": score < DISPLAY["solid_threshold"],
                     "verdicts": dict(sorted(mv.items())), "score": score,
@@ -122,7 +138,9 @@ def main():
     out = {"generatedFrom": [f"engine/panel/build_site_data.py ({rubric})"],
            "provenance": {
                "method": "llm-panel whole-document judging", "rubric": rubric,
-               "panel": ["sol (gpt-5.6-sol)", "fable (claude-fable-5)", "kimi (moonshotai/Kimi-K3)"],
+               "panel_config": DISPLAY["panel"],
+               "panel": ["sol (gpt-5.6-sol)", "fable (claude-fable-5)", "kimi (moonshotai/Kimi-K3)"]
+                        if DISPLAY["panel"] == "frontier" else sorted(panel),
                "substitution": "opus (claude-opus-4-8) replaces fable on harm-to-third-parties x model-spec (fable output content-filtered, 3 attempts); kimi-k2 (Kimi-K2.6) replaces kimi on over-under-caution x model-spec (K3 exhausted a 65k output budget on reasoning without emitting verdicts, finish_reason length)",
                "judges_seen_in_data": seats,
                "runDate": str(date.today()),

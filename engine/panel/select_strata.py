@@ -4,7 +4,8 @@
 Strata per behaviour (cheap-panel 0..6 score = sum of ternary verdicts):
   likely-relevant (score >= 5), in-between (2..4), likely-not (0..1).
 Deterministic pick (hash-ordered) of `per_stratum` from each band -> one locators file
-per behaviour, for:  harness.py <beh> <spec> frontier --locators=smoke-<beh>.txt
+per behaviour. The pinned smoke-*.txt samples are the record of the validation
+runs; the run logs behind them live on the experiment branch.
 
   python3 select_strata.py --runlog=<cheap runlog> [--rubric=v2] [--per=5]
 """
