@@ -493,31 +493,66 @@ body.resizing-columns {
 .spec-option.active { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px var(--shadow); }
 
 .view-actions { display: flex; align-items: center; gap: 7px; }
+/* Tier gauge: three stops in the same well as the spec switcher. The paper fill
+   grows rightward as tiers are added, so the control reads as an extent -- how far
+   down the panel's scale the reader is willing to go -- not as pick-one tabs. */
 .tier-control {
-  min-height: 34px;
+  height: 34px;
+  padding: 3px;
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 8px;
+  background: var(--chrome-deep);
+}
+.tier-option {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  cursor: pointer;
-}
-.tier-label {
+  padding: 0 11px;
   font-family: var(--mono);
   font-size: 10px;
-  letter-spacing: 0.06em;
+  letter-spacing: .06em;
   text-transform: uppercase;
-  color: var(--muted);
-  min-width: 62px;
-}
-.tier-control input[type="range"] {
-  width: 74px;
-  margin: 0;
-  accent-color: var(--accent);
+  white-space: nowrap;
+  color: var(--faint);
   cursor: pointer;
+  transition: background-color .15s ease, color .15s ease;
 }
-.tier-control:hover { border-color: var(--muted); }
+.tier-option:hover { color: var(--muted); }
+.tier-check {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+/* The filled run: every stop up to and including the checked one. */
+.tier-option:has(.tier-check:checked),
+.tier-option:has(~ .tier-option .tier-check:checked) {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1px 2px var(--shadow);
+}
+.tier-option:first-child { border-radius: 5px 0 0 5px; }
+.tier-option:last-child,
+.tier-option:has(.tier-check:checked) { border-radius: 0 5px 5px 0; }
+.tier-option:first-child:has(.tier-check:checked) { border-radius: 5px; }
+/* Hairline ticks between filled stops, so the run stays legible as three targets. */
+.tier-option:not(:first-child):has(.tier-check:checked)::before,
+.tier-option:not(:first-child):has(~ .tier-option .tier-check:checked)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  width: 1px;
+  background: var(--line-light);
+}
+.tier-option:has(.tier-check:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
 .compare-toggle, .source-link {
   min-height: 34px;
   padding: 8px 12px;
@@ -1008,7 +1043,7 @@ button:focus-visible, a:focus-visible, .column-resizer:focus-visible {
   .reader-toolbar { padding: 10px; }
   .spec-switcher { width: 100%; }
   .spec-option { min-width: 0; flex: 1; }
-  .view-actions { width: 100%; justify-content: space-between; }
+  .view-actions { width: 100%; justify-content: space-between; flex-wrap: wrap; }
   .finding-bar { padding: 8px 12px; }
   .document-header { padding: 11px 15px; }
   /* Asymmetric on a phone: the right margin has to hold the passage rules and the rail,

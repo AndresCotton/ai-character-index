@@ -49,7 +49,7 @@ function behaviourTexture(behaviour) {
 
 const state = {
   payload: null,
-  rawBehaviours: null,   // unfiltered panel data; the tier slider re-filters from this
+  rawBehaviours: null,   // unfiltered panel data; the tier control re-filters from this
   tier: null,            // "defining" | "core" | "adjacent"; null = legacy ?threshold=/?solid= mode
   selectedSlugs: [],
   selectedSpec: "anthropic",
@@ -83,15 +83,14 @@ const elements = {
   sidebarResizer: document.querySelector("#sidebar-resizer"),
   sourceLink: document.querySelector("#source-link"),
   template: document.querySelector("#document-template"),
-  tierLabel: document.querySelector("#tier-label"),
-  tierSlider: document.querySelector("#tier-slider"),
+  tierControl: document.querySelector("#tier-control"),
+  tierRadios: document.querySelectorAll("#tier-control input[name='tier']"),
 };
 
 /* Display tiers for panel-scored passages, coarsest first. Per cell with j judges:
  * defining shows score >= 2j+1 (a "3" vote must be present -- on 3-point data this
  * clamps to unanimous core), core adds score >= j+1, adjacent shows every citation. */
 const TIERS = ["defining", "core", "adjacent"];
-const TIER_LABEL = { defining: "Defining", core: "+ Core", adjacent: "+ Adjacent" };
 
 const initialParams = new URLSearchParams(location.search);
 state.embedded = initialParams.get("embedded") === "1";
@@ -1542,7 +1541,7 @@ function applyPanelThreshold(payload) {
         p.maxScore = maxVerdict * vs.length;
       });
       const maxCell = Math.max(0, ...cov.passages.map(p => p.maxScore || 0));
-      // Tier mode (the slider): per-cell cuts derived from the judge count, so the same
+      // Tier mode (the gauge): per-cell cuts derived from the judge count, so the same
       // position means the same thing on 3-point and 4-point cells alike.
       const judges = Math.max(1, ...cov.passages.map(p => p.verdicts ? Object.values(p.verdicts).length : 0));
       const tierCut = { defining: 2 * judges + 1, core: judges + 1, adjacent: 1 };
@@ -1570,14 +1569,13 @@ function applyPanelThreshold(payload) {
 }
 
 function syncTierControl() {
-  if (!elements.tierSlider) return;
+  if (!elements.tierRadios.length) return;
   let shown = state.tier;
-  if (!shown) {   // legacy ?threshold= mode: position the slider by the nearest tier
+  if (!shown) {   // legacy ?threshold= mode: mark the nearest tier stop
     const t = Number(initialParams.get("threshold") ?? 6);
     shown = t >= 6 ? "defining" : t >= 4 ? "core" : "adjacent";
   }
-  elements.tierSlider.value = String(Math.max(0, TIERS.indexOf(shown)));
-  elements.tierLabel.textContent = TIER_LABEL[shown];
+  for (const radio of elements.tierRadios) radio.checked = radio.value === shown;
 }
 
 function setTier(tier) {
@@ -1591,8 +1589,8 @@ function setTier(tier) {
   rebuildReader();
 }
 
-elements.tierSlider?.addEventListener("input", () => {
-  setTier(TIERS[Number(elements.tierSlider.value)] ?? "defining");
+elements.tierControl?.addEventListener("change", (event) => {
+  if (event.target.name === "tier" && TIERS.includes(event.target.value)) setTier(event.target.value);
 });
 
 async function loadJSON(url) {
