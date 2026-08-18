@@ -178,8 +178,11 @@ class ParseLocatorTest(unittest.TestCase):
 
 class PublishedQuotesFindableTest(unittest.TestCase):
     """Invariant `find` and the term sweep rely on: folding never loses a
-    published quote. Runs in-process (no subprocess per citation) so the
-    whole corpus stays cheap."""
+    published quote. Each locator is checked against the spec version it
+    pins (parse_locator + load_spec(spec, version), cached per
+    (spec, version)), so a spec-mirror update cannot false-fail the test.
+    Runs in-process (no subprocess per citation) so the whole corpus stays
+    cheap."""
 
     def test_every_published_quote_survives_folding(self):
         coverage = json.loads((ROOT / "data" / "coverage.json").read_text(encoding="utf-8"))
@@ -187,12 +190,13 @@ class PublishedQuotesFindableTest(unittest.TestCase):
         misses = []
         for behaviour in coverage["coverage"]:
             for citation in behaviour.get("citations", []):
-                spec = citation["locator"].split("@")[0].strip()
-                if spec not in specs:
-                    _, sections, lines = cite.load_spec(spec, None)
-                    specs[spec] = cite.match_normalize("\n".join(lines))
+                spec, version, _, _ = cite.parse_locator(citation["locator"])
+                key = (spec, version)
+                if key not in specs:
+                    _, _, lines = cite.load_spec(spec, version)
+                    specs[key] = cite.match_normalize("\n".join(lines))
                 needle = cite.match_normalize(citation["quote"])
-                if needle not in specs[spec]:
+                if needle not in specs[key]:
                     misses.append(citation["locator"])
         self.assertEqual(misses, [], f"quotes no longer findable after folding: {misses}")
 
