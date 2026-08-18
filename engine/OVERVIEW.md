@@ -60,7 +60,7 @@ graph LR
 - Four panel modules read `panel-config.json` at import time; config cannot be injected without monkeypatching.
 - Runlog defaults disagree: `harness.RUNLOG` = `runlog.jsonl`, executors default to `runlog-v3.jsonl`; resume silently reads the wrong file if the override is forgotten.
 - Locator separators diverge by producer: panel chain emits `" > "`, curated chain `" › "`; cite.py tolerates both, consumers must know which producer they face.
-- Dead code/config: `harness.BATCH` + `user_msg()`, `panel-config.json batch_size`, `build_site_data.VERDICT_WORD`; `display.threshold` marked "unused legacy" while `solid_threshold` is still load-bearing.
+- The former dead symbols (`harness.BATCH`, `user_msg()`, `panel-config.json batch_size`, `build_site_data.VERDICT_WORD`) have been removed by the dead-code cleanup; `display.threshold` is still marked "unused legacy" while `solid_threshold` is load-bearing.
 - Rubric-text coupling: `whole_doc.py` derives prompts by `str.replace` + `assert` on frozen strings in `harness.py` — rubric edits are two-file surgery.
 - Nothing runs in CI: no workflow executes `test_panel.py`, `publish-coverage.py --check`, locator re-resolution, or the verifiers.
-- Hygiene: a `__pycache__/cite.cpython-312.pyc` is committed; `wholedoc-FAILED-*.txt` outputs are not gitignored.
+- Hygiene: `__pycache__/` + `*.pyc` are now gitignored (the committed `.pyc` was removed); `wholedoc-FAILED-*.txt` outputs are still not gitignored.
