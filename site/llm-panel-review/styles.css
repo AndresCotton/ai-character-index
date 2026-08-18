@@ -622,6 +622,32 @@ body.resizing-columns {
 /* Neutral: the legend explains intensity, and the colour belongs to the behaviour. */
 .legend-mark { width: 3px; height: 9px; display: inline-block; border-radius: 2px; background: var(--muted); }
 .legend-mark.adjacent { margin-left: 3px; opacity: .4; }
+
+/* Tier toggles: the legend is the control. Each mark-and-word pair is a button; a
+   pressed pair sits enclosed in a small bordered well, an unpressed one fades but
+   keeps its footprint. Mark weight orders the tiers: heavy bar = defining, solid =
+   core, faint = related -- the same weights the passage rail carries. */
+.tier-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+  transition: color .12s ease, border-color .12s ease, background-color .12s ease;
+}
+.tier-toggle .legend-mark { background: currentColor; }
+.tier-toggle .legend-mark.adjacent { margin-left: 0; }
+.tier-toggle:hover { color: var(--muted); border-color: var(--line-light); }
+.tier-toggle[aria-pressed="true"] {
+  border-color: var(--line);
+  background: var(--chrome-deep);
+  color: var(--ink);
+}
+.legend-mark.defining { width: 5px; }
 .document-scroll { position: relative; flex: 1; min-height: 0; overflow: auto; scroll-behavior: smooth; }
 
 .document-body {

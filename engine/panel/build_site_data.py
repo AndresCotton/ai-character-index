@@ -24,6 +24,7 @@ ROOT = HERE.parent.parent
 CONFIG = json.loads((HERE / "panel-config.json").read_text())
 DISPLAY = CONFIG["display"]
 LAB = {"constitution": "anthropic", "model-spec": "openai"}
+VERDICT_WORD = {3: "defining", 2: "core", 1: "related", 0: "unrelated"}   # 3 only in 4-point rubrics (v5+)
 MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3", "kimi-k2": "Kimi-K2.6", "qwen-big": "Qwen3-235B", "opus": "Claude Opus 4.8",
                "gpt-mini": "GPT-5 mini", "haiku": "Claude Haiku 4.5", "qwen-small": "Qwen3-32B"}
 # panel behaviour keys -> site slugs
@@ -60,6 +61,7 @@ def citation_quote(text):
 def main():
     runlog = HERE / "runlog-v3.jsonl"   # same default as whole_doc.py and run_rollout.py
     rubric = CONFIG["rubric"]
+    out_name = None
     for a in sys.argv[1:]:
         if a.startswith("--runlog="):
             runlog = Path(a.split("=", 1)[1])
@@ -67,6 +69,10 @@ def main():
             rubric = a.split("=", 1)[1]
         elif a.startswith("--panel="):
             DISPLAY["panel"] = a.split("=", 1)[1]
+        elif a.startswith("--behaviours="):     # site slugs, comma-separated; overrides display list
+            DISPLAY["behaviours"] = a.split("=", 1)[1].split(",")
+        elif a.startswith("--out="):            # alternate FILENAME in site data dir (iteration builds)
+            out_name = a.split("=", 1)[1]
     panel = set(CONFIG["panels"][DISPLAY["panel"]])
     votes = collections.defaultdict(dict)
     spec_of = {}
@@ -110,8 +116,8 @@ def main():
                 score = sum(mv.values())
                 if not keeps_citation(score, len(mv), len(panel)):   # emit all scored; page filters by ?threshold=
                     continue
-                SYM = {2: "\u2713", 1: "~", 0: "\u2717"}
-                WORD = {2: "core", 1: "related", 0: "not relevant"}
+                SYM = {3: "\u2713\u2713", 2: "\u2713", 1: "~", 0: "\u2717"}   # defining = doubled core tick, no star
+                WORD = {3: "defining", 2: "core", 1: "related", 0: "not relevant"}
                 decisions = "\n".join(f"{SYM[v]} {MODEL_LABEL.get(m, m)} \u2014 {WORD[v]}"
                                       for m, v in sorted(mv.items(), key=lambda x: -x[1]))
                 quote, is_example = citation_quote(text.get(loc, ""))
@@ -124,7 +130,9 @@ def main():
                 })
             cits.sort(key=lambda c: (-c["score"], c["locator"]))
             cov[lab] = {"verdict": src_entry.get("verdict"), "depth": src_entry.get("depth_0_4"),
-                        "note": src_entry.get("depth_note", ""),
+                        # depth_note stays in the stage-4 record; beside re-run panel data the
+                        # curation-era prose goes stale, so the bench ships passage sets only
+                        "note": "",
                         "verifiedDate": src_entry.get("verified_date", ""),
                         "passages": cits}
         out_behaviours.append({"id": len(out_behaviours) + 1,   # renumber 01..N for display
@@ -145,7 +153,7 @@ def main():
                "runDate": str(date.today()),
                "scoring": "per passage: sum over judges of core=2/related=1/neither=0; display thresholds are client-side URL params"},
            "behaviours": out_behaviours}
-    dest = ROOT / "site" / "llm-panel-review" / "data" / "behaviours.json"
+    dest = ROOT / "site" / "llm-panel-review" / "data" / (out_name or "behaviours.json")
     dest.write_text(json.dumps(out, indent=1, ensure_ascii=False))
     n = sum(len(c["passages"]) for b in out_behaviours for c in b["coverage"].values())
     print(f"{dest.relative_to(ROOT)}: {len(out_behaviours)} behaviours, {n} citations "
