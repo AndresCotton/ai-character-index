@@ -6,9 +6,8 @@
 
 ## 0. Scope consequences (need Andres ruling)
 
-- [ ] Decide fate of out-of-scope material in the repo: delete, move to an archive area, or leave with a clear "not part of the deliverable" marker. Candidates: `data/evals.json`, `research/sources/`, sweep stages 1–3 artifacts, `site/index.html` evidence lens, `.github/ISSUE_TEMPLATE/submit-eval.yml`.
+- [ ] Decide fate of out-of-scope material in the repo: delete, move to an archive area, or leave with a clear "not part of the deliverable" marker. Candidates: `data/evals.json`, `research/sources/`, sweep stages 1–3 artifacts, `site/index.html` evidence lens.
 - [ ] **`.claude/skills/` scope pass.** Under the model-spec-reader-only scope: `1-sweep-discover/`, `2-sweep-curate/`, `3-sweep-score/` and `behaviour-sweep/references/exclusion-criteria.md` are the out-of-scope eval-discovery/quality workflow → delete/archive candidates. `4-sweep-spec-coverage/` and `spec-coverage-pass/` are the spec-coverage core → keep. Rescope to coverage-only: `5-sweep-publish/` (drop the evals.json / Notion / prototype surfaces, keep the `publish-coverage.py` slice), `6-sweep-verify/` (drop eval-register accounting + score identity; keep quote re-resolution / links / gate log), the `behaviour-sweep/` orchestrator (retire in favour of `spec-coverage-pass` or rescope), and `references/locations.md` (strip Notion IDs; keep canonical paths + spec versions). Sub-question: adding new behaviours later should be a lightweight editorial add to `core-behaviour-list.md`, not the discovery pipeline. Drafts of the rescoped stages: `docs/proposals/5-sweep-publish.coverage-only.draft.md`, `docs/proposals/6-sweep-verify.coverage-only.draft.md`.
-- [x] **Public intake forms.** Ruled (repo owner): delete `submit-eval.yml` and `appeal.yml`, keep only a contact mechanism — done in this PR (both forms removed, `config.yml` contact link retained, README Contributing points to it). Side effect: removing `submit-eval.yml` also removes one hand-synced behaviour-list copy (its dropdown).
 - [ ] Decide what "model spec reader" means for the site surfaces: keep `spec-reader/` + `llm-panel-review/` (+ test bench?), retire `index.html` prototype and `methodology.html` as-is, or rework them.
 - [ ] `behaviours-for-adria/`: in or out? It feeds the test bench and — via three transcribed rows — the panel surface, and it IS spec-coverage work.
 
@@ -16,15 +15,6 @@
 
 As-is documentation set: `SYSTEM.md` + per-directory `OVERVIEW.md` files + `experiments-branches.md` (proposed for main in this PR).
 
-- [ ] Walk the as-is set with Andres; confirm the current-state claims before anything is rewritten.
-- [x] Kimi-K3 adversarial verification of all repo documentation → findings fixed in this PR; remaining open items below.
-- [x] Truthfulness fixes (no decisions needed, just stale prose) — landed in this PR:
-  - [x] `README.md` repo map: "evals/" label → sweeps; engine row missing `spec-cite/`, `panel/`, `publish-coverage.py`; Notion-sync described as operative (it's a `.gitkeep`).
-  - [x] `engine/README.md`: add `panel/` and `publish-coverage.py`; drop/qualify the "CI re-resolves every locator" claim.
-  - [x] `data/README.md`: "Empty until Phase 1" is false; schema/CI claim is false; `reader-test-coverage.json` also feeds `engine/panel/build_site_data.py`.
-  - [x] `site/README.md`: tab list missing `llm-panel-review/`; describes an Astro stack that does not exist (the site is vanilla HTML/JS, no build step).
-  - [x] `docs/onboarding-spec-coverage.md` §7: "CI is empty / no workflows" stale (deploy.yml exists); behaviour count corrected to the repo list's 12 (the 13-row Notion version is noted as newer in `methodology/mentee-project-archetypes.md`).
-  - [x] 3 files cited the rubric at dead path `research/spec-coverage-depth-rubric.md` (it lives in `methodology/`) — fixed/annotated.
 - [ ] **PLAN.md ruling (Matt + Andres):** rewrite as living architecture doc, mark historical, or surgically update. It is the largest doc/reality gap in the repo. Confirmed specifics: §8 lists `outreach/` (gitignored, never on main); §2/§8 claim schema-enforced CI (none exists); §8's engine row omits `panel/` and the builders; §1.2 promises four workflows where one exists.
 - [ ] `site/methodology.html` + `methodology/site-copy-how-we-assess-coverage.md`: describe the term-list method while the operative procedure is the LLM panel; the panel method needs writing for the public page.
 
@@ -46,7 +36,6 @@ Two independent engineering reviews (Qwen-3.8-Max and Kimi-K3, run as external O
 - [ ] **Unify reader anchoring + passage counting.** The three reader surfaces fork one code base (the published reader already lacks the forks' `passageFragments` matcher), and the two verifiers count passages differently (raw citations vs deduped blocks). Extract a shared reader-core module; generate `reader-test-coverage.json` from the sweep artifacts with a `--check` instead of hand transcription. *Sev 3 · M*
 - [ ] **Single source for agent-facing procedures.** The sweep procedures exist only under `.claude/skills/` (a Claude-Code-specific path) and no root agent-context files exist (no AGENTS.md/QWEN.md/CLAUDE.md anywhere); making the procedures reachable from other agents must not duplicate the SKILL.md files — one canonical copy, everything else a pointer. Decide: (a) canonical location (stay at `.claude/skills/` vs move to a neutral path), (b) pointer mechanism (symlinks from agent-specific locations — fine on macOS/Linux, needs developer mode on Windows, some tools don't follow links — vs root AGENTS.md/QWEN.md pointer docs referencing the canonical path), (c) a CI sync check if copies are ever generated. *Sev 3 · S–M*
 - [ ] **Decide `llm-panel-review/` production status.** ★ It is live on Cloudflare (deploy filters on `site/**`), unlinked from all navs, noindex but publicly reachable, rendering panel data whose provenance lives on an unmerged branch. Link it with a draft banner or exclude it from the deploy. *Sev 3 · S* (gated on §0)
-- [ ] **Documentation truthfulness pass** — the items in §1 above. *Sev 3 · S*
 
 **Tier 3 — hygiene:**
 
