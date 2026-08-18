@@ -25,6 +25,20 @@ python3 engine/spec-cite/cite.py find model-spec "some remembered phrase"   # te
 
 No CI re-resolves locators today (the only workflow is `.github/workflows/deploy.yml`). Re-resolution happens when `engine/publish-coverage.py` runs — it verifies every quote through `cite.py` before writing `data/coverage.json` — and a PR-time locator check is on the closeout list. Combined with spec-watch, that is what keeps coverage claims verifiable over time.
 
+### User specs (bring your own document)
+
+`cite.py` also resolves locators into your own spec document, without editing the tool: drop a manifest at `specs/user/specs.json` (gitignored — the manifest and any documents stored with it stay local and unpushed):
+
+```json
+{
+  "my-spec": {
+    "2026-08-18": {"path": "specs/user/my-spec.md", "default": true}
+  }
+}
+```
+
+Every command then accepts the registered names alongside the bundled specs — `cite.py outline my-spec`, `cite.py resolve "my-spec@2026-08-18 > Some Section > ¶2 s1"`, etc. Paths resolve relative to the repo root (absolute paths also work); versions are ISO dates, as in locators. A spec with exactly one version needs no `"default"` flag; with several, exactly one version must carry it. Bundled names (`constitution`, `model-spec`) cannot be redefined — a manifest that tries, or that is malformed, fails loudly at load; an absent manifest is the normal bundled-only state. `SPEC_CITE_USER_SPECS=<file>` overrides the manifest location (how the test suite exercises this without touching `specs/`). This is a private citation workflow: the index's published coverage still cites only the bundled mirrors.
+
 ## publish-coverage.py (works today)
 
 Publishes one behaviour's gate-approved stage-4 artifact into `data/coverage.json`, re-resolving every stored quote through `cite.py` first. Two artifact forms; the sidecar wins when both exist in the sweep directory:

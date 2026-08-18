@@ -109,3 +109,6 @@ the exact span, `resolve` the locator, and store the resolver's output as the qu
 
 New spec versions: add the mirrored file, register it in `SPECS` in `cite.py`, and
 re-resolve stored locators; block numbers are stable only within a pinned version.
+To cite your own (non-mirrored) spec document, register it through the user manifest
+(`specs/user/specs.json`, described in `engine/README.md` under spec-cite) instead of
+editing `cite.py`; the grammar and commands above apply unchanged.
