@@ -251,6 +251,15 @@ class TestReaderTestCoverageSchema(MutationMixin, unittest.TestCase):
             d["coverage"][0]["verified_against_version"] = None
         self.assert_valid(mutate)
 
+    def test_empty_citations_allowed_for_absence_findings(self):
+        # The bench models "the spec says nothing about this behaviour" as a
+        # record whose citations are empty, never a missing record (see
+        # engine/build-reader-test-data.py). The published coverage.json keeps
+        # the >=1 rule; only the bench relaxes it.
+        def mutate(d):
+            d["coverage"][0]["citations"] = []
+        self.assert_valid(mutate)
+
 
 class TestCrossFileRules(unittest.TestCase):
     """Rules a single-file schema cannot express, run against a scratch repo copy."""
@@ -293,6 +302,22 @@ class TestCrossFileRules(unittest.TestCase):
         self.assertTrue(
             any("coverage.json" in e and "invalid JSON" in e for e in errors),
             f"no invalid-JSON error; got: {errors}",
+        )
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+            self.assertEqual(vd.main(["--root", str(self.tmp)]), 1)
+
+    def test_null_json_file_fails(self):
+        # A file containing literal JSON null parses fine (json.loads("null")
+        # is None) but is a wrong-type document: the gate must reject it, not
+        # confuse it with a load failure and skip it silently.
+        (self.tmp / "data" / "coverage.json").write_text("null", encoding="utf-8")
+        errors = vd.validate_all(self.tmp)
+        # Both backends report the top-level type mismatch, in their own
+        # wording ("None is not of type 'object'" vs "expected type object").
+        self.assertTrue(
+            any("coverage.json" in e and "type" in e for e in errors),
+            f"null coverage.json passed silently; got: {errors}",
         )
         buffer = io.StringIO()
         with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):

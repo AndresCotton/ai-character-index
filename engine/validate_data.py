@@ -184,6 +184,12 @@ def validate_instance(instance, schema, force_stdlib: bool = False) -> list:
     return _validate_with_stdlib(instance, schema)
 
 
+# Sentinel distinguishing "load failed" from a successfully parsed JSON
+# `null` (json.loads("null") is None, which is valid JSON the schemas must
+# reject as a mistyped document, not skip as a read error).
+_MISSING = object()
+
+
 def _load_json(path: Path, errors: list):
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -191,7 +197,7 @@ def _load_json(path: Path, errors: list):
         errors.append(f"{path.name}: file not found at {path}")
     except json.JSONDecodeError as exc:
         errors.append(f"{path.name}: invalid JSON: {exc}")
-    return None
+    return _MISSING
 
 
 def _cross_file_checks(files: dict) -> list:
@@ -255,7 +261,7 @@ def validate_all(root=None, force_stdlib: bool = False) -> list:
     for data_name, schema_name in CHECKS:
         instance = _load_json(data_dir / data_name, errors)
         schema = _load_json(data_dir / "schema" / schema_name, errors)
-        if instance is None or schema is None:
+        if instance is _MISSING or schema is _MISSING:
             continue
         files[data_name] = instance
         errors.extend(

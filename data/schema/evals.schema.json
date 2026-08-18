@@ -138,7 +138,7 @@
             "anthropic": { "$ref": "#/$defs/adherenceEntry" },
             "openai": { "$ref": "#/$defs/adherenceEntry" }
           },
-          "description": "One entry per launch lab; additional labs may be added as keys."
+          "description": "One entry per launch lab; additional labs may be added as keys. Note: extra lab keys beyond anthropic/openai are currently NOT validated against adherenceEntry (the object is open); add a property entry when a third lab lands."
         },
         "featured": { "type": "boolean" },
         "notes": { "type": "string" }
