@@ -31,13 +31,19 @@ One test file per subject under test:
   the corpus-wide invariant that every published quote stays findable
   under folding.
 - `test_publish_check.py` -- runs `publish-coverage.py --check` for every
-  `research/sweeps/*/4-spec-coverage.md`: re-resolves every published quote
-  byte-for-byte and diffs the artifact against `data/coverage.json`.
+  sweep directory holding a stage-4 artifact (`4-spec-coverage.md` or its
+  structured sidecar `4-spec-coverage.json`): re-resolves every published
+  quote byte-for-byte and diffs the artifact against `data/coverage.json`.
+- `test_sidecar.py` -- pins the structured sidecar path of
+  `publish-coverage.py`: committed sidecars validate against
+  `data/schema/spec-coverage-sidecar.schema.json` (both validator backends)
+  with complete reconstruction provenance; corrupted quotes still fail at
+  the cite.py re-resolution gate; schema violations and missing
+  reconstruction provenance fail loudly at publish time.
 - `test_coverage_json.py` -- re-resolves **every** locator in
-  `data/coverage.json` against `cite.py`, including behaviour 1, whose
-  old-format artifact the publish gate cannot parse. Resolution is
-  in-process (one spec load per spec), so this stays near-instant as
-  behaviours accumulate.
+  `data/coverage.json` against `cite.py`, whether or not the behaviour has
+  any artifact. Resolution is in-process (one spec load per spec), so this
+  stays near-instant as behaviours accumulate.
 - `test_behaviour_registry.py` -- the drift gate for behaviour identity:
   `data/behaviours.json` is the source of truth, and the derived constants
   (`GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in

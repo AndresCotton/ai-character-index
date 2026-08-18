@@ -27,12 +27,19 @@ No CI re-resolves locators today (the only workflow is `.github/workflows/deploy
 
 ## publish-coverage.py (works today)
 
-Publishes one behaviour's gate-approved stage-4 artifact (`research/sweeps/NN-<slug>/4-spec-coverage.md`) into `data/coverage.json`, re-resolving every stored quote through `cite.py` first:
+Publishes one behaviour's gate-approved stage-4 artifact into `data/coverage.json`, re-resolving every stored quote through `cite.py` first. Two artifact forms; the sidecar wins when both exist in the sweep directory:
+
+- `4-spec-coverage.json` — structured sidecar, validated against [`data/schema/spec-coverage-sidecar.schema.json`](../data/schema/spec-coverage-sidecar.schema.json) plus cross-checks a single-file schema cannot express: records agree with the top-level behaviour identity and the `NN-<slug>` directory name, exactly one record per lab, the declared `citation_format` is the project convention, each `verified_against_version` equals the version pinned by the record's first locator, and a sidecar marked `provenance.reconstructed` names its source and date. Records are published verbatim — citation key order included — so a sidecar derived from `coverage.json` round-trips byte-for-byte.
+- `4-spec-coverage.md` — the prose artifact, parsed by the ~4-line regex layout (behaviour 2 is the template). This is the fallback when no sidecar exists, and the only form behaviours 2–3 ship today.
+
+The cite.py gate is the same on both paths: no quote is written or checked without re-resolution.
 
 ```sh
 python3 engine/publish-coverage.py research/sweeps/02-calibration            # write
 python3 engine/publish-coverage.py research/sweeps/02-calibration --check    # verify only
 ```
+
+Behaviour 1 is a special case: `research/sweeps/01-no-sycophancy/` never had a stage-4 markdown artifact (its records were published in 2026-07, before the staged layout existed), so it ships a sidecar reconstructed from its published records in `data/coverage.json`. The sidecar's `provenance` block marks it `reconstructed` and lists what a genuine stage-4 artifact would carry that it cannot (term sweep and zero-hit probes, mirror-freshness record, authority annotations, "Considered and not kept", gate history). The schema lives in `data/schema/` but is deliberately not in `engine/validate_data.py`'s CHECKS — that tuple pairs `data/*.json` files with their schemas; sidecars validate `research/sweeps` artifacts and are enforced here at publish time instead.
 
 ## panel/ (works today)
 
