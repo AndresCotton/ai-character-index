@@ -11,7 +11,7 @@ Everything that keeps the index alive: resolves spec citations, runs LLM panel j
 | Path | What it is |
 |---|---|
 | `spec-cite/cite.py` | Locator resolver/verifier (`outline`/`show`/`resolve`/`find`). Grammar defined by `specs/CITATION.md`; spec registry hardcoded (`SPECS` dict). Stdlib-only; CLI **and** imported library. No tests. |
-| `spec-watch/pull-latest.sh` | Pulls upstream OpenAI/Anthropic specs into `specs/` via `gh`. Manual today; no version pinning or diff detection. The dated upstream HTML release archives are deliberately not mirrored (they exceed the contents API's 1 MB inline limit). |
+| `spec-watch/pull-latest.sh` | Pulls upstream OpenAI/Anthropic specs into `specs/` via `gh`. Manual today; no version pinning or diff detection. Known issue: the dated upstream HTML release archives exceed the contents API's 1 MB inline limit and are fetched as 0-byte files. |
 | `panel/` | LLM panel pipeline: `harness.py` (library: config, frozen rubrics v1/v2/v3, prompt builders, verdict parsing, resume), `whole_doc.py` (one API call per behaviour×spec×model), `run_rollout.py` (grid driver, dry-run default), `build_site_data.py` (runlog → site payload), `select_strata.py` (validation sampler), `test_panel.py` (27 offline unit tests), `panel-config.json`, `behaviours.json`. |
 | `publish-coverage.py` | Parses a stage-4 artifact (`research/sweeps/NN-slug/4-spec-coverage.md`) via regexes and publishes records into `data/coverage.json`, re-verifying every quote through `cite.py resolve` (subprocess). |
 | `build-spec-reader-data.py` | `data/coverage.json` + spec markdown → `site/spec-reader/data/documents.json`. Hardcoded `BEHAVIOURS` list (ids 1–3 only). |
