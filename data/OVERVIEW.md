@@ -2,7 +2,7 @@
 > As-is snapshot of origin/main @ 31fddca (2026-08-17). Describes what exists now, not what should exist.
 
 ## Purpose
-Per `data/README.md`, this directory is "the canonical machine-readable data the site renders from," changed only via reviewed PRs. It currently holds cited spec-coverage verdicts, the lab list, and one eval survey; derived views are computed by the site at build time, never stored here.
+Per `data/README.md`, this directory is "the canonical machine-readable data the site renders from," changed only via reviewed PRs. It currently holds cited spec-coverage verdicts, the lab list, and one eval survey. Derived views (evidence strength per cell, the gap list) are planned but computed nowhere today; when implemented they should be computed at render time, never stored here.
 
 ## Contents
 | File | Top-level keys / one-line semantics | Size |

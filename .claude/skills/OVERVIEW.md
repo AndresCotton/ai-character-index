@@ -4,7 +4,7 @@
 
 ## Purpose
 
-The agent-executable playbook for extending the index: a six-stage "behaviour sweep" pipeline (plus two campaign wrappers), where each stage ends at a human sign-off gate. This is the primary LLM-facing interface to the repo — an agent asked to "sweep behaviour N" starts at `README.md` and follows these files.
+The agent-executable playbook for extending the index: a six-stage "behaviour sweep" pipeline (plus one campaign wrapper), where each stage ends at a human sign-off gate. This is the primary LLM-facing interface to the repo — an agent asked to "sweep behaviour N" starts at `README.md` and follows these files.
 
 ## Contents
 
@@ -44,5 +44,5 @@ graph LR
 
 - Stage 4 fully describes the LLM panel (every path it names exists on this checkout), but the artifact template it points to (`research/sweeps/02-calibration/4-spec-coverage.md`) contains a `## Term sweep` section the current procedure does not produce (the skill asks for "Panel run") — an agent copying the template reproduces a section the publisher does not ingest.
 - Stage 6 and the orchestrator name manual `pnpm deploy:site` as THE release act and do not mention `.github/workflows/deploy.yml`, which auto-deploys on merge to main; both mechanisms exist.
-- `README.md`'s "`data/evals.json` `data/coverage.json` — what the site renders" is only partly true: the readers render engine-built payloads, `index.html` renders inline prototype data, and nothing renders `evals.json` yet.
-- The runlog stage 4 names (`engine/panel/runlog-v3.jsonl`) is gitignored by design; the shipped copy lives on the `experiment/panel-judges` branch, so reproducing the shipped dataset requires a branch that isn't main.
+- The README repo map's `data/` row ("Canonical machine-readable data the site renders from") is only partly true: the readers render engine-built payloads, `index.html` renders inline prototype data, and nothing renders `evals.json` yet.
+- The runlog stage 4 names (`engine/panel/runlog-v3.jsonl`) is not committed to main and is not yet gitignored (adding panel runtime artifacts to `.gitignore` is an open closeout item); the shipped copy lives on the `experiment/panel-judges` branch, so reproducing the shipped dataset requires a branch that isn't main.

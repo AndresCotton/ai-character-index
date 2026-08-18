@@ -8,7 +8,7 @@ Holds stage-4 (spec-coverage) sweep artifacts for ten behaviours supplied by an 
 ## Contents
 | Path | Holds |
 |---|---|
-| `README.md` | Batch overview: provenance, coverage summary table (all ten covered, depths 3–4, 294 locators across 30 behaviour×spec views), the one-hop publish route, cross-behaviour notes |
+| `README.md` | Batch overview: provenance, coverage summary table (all ten covered, depths 3–4, 294 locators across 30 behaviour×spec views), the one-hop publish route, cross-behaviour notes. The 30 views are the rendered bench views (10 behaviours × {anthropic, openai, compare}); the underlying ledger `data/reader-test-coverage.json` holds 20 coverage records (10 × 2 labs) carrying those 294 citations |
 | `01-helpfulness/` … `08-user-autonomy/` | Eight numbered folders, each with a single `4-spec-coverage.md`: term sweep, resolver-verified excerpt set, per-spec verdict + depth, "considered and not kept" log, mechanical re-check output, Gate-4 checklist |
 | `general-guidelines/README.md` | The second group, defined by a *filter over the specs* rather than a construct; renders under its own bench heading with a broken margin rule |
 | `general-guidelines/01-animal-welfare-impacts/` | "General welfare impacts" — 51 locators, covered/4 on both specs |

@@ -11,7 +11,7 @@ Current files:
 | `evals.json` | eval, with rubric quality scores | hand-maintained (stage-5 transcription); no code reads it today |
 | `reader-test-coverage.json` | see below | hand-transcribed from [`behaviours-for-adria/`](../behaviours-for-adria/README.md) |
 
-Planned but absent: `behaviours.json` (the single behaviour registry — see the pre-publication punch list) and `meta.json` (site-wide metadata).
+Planned but absent: `behaviours.json` (the single behaviour registry — see the closeout list) and `meta.json` (site-wide metadata).
 
 One file here is deliberately **not** index data: `reader-test-coverage.json`, the ledger behind the [reader test bench](../site/spec-reader-test/README.md). It holds an external reviewer's behaviour set -- definitions plus one coverage record per behaviour × lab, in the same record shape as `coverage.json` so a record can be lifted from a sweep unchanged. Consumers: `engine/build-reader-test-data.py` (the whole set → `site/spec-reader-test/`) and `engine/panel/build_site_data.py` (three rows — helpfulness, harm-avoidance-to-third-parties, avoiding-over-and-under-caution — carried through untouched into `site/llm-panel-review/`). Nothing in it is an index verdict, and nothing in it reaches `coverage.json` or the published `site/spec-reader/`.
 

@@ -1,4 +1,4 @@
-> **DRAFT PROPOSAL — awaiting ruling** (punch list §0, ".claude/skills/ scope pass").
+> **DRAFT PROPOSAL — awaiting ruling** (closeout list, "Scope deletions" item — `.claude/skills/` scope pass).
 > Rescoped replacement for `.claude/skills/6-sweep-verify/SKILL.md` under the model-spec-reader-only scope. Not a live skill — do not move under `.claude/skills/` until approved.
 > Stage numbering (4/5/6) is kept for continuity with signed gate records in `research/sweeps/02-calibration/` and `03-action-honesty/`.
 

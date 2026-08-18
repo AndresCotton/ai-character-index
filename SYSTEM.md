@@ -2,7 +2,7 @@
 
 > As-is snapshot of origin/main @ 31fddca (2026-08-17), plus the branch/local territory documented in `experiments-branches.md`. Describes what exists now, not what should exist. Each directory has its own `OVERVIEW.md`; this file stitches them together.
 
-> **Scope (repo-owner decision):** the deliverable is the **model spec reader only** — behaviour × spec coverage with cited passages. The eval-discovery/quality workflow (sweep stages 1–3, `evals.json`, `sources/`, evidence-strength lens) is outside the deliverable. This document maps the whole repo as-is; in/out rulings and removal tasks are tracked in [PREPUBLICATION-PUNCHLIST.md](PREPUBLICATION-PUNCHLIST.md).
+> **Scope (repo-owner decision):** the deliverable is the **model spec reader only** — behaviour × spec coverage with cited passages. The eval-discovery/quality workflow (sweep stages 1–3, `evals.json`, `sources/`, evidence-strength lens) is outside the deliverable. This document maps the whole repo as-is; in/out rulings and removal tasks are tracked in [CLOSEOUT-LIST.md](CLOSEOUT-LIST.md).
 
 ## What the system is
 

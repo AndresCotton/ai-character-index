@@ -22,7 +22,7 @@ Everything that keeps the index alive: resolves spec citations, runs LLM panel j
 ## Relationships
 
 - `cite.py` is the shared foundation: imported by `panel/harness.py` (via a `sys.path` insertion) and invoked as a subprocess by `publish-coverage.py`.
-- The panel chain: `run_rollout.py` drives `whole_doc.py` → `runlog-v3.jsonl` (gitignored; the shipped runlog lives on the `experiment/panel-judges` branch) → `build_site_data.py` → `site/llm-panel-review/data/behaviours.json`. The builder also reads `data/reader-test-coverage.json` for behaviour names/slugs.
+- The panel chain: `run_rollout.py` drives `whole_doc.py` → `runlog-v3.jsonl` (uncommitted runtime artifact; the shipped runlog lives on the `experiment/panel-judges` branch) → `build_site_data.py` → `site/llm-panel-review/data/behaviours.json`. The builder also reads `data/reader-test-coverage.json` for behaviour names/slugs.
 - The curated chain: sweep stage-4 markdown → `publish-coverage.py` → `data/coverage.json` → `build-spec-reader-data.py` → `site/spec-reader/data/documents.json`.
 - `spec-watch` overwrites `specs/`, which `cite.py` and `build-spec-reader-data.py` consume (the test-bench builder reads only `data/reader-test-coverage.json`).
 
@@ -36,7 +36,7 @@ graph LR
   cite --> harness["panel/harness.py"]
   rollout["panel/run_rollout.py"] --> wholedoc["panel/whole_doc.py"]
   harness --> wholedoc
-  wholedoc --> runlog["runlog-v3.jsonl (gitignored)"]
+  wholedoc --> runlog["runlog-v3.jsonl (uncommitted runtime artifact)"]
   runlog --> bsd["panel/build_site_data.py"]
   bsd --> panelpayload["site/llm-panel-review/data/behaviours.json"]
   sweep4["research/sweeps/NN/4-spec-coverage.md"] --> publish["publish-coverage.py"]
