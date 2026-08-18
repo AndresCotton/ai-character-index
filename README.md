@@ -16,7 +16,7 @@ Evidence enters through **behaviour sweeps**: a staged pipeline with a human sig
 
 | Folder | What it holds |
 |---|---|
-| [`research/`](research/) | The intellectual core: the [canonical behaviour list](research/core-behaviour-list.md) (mirrored from Notion; the repo copy lags at rows 11–13), sweep records in [`sweeps/`](research/sweeps/), its [sources](research/sources/), superseded drafts in `archive/` |
+| [`research/`](research/) | The intellectual core: the [canonical behaviour list](research/core-behaviour-list.md) (synced with Notion), sweep records in [`sweeps/`](research/sweeps/), its [sources](research/sources/), superseded drafts in `archive/` |
 | [`.claude/skills/`](.claude/skills/) | The behaviour-sweep pipeline: versioned procedure files, one per stage, each ending at a human gate -- [how to run a sweep](.claude/skills/README.md) |
 | [`specs/`](specs/) | Local mirrors of the specs the index scores against (Claude constitution, OpenAI Model Spec) |
 | [`methodology/`](methodology/) | Depth rubric (anchors every published depth score), the editable site methodology copy, method-exploration write-ups |
@@ -31,7 +31,4 @@ Evidence enters through **behaviour sweeps**: a staged pipeline with a human sig
 
 ## Contributing
 
-Two channels (live on GitHub):
-
-- **Submit an eval** you think the index should track → "Submit an eval" issue form.
-- **Think we made a mistake?** → "Appeal a score" issue form. Appeals and their resolutions are public.
+Questions, corrections, or anything you think we've got wrong: use the **contact link** on the repo's Issues page ("Contact Andrés directly"), or open a blank issue. We read everything.
