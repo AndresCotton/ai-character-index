@@ -1,5 +1,5 @@
 # specs/ — version-pinned mirrors of the lab specs every citation resolves against
-> As-is snapshot of origin/main @ 4fe2dac (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
+> As-is snapshot of origin/main @ 72e2e6b (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
 
 ## Purpose
 Local copies of the two published lab behaviour specs, pinned by version, plus `CITATION.md`, which defines the locator grammar that makes every stored quote resolvable to an exact span. Per `CITATION.md`, a locator is only valid if `engine/spec-cite/cite.py` resolves it against these files.

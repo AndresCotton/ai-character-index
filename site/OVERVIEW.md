@@ -1,6 +1,6 @@
 # site/ — five static surfaces, no build step, data via committed JSON payloads
 
-> As-is snapshot of origin/main @ 4fe2dac (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
+> As-is snapshot of origin/main @ 72e2e6b (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
 
 ## Purpose
 
@@ -14,7 +14,7 @@ The public presentation layer: renders engine-generated JSON payloads into stati
 | `methodology.html` | Static prose page. Describes coverage assessment as systematic term-list search; the operative procedure is the LLM panel. |
 | `spec-reader/` | The published reader. Fetches `data/documents.json` (built by `engine/build-spec-reader-data.py`; currently behaviours 1–3). `app.js` `GROUPS` hardcodes 13 behaviours in 4 categories while the payload carries 3. |
 | `spec-reader-test/` | External reviewer's bench (deliberate fork of the reader UI). Fetches the shared `../spec-reader/data/documents.json` plus its own `data/behaviours.json` (built by `engine/build-reader-test-data.py` from `data/reader-test-coverage.json`, transcribed from `behaviours-for-adria/`). Excellent README. |
-| `llm-panel-review/` | Panel-judged reader: raw per-judge verdicts per passage, scores recomputed client-side (`?threshold=`/`?solid=`/`?related=`). Fetches shared `documents.json` + own `data/behaviours.json` (built by `engine/panel/build_site_data.py`). 3 behaviours × 3 judges. **Not linked from any nav.** |
+| `llm-panel-review/` | Panel-judged reader: raw per-judge verdicts per passage, scores recomputed client-side (`?threshold=`/`?solid=`/`?related=`). Fetches shared `documents.json` + own `data/behaviours.json` (built by `engine/panel/build_site_data.py`); `?data=<name>` loads a sibling payload instead (`data/` also holds the calibration variants v3w-fresh / v4a / v4a-ds / v5 / v5-1 side by side). 3 behaviours × 3 judges. **Not linked from any nav.** |
 | `README.md` | Layer status; lists all five tabs, with `llm-panel-review/` noted as deployed-but-unlinked. |
 
 ## Relationships

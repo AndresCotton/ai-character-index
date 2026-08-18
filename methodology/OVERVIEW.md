@@ -1,6 +1,6 @@
 # methodology/ — scoring rubrics, site methodology copy, and exploratory method write-ups
 
-> As-is snapshot of origin/main @ 4fe2dac (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
+> As-is snapshot of origin/main @ 72e2e6b (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
 
 ## Purpose
 The methodological backbone for the coverage side of the index: the rubric that anchors every 0–4 depth score, the public-facing copy that explains how coverage is assessed, and two exploratory/forward-looking documents (the lexical→semantic→panel method exploration, and mentee project archetypes).

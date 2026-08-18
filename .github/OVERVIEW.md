@@ -1,6 +1,6 @@
 # .github — one production deploy workflow + two public intake forms
 
-> As-is snapshot of origin/main @ 4fe2dac (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
+> As-is snapshot of origin/main @ 72e2e6b (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
 
 ## Purpose
 `.github/` holds the repo's only CI/CD automation — a Cloudflare Pages deploy fired by merges to `main` — plus the two GitHub issue forms that are the project's public inbound channels (eval submissions, appeals).

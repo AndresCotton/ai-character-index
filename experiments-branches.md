@@ -1,6 +1,6 @@
 # Experiment branches & local-only territory — what exists outside origin/main
 
-> As-is snapshot of the working copy and branch list (main @ 4fe2dac). Describes what exists now, not what should exist. This document covers satellite territory only; `SYSTEM.md` covers main itself.
+> As-is snapshot of the working copy and branch list (main @ 72e2e6b). Describes what exists now, not what should exist. This document covers satellite territory only; `SYSTEM.md` covers main itself.
 
 ## Purpose
 
@@ -25,11 +25,11 @@ Alignment and planning conversations need the full inventory, not just main. Thi
 ```mermaid
 graph LR
   exp["experiment/panel-judges<br/>(frozen harness fork + canonical run log)"] -->|"one of two harness copies"| engp["engine/panel/ on main"]
-  hard["panel-hardening<br/>(Andres's active branch; content in main)"] -->|"resolve() shared"| engp
+  hard["panel-hardening<br/>(merged into main via #27)"] -->|"resolve() shared"| engp
   engp --> site["site/llm-panel-review/ on main"]
 ```
 
-- `panel-hardening` exists and is Andres's working branch for prompt iteration; its current content is fully in main.
+- `panel-hardening` is fully merged into main (PR #27: rubric calibration v4a/v5/v5.1, the `frontier_fast` calibration panel, the full v5 bench); it stays as a merged ref only.
 - `panel-frontier-coverage`, `panel-pipeline-rollout`, `panel-stage4-docs`, `panel-stage4-replacement` do not exist as branches; their content is in main.
 - Provenance dependency: `engine/panel/README.md` points at `experiment/panel-judges` for the canonical run log — main's shipped panel dataset depends on that unmerged branch for reproduction.
 

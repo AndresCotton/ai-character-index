@@ -1,6 +1,6 @@
 # behaviours-for-adria/ — an external reviewer's ten-behaviour set, swept for spec coverage; published to the reader test bench, with three rows also feeding the panel-review surface
 
-> As-is snapshot of origin/main @ 4fe2dac (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
+> As-is snapshot of origin/main @ 72e2e6b (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
 
 ## Purpose
 Holds stage-4 (spec-coverage) sweep artifacts for ten behaviours supplied by an external reviewer ("Adria"). It is a deliberate side channel so that set can be published, revised, and withdrawn without touching the index's own behaviour list, data, or published reader.
