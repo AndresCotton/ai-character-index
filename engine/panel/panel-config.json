@@ -189,6 +189,30 @@
         ]
       }
     },
+    "deepseek-v4": {
+      "provider": "openrouter",
+      "id": "deepseek/deepseek-v4-pro-0813",
+      "price_per_mtok": [
+        0.66,
+        1.98
+      ]
+    },
+    "glm": {
+      "provider": "openrouter",
+      "id": "z-ai/glm-5.2",
+      "price_per_mtok": [
+        0.46,
+        1.45
+      ]
+    },
+    "qwen38-max": {
+      "provider": "openrouter",
+      "id": "qwen/qwen3.8-max",
+      "price_per_mtok": [
+        2.0,
+        6.0
+      ]
+    },
     "kimi-k2": {
       "provider": "together",
       "id": "moonshotai/Kimi-K2.6",
@@ -223,6 +247,12 @@
       "fable",
       "kimi"
     ],
+    "frontier_fast": [
+      "sol",
+      "fable",
+      "deepseek"
+    ],
+    "_frontier_fast_note": "calibration-loop panel (2026-08-17): deepseek replaces kimi as third seat -- K3 spends 8-18 min and 25-57k reasoning tokens per whole-doc call; V3.2 is frontier-class, open-weights, and fast. Seat confirmed by a 4-way audition on the v5 rubric (runlog-v5.jsonl, 5 cells each): V3.2 4/4 named-core hits at 28-86s/call with the sparsest positives; glm (GLM-5.2) 3/4 at 43-153s = designated substitute; deepseek-v4 (V4-Pro-0813) 4/4 but 93-1132s/call and 2-4x looser; qwen38-max 2 length-overflow parse failures. Production frontier/frontier_primary unchanged until the shipped data is regenerated.",
     "_comment": "frontier = every tag whose rows the site builder may admit (primaries AND substitutes). frontier_primary = the judges the run driver executes; substitutes (opus, kimi-k2) are run manually per Skill 4 when a primary fails.",
     "itest": [
       "qwen-big"
