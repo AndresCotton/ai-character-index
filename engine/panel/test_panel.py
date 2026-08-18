@@ -10,6 +10,7 @@ import io
 import json
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -710,6 +711,97 @@ class TestAppJSResolution(unittest.TestCase):
                          "app.js payloadName drifted from build_site_data._payload_name: "
                          + ", ".join(f"{n!r}: js={g} py={p}"
                                      for n, g, p in zip(names, got, expected) if g != p))
+class TestImportSideEffects(unittest.TestCase):
+    """Config must be lazy: importing any panel module in a FRESH interpreter reads
+    no config/data file (guards the monkeypatch-to-inject debt the decoupling removed)."""
+
+    PROBE = r'''
+import builtins, importlib.util, json, sys
+from pathlib import Path
+HERE = Path(sys.argv[1])
+opened = []
+_real_open = builtins.open
+def rec_open(file, *a, **k):
+    opened.append(str(file))
+    return _real_open(file, *a, **k)
+builtins.open = rec_open
+for name in ("harness", "whole_doc", "run_rollout", "build_site_data"):
+    sp = importlib.util.spec_from_file_location(name, HERE / (name + ".py"))
+    m = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(m)
+bad = [p for p in opened if p.endswith((".json", ".jsonl", ".txt", ".env"))]
+print(json.dumps({"bad": bad, "opened": opened}))
+'''
+
+    def test_import_reads_no_config_or_data_file(self):
+        r = subprocess.run([sys.executable, "-B", "-c", self.PROBE, str(HERE)],
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        data = json.loads(r.stdout.strip().splitlines()[-1])
+        self.assertEqual(data["bad"], [],
+                         f"import-time file reads: {sorted(set(data['bad']))}")
+
+    def test_module_level_load_here_read_nothing(self):
+        # The h/rr/wd/bs objects at the top of THIS file were exec'd at test import;
+        # none of them should have cached a config (it is resolved at use time now).
+        for mod in (h, rr, wd, bs):
+            self.assertNotIn("CONFIG", vars(mod),
+                             f"{Path(mod.__file__).name} cached CONFIG at import")
+
+
+class TestPromptIdentity(unittest.TestCase):
+    """The explicit render_system_v3 composition must be BYTE-IDENTICAL to the old
+    str.replace+assert outputs. Expected strings were captured from pre-refactor
+    behaviour into test_frozen_prompts.json before the refactor landed."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.fx = json.loads((HERE / "test_frozen_prompts.json").read_text())
+
+    def test_frozen_rubrics_unchanged(self):
+        self.assertEqual(h.SYSTEM_V1, self.fx["v1_raw"])
+        self.assertEqual(h.SYSTEM, self.fx["v2_raw"])
+        self.assertEqual(h.SYSTEM_V3, self.fx["v3_raw"])
+
+    def test_whole_doc_prompts_byte_identical(self):
+        # old code sent SYSTEM_W.format(reason="") / SYSTEM_S.format(reason="");
+        # the new constants are already rendered, so they must equal those strings
+        self.assertEqual(wd.SYSTEM_W, self.fx["w_sent"])
+        self.assertEqual(wd.SYSTEM_S, self.fx["s_sent"])
+
+    def test_render_reproduces_frozen_v3_from_slots(self):
+        rebuilt = h.render_system_v3(h.INDEPENDENCE_PASSAGE, h.OUTPUT_FORMAT_FULL,
+                                     reason="{reason}")
+        self.assertEqual(rebuilt, self.fx["v3_raw"])
+
+    def test_systems_table_and_behaviour_template(self):
+        self.assertEqual(sorted(h.SYSTEMS), self.fx["systems_keys"])
+        self.assertEqual(h.BEHAVIOUR_TEMPLATE_V3, self.fx["behaviour_template_v3"])
+
+
+class TestLazyConfig(unittest.TestCase):
+    """load_config is the single injection point; default path resolves relative to
+    the module and an override path / parsed dict is honored without monkeypatching."""
+
+    def test_default_loads_shipped_config(self):
+        cfg = h.load_config()
+        self.assertIn("models", cfg)
+        self.assertIn("frontier_primary", cfg["panels"])
+
+    def test_override_path_is_honored(self):
+        custom = {"providers": {}, "models": {}, "panels": {"p": ["m"]}}
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+            json.dump(custom, f)
+        self.addCleanup(lambda: Path(f.name).unlink(missing_ok=True))
+        self.assertEqual(h.load_config(f.name)["panels"], {"p": ["m"]})
+
+    def test_resolve_uses_injected_config_not_default(self):
+        injected = {"providers": {"acme": {"base_url": None, "key_env": "ACME_KEY"}},
+                    "models": {"solo": {"provider": "acme", "id": "acme/solo-v9"}}}
+        real_env = h.env
+        h.env = lambda name: None          # no keys anywhere -> native route, no fallback
+        self.addCleanup(lambda: setattr(h, "env", real_env))
+        self.assertEqual(h.resolve("solo", injected), ("acme", "acme/solo-v9"))
 
 
 if __name__ == "__main__":

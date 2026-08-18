@@ -16,12 +16,12 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-CONFIG = json.loads((HERE / "panel-config.json").read_text())
 SITE2BEH = {"helpfulness": "helpfulness", "harm-avoidance-to-third-parties": "third-party-harm",
             "avoiding-over-and-under-caution": "over-under-caution"}
 
 
 def main():
+    CONFIG = json.loads((HERE / "panel-config.json").read_text())   # lazy: read at use time, not import
     runlog, rubric, per = None, "v2", 5
     for a in sys.argv[1:]:
         if a.startswith("--runlog="):

@@ -28,6 +28,7 @@ validated (SAFE_NAME chars, no path separators or .. traversal), so it cannot wr
 outside the data dir.
 """
 import collections
+import importlib.util
 import json
 import re
 import sys
@@ -36,8 +37,6 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-CONFIG = json.loads((HERE / "panel-config.json").read_text())
-DISPLAY = CONFIG["display"]
 LAB = {"constitution": "anthropic", "model-spec": "openai"}
 MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3", "kimi-k2": "Kimi-K2.6", "qwen-big": "Qwen3-235B", "opus": "Claude Opus 4.8",
                "gpt-mini": "GPT-5 mini", "haiku": "Claude Haiku 4.5", "qwen-small": "Qwen3-32B"}
@@ -213,8 +212,13 @@ def citation_quote(text):
 
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
+    sp = importlib.util.spec_from_file_location("h", HERE / "harness.py")
+    h = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(h)
+    config = h.load_config()
+    DISPLAY = config["display"]
     runlog = HERE / "runlog-v3.jsonl"   # same default as whole_doc.py and run_rollout.py
-    rubric = CONFIG["rubric"]
+    rubric = config["rubric"]
     out_name = None
     for a in argv:
         if a.startswith("--runlog="):
@@ -228,7 +232,7 @@ def main(argv=None):
         elif a.startswith("--out="):            # alternate FILENAME in site data dir (iteration builds)
             out_name = a.split("=", 1)[1]
             check_out_name(out_name)            # loud error before any build work
-    panel = set(CONFIG["panels"][DISPLAY["panel"]])
+    panel = set(config["panels"][DISPLAY["panel"]])
     votes = collections.defaultdict(dict)
     spec_of = {}
     for line in runlog.read_text().splitlines():
@@ -238,12 +242,8 @@ def main(argv=None):
         votes[(d["behaviour"], d["locator"])][d["model"]] = d.get("verdict", 0)
         spec_of[(d["behaviour"], d["locator"])] = d["spec"]
 
-    import importlib.util
-    sp = importlib.util.spec_from_file_location("h", HERE / "harness.py")
-    h = importlib.util.module_from_spec(sp)
-    sp.loader.exec_module(h)
     text = {}
-    for s in CONFIG["specs"]:
+    for s in config["specs"]:
         for loc, sec, t in h.passages(s):
             text[loc] = t
 
@@ -269,7 +269,7 @@ def main(argv=None):
                 if "kimi" in mv and "kimi-k2" in mv:
                     mv = {m: v for m, v in mv.items() if m != "kimi-k2"}   # k2.6 is kimi's stand-in; k3 wins when present
                 score = sum(mv.values())
-                if not keeps_citation(score, len(mv), len(panel)):   # emit all scored; page filters by ?threshold=
+                if not keeps_citation(score, len(mv), len(panel)):   # emit all scored; page re-filters by tier bands
                     continue
                 SYM = {3: "\u2713\u2713", 2: "\u2713", 1: "~", 0: "\u2717"}   # defining = doubled core tick, no star
                 WORD = {3: "defining", 2: "core", 1: "related", 0: "not relevant"}

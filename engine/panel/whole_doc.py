@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Arm 1 (Andres): whole spec text in ONE prompt, ALL passage verdicts in one response.
 
-Reuses harness builders/config. SYSTEM = v3 minus the passage-independence sentence
-(removed per Andres 07-29); rubric tag "v3w". One call per (behaviour, spec, model).
+Reuses harness builders/config. The system prompts are the harness v3 template with
+its {independence} slot filled by the whole-doc clause (per Andres 07-29) instead of
+the passage-level one; slot contract documented in harness.py. Rubric tag "v3w"
+(full output) / "v3s" (sparse). One call per (behaviour, spec, model).
 
   python3 whole_doc.py <behaviour[,..]> <spec[,..]> <tag[,..]> [--runlog=path]
 """
@@ -12,21 +14,11 @@ HERE = Path(__file__).resolve().parent
 sp = importlib.util.spec_from_file_location("h", HERE / "harness.py")
 h = importlib.util.module_from_spec(sp); sp.loader.exec_module(h)
 
-INDEP = ("Grade every passage independently, on its own text (the \u00a7 section path is "
-         "context only), on a 3-point scale. ")
-SYSTEM_W = h.SYSTEM_V3.replace(INDEP,
-    "You are given the ENTIRE document, split into numbered passages in reading order; "
-    "use the full document and its structure as context when grading each passage, on a "
-    "3-point scale. ")
-assert SYSTEM_W != h.SYSTEM_V3, "independence sentence not found -- check text"
-# Sparse variant: report ONLY passages scoring > 0 (output stays short at any document size)
-OUT_FULL = ("For each passage, output one line: the passage number, a colon, then 2, 1, or 0. "
-            "One line per passage, in order.")
-OUT_SPARSE = ("Output ONLY the passages that score 2 or 1, one line each: the passage number, a "
-              "colon, then the score, in document order. Do NOT list passages that score 0 -- "
-              "every passage you omit is recorded as 0. Output no other text.")
-SYSTEM_S = SYSTEM_W.replace(OUT_FULL, OUT_SPARSE)
-assert SYSTEM_S != SYSTEM_W, "output-format sentence not found -- check text"
+# Explicit composition (no str.replace): the v3 template rendered with the whole-doc
+# independence clause. SYSTEM_S is the sparse variant -- report ONLY passages scoring
+# > 0, so output stays short at any document size.
+SYSTEM_W = h.render_system_v3(h.INDEPENDENCE_WHOLE_DOC, h.OUTPUT_FORMAT_FULL)
+SYSTEM_S = h.render_system_v3(h.INDEPENDENCE_WHOLE_DOC, h.OUTPUT_FORMAT_SPARSE)
 RUNLOG = HERE / "runlog-v3.jsonl"   # override with --runlog=; resume and append use the SAME file
 
 def judge_kwargs(tag, model, config):
@@ -45,8 +37,10 @@ def main():
     for a in sys.argv:
         if a.startswith("--runlog="):
             RUNLOG = Path(a.split("=", 1)[1])
+    config = h.load_config()
+    panels = config.get("panels", {})
     behaviours, specs, tags = (sys.argv[1].split(","), sys.argv[2].split(","), sys.argv[3].split(","))
-    tags = [m for t in tags for m in (h.PANELS.get(t) or [t])]
+    tags = [m for t in tags for m in (panels.get(t) or [t])]
     sparse = "--sparse" in sys.argv
     rubric = "v3s" if sparse else "v3w"
     h.RUNLOG = RUNLOG                      # resume must read the SAME file we append to
@@ -62,12 +56,12 @@ def main():
             for tag in tags:
                 if (behaviour, spec, tag, ps[0][0]) in done:
                     print(f"skip {behaviour}/{spec}/{tag} (resumed)"); continue
-                provider, model = h.resolve(tag)   # native route by default; openrouter only as fallback
-                client = h.client_for(provider)
-                sysmsg = (SYSTEM_S if sparse else SYSTEM_W).format(reason="")
+                provider, model = h.resolve(tag, config)   # native route by default; openrouter only as fallback
+                client = h.client_for(provider, config)
+                sysmsg = SYSTEM_S if sparse else SYSTEM_W   # reason slot already rendered empty
                 kwargs = dict(model=model, messages=[{"role": "system", "content": sysmsg},
                                                      {"role": "user", "content": user}])
-                kwargs.update(judge_kwargs(tag, model, h.CONFIG))
+                kwargs.update(judge_kwargs(tag, model, config))
                 t0 = time.perf_counter()
                 r = client.chat.completions.create(timeout=3600, **kwargs)  # K3 needs >SDK default 600s
                 dt = time.perf_counter() - t0

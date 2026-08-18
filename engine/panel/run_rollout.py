@@ -22,13 +22,12 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-CONFIG = json.loads((HERE / "panel-config.json").read_text())
 
 # Every behaviours.json key except the two calibration behaviours (no-sycophancy,
 # undermine-oversight), which were the rubric-development vehicles, not index rows.
 ROLLOUT = ["helpfulness", "harmlessness-to-user", "third-party-harm", "proportionate-risk",
            "tradeoffs", "over-under-caution", "objectivity", "user-autonomy", "general-welfare"]
-PANEL = CONFIG["panels"]["frontier_primary"]   # primaries only; substitutes run manually (Skill 4); --panel= overrides
+DEFAULT_PANEL = "frontier_primary"   # primaries only; substitutes run manually (Skill 4); --panel= overrides
 # Cost is derived from config, not a hardcoded table: input is deterministic
 # (spec token count times price_per_mtok); output is a range, bare verdict lines
 # up to the model's max_output ceiling (models differ this much: 3k to 48k).
@@ -65,10 +64,16 @@ def estimate(plan, spec_tokens, n_passages, models):
 
 
 def main():
+    sp = importlib.util.spec_from_file_location("h", HERE / "harness.py")
+    h = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(h)
+    config = h.load_config()
+    panels = config["panels"]
     panel_name = "frontier"
     go = "--go" in sys.argv
     runlog = HERE / "runlog-v3.jsonl"   # the SAME file whole_doc.py appends to
     behaviours = ROLLOUT
+    panel = list(panels[DEFAULT_PANEL])
     for a in sys.argv[1:]:
         if a.startswith("--runlog="):
             runlog = Path(a.split("=", 1)[1])
@@ -76,10 +81,10 @@ def main():
             behaviours = a.split("=", 1)[1].split(",")
         elif a.startswith("--panel="):
             panel_name = a.split("=", 1)[1]
-            if (panel_name.startswith("_") or panel_name not in CONFIG["panels"]
-                    or not isinstance(CONFIG["panels"][panel_name], list)):
-                sys.exit(f"unknown panel {panel_name!r} -- panels: {[k for k in CONFIG['panels'] if not k.startswith('_')]}")
-            globals()["PANEL"] = CONFIG["panels"][panel_name]
+            if (panel_name.startswith("_") or panel_name not in panels
+                    or not isinstance(panels[panel_name], list)):
+                sys.exit(f"unknown panel {panel_name!r} -- panels: {[k for k in panels if not k.startswith('_')]}")
+            panel = list(panels[panel_name])
         elif a != "--go":
             sys.exit(f"unknown argument {a!r} -- valid: --go --runlog= --behaviours= --panel=")
     known = {k for k, v in json.loads((HERE / "behaviours.json").read_text()).items()
@@ -87,18 +92,15 @@ def main():
     bad = [b for b in behaviours if b not in known]
     if bad:
         sys.exit(f"unknown behaviours {bad} -- keys in behaviours.json: {sorted(known)}")
-    sp = importlib.util.spec_from_file_location("h", HERE / "harness.py")
-    h = importlib.util.module_from_spec(sp)
-    sp.loader.exec_module(h)
     h.RUNLOG = runlog
-    done = h.done_keys(CONFIG["rubric"])
-    all_ps = {s: h.passages(s) for s in CONFIG["specs"]}
+    done = h.done_keys(config["rubric"])
+    all_ps = {s: h.passages(s) for s in config["specs"]}
     first_loc = {s: ps[0][0] for s, ps in all_ps.items()}
     spec_tokens = {s: sum(len(t) for _, _, t in ps) // 4 for s, ps in all_ps.items()}
     n_passages = {s: len(ps) for s, ps in all_ps.items()}
 
-    plan, skipped = build_plan(behaviours, CONFIG["specs"], PANEL, done, first_loc)
-    low, high = estimate(plan, spec_tokens, n_passages, CONFIG["models"])
+    plan, skipped = build_plan(behaviours, config["specs"], panel, done, first_loc)
+    low, high = estimate(plan, spec_tokens, n_passages, config["models"])
     print(f"plan: {len(plan)} calls ({len(skipped)} cells resumed), estimated "
           f"${low:.0f}-{high:.0f} (config-derived: exact input cost; output floor vs ceiling)")
     for beh, spec, tag in plan:
@@ -119,9 +121,9 @@ def main():
             fails = 0
     # completeness check against the REAL runlog: catches parse failures (which exit 0),
     # crashes, and interrupts uniformly, and names the fix for each missing cell
-    done = h.done_keys(CONFIG["rubric"])
+    done = h.done_keys(config["rubric"])
     missing = [(b, sp, t) for b, sp, t in
-               ((b, sp, t) for b in behaviours for sp in CONFIG["specs"] for t in PANEL)
+               ((b, sp, t) for b in behaviours for sp in config["specs"] for t in panel)
                if (b, sp, t, first_loc[sp]) not in done]
     if missing:
         print(f"\nINCOMPLETE -- {len(missing)} cells still missing:")
@@ -131,7 +133,7 @@ def main():
             print(f"  retry: whole_doc.py {b} {sp} {t} --runlog={runlog}{alt}")
     else:
         print(f"\nCOMPLETE -- every cell banked. Next: python3 build_site_data.py "
-              f"--runlog={runlog} --rubric={CONFIG['rubric']} --panel={panel_name}")
+              f"--runlog={runlog} --rubric={config['rubric']} --panel={panel_name}")
 
 
 if __name__ == "__main__":
