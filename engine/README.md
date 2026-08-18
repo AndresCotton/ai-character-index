@@ -10,7 +10,7 @@ The automation that keeps the index alive. Design in [PLAN.md §1.2](../PLAN.md)
 ./engine/spec-watch/pull-latest.sh
 ```
 
-Requires an authenticated `gh` CLI. In Phase 3 this becomes a weekly GitHub Action that opens a PR when a spec changed, plus an issue listing which behaviours cite the changed sections and need re-verification.
+Requires an authenticated `gh` CLI. The OpenAI upstream `docs/` release archives (dated HTML snapshots, 1.7-2.6 MB each) are deliberately not mirrored: they exceed the GitHub contents API's 1 MB inline limit, so that endpoint can never return them. In Phase 3 this becomes a weekly GitHub Action that opens a PR when a spec changed, plus an issue listing which behaviours cite the changed sections and need re-verification.
 
 ## spec-cite/ (works today)
 
