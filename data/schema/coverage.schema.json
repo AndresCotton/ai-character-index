@@ -56,6 +56,8 @@
         "verified_date",
         "citation_format"
       ],
+      "additionalProperties": false,
+      "description": "Closed object: the builders consume these fields verbatim, so an undeclared key is a typo or an unreviewed field, not data.",
       "properties": {
         "behaviour_id": { "type": "integer", "minimum": 1 },
         "behaviour_name": { "type": "string", "minLength": 1 },

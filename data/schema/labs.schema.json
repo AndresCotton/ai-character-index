@@ -21,6 +21,8 @@
           "local_copy",
           "has_published_spec"
         ],
+        "additionalProperties": false,
+        "description": "Closed object: labs.json is the registry coverage records join against, so an undeclared key is a typo or an unreviewed field.",
         "properties": {
           "id": {
             "type": "string",

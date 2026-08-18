@@ -55,7 +55,7 @@ text and nothing else, so work there cannot alter what the index publishes.
 
 ## data validation (works today)
 
-Every file in [`data/`](../data/) is validated against the JSON Schemas in [`data/schema/`](../data/schema/), plus the cross-file rules from [`data/README.md`](../data/README.md): no coverage verdict without a citation, no eval without a URL, no unknown behaviour IDs, no coverage record pointing at a lab that `labs.json` doesn't define.
+Every file in [`data/`](../data/) is validated against the JSON Schemas in [`data/schema/`](../data/schema/), plus the cross-file rules from [`data/README.md`](../data/README.md): no coverage verdict without a citation, no eval without a URL, no coverage record pointing at a lab that `labs.json` doesn't define, and no unknown behaviour IDs in `reader-test-coverage.json` (checked against its own behaviours list). Behaviour IDs in `coverage.json` and `evals.json` are unchecked until a canonical behaviours registry (`behaviours.json`, planned in PLAN.md §2) exists.
 
 ```sh
 python3 engine/validate_data.py          # uses jsonschema when installed, stdlib fallback otherwise

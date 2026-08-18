@@ -125,6 +125,18 @@ class TestCoverageSchema(MutationMixin, unittest.TestCase):
             d["coverage"][0]["depth_0_4"] = 5
         self.assert_invalid(mutate, "depth_0_4")
 
+    def test_negative_depth_fails(self):
+        # Pins the schema's minimum bound, not just its maximum.
+        def mutate(d):
+            d["coverage"][0]["depth_0_4"] = -1
+        self.assert_invalid(mutate, "depth_0_4")
+
+    def test_unknown_record_key_fails(self):
+        # Coverage records are closed: new fields need a schema change and review.
+        def mutate(d):
+            d["coverage"][0]["severity"] = "high"
+        self.assert_invalid(mutate, "severity")
+
     def test_unknown_verdict_fails(self):
         def mutate(d):
             d["coverage"][0]["verdict"] = "excellent"
@@ -191,6 +203,28 @@ class TestEvalsSchema(MutationMixin, unittest.TestCase):
         self.assert_valid(mutate)
 
 
+class TestLabsSchema(MutationMixin, unittest.TestCase):
+    """data/labs.json: the lab registry coverage records join against."""
+
+    DATA_FILE = "labs.json"
+    SCHEMA_FILE = "labs.schema.json"
+
+    def test_valid_as_committed(self):
+        self.assert_valid()
+
+    def test_empty_required_string_fails(self):
+        # Pins the minLength bound: an empty join key is not a lab.
+        def mutate(d):
+            d["labs"][0]["id"] = ""
+        self.assert_invalid(mutate, ".id")
+
+    def test_unknown_lab_key_fails(self):
+        # Lab records are closed: new fields need a schema change and review.
+        def mutate(d):
+            d["labs"][0]["headquarters"] = "SF"
+        self.assert_invalid(mutate, "headquarters")
+
+
 class TestReaderTestCoverageSchema(MutationMixin, unittest.TestCase):
     """data/reader-test-coverage.json: the bench's behaviour + coverage ledger."""
 
@@ -204,6 +238,12 @@ class TestReaderTestCoverageSchema(MutationMixin, unittest.TestCase):
         def mutate(d):
             d["behaviours"][0]["slug"] = "Not A Slug"
         self.assert_invalid(mutate, "slug")
+
+    def test_unknown_record_key_fails(self):
+        # Bench coverage records are closed, same policy as data/coverage.json.
+        def mutate(d):
+            d["coverage"][0]["severity"] = "high"
+        self.assert_invalid(mutate, "severity")
 
     def test_null_verified_against_version_is_allowed(self):
         # Most bench records predate the field; the two that have it carry null.
@@ -245,6 +285,18 @@ class TestCrossFileRules(unittest.TestCase):
             any("lab_id" in e and "deepmind" in e for e in errors),
             f"no unknown-lab error; got: {errors}",
         )
+
+    def test_malformed_json_fails(self):
+        # Unparseable data must fail the gate loudly, never pass silently.
+        (self.tmp / "data" / "coverage.json").write_text("{ not json", encoding="utf-8")
+        errors = vd.validate_all(self.tmp)
+        self.assertTrue(
+            any("coverage.json" in e and "invalid JSON" in e for e in errors),
+            f"no invalid-JSON error; got: {errors}",
+        )
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer), contextlib.redirect_stderr(buffer):
+            self.assertEqual(vd.main(["--root", str(self.tmp)]), 1)
 
     def test_main_reports_failure_exit_code(self):
         def mutate(d):
