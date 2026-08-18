@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Verify the spec reader against site/spec-reader/data/documents.json:
 // every behaviour x spec view must anchor exactly its published passage count,
-// with no unresolved-anchor warnings and no console errors.
+// every same-site navigation link must resolve to a real page (and any
+// #fragment to a real id), with no unresolved-anchor warnings and no console
+// errors.
 // Usage: node engine/verify-spec-reader.mjs   (requires Chrome installed)
 
 import { createServer } from "node:http";
@@ -82,6 +84,54 @@ for (const behaviour of payload.behaviours) {
     { passages: total, behaviour: behaviour.name },
     `${behaviour.slug} · compare`,
   );
+}
+
+// Navigation anchors: every same-site link on the reader must resolve to a
+// served page, and every #fragment must match an id in its target document.
+await page.goto(base, { waitUntil: "networkidle" });
+await page.waitForTimeout(150);
+const linkIssues = await page.evaluate(async () => {
+  const issues = [];
+  const here = new URL(location.href);
+  for (const anchor of document.querySelectorAll("a[href]")) {
+    const href = anchor.getAttribute("href");
+    let url;
+    try {
+      url = new URL(href, here);
+    } catch {
+      issues.push(`${href} -> unparsable href`);
+      continue;
+    }
+    if (url.protocol !== "http:" && url.protocol !== "https:") continue;
+    if (url.origin !== here.origin) continue; // external target, not verifiable offline
+    const id = url.hash ? decodeURIComponent(url.hash.slice(1)) : "";
+    if (!id && url.pathname === here.pathname && url.search === here.search) continue; // self / bare "#"
+    if (url.pathname === here.pathname) {
+      // Same page: check the live document, since app.js renders ids dynamically.
+      if (id && !document.getElementById(id) && !document.querySelector(`[name="${CSS.escape(id)}"]`)) {
+        issues.push(`${href} -> no element #${id} on this page`);
+      }
+      continue;
+    }
+    const response = await fetch(url.pathname);
+    if (!response.ok) {
+      issues.push(`${href} -> HTTP ${response.status} for ${url.pathname}`);
+      continue;
+    }
+    if (!id) continue;
+    const target = new DOMParser().parseFromString(await response.text(), "text/html");
+    if (!target.getElementById(id) && !target.querySelector(`[name="${CSS.escape(id)}"]`)) {
+      issues.push(`${href} -> no element #${id} in ${url.pathname}`);
+    }
+  }
+  return issues;
+});
+if (linkIssues.length) {
+  failures += 1;
+  console.log(`FAIL  navigation anchors: ${linkIssues.length} broken link(s)`);
+  for (const issue of linkIssues) console.log(`        ${issue}`);
+} else {
+  console.log("PASS  navigation anchors: every same-site link resolves");
 }
 
 if (consoleErrors.length) {
