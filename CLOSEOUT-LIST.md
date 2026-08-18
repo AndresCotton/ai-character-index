@@ -1,8 +1,8 @@
 # Closeout list
 
-> **Closeout, not a roadmap.** The project is being paused. Scope (repo-owner decision): the deliverable is the **model spec reader only** — behaviour × model-spec coverage with cited passages; the eval-discovery/quality workflow is out of scope. Current state is documented in `SYSTEM.md` and the per-directory `OVERVIEW.md` files.
+> **Aim (repo-owner decision):** ship the **model spec reader** — behaviour × model-spec coverage with cited passages — as a small, honest, **fixed demo**, plus a **clear pathway for people to clone/fork the repo and run it on their own behaviours**. The eval-discovery/quality workflow is out of scope and gets stripped. The target is the reader + pathway (Phase 2 below), **timeboxed to this week and likely to land as an incompletely-tested end state**; on top of it, be **explicit about the limitations** so people can judge whether and how to build on it. The full modular platform (Phase 3) stays deferred. Current state is documented in `SYSTEM.md` and the per-directory `OVERVIEW.md` files.
 >
-> Three **cumulative** phases, ordered safest-first. Each phase leaves the repo in a coherent, honest state, so it is fine to stop after any phase. Later phases add to earlier ones; nothing in a later phase is needed for an earlier phase to stand on its own.
+> Three **cumulative** phases, ordered safest-first; each leaves the repo coherent and honest, and later phases build on earlier ones. **Phase 2 is the current target.**
 
 ## Phase 1 — Tier 3: honest, clean demo (bounded, behavior-preserving changes only)
 
@@ -10,7 +10,7 @@
 > **Risk: low.** Docs, bounded deletions/hygiene, and behavior-preserving code-quality work (tests, determinism, de-duplication); no interface or behavior changes. The main failure mode is cleanup scope-creep.
 
 - [ ] Merge the prep PRs: **#22** (gitignore + cruft), **#23** (docs + this list + intake forms), **#24** (dead code)
-- [ ] **Honest status note** (README or a top-level note): built with ambitions it hasn't reached; being paused; what works today vs. what is aspirational
+- [ ] **Honest status note** (README or a top-level note): what this is (a spec reader + a toolkit to clone/fork), what works today vs. what is aspirational/unproven
 - [ ] **PLAN.md ruling:** rewrite as a living architecture doc, mark historical, or surgically update — the largest doc/reality gap (§8 lists `outreach/` which is gitignored and never on main; §2/§8 claim schema-enforced CI that doesn't exist; §8's engine row omits `panel/` and the builders; §1.2 promises four workflows where one exists)
 - [ ] **`site/methodology.html` + `methodology/site-copy-how-we-assess-coverage.md`:** describe the term-list method while the operative procedure is the LLM panel; the panel method needs writing for the public page
 - [ ] **Bounded hygiene:** gitignore the panel runtime artifacts (`engine/panel/runlog*.jsonl`, `metrics.jsonl`, `wholedoc-FAILED-*.txt`). (The committed `.pyc` and the 0-byte archives are already removed by #22; the `runDate` and nav-anchor fixes live in the engineering items below.)
@@ -37,6 +37,9 @@
 - [ ] **Behaviour-identity single source:** one slug-keyed registry (ids namespaced per set — `coverage.json` id 1 = No sycophancy vs `reader-test-coverage.json` id 1 = Helpfulness today); generate `GROUPS` in `spec-reader/app.js`, `BEHAVIOURS` in `build-spec-reader-data.py`, and panel `SLUGS` from it; kill the display-time renumbering in `build_site_data.py`
 - [ ] **Parameterize the builders** (`build-spec-reader-data.py`, `build-reader-test-data.py`) to drive from user-supplied behaviour + spec lists instead of hardcoded `BEHAVIOURS`/`DOCUMENTS`
 - [ ] **Local/gitignored output convention** — user-generated data lands somewhere unpushed
+- [ ] **How-to: "run it on your own behaviours"** — the clone/fork pathway doc: define your behaviour, point it at your spec, run the pipeline, view the result locally (nothing pushed back)
+- [ ] **Public page = small fixed demo + invitation** — the sample coverage stays a fixed demo that explicitly invites cloning/forking for one's own behaviours
+- [ ] **Explicit limitations** — state what works vs. aspirational vs. unproven so people can judge whether/how to build on it (the endorsed part of option C)
 - [ ] **Structured stage-4 sidecar:** emit `4-spec-coverage.json` alongside the markdown and point `publish-coverage.py` at it (the current 4-line regex contract breaks on any prose drift); reconstruct `research/sweeps/01-no-sycophancy/4-spec-coverage.md` from its 20 published citations — behaviour 1's records are currently unregenerable
 - [ ] **Land CI verification:** PR-time workflow running `engine/panel/test_panel.py`, the cite.py golden suite, `publish-coverage.py --check` for every published behaviour, and both `verify-*.mjs`; make `spec-watch/pull-latest.sh` abort when upstream version ≠ `cite.py`'s registry (and fix its 0-byte archive fetch — skip them or use the blob API). Most pieces exist on parked branches `ci/fast-suite` / `tests/cite-suite` / `hooks/fast-gate`
 - [ ] **Panel provenance on main:** commit the canonical panel runlog (or a hash-pinned manifest); derive the substitution provenance text from the runlog instead of a hand-edited string
