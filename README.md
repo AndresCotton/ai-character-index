@@ -31,7 +31,4 @@ Evidence enters through **behaviour sweeps**: a staged pipeline with a human sig
 
 ## Contributing
 
-Two channels (the repo is on GitHub and the issue forms are live; also linked from the site):
-
-- **Submit an eval** you think the index should track → "Submit an eval" issue form.
-- **Think we made a mistake?** → "Appeal a score" issue form. Appeals and their resolutions are public.
+Questions, corrections, or anything you think we've got wrong: use the **contact link** on the repo's Issues page ("Contact Andrés directly"), or open a blank issue. We read everything.
