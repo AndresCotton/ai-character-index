@@ -4,12 +4,25 @@
 Usage:
     publish-coverage.py research/sweeps/NN-<slug> [--check]
 
-Parses the behaviour's stage-4 artifact (4-spec-coverage.md), re-verifies every
-stored quote byte-for-byte against engine/spec-cite/cite.py, and replaces that
-behaviour's records in data/coverage.json. With --check, verifies and diffs
-against the currently published records without writing.
+Reads the behaviour's stage-4 artifact, re-verifies every stored quote
+byte-for-byte against engine/spec-cite/cite.py, and replaces that behaviour's
+records in data/coverage.json. With --check, verifies and diffs against the
+currently published records without writing.
 
-The artifact is a parsing contract (behaviour 2 is the template):
+Two artifact forms; the sidecar wins when both exist:
+
+1. Structured sidecar `4-spec-coverage.json` -- validated against
+   data/schema/spec-coverage-sidecar.schema.json (through validate_data.py's
+   jsonschema/stdlib backends) plus cross-checks a single-file schema cannot
+   express: records agree with the top-level behaviour identity and with the
+   NN-<slug> directory name, exactly one record per lab, the declared
+   citation_format is the project's convention, each declared
+   verified_against_version equals the version pinned by the record's first
+   locator, and a reconstructed sidecar names its source and date. Records
+   are published verbatim (citation key order included), so a sidecar derived
+   from data/coverage.json round-trips byte-for-byte.
+2. Markdown `4-spec-coverage.md` -- the original layout contract, parsed by
+   regex; the fallback when no sidecar exists (behaviour 2 is the template):
   - header bullet:  - **Behaviour:** <id>, <name> (...)
   - header bullet:  - **Sweep date:** YYYY-MM-DD
   - per-spec sections "## Claude constitution ..." and "## OpenAI Model Spec ...",
@@ -20,6 +33,9 @@ The artifact is a parsing contract (behaviour 2 is the template):
           **Flags:** -- | adjacent ... | example_block ...
   - a "## Verdict and depth" table with one row per spec:
         | Claude constitution (...) | <verdict> | <0-4> | <rationale> |
+
+The cite.py gate is the same on both paths: every quote goes through
+`cite.py resolve` verification before anything is written or checked.
 """
 
 from __future__ import annotations
@@ -32,8 +48,15 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))   # engine/ -> validate_data
+import validate_data  # noqa: E402
+
 COVERAGE = ROOT / "data" / "coverage.json"
 CITE = ROOT / "engine" / "spec-cite" / "cite.py"
+SIDECAR_SCHEMA = ROOT / "data" / "schema" / "spec-coverage-sidecar.schema.json"
+
+MARKDOWN_NAME = "4-spec-coverage.md"
+SIDECAR_NAME = "4-spec-coverage.json"
 
 CITATION_FORMAT = (
     "specs/CITATION.md; quotes are exact output of engine/spec-cite/cite.py resolve; "
@@ -104,6 +127,129 @@ def parse_verdict_table(text: str) -> dict[str, dict]:
     return rows
 
 
+def parse_markdown(artifact_path: Path) -> tuple[int, list[dict]]:
+    """The regex path: unchanged contract for 4-spec-coverage.md artifacts."""
+    artifact = artifact_path.read_text()
+
+    header = re.search(r"\*\*Behaviour:\*\* (\d+), ([^(\n]+?)(?: \(|\n)", artifact)
+    sweep_date = re.search(r"\*\*Sweep date:\*\* (\d{4}-\d{2}-\d{2})", artifact)
+    if not header or not sweep_date:
+        sys.exit("could not parse the behaviour header or sweep date")
+    behaviour_id = int(header.group(1))
+    behaviour_name = header.group(2).strip()
+
+    verdicts = parse_verdict_table(artifact)
+    enders = ["\n## Considered and not kept", "\n## Verdict and depth"]
+    records = []
+    for lab_id, heading in LABS:
+        citations = parse_citations(
+            section(artifact, heading, [h for _, h in LABS if h != heading] + enders)
+        )
+        if not citations:
+            sys.exit(f"no citations parsed for {lab_id}")
+        version = citations[0]["locator"].split(" › ")[0].split("@")[1]
+        records.append(
+            {
+                "behaviour_id": behaviour_id,
+                "behaviour_name": behaviour_name,
+                "lab_id": lab_id,
+                **verdicts[lab_id],
+                "citations": citations,
+                "verified_against_version": version,
+                "verified_date": sweep_date.group(1),
+                "citation_format": CITATION_FORMAT,
+            }
+        )
+    return behaviour_id, records
+
+
+def parse_sidecar(sidecar_path: Path, sweep_dir: Path) -> tuple[int, list[dict]]:
+    """The structured path: schema-validate 4-spec-coverage.json, then apply
+    the cross-checks a single-file schema cannot express. Returns its records
+    verbatim (citation key order included) for byte-stable publication."""
+    try:
+        sidecar = json.loads(sidecar_path.read_text())
+    except json.JSONDecodeError as exc:
+        sys.exit(f"{sidecar_path.name}: invalid JSON: {exc}")
+
+    schema = json.loads(SIDECAR_SCHEMA.read_text())
+    errors = validate_data.validate_instance(sidecar, schema)
+    if errors:
+        print(f"{sidecar_path.name}: failed schema validation:")
+        for error in errors:
+            print(f"  {error}")
+        sys.exit(f"{sidecar_path.name}: {len(errors)} schema error(s)")
+
+    provenance = sidecar["provenance"]
+    if provenance["reconstructed"]:
+        missing = [
+            key for key in ("reconstructedFrom", "reconstructedDate")
+            if key not in provenance
+        ]
+        if missing:
+            sys.exit(
+                f"{sidecar_path.name}: a reconstructed sidecar must carry "
+                + " and ".join(missing)
+            )
+
+    behaviour_id = sidecar["behaviour_id"]
+    behaviour_name = sidecar["behaviour_name"]
+
+    directory_number, _, directory_slug = sweep_dir.name.partition("-")
+    if not directory_number.isdigit() or int(directory_number) != behaviour_id:
+        sys.exit(
+            f"{sidecar_path.name}: behaviour_id {behaviour_id} does not match "
+            f"its directory {sweep_dir.name!r}"
+        )
+    if sidecar["slug"] != directory_slug:
+        sys.exit(
+            f"{sidecar_path.name}: slug {sidecar['slug']!r} does not match "
+            f"its directory {sweep_dir.name!r}"
+        )
+
+    records = sidecar["records"]
+    by_lab = {}
+    for index, record in enumerate(records):
+        if (
+            record["behaviour_id"] != behaviour_id
+            or record["behaviour_name"] != behaviour_name
+        ):
+            sys.exit(
+                f"{sidecar_path.name}: records[{index}] disagrees with the "
+                "top-level behaviour identity"
+            )
+        if record["citation_format"] != CITATION_FORMAT:
+            sys.exit(
+                f"{sidecar_path.name}: records[{index}] citation_format is not "
+                "the project's citation convention (see CITATION_FORMAT)"
+            )
+        try:
+            version = record["citations"][0]["locator"].split(" › ")[0].split("@")[1]
+        except IndexError:
+            sys.exit(
+                f"{sidecar_path.name}: records[{index}] first locator does not "
+                "start with spec@version"
+            )
+        if version != record["verified_against_version"]:
+            sys.exit(
+                f"{sidecar_path.name}: records[{index}] verified_against_version "
+                f"{record['verified_against_version']!r} does not match the "
+                f"version pinned by its first locator ({version!r})"
+            )
+        lab_id = record["lab_id"]
+        if lab_id in by_lab:
+            sys.exit(f"{sidecar_path.name}: duplicate record for lab {lab_id!r}")
+        by_lab[lab_id] = record
+
+    expected_labs = {lab_id for lab_id, _ in LABS}
+    if set(by_lab) != expected_labs:
+        sys.exit(
+            f"{sidecar_path.name}: expected exactly one record per lab "
+            f"{sorted(expected_labs)}, got {sorted(by_lab)}"
+        )
+    return behaviour_id, records
+
+
 def verify_citations(citations: list[dict]) -> None:
     failures = 0
     for citation in citations:
@@ -131,39 +277,23 @@ def main() -> None:
     parser.add_argument("--check", action="store_true")
     arguments = parser.parse_args()
 
-    artifact = (arguments.behaviour_dir / "4-spec-coverage.md").read_text()
-
-    header = re.search(r"\*\*Behaviour:\*\* (\d+), ([^(\n]+?)(?: \(|\n)", artifact)
-    sweep_date = re.search(r"\*\*Sweep date:\*\* (\d{4}-\d{2}-\d{2})", artifact)
-    if not header or not sweep_date:
-        sys.exit("could not parse the behaviour header or sweep date")
-    behaviour_id = int(header.group(1))
-    behaviour_name = header.group(2).strip()
-
-    verdicts = parse_verdict_table(artifact)
-    enders = ["\n## Considered and not kept", "\n## Verdict and depth"]
-    records = []
-    all_citations = []
-    for lab_id, heading in LABS:
-        citations = parse_citations(
-            section(artifact, heading, [h for _, h in LABS if h != heading] + enders)
+    sidecar_path = arguments.behaviour_dir / SIDECAR_NAME
+    markdown_path = arguments.behaviour_dir / MARKDOWN_NAME
+    if sidecar_path.exists():
+        behaviour_id, records = parse_sidecar(sidecar_path, arguments.behaviour_dir)
+        print(f"using structured sidecar {sidecar_path.name}")
+    elif markdown_path.exists():
+        behaviour_id, records = parse_markdown(markdown_path)
+    else:
+        sys.exit(
+            f"no stage-4 artifact in {arguments.behaviour_dir}: expected "
+            f"{SIDECAR_NAME} or {MARKDOWN_NAME}"
         )
-        if not citations:
-            sys.exit(f"no citations parsed for {lab_id}")
-        all_citations.extend(citations)
-        version = citations[0]["locator"].split(" › ")[0].split("@")[1]
-        records.append(
-            {
-                "behaviour_id": behaviour_id,
-                "behaviour_name": behaviour_name,
-                "lab_id": lab_id,
-                **verdicts[lab_id],
-                "citations": citations,
-                "verified_against_version": version,
-                "verified_date": sweep_date.group(1),
-                "citation_format": CITATION_FORMAT,
-            }
-        )
+
+    all_citations = [
+        citation for record in records for citation in record["citations"]
+    ]
+    behaviour_name = records[0]["behaviour_name"]
 
     verify_citations(all_citations)
 
