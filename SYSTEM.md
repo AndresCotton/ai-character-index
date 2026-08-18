@@ -48,7 +48,7 @@ graph TB
 | `behaviours-for-adria/` | Independent reviewer-batch stage-4 set (test bench, plus 3 rows feeding the panel surface) | [behaviours-for-adria/OVERVIEW.md](behaviours-for-adria/OVERVIEW.md) |
 | `methodology/` | Depth rubric, public site copy, method-exploration findings | [methodology/OVERVIEW.md](methodology/OVERVIEW.md) |
 | `site/` | Five static surfaces, no build step | [site/OVERVIEW.md](site/OVERVIEW.md) |
-| `.github/` | One deploy workflow + two public intake forms | [.github/OVERVIEW.md](.github/OVERVIEW.md) |
+| `.github/` | One deploy workflow + a contact-only issue channel | [.github/OVERVIEW.md](.github/OVERVIEW.md) |
 | `docs/` | One onboarding document bridging both repo eras | [docs/OVERVIEW.md](docs/OVERVIEW.md) |
 | `design/`, `vision/` | Settled-design log (Jul 2026) and the originating brief | [design/OVERVIEW.md](design/OVERVIEW.md), [vision/OVERVIEW.md](vision/OVERVIEW.md) |
 | root files | PLAN.md, README.md, pnpm-for-wrangler setup | [ROOT.md](ROOT.md) |
@@ -58,7 +58,7 @@ graph TB
 
 1. **Locator grammar** — `specs/CITATION.md` defines the format; `cite.py` implements it; every stored citation in `data/` and site payloads depends on byte-exact resolution. No CI re-resolves; only `publish-coverage.py` runs enforce it.
 2. **Stage-4 markdown format** — prescribed by `.claude/skills/4-sweep-spec-coverage`, regex-scraped by `engine/publish-coverage.py`. The artifact is simultaneously prose record, parser input, and gate evidence.
-3. **Behaviour identity** — at least six hand-synced copies: `core-behaviour-list.md` (12), `site/spec-reader/app.js GROUPS` (13), `engine/build-spec-reader-data.py BEHAVIOURS` (3), `engine/panel/behaviours.json`, `panel-config.json`, `.github/ISSUE_TEMPLATE/submit-eval.yml`. Worse, `behaviour_id` is **reused across disjoint numbering spaces**: id 1 = "No sycophancy" in `coverage.json` but "Helpfulness" in `reader-test-coverage.json`.
+3. **Behaviour identity** — at least five hand-synced copies: `core-behaviour-list.md` (12), `site/spec-reader/app.js GROUPS` (13), `engine/build-spec-reader-data.py BEHAVIOURS` (3), `engine/panel/behaviours.json`, `panel-config.json`. Worse, `behaviour_id` is **reused across disjoint numbering spaces**: id 1 = "No sycophancy" in `coverage.json` but "Helpfulness" in `reader-test-coverage.json`.
 4. **Runlog convention** — JSONL rows keyed by rubric version; defaults disagree between `harness.RUNLOG` and the executors; the canonical shipped runlog is an UNTRACKED FILE in a local working copy of `experiment/panel-judges` (committed to no branch) — committing it is an open closeout item.
 5. **Site payloads** — `spec-reader/data/documents.json` is shared by all three reader surfaces; panel citations carry `exampleBlock` flags anchoring example blocks.
 6. **Deploy trigger** — pushes to main filtered to `site/**` and `.github/workflows/deploy.yml` (plus manual dispatch): data/engine changes are invisible to production until baked into committed payloads.
@@ -67,7 +67,7 @@ graph TB
 
 1. **Nothing is verified automatically.** No CI runs tests, schema validation, or locator re-resolution; `data/schema/` is empty. A draft `ci.yml` + test suite + pre-commit gate exist only on parked local branches (`ci/fast-suite`, `tests/cite-suite`, `hooks/fast-gate`).
 2. **`cite.py` is the untested foundation** of every chain; docs call it the trickiest code in the repo.
-3. **Behaviour metadata fragmentation** — six hand-synced copies plus the disjoint-id collision above; one list change is a multi-file surgery with no error signal.
+3. **Behaviour metadata fragmentation** — five hand-synced copies plus the disjoint-id collision above; one list change is a multi-file surgery with no error signal.
 4. **Documentation describes a system that half-exists**: PLAN.md promises Notion sync, four workflows, Astro, schemas; reality has one workflow, vanilla JS, and an empty `notion-sync/` — and this doc set now records the gap file-by-file.
 5. **Hand-maintained surfaces**: `index.html` inline data (diverged from its prototype source) and hand-transcribed `reader-test-coverage.json`.
 6. **Provenance fragility**: behaviour 1's published records are currently unregenerable (missing sweep artifact); shipped panel data's runlog exists only as an untracked local file — losing that working copy loses the provenance.
