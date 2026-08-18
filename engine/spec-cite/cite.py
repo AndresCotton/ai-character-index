@@ -6,7 +6,8 @@ Locator grammar (canonical form, see specs/CITATION.md):
     <spec>@<version> > <section-ref> > ¶<n>[ s<a>[-<b>]]
     <spec>@<version> > <section-ref> > ¶<n> s<a> - ¶<m> s<b>
 
-  spec         constitution | model-spec
+  spec         constitution | model-spec (bundled), or any name a user
+               manifest registers (see "User specs" below)
   section-ref  #anchor (model-spec) or heading path "Chapter > Section" (constitution)
   ¶<n>         block number within the section's direct span ("p<n>" also accepted)
   s<a>[-<b>]   sentence (range) within the block; omit for the whole block
@@ -18,19 +19,147 @@ Commands:
     cite.py show    "<spec>[@<version>] > <section-ref>"
     cite.py resolve "<locator>"
     cite.py find    <spec>[@<version>] "<text>"
+
+User specs:
+    A manifest at specs/user/specs.json (gitignored, absent by default)
+    registers additional spec documents without editing this file. Shape:
+
+        {
+          "<name>": {
+            "<YYYY-MM-DD>": {"path": "<repo-relative .md path>", "default": true}
+          }
+        }
+
+    - Names match [a-z-]+ (the locator grammar's spec identifiers) and must
+      not be the bundled names constitution / model-spec: a manifest that
+      tries to redefine a bundled spec fails loudly.
+    - "default" selects the version used when @<version> is omitted. It is
+      optional when a spec has exactly one version, and at most one version
+      per spec may carry it.
+    - "path" resolves relative to the repo root (absolute paths also work),
+      so the document itself can live anywhere, e.g. under specs/user/.
+    - SPEC_CITE_USER_SPECS=<file> overrides the manifest location; the test
+      suite uses this to exercise the feature without touching specs/.
+    A malformed manifest fails loudly; an absent manifest is the normal
+    bundled-only state, not an error.
 """
 
+import json
+import os
 import re
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-SPECS = {
+BUNDLED_SPECS = {
     ("constitution", "2026-01-20"): "specs/claude-constitution/20260120-constitution.md",
     ("model-spec", "2025-12-18"): "specs/openai-model-spec/model_spec.md",
 }
-DEFAULT_VERSION = {"constitution": "2026-01-20", "model-spec": "2025-12-18"}
+BUNDLED_DEFAULT_VERSION = {"constitution": "2026-01-20", "model-spec": "2025-12-18"}
+
+USER_MANIFEST_PATH = REPO_ROOT / "specs" / "user" / "specs.json"
+MANIFEST_ENV_VAR = "SPEC_CITE_USER_SPECS"
+
+SPEC_NAME_RE = re.compile(r"^[a-z-]+$")
+VERSION_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+# Effective registry: bundled specs merged with the user manifest (if any).
+# Rebuilt by load_user_manifest(); never edit these by hand at runtime.
+SPECS = {}
+DEFAULT_VERSION = {}
+
+
+def load_user_manifest(manifest_path=None):
+    """Rebuild SPECS / DEFAULT_VERSION as bundled specs + user manifest.
+
+    Idempotent: always restarts from the bundled registry, so calling it
+    again after the manifest changed picks up the new state. An absent
+    manifest is the normal bundled-only state, not an error; a present but
+    malformed one fails loudly BEFORE anything is merged, leaving the
+    registry as it was. manifest_path overrides the location (as
+    SPEC_CITE_USER_SPECS does for the whole process).
+    """
+    global SPECS, DEFAULT_VERSION
+    merged = dict(BUNDLED_SPECS)
+    defaults = dict(BUNDLED_DEFAULT_VERSION)
+    if manifest_path is None:
+        manifest_path = os.environ.get(MANIFEST_ENV_VAR) or USER_MANIFEST_PATH
+    path = Path(manifest_path)
+    if path.is_file():
+        try:
+            manifest = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            sys.exit(f"user-spec manifest {path} is not readable JSON: {e}")
+        if not isinstance(manifest, dict):
+            sys.exit(f"user-spec manifest {path}: top level must be a JSON object")
+        for name, versions in manifest.items():
+            if name in BUNDLED_DEFAULT_VERSION:
+                sys.exit(
+                    f"user-spec manifest {path} defines '{name}', a bundled "
+                    "spec; user specs cannot shadow bundled specs -- pick "
+                    "another name"
+                )
+            if not SPEC_NAME_RE.match(name):
+                sys.exit(
+                    f"user-spec manifest {path}: bad spec name '{name}' "
+                    "(must match [a-z-]+, the locator grammar's spec identifiers)"
+                )
+            if not isinstance(versions, dict) or not versions:
+                sys.exit(
+                    f"user-spec manifest {path}: spec '{name}' must map at "
+                    "least one version to an entry"
+                )
+            explicit_defaults = []
+            for version, entry in versions.items():
+                if not VERSION_RE.match(version):
+                    sys.exit(
+                        f"user-spec manifest {path}: bad version '{version}' "
+                        f"for '{name}' (must be an ISO date YYYY-MM-DD)"
+                    )
+                if not isinstance(entry, dict):
+                    sys.exit(
+                        f"user-spec manifest {path}: entry for "
+                        f"'{name}@{version}' must be an object"
+                    )
+                unknown = sorted(set(entry) - {"path", "default"})
+                if unknown:
+                    sys.exit(
+                        f"user-spec manifest {path}: unknown key(s) {unknown} "
+                        f"in '{name}@{version}' (allowed: path, default)"
+                    )
+                spec_path = entry.get("path")
+                if not isinstance(spec_path, str) or not spec_path:
+                    sys.exit(
+                        f"user-spec manifest {path}: entry for "
+                        f"'{name}@{version}' needs a non-empty \"path\" string"
+                    )
+                default = entry.get("default", False)
+                if not isinstance(default, bool):
+                    sys.exit(
+                        f"user-spec manifest {path}: 'default' for "
+                        f"'{name}@{version}' must be a boolean"
+                    )
+                merged[(name, version)] = spec_path
+                if default:
+                    explicit_defaults.append(version)
+            if len(explicit_defaults) > 1:
+                sys.exit(
+                    f"user-spec manifest {path}: '{name}' marks multiple "
+                    f"versions default: {sorted(explicit_defaults)}"
+                )
+            if explicit_defaults:
+                defaults[name] = explicit_defaults[0]
+            elif len(versions) == 1:
+                defaults[name] = next(iter(versions))
+            # several versions and none marked default: load_spec(name, None)
+            # reports the choice instead of guessing
+    SPECS = merged
+    DEFAULT_VERSION = defaults
+
+
+load_user_manifest()
+
 
 HEADING_RE = re.compile(
     r"^(#{1,6})\s+(.*?)\s*(?:\{#([A-Za-z0-9_-]+)(?:\s+authority=\S+)?\})?\s*$"
@@ -201,9 +330,19 @@ def load_spec(spec, version):
     version = version or DEFAULT_VERSION.get(spec)
     path = SPECS.get((spec, version))
     if not path:
-        known = ", ".join(f"{s}@{v}" for s, v in SPECS)
+        if version is None and any(s == spec for s, _ in SPECS):
+            options = ", ".join(
+                f"{spec}@{v}" for s, v in sorted(SPECS) if s == spec
+            )
+            sys.exit(
+                f"spec '{spec}' has no default version; pin one of: {options}"
+            )
+        known = ", ".join(f"{s}@{v}" for s, v in sorted(SPECS))
         sys.exit(f"unknown spec '{spec}@{version}' (known: {known})")
-    lines = (REPO_ROOT / path).read_text(encoding="utf-8").splitlines()
+    try:
+        lines = (REPO_ROOT / path).read_text(encoding="utf-8").splitlines()
+    except OSError as e:
+        sys.exit(f"cannot read spec document '{path}' for {spec}@{version}: {e}")
     return version, parse_sections(lines), lines
 
 
