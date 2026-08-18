@@ -3,6 +3,16 @@ node_modules/
 dist/
 .env
 *.log
+
+# Python bytecode and test caches
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Regenerable experiment artifacts: virtualenvs and model-weight caches
+.venv*/
+venv/
+ckpts/
 .claude/settings.local.json
 .claude/settings.json
 .claude/launch.json
