@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // Verify the spec reader against site/spec-reader/data/documents.json:
 // every behaviour x spec view must anchor exactly its published passage count,
-// every same-site navigation link must resolve to a real page (and any
-// #fragment to a real id), with no unresolved-anchor warnings and no console
-// errors.
+// every expected nav link must be present, every same-site navigation link
+// must resolve to a real page (and any #fragment to a real id), with no
+// unresolved-anchor warnings and no console errors.
 // Usage: node engine/verify-spec-reader.mjs   (requires Chrome installed)
 
 import { createServer } from "node:http";
@@ -86,10 +86,22 @@ for (const behaviour of payload.behaviours) {
   );
 }
 
-// Navigation anchors: every same-site link on the reader must resolve to a
-// served page, and every #fragment must match an id in its target document.
+// Navigation anchors: the expected primary-nav links must all be present,
+// every same-site link on the reader must resolve to a served page, and every
+// #fragment must match an id in its target document.
 await page.goto(base, { waitUntil: "networkidle" });
 await page.waitForTimeout(150);
+const expectedNav = ["../", "./", "../spec-reader-test/", "../methodology.html", "../#about"];
+const navHrefs = await page.evaluate(
+  () => [...document.querySelectorAll('nav[aria-label="Primary navigation"] a')].map(a => a.getAttribute("href")),
+);
+const missingNav = expectedNav.filter(href => !navHrefs.includes(href));
+if (missingNav.length) {
+  failures += 1;
+  console.log(`FAIL  navigation presence: missing nav link(s): ${missingNav.join(", ")}`);
+} else {
+  console.log("PASS  navigation presence: all expected nav links present");
+}
 const linkIssues = await page.evaluate(async () => {
   const issues = [];
   const here = new URL(location.href);
@@ -104,7 +116,15 @@ const linkIssues = await page.evaluate(async () => {
     }
     if (url.protocol !== "http:" && url.protocol !== "https:") continue;
     if (url.origin !== here.origin) continue; // external target, not verifiable offline
-    const id = url.hash ? decodeURIComponent(url.hash.slice(1)) : "";
+    let id = "";
+    if (url.hash) {
+      try {
+        id = decodeURIComponent(url.hash.slice(1));
+      } catch {
+        issues.push(`${href} -> malformed fragment ${url.hash}`);
+        continue;
+      }
+    }
     if (!id && url.pathname === here.pathname && url.search === here.search) continue; // self / bare "#"
     if (url.pathname === here.pathname) {
       // Same page: check the live document, since app.js renders ids dynamically.
