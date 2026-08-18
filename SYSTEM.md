@@ -71,7 +71,7 @@ graph TB
 5. **Hand-maintained surfaces**: `index.html` inline data (diverged from its prototype source) and hand-transcribed `reader-test-coverage.json`.
 6. **Provenance fragility**: behaviour 1's published records are currently unregenerable (missing sweep artifact); shipped panel data's runlog lives on an unmerged branch.
 7. **No Python packaging**: importlib/sys.path wiring, config read at import time, dead code and stale config in the panel modules.
-8. **Orphans and residue**: `llm-panel-review/` unlinked from all navs; 0-byte spec archives; `labs.json`/`evals.json` read by nothing; sweep records referencing the rubric at a stale path (annotated with its current `methodology/` location).
+8. **Orphans and residue**: `llm-panel-review/` unlinked from all navs; 0-byte spec archives; `labs.json`/`evals.json` read by nothing; sweep records referencing the rubric at a stale path (annotated with its current `methodology/` location); no root agent-context files (AGENTS.md/QWEN.md/CLAUDE.md) — the procedures are reachable only through the Claude-specific `.claude/skills/` path.
 
 ## Reading order for a cold-start agent
 
