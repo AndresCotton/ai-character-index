@@ -1,6 +1,6 @@
 # research/ — the index's intellectual core: canonical behaviour list plus per-behaviour sweep records
 
-> As-is snapshot of origin/main @ 31fddca (2026-08-17). Describes what exists now, not what should exist.
+> As-is snapshot of origin/main @ 4fe2dac (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
 
 ## Purpose
 Defines the behaviours the index measures (`core-behaviour-list.md`), their provenance (`sources/`), and holds the working records of evidence and spec-coverage sweeps (`sweeps/`) that eventually feed `data/*.json` and, through it, the site.

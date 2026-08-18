@@ -1,6 +1,6 @@
 # vision/ — the originating brief: what the project should feel like and the conceptual proposal it grew from
 
-> As-is snapshot of origin/main @ 31fddca (2026-08-17). Describes what exists now, not what should exist.
+> As-is snapshot of origin/main @ 4fe2dac (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
 
 ## Purpose
 Holds the original vision material that motivated the repo: a requirements/feel brief ("features to build") plus the embedded conceptual project proposal ("AI character index / Model specs org", by Andrés Cotton). It is the why and the product requirements, upstream of `PLAN.md`'s how.

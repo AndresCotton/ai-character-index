@@ -1,6 +1,6 @@
 # design/ — settled aesthetics decisions, the interaction model, and the core-page prototype the live index is copied from
 
-> As-is snapshot of origin/main @ 31fddca (2026-08-17). Describes what exists now, not what should exist.
+> As-is snapshot of origin/main @ 4fe2dac (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
 
 ## Purpose
 Where the site's aesthetics and interaction grammar were discussed and settled (the v0 design sprint of 2026-07-12/13). Holds the decision log, the full L0–L4 interaction model, and the working prototype that `site/index.html` is served from.

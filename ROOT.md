@@ -1,6 +1,6 @@
 # Repo root — plan + front-door README, and a root-only pnpm setup for deploying site/
 
-> As-is snapshot of origin/main @ 31fddca (2026-08-17). Describes what exists now, not what should exist.
+> As-is snapshot of origin/main @ 4fe2dac (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
 
 ## Purpose
 The root holds the project's two entry documents (`PLAN.md`, `README.md`) and a minimal pnpm setup whose only functional role is to supply `wrangler` for deploying `site/` to Cloudflare Pages (plus `playwright-core` for the engine's reader checks).

@@ -1,6 +1,6 @@
 # SYSTEM — global map of the AI Character Index repository
 
-> As-is snapshot of origin/main @ 31fddca (2026-08-17), plus the branch/local territory documented in `experiments-branches.md`. Describes what exists now, not what should exist. Each directory has its own `OVERVIEW.md`; this file stitches them together.
+> As-is snapshot of origin/main @ 4fe2dac (2026-08-18); the documentation set itself is added by this PR. Plus the branch/local territory documented in `experiments-branches.md`. Describes what exists now, not what should exist. Each directory has its own `OVERVIEW.md`; this file stitches them together.
 
 > **Scope (repo-owner decision):** the deliverable is the **model spec reader only** — behaviour × spec coverage with cited passages. The eval-discovery/quality workflow (sweep stages 1–3, `evals.json`, `sources/`, evidence-strength lens) is outside the deliverable. This document maps the whole repo as-is; in/out rulings and removal tasks are tracked in [CLOSEOUT-LIST.md](CLOSEOUT-LIST.md).
 
@@ -21,7 +21,7 @@ graph TB
   cite -->|"quote re-verification"| pub
   pub --> cov["data/coverage.json"]
   sweeps -->|"stage-5 transcribe"| unused["data/evals.json (no code consumers; nothing reads hand-maintained labs.json either)"]
-  panel -->|"runlog-v3.jsonl (gitignored)"| bsd["engine/panel/build_site_data.py"]
+  panel -->|"runlog-v3.jsonl (uncommitted runtime artifact)"| bsd["engine/panel/build_site_data.py"]
   rtc["data/reader-test-coverage.json (hand-transcribed)"] --> bsd
   rtc --> brt["engine/build-reader-test-data.py"]
   cov --> bsr["engine/build-spec-reader-data.py"]
@@ -71,7 +71,7 @@ graph TB
 5. **Hand-maintained surfaces**: `index.html` inline data (diverged from its prototype source) and hand-transcribed `reader-test-coverage.json`.
 6. **Provenance fragility**: behaviour 1's published records are currently unregenerable (missing sweep artifact); shipped panel data's runlog lives on an unmerged branch.
 7. **No Python packaging**: importlib/sys.path wiring, config read at import time, dead code and stale config in the panel modules.
-8. **Orphans and residue**: `llm-panel-review/` unlinked from all navs; 0-byte spec archives; `labs.json`/`evals.json` read by nothing; sweep records referencing the rubric at a stale path (annotated with its current `methodology/` location); no root agent-context files (AGENTS.md/QWEN.md/CLAUDE.md) — the procedures are reachable only through the Claude-specific `.claude/skills/` path.
+8. **Orphans and residue**: `llm-panel-review/` unlinked from all navs; `spec-watch`'s fetch still produces 0-byte release archives (the committed empty artifacts are gone; the fetch needs fixing); `labs.json`/`evals.json` read by nothing; sweep records referencing the rubric at a stale path (annotated with its current `methodology/` location); no root agent-context files (AGENTS.md/QWEN.md/CLAUDE.md) — the procedures are reachable only through the Claude-specific `.claude/skills/` path.
 
 ## Reading order for a cold-start agent
 

@@ -1,6 +1,6 @@
 # data/
 
-The canonical machine-readable data the site renders from. **The site contains no data of its own; Notion is never read directly by the site.** Changes arrive here via reviewed pull requests. `coverage.json` is written by `engine/publish-coverage.py` from gate-approved stage-4 sweep artifacts (`research/sweeps/NN-<slug>/4-spec-coverage.md`); the other files are hand-maintained. `engine/notion-sync/` (the planned Notion → data/ sync) is a placeholder, not built.
+The canonical machine-readable data the site renders from. **The dynamic site surfaces contain no data of their own** — the one exception is `site/index.html`, whose inline prototype data (`const B = {...}`) is hand-maintained and connected to nothing here; Notion is never read directly by the site. Changes arrive here via reviewed pull requests. `coverage.json` is written by `engine/publish-coverage.py` from gate-approved stage-4 sweep artifacts (`research/sweeps/NN-<slug>/4-spec-coverage.md`); the other files are hand-maintained. `engine/notion-sync/` (the planned Notion → data/ sync) is a placeholder, not built.
 
 Current files:
 

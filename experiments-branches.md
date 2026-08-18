@@ -1,6 +1,6 @@
 # Experiment branches & local-only territory — what exists outside origin/main
 
-> As-is snapshot of the working copy and branch list (main @ 31fddca). Describes what exists now, not what should exist. This document covers satellite territory only; `SYSTEM.md` covers main itself.
+> As-is snapshot of the working copy and branch list (main @ 4fe2dac). Describes what exists now, not what should exist. This document covers satellite territory only; `SYSTEM.md` covers main itself.
 
 ## Purpose
 

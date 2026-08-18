@@ -1,6 +1,6 @@
 # site/ — five static surfaces, no build step, data via committed JSON payloads
 
-> As-is snapshot of origin/main @ 31fddca (2026-08-17). Describes what exists now, not what should exist.
+> As-is snapshot of origin/main @ 4fe2dac (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
 
 ## Purpose
 
