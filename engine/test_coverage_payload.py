@@ -94,12 +94,13 @@ class TestCitationMapping(unittest.TestCase):
         self.assertEqual(first["locator"], "S3")
         self.assertEqual(first["quote"], "quote one")
         self.assertEqual(first["role"], "core")
-        # absent in the record -> defaults
-        self.assertFalse(first["adjacent"])
-        self.assertFalse(first["exampleBlock"])
+        # absent in the record -> defaults; assertIs pins boolean identity, so a
+        # mutation to None (which would ship `null` instead of `false`) fails
+        self.assertIs(first["adjacent"], False)
+        self.assertIs(first["exampleBlock"], False)
         # present in the record -> carried through
-        self.assertTrue(second["adjacent"])
-        self.assertTrue(second["exampleBlock"])
+        self.assertIs(second["adjacent"], True)
+        self.assertIs(second["exampleBlock"], True)
 
     def test_payload_is_json_serializable(self):
         out = cp.coverage_payload(RECORD, "anthropic", "no-sycophancy")
