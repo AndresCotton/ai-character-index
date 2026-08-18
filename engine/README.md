@@ -53,6 +53,15 @@ The reader test bench ([`site/spec-reader-test/`](../site/spec-reader-test/)) is
 tab carrying an external reviewer's behaviour set. It shares the published reader's spec
 text and nothing else, so work there cannot alter what the index publishes.
 
+## data validation (works today)
+
+Every file in [`data/`](../data/) is validated against the JSON Schemas in [`data/schema/`](../data/schema/), plus the cross-file rules from [`data/README.md`](../data/README.md): no coverage verdict without a citation, no eval without a URL, no unknown behaviour IDs, no coverage record pointing at a lab that `labs.json` doesn't define.
+
+```sh
+python3 engine/validate_data.py          # uses jsonschema when installed, stdlib fallback otherwise
+python3 engine/test_validate_data.py     # the gate's own tests: committed data passes, mutations fail
+```
+
 ## notion-sync/ (Phase 3)
 
 Will pull the Notion databases (Evals by Behaviour; later Behaviours and Coverage) via the official Notion API, normalize into [`data/`](../data/), and open a PR when anything changed. Merging that PR is the push-to-production step -- no unreviewed change ever reaches the site.
