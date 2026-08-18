@@ -6,6 +6,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from coverage_payload import coverage_payload
+
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "site" / "spec-reader" / "data" / "documents.json"
@@ -64,26 +66,6 @@ BEHAVIOURS = [
         "category": "Honesty & epistemics",
     },
 ]
-
-
-def coverage_payload(record: dict, document_id: str, slug: str) -> dict:
-    return {
-        "verdict": record["verdict"],
-        "depth": record["depth_0_4"],
-        "note": record["depth_note"],
-        "verifiedDate": record["verified_date"],
-        "passages": [
-            {
-                "id": f"{document_id}-{slug}-{index + 1}",
-                "locator": citation["locator"],
-                "quote": citation["quote"],
-                "role": citation["role"],
-                "adjacent": citation.get("adjacent", False),
-                "exampleBlock": citation.get("example_block", False),
-            }
-            for index, citation in enumerate(record["citations"])
-        ],
-    }
 
 
 def main() -> None:
