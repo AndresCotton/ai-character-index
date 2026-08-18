@@ -27,7 +27,6 @@ import cite  # noqa: E402
 RUNLOG = HERE / "runlog.jsonl"
 METRICS = HERE / "metrics.jsonl"   # per-call latency + token usage (for cost/time reporting)
 SPECS = ("constitution", "model-spec")
-BATCH = 40   # passages per prompt -- bounded output (compact format stays coherent)
 
 # Providers/models/panels come from panel-config.json (credentials are env-var NAMES there,
 # never values). The old hardcoded tables are gone; edit the config, not this file.
@@ -202,12 +201,6 @@ def compose_query(behaviour, rubric):
         definition=beh.get("query_v2", query),
         clarifications=beh.get("clarifications") or FIELD_NONE,
         scope=beh.get("boundary") or FIELD_NONE)
-
-
-def user_msg(qblock, batch):
-    """Full user message: behaviour block + numbered passages + bounded output ask."""
-    body = "\n".join(f"[{i+1}] (§ {sec}) {t}" for i, (_, sec, t) in enumerate(batch))
-    return f"{qblock}\n\nPassages:\n{body}\n\nOutput {len(batch)} verdict lines."
 
 
 def done_keys(rubric):
