@@ -465,7 +465,8 @@ function passagesMarkdown() {
       const summary = coverageSummary(coverage);
       if (summary) lines.push("", summary);
       lines.push("", `Source: ${doc.sourceUrl}`);
-      if (coverage.note) lines.push("", `**Coverage note.** ${coverage.note}`);
+      // Coverage notes are curation-era prose; the panel bench ships passage sets only
+      // (removed from the export per Andres 2026-08-17 -- stale beside re-run panel data).
       if (!coverage.passages.length) {
         lines.push(
           "",

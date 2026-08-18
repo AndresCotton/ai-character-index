@@ -31,7 +31,7 @@
     "anthropic": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. A dedicated `Being helpful` chapter makes helpfulness a first-class value (\"unhelpfulness is never trivially safe\"; \"failing to be helpful is costly\"), states quotable pass criteria for genuine helpfulness (the five dimensions; the best-of-its-ability/no-sandbagging rule; a six-step procedure for the most helpful response), and supplies worked inline cases a grader can adapt (the \"word that means happy\" over-literal case, the bug-fix final-goal case, the coding-language desideratum case, the tests case). Prescribed-plus-examples for this behaviour's own construct.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": [
       {
@@ -2461,7 +2461,7 @@
     "openai": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. No dedicated helpfulness section, but the value is declared at the framing level (empower users; maximize helpfulness and freedom) and operationalized into quotable rules across root/user/guideline authority: never refuse unless the chain of command requires it, interpret assuming positive intent while avoiding needless clarifying questions, address implied intent without overstepping, be thorough/take on laborious tasks/ship an immediately usable artifact. `#assume_best_intentions` carries worked examples of interpreting ambiguous requests helpfully (providing context without moralizing; the permissible-goal redirect), which instantiate this behaviour's interpret-helpfully core.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": []
     }
@@ -2477,7 +2477,7 @@
     "anthropic": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. The calibration function is spelled out as an explicit factor list -- probability, counterfactual, severity/reversibility, breadth (how many affected), proximate cause, consent, responsibility, vulnerability -- weighed against benefits, then *demonstrated*: the 1,000-senders policy reasoning (decline at 1-in-a-million when severe; proceed when harm is low even if most are ill-intentioned) and the graded nurse/medication case across deployment-context variants give an eval an answer key for how caution should scale with probability, scale, and severity.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": [
       {
@@ -4907,7 +4907,7 @@
     "openai": {
      "verdict": "covered",
      "depth": 3,
-     "note": "prescribed. A three-category risk taxonomy frames assessment, and `#control_side_effects` states quotable proportionality rules (each action \"proportionate to the established objectives\"; prefer minimally disruptive and reversible; steer clear of significant unapproved risks), reinforced by dual-use content calibration and the imminent-harm signal threshold. What holds it at 3: the proportionality worked example (`#control_side_effects` ¶22) demonstrates side-effect *communication* for agentic actions rather than a graded probability/scale/severity ladder; the spec prescribes the calibration but does not demonstrate the severity-scaling itself across worked cases the way the constitution does.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": [
       {
@@ -8634,7 +8634,7 @@
     "anthropic": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. A dedicated, explicit prioritization scheme -- four ranked properties resolved \"holistically rather than strictly\", weighed in an overall judgment rather than as tie-breakers -- is exactly the structured-prioritization-not-abandonment method the behaviour names, and it is a quotable pass criterion. It is operationalized by named heuristics (thoughtful senior employee, dual newspaper, holistic judgment) and demonstrated through worked value-conflict resolutions elsewhere in \"Avoiding harm\" (household chemicals; the graded nurse case) that show helpfulness weighed against harm rather than either abandoned.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": [
       {
@@ -11414,7 +11414,7 @@
     "openai": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. The spec explicitly frames itself as a tradeoff-navigation device and supplies a structured engine -- the chain of command, where higher authority overrides lower -- plus two demonstrated outcome orderings (the lie-of-omission ranking; the confidence ranking) that rank rather than discard competing considerations, and the clarify-when-unclear rule for genuine side-effect tradeoffs. The `#levels_of_authority` ¶1 harm-vs-help example and the chain-of-command worked cases give graders concrete conflict resolutions.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": []
     }
@@ -11430,7 +11430,7 @@
     "anthropic": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. The symmetry is stated outright (\"the risks of being too unhelpful or overly cautious are just as real... as being too harmful or dishonest\"; \"never see unhelpful responses... as an automatically safe choice\") and then operationalized into two explicit, quotable failure-mode lists -- fourteen over-caution failures and six harmful-compliance failures -- plus a two-sided \"dual newspaper\" check. The failure lists are effectively an answer key an eval can score transcripts against in either direction.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": [
       {
@@ -12474,7 +12474,7 @@
     "openai": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. The two error costs are framed at principle level (empower vs. minimize harm) and the anti-over-caution side is prescribed forcefully at root authority (\"never refuse a request unless required to by the chain of command\"; don't censor topics at scale) with worked calibration (the shoplifting deterrence-vs-getaway split, the permissible-goal carve-out) and style rules against preachy/condescending refusals. The harmful-compliance side is carried by the `#stay_in_bounds` rules. Both directions are prescribed with examples.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": []
     }

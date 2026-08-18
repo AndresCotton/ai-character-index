@@ -33,7 +33,7 @@
     "anthropic": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. A dedicated `Being helpful` chapter makes helpfulness a first-class value (\"unhelpfulness is never trivially safe\"; \"failing to be helpful is costly\"), states quotable pass criteria for genuine helpfulness (the five dimensions; the best-of-its-ability/no-sandbagging rule; a six-step procedure for the most helpful response), and supplies worked inline cases a grader can adapt (the \"word that means happy\" over-literal case, the bug-fix final-goal case, the coding-language desideratum case, the tests case). Prescribed-plus-examples for this behaviour's own construct.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": [
       {
@@ -2799,7 +2799,7 @@
     "openai": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. No dedicated helpfulness section, but the value is declared at the framing level (empower users; maximize helpfulness and freedom) and operationalized into quotable rules across root/user/guideline authority: never refuse unless the chain of command requires it, interpret assuming positive intent while avoiding needless clarifying questions, address implied intent without overstepping, be thorough/take on laborious tasks/ship an immediately usable artifact. `#assume_best_intentions` carries worked examples of interpreting ambiguous requests helpfully (providing context without moralizing; the permissible-goal redirect), which instantiate this behaviour's interpret-helpfully core.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": [
       {
@@ -8094,7 +8094,7 @@
     "anthropic": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. Third-party/world harm is named as a protected class (\"harms to... third parties, non-human beings, society, or the world\"), the responsibility duty is stated (\"morally responsible for... risks to those inside or outside of the conversation\"), and an absolute bright-line list prohibits the catastrophic third-party harms (CBRN, critical infrastructure, cyberweapons, species-scale harm, CSAM). Worked cases give an answer key -- the vaccine-research/bioweapon-uplift refusal, the unsupervised-access-to-children refusal, IP/defamation, and severe-irreversible agentic harm.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": [
       {
@@ -10888,7 +10888,7 @@
     "openai": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. A red-line commitment enumerates the critical harms, and root-authority sections prescribe concrete refusal rules for information hazards (no actionable CBRN/harm steps, regardless of context), illicit facilitation (refuse guidance/steps/plan-improvements on illicit intent), and imminent real-world harm (proactive intervention with non-prescriptive safety advice), each with worked request/response examples (bomb with vs without intent, meth, gas leak, on-camera danger) usable as a grading key.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": [
       {
@@ -15567,7 +15567,7 @@
     "anthropic": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. The symmetry is stated outright (\"the risks of being too unhelpful or overly cautious are just as real... as being too harmful or dishonest\"; \"never see unhelpful responses... as an automatically safe choice\") and then operationalized into two explicit, quotable failure-mode lists -- fourteen over-caution failures and six harmful-compliance failures -- plus a two-sided \"dual newspaper\" check. The failure lists are effectively an answer key an eval can score transcripts against in either direction.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": [
       {
@@ -16653,7 +16653,7 @@
     "openai": {
      "verdict": "covered",
      "depth": 4,
-     "note": "demonstrated. The two error costs are framed at principle level (empower vs. minimize harm) and the anti-over-caution side is prescribed forcefully at root authority (\"never refuse a request unless required to by the chain of command\"; don't censor topics at scale) with worked calibration (the shoplifting deterrence-vs-getaway split, the permissible-goal carve-out) and style rules against preachy/condescending refusals. The harmful-compliance side is carried by the `#stay_in_bounds` rules. Both directions are prescribed with examples.",
+     "note": "",
      "verifiedDate": "2026-07-24",
      "passages": [
       {
