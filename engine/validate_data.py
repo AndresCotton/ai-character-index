@@ -115,7 +115,8 @@ def _resolve_ref(ref: str, root_schema: dict) -> dict:
 # Validation keywords the fallback implements (the subset data/schema/ uses).
 _SUPPORTED_KEYWORDS = {
     "type", "enum", "required", "properties", "additionalProperties",
-    "items", "minItems", "minLength", "minimum", "maximum", "pattern", "$ref",
+    "propertyNames", "items", "minItems", "minLength", "minimum", "maximum",
+    "pattern", "$ref",
 }
 
 # Annotation/meta keywords with no validation semantics (draft 2020-12);
@@ -153,6 +154,9 @@ def _check_supported_keywords(schema, location, errors) -> None:
     additional = schema.get("additionalProperties")
     if isinstance(additional, dict):
         _check_supported_keywords(additional, f"{location}.additionalProperties", errors)
+    prop_names = schema.get("propertyNames")
+    if isinstance(prop_names, dict):
+        _check_supported_keywords(prop_names, f"{location}.propertyNames", errors)
     defs = schema.get("$defs")
     if isinstance(defs, dict):
         for name, sub in defs.items():
@@ -190,6 +194,10 @@ def _validate_node(instance, schema, root_schema, path, errors) -> None:
             errors.append(f"{path}: {instance} is greater than maximum {schema['maximum']}")
 
     if isinstance(instance, dict):
+        prop_names = schema.get("propertyNames")
+        if isinstance(prop_names, dict):
+            for key in instance:
+                _validate_node(key, prop_names, root_schema, f"{path}.<propertyNames:{key}>", errors)
         for key in schema.get("required", []):
             if key not in instance:
                 errors.append(f"{path}: missing required key '{key}'")

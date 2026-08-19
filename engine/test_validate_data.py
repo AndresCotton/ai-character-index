@@ -273,6 +273,22 @@ class TestReaderTestCoverageSchema(MutationMixin, unittest.TestCase):
         self.assert_valid(mutate)
 
 
+class TestPropertyNamesFallback(unittest.TestCase):
+    """The stdlib fallback enforces propertyNames (the registry's slug rule)."""
+
+    SCHEMA = {"type": "object", "propertyNames": {"pattern": "^[a-z][a-z0-9-]*$"}}
+
+    def test_invalid_property_name_fails_on_stdlib(self):
+        errors = vd._validate_with_stdlib({"Bad Key!": 1}, self.SCHEMA)
+        self.assertTrue(
+            any("propertyNames" in e and "pattern" in e for e in errors),
+            f"no propertyNames error; got: {errors}",
+        )
+
+    def test_valid_property_names_pass_on_stdlib(self):
+        self.assertEqual(vd._validate_with_stdlib({"good-key": 1}, self.SCHEMA), [])
+
+
 class TestStdlibKeywordGuard(unittest.TestCase):
     """The stdlib fallback implements a keyword subset; any other validation
     keyword must fail loudly, never be silently skipped -- otherwise a schema
