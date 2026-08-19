@@ -37,17 +37,21 @@ One test file per subject under test:
   sweep directory holding a stage-4 artifact (`4-spec-coverage.md` or its
   structured sidecar `4-spec-coverage.json`): re-resolves every published
   quote byte-for-byte and diffs the artifact against `data/coverage.json`.
-  Mutation guards pin the corrupted-quote detector and the regex path's
-  coverage-schema gate (records parsed from markdown are schema-validated
-  before cite.py runs).
+  Mutation guards pin the corrupted-quote detector, the coverage-schema gate
+  on the regex path's parsed records (schema-validated before cite.py runs),
+  and the clean failure when a markdown first locator lacks a `spec@version`
+  prefix.
 - `test_sidecar.py` -- pins the structured sidecar path of
   `publish-coverage.py`: committed sidecars validate against
   `data/schema/spec-coverage-sidecar.schema.json` (both validator backends)
   with complete reconstruction provenance; corrupted quotes still fail at
   the cite.py re-resolution gate; schema violations, a `sidecar_version`
   other than 1, and missing reconstruction provenance fail loudly at
-  publish time; every post-schema cross-check (slug vs directory, record
-  identity, citation_format, verified_against_version, duplicate labs,
+  publish time; the sidecar path's records are additionally gated by the
+  real `data/schema/coverage.schema.json` (a drift guard proves this gate,
+  not the sidecar schema's mirrored $def, is load-bearing); every
+  post-schema cross-check (slug vs directory, record identity,
+  citation_format, verified_against_version, duplicate labs, unknown lab,
   sidecar-beats-markdown precedence) has a mutation guard on a scratch
   copy of the behaviour-1 sweep.
 - `test_coverage_json.py` -- re-resolves **every** locator in

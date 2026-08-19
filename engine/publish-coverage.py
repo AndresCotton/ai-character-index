@@ -34,10 +34,14 @@ Two artifact forms; the sidecar wins when both exist:
   - a "## Verdict and depth" table with one row per spec:
         | Claude constitution (...) | <verdict> | <0-4> | <rationale> |
 
-The regex path gets the sidecar path's schema gate too: its parsed records
-are validated against data/schema/coverage.schema.json before anything is
-written or checked, and a failing record aborts the publish. The cite.py
-gate is the same on both paths: every quote goes through `cite.py resolve`
+Both artifact paths gate their records against data/schema/coverage.schema.json
+before quote verification: whichever artifact produced the records, they must
+match the real coverage schema before anything is written or checked, and a
+failing record aborts the publish. The sidecar schema's coverageRecord $def
+mirrors this shape for authoring convenience, but this coverage-schema gate is
+the load-bearing check on what enters data/coverage.json, so the mirror cannot
+silently drift out of sync and let a bad record through. The cite.py gate is
+the same on both paths: every quote goes through `cite.py resolve`
 verification before anything is written or checked.
 """
 
@@ -153,7 +157,13 @@ def parse_markdown(artifact_path: Path) -> tuple[int, list[dict]]:
         )
         if not citations:
             sys.exit(f"no citations parsed for {lab_id}")
-        version = citations[0]["locator"].split(" › ")[0].split("@")[1]
+        try:
+            version = citations[0]["locator"].split(" › ")[0].split("@")[1]
+        except IndexError:
+            sys.exit(
+                f"{artifact_path.name}: {lab_id} first locator does not "
+                "start with spec@version"
+            )
         records.append(
             {
                 "behaviour_id": behaviour_id,
@@ -267,10 +277,14 @@ def parse_sidecar(sidecar_path: Path, sweep_dir: Path) -> tuple[int, list[dict]]
 
 def validate_coverage_records(records: list[dict], source: str) -> None:
     """Schema-gate records about to enter data/coverage.json, whichever
-    artifact path produced them. The sidecar path gets this shape from its
-    own schema's coverageRecord $def; the regex path has no schema of its
-    own, so its parsed records are validated against the coverage schema
-    here. Fails loudly before anything is written or checked."""
+    artifact path produced them. Both the structured sidecar path and the
+    regex markdown path run their records through
+    data/schema/coverage.schema.json here, before quote verification and
+    before anything is written or checked. The sidecar schema's
+    coverageRecord $def mirrors this shape for authoring convenience, but
+    this validation against the real coverage schema is the load-bearing gate
+    on what enters data/coverage.json -- it holds even if the mirror drifts
+    out of sync. Fails loudly on any violation."""
     schema = json.loads(COVERAGE_SCHEMA.read_text())
     errors = validate_data.validate_instance({"coverage": records}, schema)
     if errors:
@@ -314,14 +328,20 @@ def main() -> None:
     if sidecar_path.exists():
         behaviour_id, records = parse_sidecar(sidecar_path, arguments.behaviour_dir)
         print(f"using structured sidecar {sidecar_path.name}")
+        artifact_name = sidecar_path.name
     elif markdown_path.exists():
         behaviour_id, records = parse_markdown(markdown_path)
-        validate_coverage_records(records, markdown_path.name)
+        artifact_name = markdown_path.name
     else:
         sys.exit(
             f"no stage-4 artifact in {arguments.behaviour_dir}: expected "
             f"{SIDECAR_NAME} or {MARKDOWN_NAME}"
         )
+
+    # Both paths gate their records against the real coverage schema before
+    # quote verification, so nothing enters data/coverage.json without
+    # matching data/schema/coverage.schema.json whichever artifact produced it.
+    validate_coverage_records(records, artifact_name)
 
     all_citations = [
         citation for record in records for citation in record["citations"]

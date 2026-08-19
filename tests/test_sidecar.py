@@ -24,6 +24,7 @@ data/coverage.json (known-good: they resolve against the pinned mirrors),
 so the only thing that can fail is the corruption under test.
 """
 
+import importlib.util
 import json
 import shutil
 import subprocess
@@ -270,6 +271,20 @@ class SidecarCrossCheckTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("duplicate record for lab", result.stdout + result.stderr)
 
+    def test_unknown_lab_record_fails(self):
+        # The other direction of the one-record-per-lab check: a record whose
+        # lab_id is schema-valid (the schema only requires a non-empty string)
+        # but is not one of the expected labs for the behaviour. The coverage
+        # schema also allows any lab_id string, so only this cross-check can
+        # reject it -- pinning it from the "unexpected lab" side.
+        def mutate(sidecar):
+            sidecar["records"][1]["lab_id"] = "deepmind"
+        result = self.run_scratch_check(mutate)
+        self.assertNotEqual(result.returncode, 0)
+        combined = result.stdout + result.stderr
+        self.assertIn("one record per lab", combined)
+        self.assertIn("deepmind", combined)
+
     def test_sidecar_wins_when_markdown_also_present(self):
         """Precedence: with both artifacts present the publisher must take
         the sidecar. The scratch copy's markdown is deliberately
@@ -292,6 +307,87 @@ class SidecarCrossCheckTest(unittest.TestCase):
         )
         self.assertIn("using structured sidecar", result.stdout)
         self.assertIn("CHECK OK", result.stdout)
+
+
+class SidecarCoverageSchemaGateTest(unittest.TestCase):
+    """The sidecar path's records are gated by the REAL
+    data/schema/coverage.schema.json before quote verification -- not merely
+    by the sidecar schema's mirrored coverageRecord $def. Those two $defs are
+    hand-maintained copies of one another, so the load-bearing claim is that a
+    record can pass the sidecar schema yet still be rejected by the coverage
+    schema if the two ever drift apart. This simulates exactly that drift: a
+    coverage schema that requires a field the sidecar mirror does not must
+    reject records that are valid against the sidecar schema -- proving it is
+    the coverage gate, not the mirror, that protects data/coverage.json.
+    """
+
+    @staticmethod
+    def _load_publish():
+        spec = importlib.util.spec_from_file_location("publish_coverage", PUBLISH)
+        publish = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(publish)
+        return publish
+
+    def test_sidecar_schema_valid_but_coverage_schema_invalid_fails(self):
+        publish = self._load_publish()
+
+        sidecar = make_fixture_sidecar()
+        sidecar_schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
+        # Premise: the fixture is valid against its OWN schema, so the sidecar
+        # gate passes and only the coverage gate can reject what follows.
+        self.assertEqual(
+            validate_data.validate_instance(sidecar, sidecar_schema), []
+        )
+
+        with tempfile.TemporaryDirectory() as tmp:
+            sweep_dir = Path(tmp) / FIXTURE_DIR_NAME
+            sweep_dir.mkdir()
+            sidecar_path = sweep_dir / "4-spec-coverage.json"
+            sidecar_path.write_text(
+                json.dumps(sidecar, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            # Passes the sidecar schema and every cross-check; returns the
+            # records verbatim, exactly as main() receives them.
+            _, records = publish.parse_sidecar(sidecar_path, sweep_dir)
+
+            # Drift: coverage.schema.json gains a requirement the sidecar
+            # mirror lacks. The records carry no such field.
+            coverage_schema = json.loads(
+                (ROOT / "data" / "schema" / "coverage.schema.json")
+                .read_text(encoding="utf-8")
+            )
+            record_def = coverage_schema["$defs"]["coverageRecord"]
+            record_def["required"].append("drift_canary")
+            record_def["properties"]["drift_canary"] = {
+                "type": "string", "minLength": 1,
+            }
+
+            # Schema-level pin: the drifted schema rejects the records on BOTH
+            # validator backends, so the gate holds with or without jsonschema.
+            for force_stdlib in (False, True):
+                with self.subTest(force_stdlib=force_stdlib):
+                    self.assertTrue(
+                        validate_data.validate_instance(
+                            {"coverage": records}, coverage_schema,
+                            force_stdlib=force_stdlib,
+                        ),
+                        f"drifted coverage schema must reject the sidecar "
+                        f"records (force_stdlib={force_stdlib})",
+                    )
+
+            # Wired-gate pin: validate_coverage_records -- the call main() now
+            # makes on the sidecar path -- reads COVERAGE_SCHEMA, so point it
+            # at the drifted schema and it must abort the publish.
+            stricter = Path(tmp) / "coverage.drift.json"
+            stricter.write_text(
+                json.dumps(coverage_schema, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            publish.COVERAGE_SCHEMA = stricter
+            with self.assertRaises(SystemExit) as ctx:
+                publish.validate_coverage_records(records, sidecar_path.name)
+        self.assertIn("coverage-schema error", str(ctx.exception))
 
 
 if __name__ == "__main__":
