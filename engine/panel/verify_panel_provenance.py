@@ -21,11 +21,12 @@ The check
 DOCUMENTED ALLOWANCE -- provenance.runDate
   build_site_data.py stamps provenance.runDate with `date.today()` at build
   time; the runlog row schema carries no timestamp field, so the original
-  build date cannot be re-derived from the log, and the builder cannot emit it
-  without being edited (build_site_data.py is owned by a parallel workstream).
-  The shipped value is corroborated outside the log: runlog-v3.md records the
-  evidence (the source file's mtime 2026-07-29, and the 2026-07-30 integration
-  run named in test_panel.py). Every other byte must match; step 5 proves that.
+  build date cannot be re-derived from the log -- a rebuild can only ever emit
+  the day it runs, never the historical build date. The shipped value is
+  corroborated outside the log: runlog-v3.md records the evidence (the source
+  file's mtime 2026-07-29, and the 2026-07-30 integration run named in
+  test_panel.py), and verify() tripwires it against DOCUMENTED_RUN_DATE.
+  Every other byte must match; step 5 proves that.
 
 Usage
   python3 engine/panel/verify_panel_provenance.py

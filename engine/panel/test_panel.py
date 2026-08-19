@@ -507,6 +507,15 @@ class TestBuildMain(unittest.TestCase):
         self.assertEqual([p.name for p in self.dir.iterdir()], ["synth-runlog.jsonl"])
         self.assertFalse((self.dir.parent / "evil.json").exists())
 
+    def test_out_rejects_manifest_name(self):
+        # a build must never clobber the manifest/ledger, even via --out=
+        with self.assertRaises(SystemExit) as cm:
+            self.build("--out=manifest.json")
+        self.assertIn("manifest.json", str(cm.exception.code))
+        self.assertIn("ledger", str(cm.exception.code))
+        # rejection fires before any build work: runlog still the only file
+        self.assertEqual([p.name for p in self.dir.iterdir()], ["synth-runlog.jsonl"])
+
 
 
 class TestPR32ReviewFixes(unittest.TestCase):

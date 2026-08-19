@@ -137,7 +137,11 @@ def resolve_data_name(data_dir, pin=None, manifest=None):
 
 def check_out_name(name):
     """Loud-fail an --out= name that could write outside the site data dir: the same
-    SAFE_NAME charset ?data= admits (so no path separators), and no .. traversal."""
+    SAFE_NAME charset ?data= admits (so no path separators), no .. traversal, and
+    never the manifest itself -- a build must not clobber the provenance ledger."""
+    if name == MANIFEST_NAME:
+        sys.exit(f"error: --out={name!r} would overwrite the manifest/ledger -- "
+                 "pick any other name; only the builder maintains the manifest")
     if not SAFE_NAME.match(name) or ".." in name or name.startswith("."):
         sys.exit(f"error: --out={name!r} is not a safe name for the site data dir -- "
                  "use a plain filename (word chars, dots, hyphens; no paths or ..)")
