@@ -45,7 +45,7 @@ The reader surfaces render from generated payloads, never from hand-edited JSON:
 ```sh
 python3 engine/build-spec-reader-data.py   # data/coverage.json + specs/ -> site/spec-reader/data/documents.json
 python3 engine/build-reader-test-data.py   # data/reader-test-coverage.json -> site/spec-reader-test/data/behaviours.json
-node engine/verify-spec-reader.mjs         # every behaviour x spec view of the published reader (needs Chrome)
+node engine/verify-spec-reader.mjs         # every behaviour x spec view of the published reader + nav presence + full link/fragment crawl (needs Chrome)
 node engine/verify-reader-test.mjs         # the same for the reader test bench (needs Chrome)
 ```
 

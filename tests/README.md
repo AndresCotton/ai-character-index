@@ -14,7 +14,7 @@ The suite is the fast gate: run it before committing any change to
 Node deps (`pnpm install`) and Chrome:
 
 ```sh
-node engine/verify-spec-reader.mjs           # every behaviour x spec view
+node engine/verify-spec-reader.mjs           # every behaviour x spec view + nav presence + full link/fragment crawl
 ```
 
 ## What is covered

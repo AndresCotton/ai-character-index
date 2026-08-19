@@ -70,7 +70,7 @@ def _validate_with_jsonschema(instance, schema) -> list:
     errors = []
     for error in sorted(
         validator_cls(schema).iter_errors(instance),
-        key=lambda e: list(e.absolute_path),
+        key=lambda e: [str(part) for part in e.absolute_path],
     ):
         where = "$" + "".join(
             f"[{part}]" if isinstance(part, int) else f".{part}"
