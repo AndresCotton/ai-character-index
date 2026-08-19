@@ -190,6 +190,17 @@ class SidecarNegativeTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("reconstructedFrom", result.stdout + result.stderr)
 
+    def test_reconstructed_sidecar_without_date_fails(self):
+        # Both legs of the honesty rule: source alone is not enough.
+        def mutate(sidecar):
+            sidecar["provenance"] = {
+                "reconstructed": True,
+                "reconstructedFrom": "data/coverage.json @ test",
+            }
+        result = run_check(make_fixture_sidecar(mutate=mutate))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("reconstructedDate", result.stdout + result.stderr)
+
     def test_missing_lab_record_fails(self):
         def mutate(sidecar):
             sidecar["records"] = sidecar["records"][:1]
