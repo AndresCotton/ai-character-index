@@ -138,11 +138,29 @@ const elements = {
 /* Display tiers for panel-scored passages, strongest first. Per cell with j judges:
  * defining is score >= 2j+1 (a "3" vote must be present -- on 3-point data this
  * clamps to unanimous core), core is score >= 2j (unanimous-core strength), related
- * is score >= j+1 (at least two judges behind it). Weaker citations never render:
- * a lone related vote is recorded in the data, not shown. Each tier is a toggle in
- * the document headers; the defaults show defining + core. */
+ * is score >= j+1 (at least two judges behind it) -- except a single-judge cell has
+ * no consensus to demand (the clone/fork cheap-run case): the sole judge's verdict
+ * IS the whole evidence, so their related vote renders at its own weight instead of
+ * dying under the multi-judge floor. Weaker citations never render: with two-plus
+ * judges a lone related vote is recorded in the data, not shown. Each tier is a
+ * toggle in the document headers; the defaults show defining + core. */
 const TIERS = ["defining", "core", "related"];
 const DEFAULT_BANDS = ["defining", "core"];
+
+/* The tier band for one passage score in one cell, or null when below every tier.
+ * `related` is the related-vote weight (display tuning, default 1): for a
+ * single-judge cell it sets the related cut so the lone vote renders at its own
+ * weight; with the weight set to 0 the user has zeroed related votes, so they
+ * stay hidden (cut falls back to 1). Extracted verbatim-friendly for
+ * engine/panel/test_appjs_tiers.js. */
+function tierBand(score, judges, maxCell, related) {
+  const defCut = Math.min(2 * judges + 1, maxCell || 2 * judges + 1);
+  const relatedCut = judges > 1 ? judges + 1 : related > 0 ? related : 1;
+  return score >= defCut ? "defining"
+    : score >= 2 * judges ? "core"
+    : score >= relatedCut ? "related"
+    : null;
+}
 
 const initialParams = new URLSearchParams(location.search);
 state.embedded = initialParams.get("embedded") === "1";
@@ -349,7 +367,7 @@ setupSidebarResizer();
 function behaviourGroups() {
   const groups = new Map();
   (state.payload?.behaviours || []).forEach(behaviour => {
-    const name = behaviour.category || "Behaviors under test";
+    const name = behaviour.category || "Behaviours under test";
     if (!groups.has(name)) groups.set(name, []);
     groups.get(name).push(behaviour);
   });
@@ -1603,9 +1621,7 @@ function applyPanelThreshold(payload) {
       // cells the defining cut clamps to unanimous core, whose passages then count as
       // defining and the core band sits empty.
       const judges = Math.max(1, ...cov.passages.map(p => p.verdicts ? Object.values(p.verdicts).length : 0));
-      const defCut = Math.min(2 * judges + 1, maxCell || 2 * judges + 1);
-      const band = score =>
-        score >= defCut ? "defining" : score >= 2 * judges ? "core" : score >= judges + 1 ? "related" : null;
+      const band = score => tierBand(score, judges, maxCell, related);
       const shownBands = state.bands ?? new Set(DEFAULT_BANDS);
       const before = cov.passages.length;
       let subTier = 0;   // below every tier -- never rendered, so never "toggled off"
