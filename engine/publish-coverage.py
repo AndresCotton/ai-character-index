@@ -382,7 +382,11 @@ def main() -> None:
     ] + records
     data["coverage"].sort(key=lambda r: (r["behaviour_id"], r["lab_id"]))
     COVERAGE.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n")
-    print(f"Wrote {COVERAGE.relative_to(ROOT)}: behaviour {behaviour_id} "
+    try:
+        coverage_label = COVERAGE.relative_to(ROOT)
+    except ValueError:  # COVERAGE rebound outside the repo (tests)
+        coverage_label = COVERAGE
+    print(f"Wrote {coverage_label}: behaviour {behaviour_id} "
           f"({behaviour_name}), {len(all_citations)} citations")
 
 

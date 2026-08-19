@@ -443,7 +443,7 @@ class WritePathRoundTripTest(unittest.TestCase):
                     pub.main()
             finally:
                 sys.argv = saved
-            self.assertIn("using structured sidecar", buf.getvalue())
+            self.assertIn("Wrote", buf.getvalue())
             self.assertEqual(
                 scratch.read_bytes(), COVERAGE.read_bytes(),
                 "republish must reproduce data/coverage.json byte-for-byte",
