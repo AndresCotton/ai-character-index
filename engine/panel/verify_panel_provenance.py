@@ -104,9 +104,14 @@ def rebuild(runlog, rubric, panel, scratch_root):
     (scratch_root / "site" / "llm-panel-review" / "data").mkdir(parents=True, exist_ok=True)
     bs = _load("build_site_data_under_test", HERE / "build_site_data.py")
     bs.ROOT = scratch_root
+    # DATA_DIR is derived from ROOT at module load; rebind it too.
+    bs.DATA_DIR = scratch_root / "site" / "llm-panel-review" / "data"
     saved_argv = sys.argv
+    # --out= pins the rebuild to the canonical filename: without it the
+    # builder emits a timestamped run file (and touches the manifest).
     sys.argv = ["build_site_data.py", f"--runlog={runlog}",
-                f"--rubric={rubric}", f"--panel={panel}"]
+                f"--rubric={rubric}", f"--panel={panel}",
+                "--out=behaviours.json"]
     try:
         bs.main()
     finally:

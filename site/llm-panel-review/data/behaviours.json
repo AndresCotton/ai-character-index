@@ -19,7 +19,7 @@
    "opus",
    "sol"
   ],
-  "runDate": "2026-07-30",
+  "runDate": "2026-08-18",
   "scoring": "per passage: sum over judges of core=2/related=1/neither=0; display thresholds are client-side URL params"
  },
  "behaviours": [
