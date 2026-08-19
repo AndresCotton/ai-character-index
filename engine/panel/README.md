@@ -25,8 +25,12 @@ Each `build_site_data.py` run emits its own timestamped file
 lexicographically sortable = chronological, URL-safe) and updates
 `site/llm-panel-review/data/manifest.json`:
 `{"latest": <filename>, "runs": [newest-first entries with filename, timestamp,
-rubric, panel and citation metadata]}`. Run files and the manifest are gitignored --
-they stay local; the tracked `behaviours.json` is the fallback a fresh clone loads.
+rubric, panel and citation metadata]}`. A second build in the same second takes a
+numeric sequence suffix (`behaviours-<ts>-2.json`, then `-3`, ...) so a run is never
+silently overwritten; the suffix sorts after the bare stamp and before the next
+second, so lexical order stays chronological. Run files and the manifest are
+gitignored -- they stay local; the tracked `behaviours.json` is the fallback a fresh
+clone loads.
 
 The page (`site/llm-panel-review/app.js`) resolves its payload in this order:
 1. `?data=<name>` URL param (a pin; name only, no paths);
@@ -45,7 +49,8 @@ python3 engine/panel/select_run.py --latest          # verify the manifest's lat
 Both paths resolve the same way: a name counts only when the file exists and parses
 as JSON. To rebuild the shipped fallback (or any fixed filename) instead of emitting
 a timestamped run, pass `--out=` -- e.g. `--out=behaviours.json`; the manifest is
-left alone on that path.
+left alone on that path. The name is validated (URL-safe chars, no path separators
+or `..`), so `--out=` cannot write outside the data dir.
 
 ## The procedure
 The end-to-end stage-4 procedure (dry run, execution, failure substitutions,

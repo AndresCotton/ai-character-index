@@ -248,6 +248,36 @@ class TestRunTimestamp(unittest.TestCase):
         self.assertEqual(stamps, sorted(stamps))
         self.assertNotIn(":", "".join(stamps))   # colons would break URL params
 
+    def test_same_second_suffix_still_sorts_chronologically(self):
+        from datetime import datetime, timedelta
+        dt = datetime(2026, 8, 18, 17, 26, 20)
+        self.assertEqual(bs.run_timestamp(dt, 2), "2026-08-18T17-26-20-2")
+        stamps = [bs.run_timestamp(dt), bs.run_timestamp(dt, 2), bs.run_timestamp(dt, 3),
+                  bs.run_timestamp(dt + timedelta(seconds=1))]
+        self.assertEqual(stamps, sorted(stamps))
+
+
+class TestNextRunName(unittest.TestCase):
+    """A same-second rebuild must never overwrite a run -- it takes a -2/-3/... suffix."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp(prefix="panel-names-"))
+        self.addCleanup(lambda: shutil.rmtree(self.dir, ignore_errors=True))
+        from datetime import datetime
+        self.dt = datetime(2026, 8, 18, 17, 26, 20)
+
+    def test_bare_name_when_the_second_is_free(self):
+        self.assertEqual(bs.next_run_name(self.dir, self.dt),
+                         ("behaviours-2026-08-18T17-26-20.json", "2026-08-18T17-26-20"))
+
+    def test_sequence_suffix_until_unique(self):
+        (self.dir / "behaviours-2026-08-18T17-26-20.json").write_text("{}")
+        self.assertEqual(bs.next_run_name(self.dir, self.dt),
+                         ("behaviours-2026-08-18T17-26-20-2.json", "2026-08-18T17-26-20-2"))
+        (self.dir / "behaviours-2026-08-18T17-26-20-2.json").write_text("{}")
+        self.assertEqual(bs.next_run_name(self.dir, self.dt),
+                         ("behaviours-2026-08-18T17-26-20-3.json", "2026-08-18T17-26-20-3"))
+
 
 class TestManifestUpdate(unittest.TestCase):
     """The manifest is the run ledger: newest first, one entry per filename."""
@@ -337,6 +367,13 @@ class TestResolveDataName(ResolveFixture):
             bs.resolve_data_name(self.dir, manifest={"latest": "behaviours-gone.json"}),
             ("behaviours.json", "fallback"))
 
+    def test_non_string_latest_falls_back_to_shipped(self):
+        # mirrors app.js's `typeof latest === "string"` guard: a malformed manifest
+        # must reach the shipped data, not crash the regex match
+        for bad in (123, ["behaviours.json"], {"latest": "x"}, True):
+            self.assertEqual(bs.resolve_data_name(self.dir, manifest={"latest": bad}),
+                             ("behaviours.json", "fallback"), f"latest={bad!r}")
+
     def test_empty_directory_resolves_nothing(self):
         empty = Path(tempfile.mkdtemp(prefix="panel-empty-"))
         self.addCleanup(lambda: shutil.rmtree(empty, ignore_errors=True))
@@ -389,6 +426,86 @@ class TestSelectRun(ResolveFixture):
         code, out, _ = self.run_cli()
         self.assertEqual(code, 0)
         self.assertIn("behaviours.json (source: fallback)", out)
+
+
+class TestBuildMain(unittest.TestCase):
+    """Integration: build_site_data.main() end-to-end on a synthetic runlog -- the
+    timestamped run file + manifest row, same-second collisions, and the --out= side
+    road (explicit file, manifest untouched, unsafe names rejected)."""
+
+    TS = "2026-08-18T17-26-20"
+    LOC = "constitution@2026-01-20 > Overview > Claude and the mission of Anthropic > ¶1"
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp(prefix="panel-build-"))
+        self.addCleanup(lambda: shutil.rmtree(self.dir, ignore_errors=True))
+        self._data_dir, self._datetime = bs.DATA_DIR, bs.datetime
+        bs.DATA_DIR = self.dir
+        self.addCleanup(lambda: setattr(bs, "DATA_DIR", self._data_dir))
+        # three frontier judges on one helpfulness passage: score 5, 3 votes -> kept
+        rows = [{"behaviour": "helpfulness", "spec": "constitution", "model": m,
+                 "locator": self.LOC, "rubric": "v3w", "parsed": True, "verdict": v}
+                for m, v in (("sol", 2), ("fable", 2), ("kimi", 1))]
+        self.runlog = self.dir / "synth-runlog.jsonl"
+        self.runlog.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+
+    def freeze(self):
+        from datetime import datetime
+        fixed = datetime(2026, 8, 18, 17, 26, 20)   # == self.TS
+        bs.datetime = type("FrozenDT", (), {"now": staticmethod(lambda: fixed)})
+        self.addCleanup(lambda: setattr(bs, "datetime", self._datetime))
+
+    def build(self, *extra):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            bs.main([f"--runlog={self.runlog}", *extra])
+        return out.getvalue()
+
+    def test_timestamped_build_writes_run_file_and_manifest_row(self):
+        self.freeze()
+        self.build()
+        name = f"behaviours-{self.TS}.json"
+        payload = json.loads((self.dir / name).read_text())
+        n = sum(len(c["passages"]) for b in payload["behaviours"]
+                for c in b["coverage"].values())
+        self.assertEqual(n, 1)
+        manifest = json.loads((self.dir / "manifest.json").read_text())
+        self.assertEqual(manifest["latest"], name)
+        self.assertEqual(len(manifest["runs"]), 1)
+        row = manifest["runs"][0]
+        self.assertEqual(row["filename"], name)
+        self.assertEqual(row["timestamp"], self.TS)
+        self.assertEqual(row["rubric"], "v3w")
+        self.assertEqual(row["panel"], "frontier")
+        self.assertEqual(row["judges"], ["fable", "kimi", "sol"])
+        self.assertEqual(row["runlog"], self.runlog.name)
+        self.assertEqual(row["citations"], 1)
+
+    def test_same_second_double_build_keeps_both_runs(self):
+        self.freeze()
+        self.build()
+        self.build()
+        first, second = f"behaviours-{self.TS}.json", f"behaviours-{self.TS}-2.json"
+        self.assertTrue((self.dir / first).exists())
+        self.assertTrue((self.dir / second).exists())
+        manifest = json.loads((self.dir / "manifest.json").read_text())
+        self.assertEqual([r["filename"] for r in manifest["runs"]], [second, first])
+        self.assertEqual(manifest["latest"], second)
+
+    def test_out_writes_named_file_and_leaves_manifest_alone(self):
+        self.build("--out=explicit.json")
+        json.loads((self.dir / "explicit.json").read_text())
+        self.assertFalse((self.dir / "manifest.json").exists())
+        self.assertFalse(any(self.dir.glob("behaviours-*.json")))
+
+    def test_out_rejects_unsafe_names(self):
+        for bad in ("../evil.json", "sub/dir.json", "..", "bad name!.json"):
+            with self.assertRaises(SystemExit) as cm:
+                self.build(f"--out={bad}")
+            self.assertIn(repr(bad), str(cm.exception.code))
+        # nothing was written anywhere: the data dir still holds only the runlog
+        self.assertEqual([p.name for p in self.dir.iterdir()], ["synth-runlog.jsonl"])
+        self.assertFalse((self.dir.parent / "evil.json").exists())
 
 
 if __name__ == "__main__":

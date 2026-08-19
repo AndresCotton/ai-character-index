@@ -19,8 +19,12 @@ Output: by DEFAULT each run emits its own timestamped file
 (hyphen-separated: lexicographically sortable = chronological, URL-safe) and updates
   site/llm-panel-review/data/manifest.json
 ({"latest": <filename>, "runs": [newest-first]}), which the page reads to pick what to
-show. --out=<name> writes that exact file instead and leaves the manifest alone --
---out=behaviours.json rebuilds the shipped fallback a fresh clone loads.
+show. A second build in the same second takes a numeric sequence suffix
+(behaviours-<ts>-2.json, then -3, ...) so a run is never silently overwritten.
+--out=<name> writes that exact file instead and leaves the manifest alone --
+--out=behaviours.json rebuilds the shipped fallback a fresh clone loads. The name is
+validated (SAFE_NAME chars, no path separators or .. traversal), so it cannot write
+outside the data dir.
 """
 import collections
 import json
@@ -53,15 +57,34 @@ FALLBACK_NAME = "behaviours.json"
 SAFE_NAME = re.compile(r"^[\w.-]+$")
 
 
-def run_timestamp(dt):
+def run_timestamp(dt, seq=0):
     """Run-file timestamp: hyphen-separated so it is URL-safe, and lexicographically
-    sortable = chronological."""
-    return dt.strftime("%Y-%m-%dT%H-%M-%S")
+    sortable = chronological. A same-second rerun takes a sequence suffix (seq >= 2,
+    e.g. …T17-26-20-2) that still sorts after the bare stamp and before the next
+    second, so lexical == chronological survives collisions."""
+    ts = dt.strftime("%Y-%m-%dT%H-%M-%S")
+    return f"{ts}-{seq}" if seq else ts
+
+
+def next_run_name(data_dir, dt):
+    """(filename, timestamp) for a new run: behaviours-<ts>.json, or the first free
+    behaviours-<ts>-N.json (N = 2, 3, ...) when that second already has a run file --
+    a provenance ledger must never silently overwrite a run."""
+    ts = run_timestamp(dt)
+    name = f"behaviours-{ts}.json"
+    seq = 2
+    while (Path(data_dir) / name).exists():
+        ts = run_timestamp(dt, seq)
+        name = f"behaviours-{ts}.json"
+        seq += 1
+    return name, ts
 
 
 def update_manifest(manifest, entry):
     """Pure: the manifest that results from inserting `entry` (replacing any entry with
-    the same filename). Runs stay newest-first and `latest` names the newest one."""
+    the same filename). Runs stay newest-first and `latest` names the newest one.
+    Same-second runs carry run_timestamp() sequence suffixes, so the timestamp sort
+    alone keeps them in build order."""
     runs = [r for r in manifest.get("runs", []) if r.get("filename") != entry["filename"]]
     runs.append(entry)
     runs.sort(key=lambda r: r.get("timestamp", ""), reverse=True)
@@ -101,13 +124,32 @@ def resolve_data_name(data_dir, pin=None, manifest=None):
         if _loadable(data_dir / fname):
             return fname, "pin"
     latest = (manifest or {}).get("latest")
-    if latest and SAFE_NAME.match(latest):
+    # isinstance guard mirrors the `typeof latest === "string"` check in app.js: a
+    # malformed manifest must fall through to the shipped data, never crash the match.
+    if isinstance(latest, str) and SAFE_NAME.match(latest):
         fname = as_json_name(latest)
         if _loadable(data_dir / fname):
             return fname, "latest"
     if _loadable(data_dir / FALLBACK_NAME):
         return FALLBACK_NAME, "fallback"
     return None, None
+
+
+def check_out_name(name):
+    """Loud-fail an --out= name that could write outside the site data dir: the same
+    SAFE_NAME charset ?data= admits (so no path separators), and no .. traversal."""
+    if not SAFE_NAME.match(name) or ".." in name or name == ".":
+        sys.exit(f"error: --out={name!r} is not a safe name for the site data dir -- "
+                 "use a plain filename (word chars, dots, hyphens; no paths or ..)")
+
+
+def _shown(path):
+    """Repo-relative for display when inside the repo, absolute otherwise (tests run
+    the builder against a temp data dir)."""
+    try:
+        return path.relative_to(ROOT)
+    except ValueError:
+        return path
 
 
 def keeps_citation(score, n_votes, panel_size):
@@ -131,11 +173,12 @@ def citation_quote(text):
     return clean_quote(text), False
 
 
-def main():
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
     runlog = HERE / "runlog-v3.jsonl"   # same default as whole_doc.py and run_rollout.py
     rubric = CONFIG["rubric"]
     out_name = None
-    for a in sys.argv[1:]:
+    for a in argv:
         if a.startswith("--runlog="):
             runlog = Path(a.split("=", 1)[1])
         elif a.startswith("--rubric="):
@@ -146,6 +189,7 @@ def main():
             DISPLAY["behaviours"] = a.split("=", 1)[1].split(",")
         elif a.startswith("--out="):            # alternate FILENAME in site data dir (iteration builds)
             out_name = a.split("=", 1)[1]
+            check_out_name(out_name)            # loud error before any build work
     panel = set(CONFIG["panels"][DISPLAY["panel"]])
     votes = collections.defaultdict(dict)
     spec_of = {}
@@ -234,10 +278,9 @@ def main():
         # the shipped fallback. Written exactly there; the manifest is left alone.
         dest = DATA_DIR / out_name
         dest.write_text(payload)
-        print(f"{dest.relative_to(ROOT)}: {summary}")
+        print(f"{_shown(dest)}: {summary}")
         return
-    ts = run_timestamp(datetime.now())
-    out_name = f"behaviours-{ts}.json"
+    out_name, ts = next_run_name(DATA_DIR, datetime.now())
     dest = DATA_DIR / out_name
     dest.write_text(payload)
     entry = {"filename": out_name, "timestamp": ts, "rubric": rubric,
@@ -246,8 +289,8 @@ def main():
     manifest_path = DATA_DIR / MANIFEST_NAME
     manifest = update_manifest(read_manifest(manifest_path), entry)
     manifest_path.write_text(json.dumps(manifest, indent=1, ensure_ascii=False))
-    print(f"{dest.relative_to(ROOT)}: {summary}")
-    print(f"{manifest_path.relative_to(ROOT)}: latest = {out_name} ({len(manifest['runs'])} runs)")
+    print(f"{_shown(dest)}: {summary}")
+    print(f"{_shown(manifest_path)}: latest = {out_name} ({len(manifest['runs'])} runs)")
 
 
 if __name__ == "__main__":

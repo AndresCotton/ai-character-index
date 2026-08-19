@@ -45,7 +45,7 @@ Known decoupling debt: the publisher hardcodes its lab list (`LABS`: anthropic a
 
 ## panel/ (works today)
 
-The LLM panel judging pipeline: whole-spec judging calls, verdict parsing, the rollout driver, and the `site/llm-panel-review/` payload builder. See [`panel/README.md`](panel/README.md) for mechanics and reproduction; `python3 engine/panel/test_panel.py` runs its 27 offline unit tests.
+The LLM panel judging pipeline: whole-spec judging calls, verdict parsing, the rollout driver, and the `site/llm-panel-review/` payload builder. See [`panel/README.md`](panel/README.md) for mechanics and reproduction; `python3 engine/panel/test_panel.py` runs its 55 offline unit tests.
 
 ## generate_behaviour_constants.py (works today)
 
