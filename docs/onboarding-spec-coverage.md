@@ -188,7 +188,7 @@ the supplied definitions.
 | **Reader verifier** | `engine/verify-spec-reader.mjs` | headless render check (needs Chrome) |
 | **Mirror refresher** | `engine/spec-watch/pull-latest.sh` | pulls latest published specs into `specs/` |
 | **Public methodology copy** | `methodology/site-copy-how-we-assess-coverage.md`, `site/methodology.html` | plain-language description of the method |
-| **Fixed IDs / locations** | `.claude/skills/behaviour-sweep/references/locations.md` | canonical table of paths + Notion IDs |
+| **Fixed locations** | `.claude/skills/references/locations.md` | canonical table of repo paths + spec versions |
 
 ---
 
