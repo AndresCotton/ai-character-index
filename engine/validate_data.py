@@ -112,6 +112,53 @@ def _resolve_ref(ref: str, root_schema: dict) -> dict:
     return node
 
 
+# Validation keywords the fallback implements (the subset data/schema/ uses).
+_SUPPORTED_KEYWORDS = {
+    "type", "enum", "required", "properties", "additionalProperties",
+    "items", "minItems", "minLength", "minimum", "maximum", "pattern", "$ref",
+}
+
+# Annotation/meta keywords with no validation semantics (draft 2020-12);
+# safe for the fallback to ignore.
+_ANNOTATION_KEYWORDS = {
+    "$schema", "$id", "$defs", "$comment", "title", "description",
+    "default", "examples", "deprecated", "readOnly", "writeOnly",
+}
+
+
+def _check_supported_keywords(schema, location, errors) -> None:
+    """Fail loudly on any validation keyword the fallback does not implement.
+
+    Scans the whole schema document (not just the parts one instance reaches),
+    so a future edit that leans on e.g. oneOf, format or uniqueItems breaks
+    the gate here instead of silently validating less than the jsonschema
+    backend does.
+    """
+    if not isinstance(schema, dict):
+        return
+    for key in schema:
+        if key not in _SUPPORTED_KEYWORDS and key not in _ANNOTATION_KEYWORDS:
+            errors.append(
+                f"schema at {location}: unsupported keyword {key!r} -- the built-in "
+                f"validator implements only: {', '.join(sorted(_SUPPORTED_KEYWORDS))}; "
+                f"extend the fallback or install jsonschema"
+            )
+    properties = schema.get("properties")
+    if isinstance(properties, dict):
+        for name, sub in properties.items():
+            _check_supported_keywords(sub, f"{location}.properties.{name}", errors)
+    items = schema.get("items")
+    if isinstance(items, dict):
+        _check_supported_keywords(items, f"{location}.items", errors)
+    additional = schema.get("additionalProperties")
+    if isinstance(additional, dict):
+        _check_supported_keywords(additional, f"{location}.additionalProperties", errors)
+    defs = schema.get("$defs")
+    if isinstance(defs, dict):
+        for name, sub in defs.items():
+            _check_supported_keywords(sub, f"{location}.$defs.{name}", errors)
+
+
 def _validate_node(instance, schema, root_schema, path, errors) -> None:
     if "$ref" in schema:
         schema = _resolve_ref(schema["$ref"], root_schema)
@@ -166,6 +213,9 @@ def _validate_node(instance, schema, root_schema, path, errors) -> None:
 
 def _validate_with_stdlib(instance, schema) -> list:
     errors = []
+    _check_supported_keywords(schema, "$", errors)
+    if errors:
+        return errors  # the schema itself is broken for this backend
     _validate_node(instance, schema, schema, "$", errors)
     return errors
 
@@ -210,6 +260,11 @@ def _cross_file_checks(files: dict) -> list:
         for lab in labs.get("labs", [])
         if isinstance(lab, dict)
     } if isinstance(labs, dict) else set()
+    if not lab_ids:
+        # Without a usable registry the membership checks below cannot run.
+        # Say so loudly: a broken registry must not masquerade as a passing
+        # gate just because nothing got checked against it.
+        errors.append("cross-file lab_id checks skipped: labs.json missing or empty")
 
     def check_lab_ids(file_name, records):
         for index, record in enumerate(records or []):
@@ -235,6 +290,14 @@ def _cross_file_checks(files: dict) -> list:
             for behaviour in reader_test.get("behaviours", [])
             if isinstance(behaviour, dict)
         }
+        if not behaviour_ids:
+            # Same rule as labs.json above: with no behaviours list there is
+            # nothing to check behaviour_id against, and that must fail the
+            # gate instead of silently skipping the membership check.
+            errors.append(
+                "cross-file behaviour_id checks skipped: "
+                "reader-test-coverage.json behaviours missing or empty"
+            )
         for index, record in enumerate(records or []):
             if not isinstance(record, dict):
                 continue

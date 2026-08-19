@@ -41,6 +41,18 @@ def main() -> None:
     source = json.loads(SOURCE.read_text())
     records = source["coverage"]
 
+    unknown_lab_ids = sorted(
+        {record["lab_id"] for record in records} - set(LAB_IDS)
+    )
+    if unknown_lab_ids:
+        # A record whose lab is not in this builder's list used to be silently
+        # dropped from the payload -- silent data loss for whoever forks the
+        # reader. Fail loudly and name the offending lab_id(s) instead.
+        raise SystemExit(
+            f"coverage record(s) with lab_id(s) {unknown_lab_ids} not in this "
+            f"builder's lab list {LAB_IDS}"
+        )
+
     behaviours = []
     for behaviour in source["behaviours"]:
         per_lab = {}

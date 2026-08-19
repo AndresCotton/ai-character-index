@@ -164,6 +164,18 @@ class TestCoverageSchema(MutationMixin, unittest.TestCase):
             d["coverag"] = d.pop("coverage")
         self.assert_invalid(mutate, "coverag")
 
+    def test_min_length_boundary_is_strict_less_than(self):
+        # minLength means `<`, not `<=`: a string of length minLength-1 fails,
+        # length minLength passes. Pins the stdlib fallback's boundary to the
+        # jsonschema backend's (citation quote has minLength 1).
+        def below_boundary(d):
+            d["coverage"][0]["citations"][0]["quote"] = ""  # length 0 < 1
+        self.assert_invalid(below_boundary, ".quote")
+
+        def at_boundary(d):
+            d["coverage"][0]["citations"][0]["quote"] = "x"  # length 1 == minLength
+        self.assert_valid(at_boundary)
+
 
 class TestEvalsSchema(MutationMixin, unittest.TestCase):
     """data/evals.json: no eval without a URL, rubric scores stay on the 0-4 scale."""
@@ -261,6 +273,49 @@ class TestReaderTestCoverageSchema(MutationMixin, unittest.TestCase):
         self.assert_valid(mutate)
 
 
+class TestStdlibKeywordGuard(unittest.TestCase):
+    """The stdlib fallback implements a keyword subset; any other validation
+    keyword must fail loudly, never be silently skipped -- otherwise a schema
+    edit silently diverges the two backends."""
+
+    def assert_flagged(self, schema, instance, keyword, location):
+        errors = vd.validate_instance(instance, schema, force_stdlib=True)
+        self.assertTrue(errors, f"unsupported keyword {keyword!r} passed silently")
+        self.assertTrue(
+            any(keyword in error and location in error for error in errors),
+            f"no error names {keyword!r} at {location!r}; got: {errors}",
+        )
+
+    def test_format_is_flagged(self):
+        schema = {"type": "string", "format": "date"}
+        self.assert_flagged(schema, "2026-01-01", "format", "$")
+
+    def test_one_of_is_flagged(self):
+        schema = {"oneOf": [{"type": "string"}, {"type": "integer"}]}
+        self.assert_flagged(schema, 1, "oneOf", "$")
+
+    def test_unique_items_nested_under_items_is_flagged_with_location(self):
+        schema = {"type": "array", "items": {"type": "integer", "uniqueItems": True}}
+        self.assert_flagged(schema, [1, 2], "uniqueItems", "$.items")
+
+    def test_supported_keywords_pass_the_guard(self):
+        # Positive control: the keyword subset the committed schemas use.
+        schema = {
+            "type": "object",
+            "required": ["a"],
+            "additionalProperties": False,
+            "properties": {
+                "a": {"type": "string", "minLength": 1, "pattern": "^[a-z]+$"},
+                "b": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0, "maximum": 4}},
+                "c": {"enum": ["x", "y"]},
+            },
+        }
+        self.assertEqual(
+            vd.validate_instance({"a": "ok", "b": [1], "c": "x"}, schema, force_stdlib=True),
+            [],
+        )
+
+
 class TestCrossFileRules(unittest.TestCase):
     """Rules a single-file schema cannot express, run against a scratch repo copy."""
 
@@ -293,6 +348,41 @@ class TestCrossFileRules(unittest.TestCase):
         self.assertTrue(
             any("lab_id" in e and "deepmind" in e for e in errors),
             f"no unknown-lab error; got: {errors}",
+        )
+
+    def test_missing_labs_registry_fails_loudly(self):
+        # Without labs.json the lab_id membership checks cannot run; the gate
+        # must say so explicitly instead of passing because nothing was checked.
+        (self.tmp / "data" / "labs.json").unlink()
+        errors = vd.validate_all(self.tmp)
+        self.assertTrue(
+            any("lab_id checks skipped" in e and "labs.json" in e for e in errors),
+            f"no registry-skip error; got: {errors}",
+        )
+
+    def test_empty_reader_test_behaviours_fails_loudly(self):
+        # Same rule for the bench's own registry: an empty behaviours list
+        # disables the behaviour_id membership check and must fail the gate.
+        def mutate(d):
+            d["behaviours"] = []
+        self.rewrite("reader-test-coverage.json", mutate)
+        errors = vd.validate_all(self.tmp)
+        self.assertTrue(
+            any("behaviour_id checks skipped" in e for e in errors),
+            f"no behaviours-skip error; got: {errors}",
+        )
+
+    def test_unsupported_keyword_in_schema_fails_loudly_on_stdlib(self):
+        # A schema edit leaning on a keyword the stdlib fallback does not
+        # implement must break the gate, naming the keyword -- never silently
+        # skip the check and diverge from the jsonschema backend.
+        def mutate(schema):
+            schema["$defs"]["citation"]["uniqueItems"] = True
+        self.rewrite("schema/coverage.schema.json", mutate)
+        errors = vd.validate_all(self.tmp, force_stdlib=True)
+        self.assertTrue(
+            any("uniqueItems" in e and "unsupported keyword" in e for e in errors),
+            f"no unsupported-keyword error; got: {errors}",
         )
 
     def test_malformed_json_fails(self):
