@@ -757,7 +757,7 @@ def rec_path_open(self, *a, **k):
     opened.append(str(self))
     return _real_path_open(self, *a, **k)
 Path.open = rec_path_open
-for name in ("harness", "whole_doc", "run_rollout", "build_site_data"):
+for name in ("harness", "whole_doc", "run_rollout", "build_site_data", "select_strata"):
     sp = importlib.util.spec_from_file_location(name, HERE / (name + ".py"))
     m = importlib.util.module_from_spec(sp)
     sp.loader.exec_module(m)
