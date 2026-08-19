@@ -13,10 +13,20 @@ Behaviour names/definitions come from data/reader-test-coverage.json exactly as 
 
   python3 build_site_data.py --runlog=<runlog> --rubric=v3w --panel=frontier
   (the shipped data: --runlog=runlog-v3.jsonl from the experiment branch, rubric v3w)
+
+Output: by DEFAULT each run emits its own timestamped file
+  site/llm-panel-review/data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json
+(hyphen-separated: lexicographically sortable = chronological, URL-safe) and updates
+  site/llm-panel-review/data/manifest.json
+({"latest": <filename>, "runs": [newest-first]}), which the page reads to pick what to
+show. --out=<name> writes that exact file instead and leaves the manifest alone --
+--out=behaviours.json rebuilds the shipped fallback a fresh clone loads.
 """
 import collections
 import json
+import re
 import sys
+from datetime import date, datetime
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -35,6 +45,69 @@ SLUGS = {"helpfulness": "helpfulness", "third-party-harm": "harm-avoidance-to-th
          "objectivity": "objectivity-on-contested-questions", "user-autonomy": "user-autonomy",
          "general-welfare": "animal-welfare-impacts"}
 SLUGS_EXTRA = {"general-welfare": ["general-welfare-impacts-strict"]}   # one run feeds both general-guidelines rows
+
+DATA_DIR = ROOT / "site" / "llm-panel-review" / "data"
+MANIFEST_NAME = "manifest.json"
+FALLBACK_NAME = "behaviours.json"
+# The same character set app.js admits for ?data= -- a run name doubles as a URL param.
+SAFE_NAME = re.compile(r"^[\w.-]+$")
+
+
+def run_timestamp(dt):
+    """Run-file timestamp: hyphen-separated so it is URL-safe, and lexicographically
+    sortable = chronological."""
+    return dt.strftime("%Y-%m-%dT%H-%M-%S")
+
+
+def update_manifest(manifest, entry):
+    """Pure: the manifest that results from inserting `entry` (replacing any entry with
+    the same filename). Runs stay newest-first and `latest` names the newest one."""
+    runs = [r for r in manifest.get("runs", []) if r.get("filename") != entry["filename"]]
+    runs.append(entry)
+    runs.sort(key=lambda r: r.get("timestamp", ""), reverse=True)
+    return {"latest": runs[0]["filename"], "runs": runs}
+
+
+def read_manifest(path):
+    """The manifest at `path`; a fresh clone (none yet) is an empty one."""
+    try:
+        return json.loads(Path(path).read_text())
+    except (OSError, ValueError):
+        return {"latest": None, "runs": []}
+
+
+def _loadable(path):
+    """True when the file exists and parses as JSON -- how the page consumes it."""
+    try:
+        json.loads(Path(path).read_text())
+        return True
+    except (OSError, ValueError):
+        return False
+
+
+def resolve_data_name(data_dir, pin=None, manifest=None):
+    """The resolution chain site/llm-panel-review/app.js implements, for CLI tooling:
+    pin (?data= / --pin) -> manifest latest -> shipped behaviours.json.
+    Returns (filename, source) with source one of pin/latest/fallback; a name that
+    fails the character check or a file that is absent or unparseable falls through
+    to the next source. (None, None) when nothing would load."""
+    data_dir = Path(data_dir)
+
+    def as_json_name(name):
+        return name[:-5] + ".json" if name.endswith(".json") else name + ".json"
+
+    if pin and SAFE_NAME.match(pin):
+        fname = as_json_name(pin)
+        if _loadable(data_dir / fname):
+            return fname, "pin"
+    latest = (manifest or {}).get("latest")
+    if latest and SAFE_NAME.match(latest):
+        fname = as_json_name(latest)
+        if _loadable(data_dir / fname):
+            return fname, "latest"
+    if _loadable(data_dir / FALLBACK_NAME):
+        return FALLBACK_NAME, "fallback"
+    return None, None
 
 
 def keeps_citation(score, n_votes, panel_size):
@@ -139,7 +212,6 @@ def main():
                                "slug": b["slug"], "name": b["name"],
                                "definition": b["definition"], "category": b["category"],
                                "coverage": cov})
-    from datetime import date
     seats = sorted({m for b_ in out_behaviours for cov in b_["coverage"].values()
                     for p in cov["passages"] for m in p.get("verdicts", {})})
     out = {"generatedFrom": [f"engine/panel/build_site_data.py ({rubric})"],
@@ -153,11 +225,29 @@ def main():
                "runDate": str(date.today()),
                "scoring": "per passage: sum over judges of core=2/related=1/neither=0; display thresholds are client-side URL params"},
            "behaviours": out_behaviours}
-    dest = ROOT / "site" / "llm-panel-review" / "data" / (out_name or "behaviours.json")
-    dest.write_text(json.dumps(out, indent=1, ensure_ascii=False))
     n = sum(len(c["passages"]) for b in out_behaviours for c in b["coverage"].values())
-    print(f"{dest.relative_to(ROOT)}: {len(out_behaviours)} behaviours, {n} citations "
-          f"(threshold {DISPLAY['threshold']}, solid {DISPLAY['solid_threshold']})")
+    summary = f"{len(out_behaviours)} behaviours, {n} citations " \
+              f"(threshold {DISPLAY['threshold']}, solid {DISPLAY['solid_threshold']})"
+    payload = json.dumps(out, indent=1, ensure_ascii=False)
+    if out_name:
+        # Explicit destination: iteration builds, or --out=behaviours.json to rebuild
+        # the shipped fallback. Written exactly there; the manifest is left alone.
+        dest = DATA_DIR / out_name
+        dest.write_text(payload)
+        print(f"{dest.relative_to(ROOT)}: {summary}")
+        return
+    ts = run_timestamp(datetime.now())
+    out_name = f"behaviours-{ts}.json"
+    dest = DATA_DIR / out_name
+    dest.write_text(payload)
+    entry = {"filename": out_name, "timestamp": ts, "rubric": rubric,
+             "panel": DISPLAY["panel"], "judges": seats, "behaviours": keep,
+             "runlog": runlog.name, "citations": n}
+    manifest_path = DATA_DIR / MANIFEST_NAME
+    manifest = update_manifest(read_manifest(manifest_path), entry)
+    manifest_path.write_text(json.dumps(manifest, indent=1, ensure_ascii=False))
+    print(f"{dest.relative_to(ROOT)}: {summary}")
+    print(f"{manifest_path.relative_to(ROOT)}: latest = {out_name} ({len(manifest['runs'])} runs)")
 
 
 if __name__ == "__main__":

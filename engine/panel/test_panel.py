@@ -8,6 +8,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -26,6 +27,7 @@ h = load("harness")
 rr = load("run_rollout")
 wd = load("whole_doc")
 bs = load("build_site_data")
+sr = load("select_run")
 
 
 class TestParseVerdicts(unittest.TestCase):
@@ -229,6 +231,164 @@ class TestCitationQuote(unittest.TestCase):
         q, ex = bs.citation_quote("An ordinary paragraph.")
         self.assertEqual(q, "An ordinary paragraph.")
         self.assertFalse(ex)
+
+
+class TestRunTimestamp(unittest.TestCase):
+    """Run filenames must be URL-safe and sort lexicographically == chronologically."""
+
+    def test_shape_is_hyphen_separated(self):
+        from datetime import datetime
+        self.assertEqual(bs.run_timestamp(datetime(2026, 8, 18, 9, 5, 3)),
+                         "2026-08-18T09-05-03")
+
+    def test_lexicographic_order_is_chronological_across_year_boundary(self):
+        from datetime import datetime, timedelta
+        stamps = [bs.run_timestamp(datetime(2026, 12, 31, 23, 59, 58) + timedelta(seconds=i))
+                  for i in range(5)]
+        self.assertEqual(stamps, sorted(stamps))
+        self.assertNotIn(":", "".join(stamps))   # colons would break URL params
+
+
+class TestManifestUpdate(unittest.TestCase):
+    """The manifest is the run ledger: newest first, one entry per filename."""
+
+    def entry(self, ts, **extra):
+        return {"filename": f"behaviours-{ts}.json", "timestamp": ts, **extra}
+
+    def test_runs_listed_newest_first_regardless_of_insert_order(self):
+        m = {"latest": None, "runs": []}
+        m = bs.update_manifest(m, self.entry("2026-08-18T10-00-00"))
+        m = bs.update_manifest(m, self.entry("2026-08-18T12-00-00"))
+        m = bs.update_manifest(m, self.entry("2026-08-18T11-00-00"))
+        self.assertEqual([r["timestamp"] for r in m["runs"]],
+                         ["2026-08-18T12-00-00", "2026-08-18T11-00-00",
+                          "2026-08-18T10-00-00"])
+        self.assertEqual(m["latest"], "behaviours-2026-08-18T12-00-00.json")
+
+    def test_same_filename_replaces_not_duplicates(self):
+        m = bs.update_manifest({"latest": None, "runs": []},
+                               self.entry("2026-08-18T10-00-00", citations=3))
+        m = bs.update_manifest(m, self.entry("2026-08-18T10-00-00", citations=7))
+        self.assertEqual(len(m["runs"]), 1)
+        self.assertEqual(m["runs"][0]["citations"], 7)
+
+    def test_late_older_insert_does_not_steal_latest(self):
+        m = bs.update_manifest({"latest": None, "runs": []},
+                               self.entry("2026-08-18T12-00-00"))
+        m = bs.update_manifest(m, self.entry("2026-08-18T09-00-00"))
+        self.assertEqual(m["latest"], "behaviours-2026-08-18T12-00-00.json")
+
+
+class ResolveFixture(unittest.TestCase):
+    """Shared temp-dir fixture: shipped fallback + two timestamped runs + a manifest."""
+
+    OLD = "behaviours-2026-08-18T10-00-00.json"
+    NEW = "behaviours-2026-08-18T12-00-00.json"
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp(prefix="panel-data-"))
+        self.addCleanup(lambda: shutil.rmtree(self.dir, ignore_errors=True))
+        self.write("behaviours.json", {"behaviours": []})
+        self.write(self.OLD, {"behaviours": ["a"]})
+        self.write(self.NEW, {"behaviours": ["a", "b"]})
+        self.manifest = {"latest": self.NEW, "runs": [
+            {"filename": self.NEW, "timestamp": "2026-08-18T12-00-00"},
+            {"filename": self.OLD, "timestamp": "2026-08-18T10-00-00"}]}
+        self.write("manifest.json", self.manifest)
+
+    def write(self, name, obj):
+        (self.dir / name).write_text(json.dumps(obj))
+
+
+class TestResolveDataName(ResolveFixture):
+    """The fallback chain app.js implements: pin -> manifest latest -> shipped."""
+
+    def test_pin_wins_over_latest(self):
+        self.assertEqual(bs.resolve_data_name(self.dir, pin=self.OLD, manifest=self.manifest),
+                         (self.OLD, "pin"))
+
+    def test_pin_accepts_name_without_json_suffix(self):
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, pin=self.OLD[:-5], manifest=self.manifest),
+            (self.OLD, "pin"))
+
+    def test_missing_pin_falls_through_to_latest(self):
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, pin="behaviours-nope", manifest=self.manifest),
+            (self.NEW, "latest"))
+
+    def test_pin_with_path_characters_is_ignored(self):
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, pin="../escape", manifest=self.manifest),
+            (self.NEW, "latest"))
+
+    def test_unparseable_pin_falls_through(self):
+        (self.dir / "behaviours-broken.json").write_text("{not json")
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, pin="behaviours-broken", manifest=self.manifest),
+            (self.NEW, "latest"))
+
+    def test_no_manifest_falls_back_to_shipped(self):
+        self.assertEqual(bs.resolve_data_name(self.dir, manifest=None),
+                         ("behaviours.json", "fallback"))
+
+    def test_manifest_latest_missing_falls_back_to_shipped(self):
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, manifest={"latest": "behaviours-gone.json"}),
+            ("behaviours.json", "fallback"))
+
+    def test_empty_directory_resolves_nothing(self):
+        empty = Path(tempfile.mkdtemp(prefix="panel-empty-"))
+        self.addCleanup(lambda: shutil.rmtree(empty, ignore_errors=True))
+        self.assertEqual(bs.resolve_data_name(empty), (None, None))
+
+
+class TestSelectRun(ResolveFixture):
+    """The CLI pin path resolves/verifies exactly what the URL param would load."""
+
+    def run_cli(self, *args):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = sr.main(["--data-dir", str(self.dir), *args])
+        return code, out.getvalue(), err.getvalue()
+
+    def test_pin_resolves_and_reports_the_url_param(self):
+        code, out, _ = self.run_cli("--pin", self.OLD[:-5])
+        self.assertEqual(code, 0)
+        self.assertIn(self.OLD, out)
+        self.assertIn(f"?data={self.OLD[:-5]}", out)
+
+    def test_pin_equals_form_and_json_suffix_both_work(self):
+        self.assertEqual(self.run_cli(f"--pin={self.OLD}")[0], 0)
+        self.assertEqual(self.run_cli("--pin", self.OLD)[0], 0)
+
+    def test_unknown_pin_fails_and_names_what_the_page_would_load(self):
+        code, _, err = self.run_cli("--pin", "behaviours-nope")
+        self.assertEqual(code, 1)
+        self.assertIn(self.NEW, err)   # the page would fall through to the latest run
+
+    def test_latest_resolves_the_manifest_newest(self):
+        code, out, _ = self.run_cli("--latest")
+        self.assertEqual(code, 0)
+        self.assertIn(self.NEW, out)
+
+    def test_latest_without_manifest_fails(self):
+        (self.dir / "manifest.json").unlink()
+        code, _, err = self.run_cli("--latest")
+        self.assertEqual(code, 1)
+        self.assertIn("no manifest", err)
+
+    def test_default_reports_what_the_page_loads(self):
+        code, out, _ = self.run_cli()
+        self.assertEqual(code, 0)
+        self.assertIn(self.NEW, out)
+        self.assertIn("(source: latest)", out)
+
+    def test_default_on_fresh_clone_reports_fallback(self):
+        (self.dir / "manifest.json").unlink()
+        code, out, _ = self.run_cli()
+        self.assertEqual(code, 0)
+        self.assertIn("behaviours.json (source: fallback)", out)
 
 
 if __name__ == "__main__":

@@ -27,3 +27,16 @@ client-side from each citation's raw per-model verdicts.
 `data/behaviours.json` is built by `engine/panel/build_site_data.py` from a verdict
 runlog (see `engine/panel/README.md`). Behaviour names/definitions pass through from
 `data/reader-test-coverage.json` unmodified.
+
+## Which payload the page loads
+Resolution order, no selection UI:
+1. `?data=<name>` -- a pin (any payload in `data/`, e.g. a timestamped run or a
+   calibration variant like `?data=behaviours-v4a`); name only, no paths;
+2. `data/manifest.json` `latest` -- the newest timestamped run the builder emitted;
+3. `data/behaviours.json` -- the shipped fallback, always tracked.
+
+A source that fails to fetch or parse falls through to the next, so a stale pin or a
+fresh clone (no manifest yet) still renders. Each `build_site_data.py` run writes
+`data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json` and updates the manifest; both are
+gitignored and stay local. `engine/panel/select_run.py` resolves/verifies pins from
+the CLI the same way the page does (`--pin <name>`, `--latest`).

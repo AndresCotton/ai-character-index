@@ -9,6 +9,14 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# Panel run outputs stay local: each engine/panel/build_site_data.py run emits a
+# timestamped payload and updates the manifest; neither is pushed. The tracked
+# site/llm-panel-review/data/behaviours.json is the fresh-clone fallback. (The
+# tracked calibration variants behaviours-v*.json predate this rule; gitignore
+# only covers files git does not already track.)
+site/llm-panel-review/data/behaviours-*.json
+site/llm-panel-review/data/manifest.json
+
 # Regenerable experiment artifacts: virtualenvs and model-weight caches
 .venv*/
 venv/

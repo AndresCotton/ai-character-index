@@ -17,12 +17,49 @@
  */
 
 const DOCUMENTS_URL = "../spec-reader/data/documents.json";
-/* ?data=<name> loads ./data/<name>.json instead of the default -- lets prompt-calibration
- * iterations sit side by side (e.g. ?data=behaviours-v4a). Name only, no paths. */
-const BEHAVIOURS_URL = (() => {
-  const d = new URLSearchParams(location.search).get("data");
-  return d && /^[\w.-]+$/.test(d) ? `./data/${d.replace(/\.json$/, "")}.json` : "./data/behaviours.json";
-})();
+/* Which behaviour payload the bench loads, resolved in this order:
+ *   1. ?data=<name>  -- a pin, name only, no paths (lets prompt-calibration iterations
+ *      sit side by side, e.g. ?data=behaviours-v4a, or any timestamped run);
+ *   2. data/manifest.json "latest" -- the newest timestamped run emitted by
+ *      engine/panel/build_site_data.py (run files and the manifest stay local);
+ *   3. data/behaviours.json -- the shipped fallback, always tracked.
+ * A source that fails to fetch or parse falls through to the next, so a stale pin,
+ * a dangling manifest entry, or a fresh clone (no manifest at all) never breaks the
+ * page. The same chain, CLI-side, is engine/panel/select_run.py. */
+const MANIFEST_URL = "./data/manifest.json";
+const FALLBACK_DATA_URL = "./data/behaviours.json";
+const DATA_NAME = /^[\w.-]+$/;
+
+function dataUrl(name) {
+  return `./data/${name.replace(/\.json$/, "")}.json`;
+}
+
+async function loadBehaviours() {
+  const pinned = new URLSearchParams(location.search).get("data");
+  if (pinned && DATA_NAME.test(pinned)) {
+    const url = dataUrl(pinned);
+    try {
+      return await loadJSON(url);
+    } catch (error) {
+      console.warn(`Pinned panel data ${url} unavailable (${error.message}); falling back.`);
+    }
+  }
+  let latest = null;
+  try {
+    latest = (await loadJSON(MANIFEST_URL)).latest;
+  } catch {
+    /* No manifest (fresh clone) or an unreadable one -- fall through to the shipped data. */
+  }
+  if (typeof latest === "string" && DATA_NAME.test(latest)) {
+    const url = dataUrl(latest);
+    try {
+      return await loadJSON(url);
+    } catch (error) {
+      console.warn(`Latest run ${url} unavailable (${error.message}); falling back.`);
+    }
+  }
+  return loadJSON(FALLBACK_DATA_URL);
+}
 
 /* Shown for a document when no behaviour is under test. */
 const NO_COVERAGE = { verdict: null, depth: null, note: "", verifiedDate: "", passages: [] };
@@ -1628,7 +1665,7 @@ async function initialize() {
   try {
     const [documents, behaviours] = await Promise.all([
       loadJSON(DOCUMENTS_URL),
-      loadJSON(BEHAVIOURS_URL),
+      loadBehaviours(),
     ]);
     state.rawBehaviours = behaviours.behaviours || [];
     state.bands = initialBands();
