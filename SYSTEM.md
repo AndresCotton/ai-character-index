@@ -31,7 +31,8 @@ graph TB
   bsd --> panelview["site/llm-panel-review/ (unlinked)"]
   adria["behaviours-for-adria/ (reviewer batch)"] -->|"hand transcription"| rtc
   proto["site/index.html (inline hand-maintained data)"]
-  reader & bench & panelview & proto ==>|"deploy.yml on site/** changes"| cf["Cloudflare Pages"]
+  meth["site/methodology.html (static page)"]
+  reader & bench & panelview & proto & meth ==>|"deploy.yml on site/** changes"| cf["Cloudflare Pages"]
   notion["Notion DBs"] -.->|"planned sync -- engine/notion-sync/ is empty"| cov
 ```
 

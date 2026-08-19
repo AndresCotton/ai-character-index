@@ -43,7 +43,8 @@ research/sweeps/NN-<slug>/    the committed working record
   gates.md                   your dated sign-offs, corrections, accepted open items
   verify.md                  the stage-6 audit
 research/sweeps/NN-<slug>.md  canonical write-up, assembled at stage 5
-data/coverage.json            what the reader renders (via documents.json); data/evals.json has no renderer
+data/coverage.json            what the reader renders (via documents.json)
+data/evals.json               the stage-5 eval survey; no renderer reads it
 ```
 
 ## References
