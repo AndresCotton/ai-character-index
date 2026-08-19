@@ -82,6 +82,10 @@ class ReaderTestCoverageJsonResolutionTest(unittest.TestCase):
     def test_every_published_quote_re_resolves(self):
         data = json.loads(READER_TEST_COVERAGE.read_text(encoding="utf-8"))
         self.assertTrue(data["coverage"], "reader-test-coverage.json is empty")
+        # The PR description pins this count: the net must cover every quote.
+        self.assertEqual(
+            sum(len(record["citations"]) for record in data["coverage"]), 294,
+        )
         specs_cache = {}
         for record in data["coverage"]:
             for citation in record["citations"]:

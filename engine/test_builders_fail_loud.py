@@ -11,12 +11,17 @@ Run:  python3 engine/test_builders_fail_loud.py
 import importlib.util
 import json
 import shutil
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
+
+# The builders do `from coverage_payload import coverage_payload`; make sure
+# engine/ is importable regardless of the invoking cwd.
+sys.path.insert(0, str(HERE))
 
 
 def load(name):

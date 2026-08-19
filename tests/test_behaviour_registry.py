@@ -271,6 +271,17 @@ class TestDriftIsCaught(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("numeric_id must be an integer >= 1", result.stdout + result.stderr)
 
+    def test_entry_missing_required_field_fails_loudly(self):
+        # An entry missing a required field used to die as a bare KeyError deep
+        # in a renderer; the loader must name the slug and the missing field.
+        def mutate(registry):
+            del registry["calibration"]["name"]
+        self.mutate_registry(mutate)
+        result = self.run_check()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("calibration", result.stdout + result.stderr)
+        self.assertIn("missing required field 'name'", result.stdout + result.stderr)
+
     def test_unmutated_copy_passes(self):
         result = self.run_check()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

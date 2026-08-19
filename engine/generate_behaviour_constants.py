@@ -96,6 +96,9 @@ def load_registry(root: Path) -> dict:
     for slug, entry in registry.items():
         if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", slug):
             sys.exit(f"data/behaviours.json: {slug!r} is not a kebab-case slug")
+        for field in ("name", "set", "numeric_id"):
+            if field not in entry:
+                sys.exit(f"data/behaviours.json: {slug}: entry is missing required field {field!r}")
         behaviour_set = entry.get("set")
         if behaviour_set not in SETS:
             sys.exit(f"data/behaviours.json: {slug}: unknown set {behaviour_set!r}")
