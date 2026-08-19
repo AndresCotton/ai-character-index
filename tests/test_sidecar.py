@@ -451,7 +451,7 @@ class SidecarMarkdownConsistencyTest(unittest.TestCase):
     """
 
     def test_markdown_path_still_checks_green_beside_sidecar(self):
-        checked = 0
+        checked = set()
         for sidecar_path in sorted(SWEEPS.glob("*/4-spec-coverage.json")):
             md_path = sidecar_path.with_name("4-spec-coverage.md")
             if not md_path.exists():
@@ -470,8 +470,19 @@ class SidecarMarkdownConsistencyTest(unittest.TestCase):
                     "markdown artifact must re-verify alongside its sidecar:\n"
                     + result.stdout + result.stderr,
                 )
-                checked += 1
-        self.assertGreater(checked, 0, "no sweep ships both artifacts")
+                self.assertIn("CHECK OK", result.stdout)
+                checked.add(sidecar_path.parent.name)
+        # Existence pins: the dual-artifact consistency set is exactly the
+        # sweeps that ship both artifacts (01 ships a reconstruction-only
+        # sidecar -- it never had a stage-4 markdown), and every committed
+        # sidecar is present. Deleting either side must turn this test red,
+        # not silently shrink the coverage the suite claims to hold.
+        self.assertEqual(checked, {"02-calibration", "03-action-honesty"})
+        all_sidecars = {path.parent.name for path in SWEEPS.glob("*/4-spec-coverage.json")}
+        self.assertEqual(
+            all_sidecars,
+            {"01-no-sycophancy", "02-calibration", "03-action-honesty"},
+        )
 
 
 
