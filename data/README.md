@@ -7,8 +7,8 @@ Current files:
 | File | One row per | Writer |
 |---|---|---|
 | `coverage.json` | behaviour × lab verdict, with citations | behaviours 2–3: `engine/publish-coverage.py` (re-verifies every quote via `engine/spec-cite/cite.py` before writing); behaviour 1: hand-written, predates the pipeline |
-| `labs.json` | lab | hand-maintained (changes rarely); no code reads it today |
-| `evals.json` | eval, with rubric quality scores | hand-maintained (written before the staged pipeline existed); no code reads it today |
+| `labs.json` | lab | hand-maintained (changes rarely); read by `engine/validate_data.py` (cross-file `lab_id` rule); no site code reads it |
+| `evals.json` | eval, with rubric quality scores | hand-maintained (written before the staged pipeline existed); read by `engine/validate_data.py` (schema gate); no site code reads it |
 | `reader-test-coverage.json` | see below | hand-transcribed from [`behaviours-for-adria/`](../behaviours-for-adria/README.md) |
 
 Planned but absent: `behaviours.json` (the single behaviour registry — see the closeout list) and `meta.json` (site-wide metadata).
