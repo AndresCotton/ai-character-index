@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Alignment and planning conversations need the full inventory, not just main. This maps everything that lives on experiment branches or only in the local working copy — including the provenance of main's published panel data, which depends on an unmerged branch.
+Alignment and planning conversations need the full inventory, not just main. This maps everything that lives on experiment branches or only in the local working copy — including the provenance of main's published panel data, which depends on an UNTRACKED FILE in one local working copy (committed to no branch).
 
 ## Contents
 
@@ -14,7 +14,7 @@ Alignment and planning conversations need the full inventory, not just main. Thi
 - `experiments/panel-judges/` (60 tracked files): a **self-contained experiment** with its own frozen harness fork (`harness.py`, `batch_panel.py`, `cost.py`, `panel-config.json`, `behaviours.json`), collection/audit tooling (`aggregate.py`, `score_audit.py`, `select_contested.py`, `build_panel_data.py`, `export_coverage.py`), prompt templates v2/v3, run logs (`runlog.jsonl`, `-v2`, `-v2b`, `-smoke`), per-model score JSONs, and `calib/` rounds including `*-FROZEN` markers.
 - Human audit materials: `audit-sheet.md`, `audit-sheet-shared20.md`, `audit-labels-matt.json`, `audit-labels-andres.json`, `audit-key.json`; results in `FINDINGS.md`.
 - Untracked locally: whole-doc reports (`WHOLEDOC-REPORT.md`, `WHOLEDOC-SPOTCHECK.md`, `SMOKE-SPOTCHECK.md`, `THRESHOLD-TABLE.md`), probe scripts/outputs, run logs v3/v3smoke/smoke3, debug dumps.
-- One of the two copies of the panel harness (the other is `engine/panel/` on main); this copy is frozen for experiment reproducibility, and the canonical run log that main's shipped panel data points to lives here.
+- One of the two copies of the panel harness (the other is `engine/panel/` on main); this copy is frozen for experiment reproducibility. The canonical run log that main's shipped panel data points to lives here ONLY AS AN UNTRACKED FILE (see the untracked-locally line above) — it is committed to this branch and to no other; deleting the branch is irrelevant to it, but losing this working copy loses it.
 
 ### `experiment/semantic-coverage` (branch; reference archive — its PR is closed unmerged, branch kept)
 
@@ -25,14 +25,14 @@ Alignment and planning conversations need the full inventory, not just main. Thi
 
 ```mermaid
 graph LR
-  exp["experiment/panel-judges<br/>(frozen harness fork + canonical run log)"] -->|"one of two harness copies"| engp["engine/panel/ on main"]
+  exp["experiment/panel-judges<br/>(frozen harness fork; canonical run log untracked here)"] -->|"one of two harness copies"| engp["engine/panel/ on main"]
   hard["panel-hardening<br/>(merged into main via #27)"] -->|"resolve() shared"| engp
   engp --> site["site/llm-panel-review/ on main"]
 ```
 
 - `panel-hardening` is fully merged into main (PR #27: rubric calibration v4a/v5/v5.1, the `frontier_fast` calibration panel, the full v5 bench); it stays as a merged ref only. The calibration rubric texts are the prompt files in `experiments/panel-calibration/prompts/` (v3w/v4a/v5/v5.1) carried by runlog keys — the frozen rubrics in `engine/panel/harness.py` remain v1/v2/v3.
 - `panel-frontier-coverage`, `panel-pipeline-rollout`, `panel-stage4-docs`, `panel-stage4-replacement` do not exist as branches; their content is in main.
-- Provenance dependency: `engine/panel/README.md` points at `experiment/panel-judges` for the canonical run log — main's shipped panel dataset depends on that unmerged branch for reproduction.
+- Provenance dependency: the canonical run log exists only as an untracked file in the `experiment/panel-judges` working copy (above) — committed to no branch. Losing that working copy loses the shipped panel dataset's only reproduction trail; committing the log is an open closeout item.
 
 ### Local-only branches (never pushed)
 
@@ -51,7 +51,7 @@ graph LR
 ## As-is observations
 
 - Two panel-harness copies exist (`engine/panel/` on main, `experiments/panel-judges/` here) and diverge intentionally — experiment instrumentation must not drift — but the convention is nowhere documented; an agent might "helpfully" try to deduplicate them.
-- Published-data provenance depends on an unmerged branch: if `experiment/panel-judges` were deleted, main's shipped panel dataset would lose its reproduction trail.
+- Published-data provenance depends on one working copy: the canonical run log is an untracked file in the `experiment/panel-judges` working copy (committed to no branch), so the loss event is losing that working copy — branch deletion is irrelevant to it. Committing the log is an open closeout item.
 - The experiment's analysis artifacts (whole-doc reports, threshold tables, probe outputs) are untracked: the experiment's conclusions currently live only in this working copy.
 - Local disk footprint is dominated by re-downloadable caches (`ckpts/`); actual experiment data is ~24 MB.
 - The test-infrastructure cluster (cite suite + CI + hook experiments) has no decided home — it is the subject of an open architecture decision, not debris.
