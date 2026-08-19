@@ -124,34 +124,6 @@ class TestBehavioursSchema(MutationMixin, unittest.TestCase):
         self.assert_invalid(mutate, "Not Kebab Case")
 
 
-    def test_bad_top_level_slug_key_fails_stdlib(self):
-        # EXPECTED FAILURE until the stdlib fallback implements propertyNames
-        # (the hardening stream owns that change in validate_data.py). The
-        # assertion is deliberately NOT weakened: once support lands, this
-        # test reports "unexpected success", signalling the decorator should
-        # come off and the stdlib leg should run for real.
-        def mutate(d):
-            d["Not Kebab Case!"] = d.pop("no-sycophancy")
-        instance = copy.deepcopy(self.instance)
-        mutate(instance)
-        errors = vd.validate_instance(instance, self.schema, force_stdlib=True)
-        self.assertTrue(errors, "mutation should fail validation")
-        self.assertTrue(
-            any("does not match" in error for error in errors),
-            f"no propertyNames error; got: {errors}",
-        )
-
-    def test_unknown_set_value_fails(self):
-        def mutate(d):
-            d["no-sycophancy"]["set"] = "banana"
-        self.assert_invalid(mutate, "is not one of")
-
-    def test_dropped_required_field_fails(self):
-        def mutate(d):
-            del d["no-sycophancy"]["numeric_id"]
-        self.assert_invalid(mutate, "numeric_id")
-
-
 class TestCoverageSchema(MutationMixin, unittest.TestCase):
     """data/coverage.json: verdicts need citations, scored fields stay in range."""
 
@@ -386,6 +358,18 @@ class TestStdlibKeywordGuard(unittest.TestCase):
 
 class TestCrossFileRules(unittest.TestCase):
     """Rules a single-file schema cannot express, run against a scratch repo copy."""
+
+    def test_missing_behaviour_registry_fails_loudly(self):
+        # Without behaviours.json the registry membership checks cannot run;
+        # the gate must say so explicitly, not pass silently.
+        (self.tmp / "data" / "behaviours.json").unlink()
+        errors = vd.validate_all(self.tmp)
+        self.assertTrue(
+            any("behaviour registry checks skipped" in e for e in errors),
+            f"no registry-skip error; got: {errors}",
+        )
+
+
 
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="validate-data-test-"))

@@ -301,6 +301,12 @@ def _cross_file_checks(files: dict) -> list:
         if isinstance(entry, dict) and entry.get("set") == "index"
     } if isinstance(registry, dict) else set()
 
+    if not index_ids:
+        errors.append(
+            "behaviour registry checks skipped: behaviours.json missing or "
+            "has no index-set entries"
+        )
+
     if index_ids and isinstance(coverage, dict):
         for index, record in enumerate(coverage.get("coverage") or []):
             if not isinstance(record, dict):
