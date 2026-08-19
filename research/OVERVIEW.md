@@ -12,7 +12,7 @@ Defines the behaviours the index measures (`core-behaviour-list.md`), their prov
 | `archive/behaviours-to-track.md` | Earlier draft, superseded 2026-07-10; 13 rows with older numbering/titles |
 | `sources/README.md`, `sources/forethought-importance-of-ai-character-appendix-2.md` | Candidate-pool provenance (Forethought excerpt) + scoring-target table pointing at the two `specs/` mirrors |
 | `sweeps/01-no-sycophancy.md` | Full-sweep canonical write-up (2026-07-12, pre-staged-layout): RAND rubric operationalization (15 items D1–Do7), verbatim spec excerpts, 5 curated evals, adherence table, Appendix A verdict matrix, epistemic status; named the stage-5 content template |
-| `sweeps/01-no-sycophancy/` | Staged re-sweep (2026-07-18): `1-dossiers.md` (search log + dossiers C01–C06, N01–N12, L01–L09, K01–K04), `register.md` (32 candidates, facet-fit codes, empty Disposition column), `gates.md` (Gate 1 pending sign-off) |
+| `sweeps/01-no-sycophancy/` | Staged re-sweep (2026-07-18): `1-dossiers.md` (search log + dossiers C01–C06, N01–N12, L01–L09, K01–K04 — 31 dossiers), `register.md` (32 candidates — one more than the dossiers; facet-fit codes, empty Disposition column), `gates.md` (Gate 1 pending sign-off) |
 | `sweeps/02-calibration/` | Stage 4 only: `4-spec-coverage.md` (verdicts covered, constitution 3 / model spec 4) + `gates.md` (Gate 4 signed 2026-07-20) |
 | `sweeps/03-action-honesty/` | Stage 4 only, same shape (constitution 3 / model spec 3), Gate 4 signed 2026-07-20 |
 

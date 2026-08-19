@@ -67,7 +67,7 @@ graph TB
 1. **Nothing is verified automatically.** No CI runs tests, schema validation, or locator re-resolution; `data/schema/` is empty. A draft `ci.yml` + test suite + pre-commit gate exist only on parked local branches (`ci/fast-suite`, `tests/cite-suite`, `hooks/fast-gate`).
 2. **`cite.py` is the untested foundation** of every chain; docs call it the trickiest code in the repo.
 3. **Behaviour metadata fragmentation** — six hand-synced copies plus the disjoint-id collision above; one list change is a multi-file surgery with no error signal.
-4. **Documentation describes a system that half-exists**: PLAN.md/README promise Notion sync, four workflows, Astro, schemas; reality has one workflow, vanilla JS, and an empty `notion-sync/`.
+4. **Documentation describes a system that half-exists**: PLAN.md promises Notion sync, four workflows, Astro, schemas; reality has one workflow, vanilla JS, and an empty `notion-sync/` — and this doc set now records the gap file-by-file.
 5. **Hand-maintained surfaces**: `index.html` inline data (diverged from its prototype source) and hand-transcribed `reader-test-coverage.json`.
 6. **Provenance fragility**: behaviour 1's published records are currently unregenerable (missing sweep artifact); shipped panel data's runlog lives on an unmerged branch.
 7. **No Python packaging**: importlib/sys.path wiring, config read at import time, dead code and stale config in the panel modules.

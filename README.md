@@ -4,7 +4,7 @@ A public, evidence-based index of **AI character**, anchored in model specs. It 
 
 In the spirit of AI Lab Watch, with a neutral, METR-like framing. By Andrés Cotton.
 
-**Status:** pre-launch. Building v0 -- see [PLAN.md](PLAN.md) for the full build plan and system design.
+**Status:** deployed to Cloudflare Pages (`ai-character-index.pages.dev`). Building v0 -- see [PLAN.md](PLAN.md) for the full build plan and system design.
 
 ## How it works (short version)
 
