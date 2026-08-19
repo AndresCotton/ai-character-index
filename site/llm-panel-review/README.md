@@ -16,8 +16,6 @@ its decision.
 ## Display tuning (URL params, no UI)
 - `?threshold=N` -- minimum score to highlight [default 6 = unanimous core, clamped
   to a cell's max where a judge's votes are pending]
-- `?solid=N` -- score at/above which a highlight renders Core-style; below renders
-  Related-style [default 6, clamped likewise]
 - `?related=W` -- weight of a "related" vote when scoring (core is always 2)
   [default 1; try 0.5 or 0]
 Params compose with the page's own `?spec=` and `?behavior=`. Scores are recomputed
@@ -30,8 +28,10 @@ runlog (see `engine/panel/README.md`). Behaviour names/definitions pass through 
 
 ## Which payload the page loads
 Resolution order, no selection UI:
-1. `?data=<name>` -- a pin (any payload in `data/`, e.g. a timestamped run or a
-   calibration variant like `?data=behaviours-v4a`); name only, no paths;
+1. `?data=<name>` -- a pin naming a `behaviours*.json` payload in `data/` (e.g. a
+   timestamped run or a calibration variant like `?data=behaviours-v4a`); name only,
+   no paths; `manifest.json` is never a valid pin, and non-`behaviours*` files are
+   refused, so the ledger can't be rendered as a behaviour set;
 2. `data/manifest.json` `latest` -- the newest timestamped run the builder emitted;
 3. `data/behaviours.json` -- the shipped fallback, always tracked.
 

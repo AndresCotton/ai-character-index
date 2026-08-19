@@ -5,7 +5,7 @@ Implements the MVP display rules from panel-config.json `display`:
   - only the listed behaviours appear in the sidebar;
   - each passage gets score = sum over panel models of (core=2, related=1, unrelated=0);
   - every passage with score >= 1 is emitted as a citation (the page filters at
-    render time via ?threshold= / ?solid= / ?related= URL params, defaults 6/6/1);
+    render time via ?threshold= / ?related= URL params, defaults 6/1);
   - the citation `role` (shown when the reader clicks "?") lists each model's decision.
 
 Behaviour names/definitions come from data/reader-test-coverage.json exactly as supplied
@@ -39,7 +39,6 @@ ROOT = HERE.parent.parent
 CONFIG = json.loads((HERE / "panel-config.json").read_text())
 DISPLAY = CONFIG["display"]
 LAB = {"constitution": "anthropic", "model-spec": "openai"}
-VERDICT_WORD = {3: "defining", 2: "core", 1: "related", 0: "unrelated"}   # 3 only in 4-point rubrics (v5+)
 MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3", "kimi-k2": "Kimi-K2.6", "qwen-big": "Qwen3-235B", "opus": "Claude Opus 4.8",
                "gpt-mini": "GPT-5 mini", "haiku": "Claude Haiku 4.5", "qwen-small": "Qwen3-32B"}
 # panel behaviour keys -> site slugs
@@ -99,12 +98,18 @@ def read_manifest(path):
     parses to something other than a dict (a JSON null or array) is treated exactly
     like an absent one -- the page tolerates an odd manifest by falling through its
     fetch/parse guards, so the builder/CLI must degrade to the empty default too,
-    never crash on .get()."""
+    never crash on .get(). A `runs` value that is not a list of dicts is normalized
+    the same way (dropped to [] / non-dict entries filtered), so a half-written or
+    hand-edited ledger degrades instead of tracebacking update_manifest/select_run."""
     try:
         doc = json.loads(Path(path).read_text())
     except (OSError, ValueError):
         return {"latest": None, "runs": []}
-    return doc if isinstance(doc, dict) else {"latest": None, "runs": []}
+    if not isinstance(doc, dict):
+        return {"latest": None, "runs": []}
+    runs = doc.get("runs")
+    doc["runs"] = [r for r in runs if isinstance(r, dict)] if isinstance(runs, list) else []
+    return doc
 
 
 def _loadable(path):

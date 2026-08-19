@@ -335,6 +335,19 @@ class TestReadManifest(unittest.TestCase):
         self.path.write_text(json.dumps(doc))
         self.assertEqual(bs.read_manifest(self.path), doc)
 
+    def test_corrupt_runs_shape_degrades_to_a_list_of_dicts(self):
+        # A half-written or hand-edited ledger must degrade, never traceback the
+        # builder (which runs AFTER the run file is written) or select_run.
+        for odd_runs in (None, "behaviours-x.json", 42, {"filename": "x"}):
+            self.path.write_text(json.dumps({"latest": "x.json", "runs": odd_runs}))
+            got = bs.read_manifest(self.path)
+            self.assertEqual(got["runs"], [], f"runs={odd_runs!r}")
+            self.assertEqual(got["latest"], "x.json")
+        # Non-dict entries inside an otherwise-valid list are filtered out.
+        self.path.write_text(json.dumps(
+            {"latest": "a.json", "runs": ["junk", 3, None, {"filename": "a.json"}]}))
+        self.assertEqual(bs.read_manifest(self.path)["runs"], [{"filename": "a.json"}])
+
 
 class ResolveFixture(unittest.TestCase):
     """Shared temp-dir fixture: shipped fallback + two timestamped runs + a manifest."""
