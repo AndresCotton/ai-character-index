@@ -29,8 +29,8 @@ No CI re-resolves locators today (the only workflow is `.github/workflows/deploy
 
 Publishes one behaviour's gate-approved stage-4 artifact into `data/coverage.json`, re-resolving every stored quote through `cite.py` first. Two artifact forms; the sidecar wins when both exist in the sweep directory:
 
-- `4-spec-coverage.json` — structured sidecar, validated against [`data/schema/spec-coverage-sidecar.schema.json`](../data/schema/spec-coverage-sidecar.schema.json) plus cross-checks a single-file schema cannot express: records agree with the top-level behaviour identity and the `NN-<slug>` directory name, exactly one record per lab, the declared `citation_format` is the project convention, each `verified_against_version` equals the version pinned by the record's first locator, and a sidecar marked `provenance.reconstructed` names its source and date. Records are published verbatim — citation key order included — so a sidecar derived from `coverage.json` round-trips byte-for-byte.
-- `4-spec-coverage.md` — the prose artifact, parsed by the ~4-line regex layout (behaviour 2 is the template). This is the fallback when no sidecar exists, and the only form behaviours 2–3 ship today.
+- `4-spec-coverage.json` — structured sidecar, validated against [`data/schema/spec-coverage-sidecar.schema.json`](../data/schema/spec-coverage-sidecar.schema.json) plus cross-checks a single-file schema cannot express: `sidecar_version` must be 1 (the schema declares the field; only the publisher rejects a future value), records agree with the top-level behaviour identity and the `NN-<slug>` directory name, exactly one record per lab, the declared `citation_format` is the project convention, each `verified_against_version` equals the version pinned by the record's first locator, and a sidecar marked `provenance.reconstructed` names its source and date. Records are published verbatim — citation key order included — so a sidecar derived from `coverage.json` round-trips byte-for-byte.
+- `4-spec-coverage.md` — the prose artifact, parsed by the ~4-line regex layout (behaviour 2 is the template). This is the fallback when no sidecar exists, and the only form behaviours 2–3 ship today. Its parsed records are validated against [`data/schema/coverage.schema.json`](../data/schema/coverage.schema.json) before anything is written or checked — parity with the sidecar path's schema gate.
 
 The cite.py gate is the same on both paths: no quote is written or checked without re-resolution.
 
@@ -40,6 +40,8 @@ python3 engine/publish-coverage.py research/sweeps/02-calibration --check    # v
 ```
 
 Behaviour 1 is a special case: `research/sweeps/01-no-sycophancy/` never had a stage-4 markdown artifact (its records were published in 2026-07, before the staged layout existed), so it ships a sidecar reconstructed from its published records in `data/coverage.json`. The sidecar's `provenance` block marks it `reconstructed` and lists what a genuine stage-4 artifact would carry that it cannot (term sweep and zero-hit probes, mirror-freshness record, authority annotations, "Considered and not kept", gate history). The schema lives in `data/schema/` but is deliberately not in `engine/validate_data.py`'s CHECKS — that tuple pairs `data/*.json` files with their schemas; sidecars validate `research/sweeps` artifacts and are enforced here at publish time instead.
+
+Known decoupling debt: the publisher hardcodes its lab list (`LABS`: anthropic and openai, plus their markdown section headings) instead of reading `data/labs.json`, so a lab added there does not extend the publisher until `LABS` changes to match.
 
 ## panel/ (works today)
 

@@ -9,8 +9,15 @@ Pins the sidecar path of engine/publish-coverage.py:
   re-resolution gate (the sidecar changes the parsing contract, never the
   quote-verification invariant);
 - schema violations fail loudly at publish time;
+- sidecar_version must be 1 -- the schema declares the field, but only the
+  publisher rejects a future value;
 - the reconstruction honesty rule is enforced: a sidecar marked
-  reconstructed must name its source and date.
+  reconstructed must name its source and date;
+- every cross-check parse_sidecar() runs after schema validation has a
+  mutation guard (slug vs directory name, record identity vs top-level,
+  citation_format vs the project constant, verified_against_version vs the
+  first locator, duplicate lab records, and sidecar-beats-markdown
+  precedence), each on a scratch copy of the committed behaviour-1 sweep.
 
 Locators/quotes in the negative fixtures are borrowed from
 data/coverage.json (known-good: they resolve against the pinned mirrors),
@@ -18,6 +25,7 @@ so the only thing that can fail is the corruption under test.
 """
 
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -153,6 +161,17 @@ class SidecarNegativeTest(unittest.TestCase):
         # or fixture problem.
         self.assertIn("MISMATCH", result.stdout)
 
+    def test_future_sidecar_version_fails(self):
+        # sidecar_version 2 is schema-valid (integer, minimum 1), so only
+        # the publisher's explicit version check can reject it.
+        def mutate(sidecar):
+            sidecar["sidecar_version"] = 2
+        result = run_check(make_fixture_sidecar(mutate=mutate))
+        self.assertNotEqual(result.returncode, 0)
+        combined = result.stdout + result.stderr
+        self.assertIn("sidecar_version", combined)
+        self.assertIn("not supported", combined)
+
     def test_unknown_key_fails_schema_validation(self):
         def mutate(sidecar):
             sidecar["severity"] = "high"
@@ -176,6 +195,103 @@ class SidecarNegativeTest(unittest.TestCase):
         result = run_check(make_fixture_sidecar(mutate=mutate))
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("one record per lab", result.stdout + result.stderr)
+
+
+class SidecarCrossCheckTest(unittest.TestCase):
+    """Mutation guards for the cross-checks parse_sidecar() runs after
+    schema validation, on scratch copies of the committed behaviour-1
+    sweep (the committed artifact is never mutated). Every mutation is
+    schema-valid, so only the cross-check under test can reject it, and
+    every cross-check trips before cite.py runs, so these stay fast.
+    """
+
+    SOURCE = "01-no-sycophancy"
+
+    def run_scratch_check(self, mutate):
+        with tempfile.TemporaryDirectory() as tmp:
+            sweep_dir = Path(tmp) / self.SOURCE
+            shutil.copytree(SWEEPS / self.SOURCE, sweep_dir)
+            sidecar_path = sweep_dir / "4-spec-coverage.json"
+            sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            mutate(sidecar)
+            sidecar_path.write_text(
+                json.dumps(sidecar, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            return subprocess.run(
+                [sys.executable, str(PUBLISH), str(sweep_dir), "--check"],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+
+    def test_slug_mismatching_directory_fails(self):
+        def mutate(sidecar):
+            sidecar["slug"] = "sycophancy"   # dir is 01-no-sycophancy
+        result = self.run_scratch_check(mutate)
+        self.assertNotEqual(result.returncode, 0)
+        combined = result.stdout + result.stderr
+        self.assertIn("slug", combined)
+        self.assertIn("does not match its directory", combined)
+
+    def test_record_identity_mismatch_fails(self):
+        for field, value in (("behaviour_id", 2), ("behaviour_name", "Elsewhere")):
+            with self.subTest(field=field):
+                def mutate(sidecar, field=field, value=value):
+                    sidecar["records"][0][field] = value
+                result = self.run_scratch_check(mutate)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn(
+                    "disagrees with the top-level behaviour identity",
+                    result.stdout + result.stderr,
+                )
+
+    def test_citation_format_mismatch_fails(self):
+        def mutate(sidecar):
+            sidecar["records"][0]["citation_format"] = "some other convention"
+        result = self.run_scratch_check(mutate)
+        self.assertNotEqual(result.returncode, 0)
+        combined = result.stdout + result.stderr
+        self.assertIn("citation_format", combined)
+        self.assertIn("project's citation convention", combined)
+
+    def test_verified_against_version_mismatch_fails(self):
+        def mutate(sidecar):
+            sidecar["records"][0]["verified_against_version"] = "1999-01-01"
+        result = self.run_scratch_check(mutate)
+        self.assertNotEqual(result.returncode, 0)
+        combined = result.stdout + result.stderr
+        self.assertIn("verified_against_version", combined)
+        self.assertIn("does not match the version pinned by its first locator",
+                      combined)
+
+    def test_duplicate_lab_record_fails(self):
+        def mutate(sidecar):
+            sidecar["records"].append(dict(sidecar["records"][0]))
+        result = self.run_scratch_check(mutate)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("duplicate record for lab", result.stdout + result.stderr)
+
+    def test_sidecar_wins_when_markdown_also_present(self):
+        """Precedence: with both artifacts present the publisher must take
+        the sidecar. The scratch copy's markdown is deliberately
+        unparseable, so a green check is only reachable through the sidecar
+        path -- the markdown path would abort parsing it."""
+        with tempfile.TemporaryDirectory() as tmp:
+            sweep_dir = Path(tmp) / self.SOURCE
+            shutil.copytree(SWEEPS / self.SOURCE, sweep_dir)
+            (sweep_dir / "4-spec-coverage.md").write_text(
+                "not a stage-4 artifact\n", encoding="utf-8"
+            )
+            result = subprocess.run(
+                [sys.executable, str(PUBLISH), str(sweep_dir), "--check"],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+        self.assertEqual(
+            result.returncode, 0,
+            "sidecar must win over an unparseable markdown sibling:\n"
+            + result.stdout + result.stderr,
+        )
+        self.assertIn("using structured sidecar", result.stdout)
+        self.assertIn("CHECK OK", result.stdout)
 
 
 if __name__ == "__main__":

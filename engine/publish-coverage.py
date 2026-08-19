@@ -34,8 +34,11 @@ Two artifact forms; the sidecar wins when both exist:
   - a "## Verdict and depth" table with one row per spec:
         | Claude constitution (...) | <verdict> | <0-4> | <rationale> |
 
-The cite.py gate is the same on both paths: every quote goes through
-`cite.py resolve` verification before anything is written or checked.
+The regex path gets the sidecar path's schema gate too: its parsed records
+are validated against data/schema/coverage.schema.json before anything is
+written or checked, and a failing record aborts the publish. The cite.py
+gate is the same on both paths: every quote goes through `cite.py resolve`
+verification before anything is written or checked.
 """
 
 from __future__ import annotations
@@ -54,6 +57,9 @@ import validate_data  # noqa: E402
 COVERAGE = ROOT / "data" / "coverage.json"
 CITE = ROOT / "engine" / "spec-cite" / "cite.py"
 SIDECAR_SCHEMA = ROOT / "data" / "schema" / "spec-coverage-sidecar.schema.json"
+COVERAGE_SCHEMA = ROOT / "data" / "schema" / "coverage.schema.json"
+
+SUPPORTED_SIDECAR_VERSION = 1
 
 MARKDOWN_NAME = "4-spec-coverage.md"
 SIDECAR_NAME = "4-spec-coverage.json"
@@ -180,6 +186,15 @@ def parse_sidecar(sidecar_path: Path, sweep_dir: Path) -> tuple[int, list[dict]]
             print(f"  {error}")
         sys.exit(f"{sidecar_path.name}: {len(errors)} schema error(s)")
 
+    # The schema declares the field; only this check rejects a future value.
+    sidecar_version = sidecar["sidecar_version"]
+    if sidecar_version != SUPPORTED_SIDECAR_VERSION:
+        sys.exit(
+            f"{sidecar_path.name}: sidecar_version {sidecar_version} is not "
+            f"supported (this publisher understands sidecar_version "
+            f"{SUPPORTED_SIDECAR_VERSION} only)"
+        )
+
     provenance = sidecar["provenance"]
     if provenance["reconstructed"]:
         missing = [
@@ -250,6 +265,23 @@ def parse_sidecar(sidecar_path: Path, sweep_dir: Path) -> tuple[int, list[dict]]
     return behaviour_id, records
 
 
+def validate_coverage_records(records: list[dict], source: str) -> None:
+    """Schema-gate records about to enter data/coverage.json, whichever
+    artifact path produced them. The sidecar path gets this shape from its
+    own schema's coverageRecord $def; the regex path has no schema of its
+    own, so its parsed records are validated against the coverage schema
+    here. Fails loudly before anything is written or checked."""
+    schema = json.loads(COVERAGE_SCHEMA.read_text())
+    errors = validate_data.validate_instance({"coverage": records}, schema)
+    if errors:
+        print(f"{source}: records fail data/schema/coverage.schema.json:")
+        for error in errors:
+            print(f"  {error}")
+        sys.exit(
+            f"{source}: {len(errors)} coverage-schema error(s); nothing written"
+        )
+
+
 def verify_citations(citations: list[dict]) -> None:
     failures = 0
     for citation in citations:
@@ -284,6 +316,7 @@ def main() -> None:
         print(f"using structured sidecar {sidecar_path.name}")
     elif markdown_path.exists():
         behaviour_id, records = parse_markdown(markdown_path)
+        validate_coverage_records(records, markdown_path.name)
     else:
         sys.exit(
             f"no stage-4 artifact in {arguments.behaviour_dir}: expected "
