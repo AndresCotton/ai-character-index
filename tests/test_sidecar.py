@@ -141,12 +141,13 @@ class CommittedSidecarTest(unittest.TestCase):
                 self.assertEqual(slug, instance["slug"])
 
     def test_published_sidecars_round_trip_byte_for_byte(self):
-        """Records publish verbatim, citation key order included: a committed
+        """Pins record content + citation key order post-json.dumps: a committed
         sidecar whose behaviour is already in data/coverage.json must hold
-        records byte-identical (post-serialization) to the published ones, so
-        republishing it can never churn coverage.json bytes. --check compares
-        parsed dicts, which cannot see key-order drift; this pins the other
-        half of the verbatim contract."""
+        records whose serialization is byte-identical to the published ones.
+        --check compares parsed dicts, which cannot see key-order drift; this
+        pins the other half of the verbatim contract. (This test compares
+        serializations directly; it does not exercise the publisher's write
+        path itself.)"""
         data = json.loads(COVERAGE.read_text(encoding="utf-8"))
         published = {}
         for record in data["coverage"]:
@@ -438,6 +439,39 @@ class SidecarCoverageSchemaGateTest(unittest.TestCase):
             with self.assertRaises(SystemExit) as ctx:
                 publish.validate_coverage_records(records, sidecar_path.name)
         self.assertIn("coverage-schema error", str(ctx.exception))
+class SidecarMarkdownConsistencyTest(unittest.TestCase):
+    """A sweep shipping both artifacts must agree whichever path publishes.
+
+    Once a sidecar exists, --check compares the sidecar against
+    data/coverage.json and the sibling markdown is no longer exercised —
+    adding the sidecar would otherwise silently drop the markdown's
+    quote-verification coverage. This test restores it: with the sidecar
+    removed from a scratch copy, the markdown path must pass the same check.
+    Divergence between the two artifacts now fails on one side or the other.
+    """
+
+    def test_markdown_path_still_checks_green_beside_sidecar(self):
+        checked = 0
+        for sidecar_path in sorted(SWEEPS.glob("*/4-spec-coverage.json")):
+            md_path = sidecar_path.with_name("4-spec-coverage.md")
+            if not md_path.exists():
+                continue  # reconstruction-only sidecars have no sibling markdown
+            with self.subTest(sweep=sidecar_path.parent.name):
+                with tempfile.TemporaryDirectory() as tmp:
+                    sweep_dir = Path(tmp) / sidecar_path.parent.name
+                    shutil.copytree(sidecar_path.parent, sweep_dir)
+                    (sweep_dir / "4-spec-coverage.json").unlink()
+                    result = subprocess.run(
+                        [sys.executable, str(PUBLISH), str(sweep_dir), "--check"],
+                        capture_output=True, text=True, encoding="utf-8",
+                    )
+                self.assertEqual(
+                    result.returncode, 0,
+                    "markdown artifact must re-verify alongside its sidecar:\n"
+                    + result.stdout + result.stderr,
+                )
+                checked += 1
+        self.assertGreater(checked, 0, "no sweep ships both artifacts")
 
 
 
