@@ -203,6 +203,18 @@ class SidecarNegativeTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("reconstructedDate", result.stdout + result.stderr)
 
+    def test_reconstructed_sidecar_without_note_fails(self):
+        # All three legs: source + date without a note is still not honest.
+        def mutate(sidecar):
+            sidecar["provenance"] = {
+                "reconstructed": True,
+                "reconstructedFrom": "data/coverage.json @ test",
+                "reconstructedDate": "2026-08-18",
+            }
+        result = run_check(make_fixture_sidecar(mutate=mutate))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("note", result.stdout + result.stderr)
+
     def test_missing_lab_record_fails(self):
         def mutate(sidecar):
             sidecar["records"] = sidecar["records"][:1]

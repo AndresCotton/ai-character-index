@@ -218,7 +218,7 @@ def parse_sidecar(sidecar_path: Path, sweep_dir: Path) -> tuple[int, list[dict]]
     provenance = sidecar["provenance"]
     if provenance["reconstructed"]:
         missing = [
-            key for key in ("reconstructedFrom", "reconstructedDate")
+            key for key in ("reconstructedFrom", "reconstructedDate", "note")
             if key not in provenance
         ]
         if missing:
