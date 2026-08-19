@@ -19,9 +19,10 @@ confirmed. Corrections applied at the gate:
   Verdict rationale updated to name it; mechanical re-check re-run, 23/23
   MATCH.
 - The depth score was anchored during this gate: the rubric now lives at
-  `research/spec-coverage-depth-rubric.md` (current location: `methodology/spec-coverage-depth-rubric.md`; with a format-neutral
+  `research/spec-coverage-depth-rubric.md` (with a format-neutral
   worked-example test after a full read of the constitution), and both
   depth-3 scores were re-confirmed unchanged under it.
+  [Editor's note, 2026-08-18 (PR #23): the rubric's current location is `methodology/spec-coverage-depth-rubric.md`.]
 
 Authorization: stage 5 in the spec-coverage-campaign scope only -- publish to
 `data/coverage.json` and the spec reader. No Notion, no eval data; the full

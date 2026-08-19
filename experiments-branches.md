@@ -29,7 +29,7 @@ graph LR
   engp --> site["site/llm-panel-review/ on main"]
 ```
 
-- `panel-hardening` is fully merged into main (PR #27: rubric calibration v4a/v5/v5.1, the `frontier_fast` calibration panel, the full v5 bench); it stays as a merged ref only.
+- `panel-hardening` is fully merged into main (PR #27: rubric calibration v4a/v5/v5.1, the `frontier_fast` calibration panel, the full v5 bench); it stays as a merged ref only. The calibration rubric texts are the prompt files in `experiments/panel-calibration/prompts/` (v3w/v4a/v5/v5.1) carried by runlog keys — the frozen rubrics in `engine/panel/harness.py` remain v1/v2/v3.
 - `panel-frontier-coverage`, `panel-pipeline-rollout`, `panel-stage4-docs`, `panel-stage4-replacement` do not exist as branches; their content is in main.
 - Provenance dependency: `engine/panel/README.md` points at `experiment/panel-judges` for the canonical run log — main's shipped panel dataset depends on that unmerged branch for reproduction.
 

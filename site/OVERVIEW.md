@@ -13,7 +13,7 @@ The public presentation layer: renders engine-generated JSON payloads into stati
 | `index.html` | Core-page **prototype**: all data is inline JS (`const B = {...}`, `const GROUPS = [...]`); only behaviour 1 carries real sweep data, the rest are labeled illustrative placeholders. Embeds `spec-reader/` in an iframe modal. Hand-maintained copy of `design/prototypes/core-page.html`; the two have diverged. |
 | `methodology.html` | Static prose page. Describes coverage assessment as systematic term-list search; the operative procedure is the LLM panel. |
 | `spec-reader/` | The published reader. Fetches `data/documents.json` (built by `engine/build-spec-reader-data.py`; currently behaviours 1–3). `app.js` `GROUPS` hardcodes 13 behaviours in 4 categories while the payload carries 3. |
-| `spec-reader-test/` | External reviewer's bench (deliberate fork of the reader UI). Fetches the shared `../spec-reader/data/documents.json` plus its own `data/behaviours.json` (built by `engine/build-reader-test-data.py` from `data/reader-test-coverage.json`, transcribed from `behaviours-for-adria/`). Excellent README. |
+| `spec-reader-test/` | External reviewer's bench (deliberate fork of the reader UI). Fetches the shared `../spec-reader/data/documents.json` plus its own `data/behaviours.json` (built by `engine/build-reader-test-data.py` from `data/reader-test-coverage.json`, transcribed from `behaviours-for-adria/`). Self-describing README. |
 | `llm-panel-review/` | Panel-judged reader: raw per-judge verdicts per passage, scores recomputed client-side (`?threshold=`/`?solid=`/`?related=`). Fetches shared `documents.json` + own `data/behaviours.json` (built by `engine/panel/build_site_data.py`); `?data=<name>` loads a sibling payload instead (`data/` also holds the calibration variants v3w-fresh / v4a / v4a-ds / v5 / v5-1 side by side). 3 behaviours × 3 judges. **Not linked from any nav.** |
 | `README.md` | Layer status; lists all five tabs, with `llm-panel-review/` noted as deployed-but-unlinked. |
 
@@ -43,7 +43,7 @@ graph LR
 ## As-is observations
 
 - Five surfaces, one orphan: `llm-panel-review/` is built, documented in its own README, deployed, and listed in `site/README.md` — but unreachable from every navigation.
-- `index.html` contradicts `data/README.md`'s "the site contains no data of its own" — it carries hand-maintained inline data; `site/README.md` documents the divergence from the prototype and warns against re-copying it without reconciling.
+- `index.html` carries hand-maintained inline prototype data (`data/README.md` carves this exception out explicitly); `site/README.md` documents the divergence from the prototype and warns against re-copying it without reconciling.
 - Broken anchors: spec-reader's nav points at `../#methodology` and `../#about`; `index.html` has neither anchor. Sibling apps link `../methodology.html` instead.
 - `methodology.html` describes the term-list method while the operative procedure is the LLM panel; nothing tells readers which method produced which published records (behaviours 1–3: term-list; panel-scored records live in `llm-panel-review/`).
 - Behaviour metadata drift: `spec-reader/app.js` hardcodes 13 behaviours while its payload ships 3.
