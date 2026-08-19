@@ -9,7 +9,7 @@ The root holds the project's two entry documents (`PLAN.md`, `README.md`) and a 
 | File | Role |
 |---|---|
 | `PLAN.md` | Build plan & system design (written 2026-07-10): three-layer architecture, data model, page map, CI/CD table (§5), build phases (§6), repo map (§8). The source of the "what should exist" claims cross-checked in this doc set |
-| `README.md` | Front door: positioning paragraph, short how-it-works, repo-map table, Contributing links to the two issue forms |
+| `README.md` | Front door: positioning paragraph, short how-it-works, repo-map table, Contributing names the two issue forms (no hyperlinks) |
 | `package.json` | Root package `ai-character-index` (private); `packageManager: pnpm@11.12.0`; `engines.node >= 22`; one script, `deploy:site` = `wrangler pages deploy site --project-name ai-character-index`; devDeps: `wrangler ^4.110.0`, `playwright-core ^1.61.1` |
 | `pnpm-workspace.yaml` | Declares no packages; only `allowBuilds` (esbuild, sharp, workerd) — the pnpm ≥10 allowlist letting wrangler's transitive deps run postinstall builds |
 | `pnpm-lock.yaml` | Lockfile v9; exactly one importer (`.` = root); pins wrangler 4.110.0 and playwright-core 1.61.1 |

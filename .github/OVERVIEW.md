@@ -33,7 +33,7 @@ graph LR
 
 ## As-is observations
 - PLAN.md §5 promises four workflows (`ci.yml`, `deploy.yml`, `notion-sync.yml`, `spec-watch.yml`); only `deploy.yml` exists on main (`git ls-tree origin/main .github/workflows/` shows just `deploy.yml` + `README.md`). `workflows/README.md` itself says the other three are "still to come".
-- A `ci.yml` does exist on the unmerged branch `ci/fast-suite` ("ci: run the fast suite on every PR") — it is not an ancestor of `origin/main`.
+- A `ci.yml` exists only on `ci/fast-suite` ("ci: run the fast suite on every PR") — a local-only branch that was never pushed (see `experiments-branches.md`); it is not an ancestor of `origin/main`.
 - `engine/notion-sync/` contains only `.gitkeep`: the Notion sync engine promised by PLAN.md §1.2/§6 Phase 3 has no code.
 - `engine/spec-watch/pull-latest.sh` exists and is used, but manually — sweep records log it being run (`research/sweeps/*/4-spec-coverage.md`, `behaviours-for-adria/*/4-spec-coverage.md`), and `docs/onboarding-spec-coverage.md` lists it as the "Mirror refresher". No workflow invokes it.
 - `data/schema/` holds only `.gitkeep`, so the `ci.yml` promise to "validate `data/*.json` against schemas in `data/schema/`" (PLAN.md §2/§5, `engine/README.md`) has no schemas to run against on main either.
