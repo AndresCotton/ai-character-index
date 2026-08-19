@@ -100,6 +100,65 @@ class MutationMixin:
                 )
 
 
+class TestBehavioursSchema(MutationMixin, unittest.TestCase):
+    """data/behaviours.json: the behaviour registry, slug-keyed and closed.
+
+    Per-set numeric_id uniqueness is NOT a schema property (JSON Schema has
+    no cross-entry uniqueness keyword that fits); it is pinned by
+    tests/test_behaviour_registry.py::test_numeric_ids_are_unique_per_set.
+    """
+
+    DATA_FILE = "behaviours.json"
+    SCHEMA_FILE = "behaviours.schema.json"
+
+    def test_valid_as_committed(self):
+        self.assert_valid()
+
+    def test_bad_top_level_slug_key_fails(self):
+        # Top-level keys are kebab-case slugs (the schema's propertyNames).
+        # The stdlib backend's leg lives in the expectedFailure test below:
+        # the fallback does not implement propertyNames yet, so this loop
+        # covers the jsonschema backend only until that lands.
+        def mutate(d):
+            d["Not Kebab Case!"] = d.pop("no-sycophancy")
+        instance = copy.deepcopy(self.instance)
+        mutate(instance)
+        errors = vd.validate_instance(instance, self.schema, force_stdlib=False)
+        self.assertTrue(errors, "mutation should fail validation")
+        self.assertTrue(
+            any("does not match" in error for error in errors),
+            f"no propertyNames error; got: {errors}",
+        )
+
+    @unittest.expectedFailure
+    def test_bad_top_level_slug_key_fails_stdlib(self):
+        # EXPECTED FAILURE until the stdlib fallback implements propertyNames
+        # (the hardening stream owns that change in validate_data.py). The
+        # assertion is deliberately NOT weakened: once support lands, this
+        # test reports "unexpected success", signalling the decorator should
+        # come off and the stdlib leg should run for real.
+        def mutate(d):
+            d["Not Kebab Case!"] = d.pop("no-sycophancy")
+        instance = copy.deepcopy(self.instance)
+        mutate(instance)
+        errors = vd.validate_instance(instance, self.schema, force_stdlib=True)
+        self.assertTrue(errors, "mutation should fail validation")
+        self.assertTrue(
+            any("does not match" in error for error in errors),
+            f"no propertyNames error; got: {errors}",
+        )
+
+    def test_unknown_set_value_fails(self):
+        def mutate(d):
+            d["no-sycophancy"]["set"] = "banana"
+        self.assert_invalid(mutate, "is not one of")
+
+    def test_dropped_required_field_fails(self):
+        def mutate(d):
+            del d["no-sycophancy"]["numeric_id"]
+        self.assert_invalid(mutate, "numeric_id")
+
+
 class TestCoverageSchema(MutationMixin, unittest.TestCase):
     """data/coverage.json: verdicts need citations, scored fields stay in range."""
 
