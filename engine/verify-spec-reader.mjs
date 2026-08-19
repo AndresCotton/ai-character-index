@@ -55,7 +55,7 @@ function readerReady() {
 
 async function expectView(url, expected, label) {
   await page.goto(url, { waitUntil: "networkidle" });
-  await page.waitForFunction(readerReady, { timeout: 10000 });
+  await page.waitForFunction(readerReady, undefined, { timeout: 10000 });
   await page.waitForTimeout(150);
   const seen = await page.evaluate(() => ({
     passages: document.querySelectorAll("[data-passage-id]").length,
@@ -95,7 +95,7 @@ for (const behaviour of payload.behaviours) {
 // every same-site link on the reader must resolve to a served page, and every
 // #fragment must match an id in its target document.
 await page.goto(base, { waitUntil: "networkidle" });
-await page.waitForFunction(readerReady, { timeout: 10000 });
+await page.waitForFunction(readerReady, undefined, { timeout: 10000 });
 await page.waitForTimeout(150);
 const expectedNav = ["../", "./", "../spec-reader-test/", "../methodology.html", "../#about"];
 const navHrefs = await page.evaluate(

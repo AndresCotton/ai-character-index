@@ -30,8 +30,9 @@ session's conversation. An auditor that watched the sweep shares its blind spots
 3. **Local render.** `node engine/verify-spec-reader.mjs` passes (and
    `engine/verify-reader-test.mjs` if the bench is affected): every passage anchors,
    no unresolved-anchor warnings, no console errors. The verifiers serve the
-   committed `site/` tree locally -- the right surface for a pre-merge audit, which
-   the deployed site does not yet reflect.
+   committed `site/` tree locally, which is the right surface to audit before merge:
+   the deployed site updates only when the branch merges, so it does not yet show
+   this branch's changes.
 4. **Gate log.** The stage gates are signed with dates in `gates.md`; every open
    item accepted at a gate is recorded in the sweep record.
 
@@ -51,7 +52,9 @@ record.
 
 ## After Gate 6
 
-Merge the sweep branch; the merge deploys the site automatically
+Commit the audit record -- `verify.md` plus the signed Gate 6 entry in
+`gates.md` -- and push, so both reach the branch before it merges. Then merge the
+sweep branch; the merge deploys the site automatically
 (`.github/workflows/deploy.yml` fires on `site/**` changes -- `pnpm deploy:site` is
 the manual twin) and record the merge/deploy date in `gates.md` under Gate 6.
 

@@ -5,8 +5,8 @@ description: Run one behaviour's spec-coverage pass -- stage-4 extraction by a f
 
 # Spec-coverage pass (one behaviour at a time)
 
-The loop for the spec-coverage campaign: stage 4 of the behaviour sweep plus the
-authorized slice of stage 5 (repo coverage data + spec reader). It does NOT
+The loop for the spec-coverage campaign: stage 4 of the behaviour sweep plus
+stage 5 (publish the repo coverage data + rebuild the spec reader). It does NOT
 publish to Notion and adds no eval data -- the eval-discovery stages (1-3)
 are out of scope and no longer part of this pipeline. One behaviour per
 pass; never batch.
@@ -78,6 +78,8 @@ artifact's pending note with the signed date, and append the Gate 4 entry to
 - Render the Gate 5 checklist (`5-sweep-publish/SKILL.md`) with these command
   outputs, then STOP for sign-off; on approval append the Gate 5 entry to
   `gates.md` (date, approver, corrections).
+- Commit the Gate 5 entry: `chore(gates): sign Gate 5 for behaviour N (<slug>)`,
+  then push -- the gate record must reach the branch before the stage-6 audit.
 
 ## Step 5 -- PR; merge after Gate 6
 
