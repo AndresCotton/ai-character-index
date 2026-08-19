@@ -7,10 +7,10 @@ Per `data/README.md`, this directory is "the canonical machine-readable data the
 ## Contents
 | File | Top-level keys / one-line semantics | Size |
 |---|---|---|
-| `coverage.json` | `coverage`: 6 records = 3 index behaviours (no-sycophancy, calibration, action-honesty) × 2 labs; all verdicts `covered`; 88 citations. Record shape: `behaviour_id/name, lab_id, verdict, depth_0_4, depth_note, citations[] (locator, quote, role, adjacent?, example_block?), verified_against_version, verified_date, citation_format` | 562 lines / 48K |
+| `coverage.json` | `coverage`: 6 records = 3 index behaviours (no-sycophancy, calibration, action-honesty) × 2 labs; all verdicts `covered`; 88 citations. Record shape: `behaviour_id/name, lab_id, verdict, depth_0_4, depth_note, citations[] (locator, quote, role, adjacent?, example_block?), verified_against_version, verified_date, citation_format` | 562 lines / 46K |
 | `labs.json` | `labs`: 2 entries (anthropic, openai): id, name, spec title/version/date/URL, `local_copy` path into `specs/`, has_published_spec | 24 lines |
 | `evals.json` | `rubric_version, sweep_date, assessment (human_reviewed: false), evals (5), rejected (9)`; each eval carries sources with live-check status, 0-4 quality scores, per-lab adherence bands; all 5 evals are behaviour 1 (sycophancy) | 149 lines / 16K |
-| `reader-test-coverage.json` | `note, generatedFrom (10 sweep paths), behaviours (10), coverage (20 records, same shape as coverage.json, 294 citations)`; an external reviewer's behaviour set for the reader test bench, explicitly not index verdicts | 2381 lines / 228K |
+| `reader-test-coverage.json` | `note, generatedFrom (10 sweep paths), behaviours (10), coverage (20 records, same shape as coverage.json, 294 citations)`; an external reviewer's behaviour set for the reader test bench, explicitly not index verdicts | 2381 lines / 224K |
 | `schema/` | only `.gitkeep` — no schemas present | — |
 | `README.md` | current-files inventory with a writer column; planned `behaviours.json`/`meta.json` noted as absent | 20 lines |
 

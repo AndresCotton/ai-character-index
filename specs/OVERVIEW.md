@@ -8,9 +8,9 @@ Local copies of the two published lab behaviour specs, pinned by version, plus `
 | Path | Holds |
 |---|---|
 | `CITATION.md` | Locator format `<spec>@<version> > <section-ref> > ¶<n>[ s<a>[-<b>]]` (`>` / `›` interchangeable); section refs are `#anchor` for the Model Spec and heading-title paths for the constitution; block (¶) and sentence (s) counting rules; the three mechanical normalizations applied to quotes; cite.py command reference |
-| `claude-constitution/20260120-constitution.md` | Anthropic constitution mirror, 830 lines / 184K; no `{#anchor}` syntax — cited by heading path only |
+| `claude-constitution/20260120-constitution.md` | Anthropic constitution mirror, 830 lines / 182K; no `{#anchor}` syntax — cited by heading path only |
 | `claude-constitution/README.md`, `LICENSE` | Mirrored upstream readme and CC0 1.0 license |
-| `openai-model-spec/model_spec.md` | OpenAI Model Spec mirror, 4691 lines / 268K; 80 lines carry `{#anchor}` markers (59 also carry `authority=` tags); worked examples are `~~~`-fenced transcripts paired with `**Example**:` captions |
+| `openai-model-spec/model_spec.md` | OpenAI Model Spec mirror, 4692 lines / 265K; 80 lines carry `{#anchor}` markers (59 also carry `authority=` tags); worked examples are `~~~`-fenced transcripts paired with `**Example**:` captions |
 | `openai-model-spec/CHANGELOG.md` | Upstream changelog, v2024.05.08 → v2025.12.18 |
 | `openai-model-spec/README.md` | Mirrored readme |
 
