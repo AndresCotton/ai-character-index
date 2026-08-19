@@ -56,7 +56,7 @@ graph LR
 - No Python package structure: no `__init__.py`/`pyproject.toml`; all cross-module wiring is `importlib` file-loading and a `sys.path` hack. Renames/moves break only at runtime.
 - `cite.py` is the untested foundation of every chain (flagged in `docs/onboarding-spec-coverage.md` as "the trickiest code in the repo").
 - Markdown-as-API: `publish-coverage.py` regex-scrapes human-written stage-4 artifacts; formatting drift breaks publication.
-- Spec identity duplicated in 4+ places (`cite.py SPECS`, `build-spec-reader-data.py DOCUMENTS`, `data/labs.json`, `specs/CITATION.md` examples); behaviour metadata in six places.
+- Spec identity duplicated in 4+ places (`cite.py SPECS`, `build-spec-reader-data.py DOCUMENTS`, `data/labs.json`, `specs/CITATION.md` examples); behaviour metadata in five places.
 - Four panel modules read `panel-config.json` at import time; config cannot be injected without monkeypatching.
 - Runlog defaults disagree: `harness.RUNLOG` = `runlog.jsonl`, executors default to `runlog-v3.jsonl`; resume silently reads the wrong file if the override is forgotten.
 - Locator separators diverge by producer: panel chain emits `" > "`, curated chain `" › "`; cite.py tolerates both, consumers must know which producer they face.
