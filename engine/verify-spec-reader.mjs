@@ -90,6 +90,10 @@ for (const behaviour of payload.behaviours) {
 // every same-site link on the reader must resolve to a served page, and every
 // #fragment must match an id in its target document.
 await page.goto(base, { waitUntil: "networkidle" });
+await page.waitForFunction(
+  () => !document.querySelector("#passage-count").textContent.startsWith("Loading"),
+  { timeout: 10000 },
+);
 await page.waitForTimeout(150);
 const expectedNav = ["../", "./", "../spec-reader-test/", "../methodology.html", "../#about"];
 const navHrefs = await page.evaluate(
