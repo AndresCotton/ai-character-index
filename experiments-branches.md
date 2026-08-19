@@ -14,7 +14,7 @@ Alignment and planning conversations need the full inventory, not just main. Thi
 - `experiments/panel-judges/` (60 tracked files): a **self-contained experiment** with its own frozen harness fork (`harness.py`, `batch_panel.py`, `cost.py`, `panel-config.json`, `behaviours.json`), collection/audit tooling (`aggregate.py`, `score_audit.py`, `select_contested.py`, `build_panel_data.py`, `export_coverage.py`), prompt templates v2/v3, run logs (`runlog.jsonl`, `-v2`, `-v2b`, `-smoke`), per-model score JSONs, and `calib/` rounds including `*-FROZEN` markers.
 - Human audit materials: `audit-sheet.md`, `audit-sheet-shared20.md`, `audit-labels-matt.json`, `audit-labels-andres.json`, `audit-key.json`; results in `FINDINGS.md`.
 - Untracked locally: whole-doc reports (`WHOLEDOC-REPORT.md`, `WHOLEDOC-SPOTCHECK.md`, `SMOKE-SPOTCHECK.md`, `THRESHOLD-TABLE.md`), probe scripts/outputs, run logs v3/v3smoke/smoke3, debug dumps.
-- One of the two copies of the panel harness (the other is `engine/panel/` on main); this copy is frozen for experiment reproducibility. The canonical run log that main's shipped panel data points to lives here ONLY AS AN UNTRACKED FILE (see the untracked-locally line above) — it is committed to this branch and to no other; deleting the branch is irrelevant to it, but losing this working copy loses it.
+- One of the two copies of the panel harness (the other is `engine/panel/` on main); this copy is frozen for experiment reproducibility. The canonical run log that main's shipped panel data points to lives here ONLY AS AN UNTRACKED FILE (see the untracked-locally line above) — committed to NO branch, this one included; deleting the branch is irrelevant to it, but losing this working copy loses it.
 
 ### `experiment/semantic-coverage` (branch; reference archive — its PR is closed unmerged, branch kept)
 
@@ -45,6 +45,7 @@ graph LR
 
 - `feat/cite-sweep`: the term-sweep stage 4 this branch implements is not the operative procedure (the LLM panel is); branch kept as the **only remote custodian of the cite.py regression suite**; permanent home TBD.
 - `research/sweeps/04-instruction-hierarchy/` — untracked working record.
+- `docs/semantic-tagging-demo.md` — untracked working-copy file (semantic-tagging demo); belongs to no branch.
 - `tests/` in this worktree — empty except bytecode.
 - `experiments/panel-judges/.gitignore` is deliberately permissive: run logs and score JSONs are tracked ("that's the data").
 
