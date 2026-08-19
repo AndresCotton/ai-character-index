@@ -1,4 +1,4 @@
-# docs/ — onboarding prose plus ruling-pending proposals
+# docs/ — onboarding prose plus ruling-approved proposals
 
 > As-is snapshot of origin/main @ 72e2e6b (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
 
@@ -34,4 +34,4 @@ graph LR
 
 - §7 accurately describes the current CI state: `deploy.yml` only, no validation CI, empty `data/schema/`, no locator re-resolution in CI.
 - §3 gives the behaviour list as 12 behaviours in 5 categories, matching `research/core-behaviour-list.md`; `methodology/mentee-project-archetypes.md` notes Notion has moved ahead of the repo file (13 rows there).
-- One onboarding doc (plus the ruling-pending `proposals/` drafts this PR adds): nothing here covers the panel pipeline, the site surfaces, or repo-wide orientation — those live in per-component READMEs of uneven freshness.
+- One onboarding doc (plus the ruling-approved `proposals/` rescopes): nothing here covers the panel pipeline, the site surfaces, or repo-wide orientation — those live in per-component READMEs of uneven freshness.
