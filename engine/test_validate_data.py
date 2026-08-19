@@ -401,6 +401,28 @@ class TestCrossFileRules(unittest.TestCase):
             f"no unsupported-keyword error; got: {errors}",
         )
 
+    def test_behaviour_id_unknown_to_the_registry_fails(self):
+        # coverage.json behaviour_ids join against the index set of the
+        # behaviour registry (data/behaviours.json).
+        def mutate(d):
+            d["coverage"][0]["behaviour_id"] = 999
+        self.rewrite("coverage.json", mutate)
+        errors = vd.validate_all(self.tmp)
+        self.assertTrue(
+            any("behaviour_id" in e and "999" in e and "registry" in e for e in errors),
+            f"no unknown-registry-behaviour error; got: {errors}",
+        )
+
+    def test_evals_behaviour_id_unknown_to_the_registry_fails(self):
+        def mutate(d):
+            d["evals"][0]["behaviour_ids"] = [999]
+        self.rewrite("evals.json", mutate)
+        errors = vd.validate_all(self.tmp)
+        self.assertTrue(
+            any("evals.json" in e and "999" in e and "registry" in e for e in errors),
+            f"no unknown-registry-behaviour error; got: {errors}",
+        )
+
     def test_malformed_json_fails(self):
         # Unparseable data must fail the gate loudly, never pass silently.
         (self.tmp / "data" / "coverage.json").write_text("{ not json", encoding="utf-8")

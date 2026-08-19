@@ -15,6 +15,10 @@ failure, so this can gate CI as-is.
 Beyond the per-file schemas, this encodes the cross-file rules from
 data/README.md that a single-file schema cannot express:
   - every coverage record's lab_id must exist in data/labs.json;
+  - every coverage record's behaviour_id must exist in the behaviour registry
+    (data/behaviours.json, index set);
+  - every behaviour id referenced by data/evals.json must exist in the
+    behaviour registry (index set);
   - every reader-test coverage record's behaviour_id must exist in that
     file's own behaviours list (no unknown behaviour IDs).
 """
@@ -31,6 +35,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # (data file, its schema) -- every *.json in data/ must appear here.
 CHECKS = (
+    ("behaviours.json", "behaviours.schema.json"),
     ("coverage.json", "coverage.schema.json"),
     ("labs.json", "labs.schema.json"),
     ("evals.json", "evals.schema.json"),
@@ -288,6 +293,37 @@ def _cross_file_checks(files: dict) -> list:
     coverage = files.get("coverage.json")
     if isinstance(coverage, dict):
         check_lab_ids("coverage.json", coverage.get("coverage"))
+
+    registry = files.get("behaviours.json")
+    index_ids = {
+        entry.get("numeric_id")
+        for entry in registry.values()
+        if isinstance(entry, dict) and entry.get("set") == "index"
+    } if isinstance(registry, dict) else set()
+
+    if index_ids and isinstance(coverage, dict):
+        for index, record in enumerate(coverage.get("coverage") or []):
+            if not isinstance(record, dict):
+                continue
+            behaviour_id = record.get("behaviour_id")
+            if behaviour_id is not None and behaviour_id not in index_ids:
+                errors.append(
+                    f"coverage.json: coverage[{index}]: behaviour_id {behaviour_id!r} "
+                    f"is not an index-set id in the behaviour registry (data/behaviours.json)"
+                )
+
+    evals = files.get("evals.json")
+    if index_ids and isinstance(evals, dict):
+        for section in ("evals", "rejected"):
+            for index, record in enumerate(evals.get(section) or []):
+                if not isinstance(record, dict):
+                    continue
+                for behaviour_id in record.get("behaviour_ids") or []:
+                    if behaviour_id not in index_ids:
+                        errors.append(
+                            f"evals.json: {section}[{index}]: behaviour id {behaviour_id!r} "
+                            f"is not an index-set id in the behaviour registry (data/behaviours.json)"
+                        )
 
     reader_test = files.get("reader-test-coverage.json")
     if isinstance(reader_test, dict):
