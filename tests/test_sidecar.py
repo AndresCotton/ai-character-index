@@ -140,6 +140,31 @@ class CommittedSidecarTest(unittest.TestCase):
                 self.assertEqual(int(number), instance["behaviour_id"])
                 self.assertEqual(slug, instance["slug"])
 
+    def test_published_sidecars_round_trip_byte_for_byte(self):
+        """Records publish verbatim, citation key order included: a committed
+        sidecar whose behaviour is already in data/coverage.json must hold
+        records byte-identical (post-serialization) to the published ones, so
+        republishing it can never churn coverage.json bytes. --check compares
+        parsed dicts, which cannot see key-order drift; this pins the other
+        half of the verbatim contract."""
+        data = json.loads(COVERAGE.read_text(encoding="utf-8"))
+        published = {}
+        for record in data["coverage"]:
+            published.setdefault(record["behaviour_id"], []).append(record)
+        checked = 0
+        for path in sorted(SWEEPS.glob("*/4-spec-coverage.json")):
+            sidecar = json.loads(path.read_text(encoding="utf-8"))
+            behaviour_id = sidecar["behaviour_id"]
+            if behaviour_id not in published:
+                continue  # unpublished fixture/preview sidecars: --check covers
+            with self.subTest(sidecar=str(path.relative_to(ROOT))):
+                self.assertEqual(
+                    json.dumps(published[behaviour_id], ensure_ascii=False),
+                    json.dumps(sidecar["records"], ensure_ascii=False),
+                )
+            checked += 1
+        self.assertGreater(checked, 0, "no committed sidecar is published")
+
     def test_sidecar_schema_is_valid_draft_2020_12(self):
         try:
             import jsonschema
