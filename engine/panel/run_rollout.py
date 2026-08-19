@@ -132,8 +132,15 @@ def main():
             alt = f"  (or substitute: whole_doc.py {b} {sp} {sub[t]})" if t in sub else ""
             print(f"  retry: whole_doc.py {b} {sp} {t} --runlog={runlog}{alt}")
     else:
+        # The rebuild admits runlog rows by the BUILD/admission panel, not the execution
+        # panel this driver just ran: build_site_data.py keeps a row iff its model is in
+        # config["panels"][config["display"]["panel"]] (frontier = primaries AND
+        # substitutes). Naming the execution panel here (e.g. frontier_primary) would
+        # silently drop the substitute-judge rows (opus, kimi-k2) on exactly the cells
+        # substitutes exist, so the hint must name the admission panel.
+        admission = config["display"]["panel"]
         print(f"\nCOMPLETE -- every cell banked. Next: python3 build_site_data.py "
-              f"--runlog={runlog} --rubric={config['rubric']} --panel={panel_name}")
+              f"--runlog={runlog} --rubric={config['rubric']} --panel={admission}")
 
 
 if __name__ == "__main__":

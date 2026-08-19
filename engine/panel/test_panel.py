@@ -9,6 +9,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -819,6 +820,50 @@ class TestLazyConfig(unittest.TestCase):
         self.assertEqual(h.resolve("solo", injected), ("acme", "acme/solo-v9"))
 
 
+class TestLazyConfigShim(unittest.TestCase):
+    """PEP 562 compatibility, probed in a FRESH interpreter: pre-refactor callers (see
+    experiments/panel-calibration/run_variant.py) read harness.CONFIG / harness.PANELS /
+    harness.PROVIDERS as module attributes. The lazy-config refactor must keep those
+    resolving through the module __getattr__ shim and stay consistent with load_config().
+    Run in a subprocess so the cached attributes never pollute the in-process module
+    (TestImportSideEffects asserts nothing is cached at import here)."""
+
+    PROBE = r'''
+import importlib.util, json, sys
+from pathlib import Path
+HERE = Path(sys.argv[1])
+sp = importlib.util.spec_from_file_location("harness", HERE / "harness.py")
+h = importlib.util.module_from_spec(sp)
+sp.loader.exec_module(h)
+cfg = h.load_config()
+out = {
+    "config_cached": h.CONFIG is h.CONFIG,
+    "config_equals_load_config": h.CONFIG == cfg,
+    "panels_equal": h.PANELS == cfg.get("panels", {}),
+    "providers_equal": h.PROVIDERS == h.providers(cfg),
+    "cached_in_module_dict": all(k in vars(h) for k in ("CONFIG", "PANELS", "PROVIDERS")),
+}
+try:
+    h.NO_SUCH_ATTRIBUTE
+    out["unknown_raises_attributeerror"] = False
+except AttributeError:
+    out["unknown_raises_attributeerror"] = True
+print(json.dumps(out))
+'''
+
+    def test_config_panels_providers_resolve_through_shim(self):
+        env = {**os.environ,
+               "SPEC_CITE_USER_SPECS": str(HERE / "no-such-user-manifest.json")}
+        r = subprocess.run([sys.executable, "-B", "-c", self.PROBE, str(HERE)],
+                           capture_output=True, text=True, env=env)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        d = json.loads(r.stdout.strip().splitlines()[-1])
+        for key in ("config_cached", "config_equals_load_config", "panels_equal",
+                    "providers_equal", "cached_in_module_dict",
+                    "unknown_raises_attributeerror"):
+            self.assertTrue(d[key], f"shim probe failed on {key}: {d}")
+
+
 class TestMainSmoke(unittest.TestCase):
     """CLI entry-point arg handling, run as real subprocesses. No network: the
     rollout driver is dry-run by default and prints the plan before any API path
@@ -844,6 +889,77 @@ class TestMainSmoke(unittest.TestCase):
                            capture_output=True, text=True)
         self.assertNotEqual(r.returncode, 0)
         self.assertIn(missing, r.stderr)
+
+    def test_run_rollout_panel_override_changes_the_plan(self):
+        # --panel= swaps the executed seat list. itest is a single cheap judge, so the
+        # override must plan ONLY qwen-big cells -- never the default frontier seats.
+        r = subprocess.run([sys.executable, str(HERE / "run_rollout.py"),
+                            "--behaviours=helpfulness", "--panel=itest"],
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("whole_doc.py helpfulness constitution qwen-big", r.stdout)
+        self.assertIn("whole_doc.py helpfulness model-spec qwen-big", r.stdout)
+        self.assertNotIn("whole_doc.py helpfulness constitution sol", r.stdout)
+        self.assertIn("DRY RUN", r.stdout)
+
+    def test_run_rollout_unknown_panel_override_rejected(self):
+        r = subprocess.run([sys.executable, str(HERE / "run_rollout.py"),
+                            "--behaviours=helpfulness", "--panel=no-such-panel"],
+                           capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("unknown panel", r.stderr + r.stdout)
+
+    def test_whole_doc_panel_name_expands_to_member_models(self):
+        # whole_doc.py expands a panel NAME into its member tags before judging. A full
+        # run needs API keys, so this is an arg-parse-level assertion: with every key
+        # removed, passing the panel NAME 'frontier' must expand to a real member and
+        # fail at that member's missing provider key -- NOT KeyError on 'frontier'
+        # (which would mean it was treated as a model tag, i.e. no expansion).
+        env = {k: v for k, v in os.environ.items()
+               if not k.upper().endswith("API_KEY") and "OPENROUTER" not in k.upper()}
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            runlog = f.name
+        self.addCleanup(lambda: Path(runlog).unlink(missing_ok=True))
+        r = subprocess.run([sys.executable, str(HERE / "whole_doc.py"),
+                            "helpfulness", "constitution", "frontier",
+                            f"--runlog={runlog}"],
+                           capture_output=True, text=True, env=env, timeout=120)
+        self.assertNotEqual(r.returncode, 0)
+        blob = r.stdout + r.stderr
+        self.assertIn("for provider", blob)      # reached an expanded member's key check
+        self.assertNotIn("KeyError", blob)       # 'frontier' was not treated as a model
+        self.assertNotIn("Traceback", blob)
+
+    def test_complete_hint_names_admission_panel_not_execution_panel(self):
+        # The COMPLETE hint tells the user how to REBUILD the site payload, and
+        # build_site_data.py admits runlog rows by the ADMISSION panel
+        # (config["display"]["panel"] = frontier: primaries AND substitutes), NOT the
+        # execution panel this driver ran. Bank every cell so --go reaches the COMPLETE
+        # branch with an empty plan (no API calls), then read the hint's --panel value.
+        cfg = h.load_config()
+        rubric = cfg["rubric"]
+        exec_panel = cfg["panels"]["frontier_primary"]   # the --panel= override below
+        admission = cfg["display"]["panel"]              # what the hint must name
+        self.assertEqual(set(exec_panel) | {"opus", "kimi-k2"},
+                         set(cfg["panels"][admission]))  # premise: admission adds subs
+        first_loc = {s: h.passages(s)[0][0] for s in cfg["specs"]}
+        rows = [{"behaviour": "helpfulness", "spec": s, "model": m,
+                 "locator": first_loc[s], "rubric": rubric}
+                for s in cfg["specs"] for m in exec_panel]
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
+            for row in rows:
+                f.write(json.dumps(row) + "\n")
+            runlog = f.name
+        self.addCleanup(lambda: Path(runlog).unlink(missing_ok=True))
+        r = subprocess.run([sys.executable, str(HERE / "run_rollout.py"), "--go",
+                            "--behaviours=helpfulness", "--panel=frontier_primary",
+                            f"--runlog={runlog}"],
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("COMPLETE", r.stdout)
+        m_panel = re.search(r"--panel=(\S+)", r.stdout)
+        self.assertIsNotNone(m_panel, r.stdout)
+        self.assertEqual(m_panel.group(1), admission)    # frontier, not frontier_primary
 
 
 if __name__ == "__main__":
