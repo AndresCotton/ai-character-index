@@ -118,7 +118,10 @@ SYSTEM = ("You grade how each spec passage relates to a target behaviour, on a 3
 #                      passage) or OUTPUT_FORMAT_SPARSE (positives only; every
 #                      omitted passage is recorded as 0).
 #   {reason}        -- an optional trailing reasoning instruction. Every shipped
-#                      caller renders with reason="" (empty).
+#                      caller renders with reason="" (empty), so whole_doc.py's
+#                      SYSTEM_W/SYSTEM_S are FULLY RENDERED: no {reason} placeholder
+#                      remains, and a later .format(reason=...) on them silently does
+#                      nothing (no injection happens).
 #
 # The slot values below are the exact sentences the pre-refactor whole_doc.py
 # substituted via str.replace; test_frozen_prompts.json pins the composed results

@@ -8,6 +8,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -743,8 +744,13 @@ print(json.dumps({"bad": bad, "opened": opened}))
 '''
 
     def test_import_reads_no_config_or_data_file(self):
+        # Hermetic: force SPEC_CITE_USER_SPECS to a path that cannot exist, so a
+        # developer who uses the user-spec feature locally still passes the probe
+        # (it must see the repo's committed bundled-only state, not their manifest).
+        env = {**os.environ,
+               "SPEC_CITE_USER_SPECS": str(HERE / "no-such-user-manifest.json")}
         r = subprocess.run([sys.executable, "-B", "-c", self.PROBE, str(HERE)],
-                           capture_output=True, text=True)
+                           capture_output=True, text=True, env=env)
         self.assertEqual(r.returncode, 0, r.stderr)
         data = json.loads(r.stdout.strip().splitlines()[-1])
         self.assertEqual(data["bad"], [],
@@ -811,6 +817,33 @@ class TestLazyConfig(unittest.TestCase):
         h.env = lambda name: None          # no keys anywhere -> native route, no fallback
         self.addCleanup(lambda: setattr(h, "env", real_env))
         self.assertEqual(h.resolve("solo", injected), ("acme", "acme/solo-v9"))
+
+
+class TestMainSmoke(unittest.TestCase):
+    """CLI entry-point arg handling, run as real subprocesses. No network: the
+    rollout driver is dry-run by default and prints the plan before any API path
+    is reachable; both smokes are pointed at a runlog that cannot exist, so a
+    committed runlog can neither resume cells nor be rebuilt over."""
+
+    def test_run_rollout_dry_run_prints_plan_and_exits_zero(self):
+        missing = str(HERE / "no-such-runlog.jsonl")
+        r = subprocess.run([sys.executable, str(HERE / "run_rollout.py"),
+                            "--behaviours=helpfulness", f"--runlog={missing}"],
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("whole_doc.py helpfulness", r.stdout)
+        self.assertIn("DRY RUN", r.stdout)
+
+    def test_build_site_data_hoisted_config_load_fails_at_runlog_read(self):
+        # The hoisted load_config() must succeed before arg parsing; a missing
+        # --runlog= then fails at the runlog read (naming the path), not as an
+        # import-time crash.
+        missing = str(HERE / "no-such-runlog.jsonl")
+        r = subprocess.run([sys.executable, str(HERE / "build_site_data.py"),
+                            f"--runlog={missing}"],
+                           capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn(missing, r.stderr)
 
 
 if __name__ == "__main__":
