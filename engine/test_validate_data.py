@@ -115,22 +115,15 @@ class TestBehavioursSchema(MutationMixin, unittest.TestCase):
         self.assert_valid()
 
     def test_bad_top_level_slug_key_fails(self):
-        # Top-level keys are kebab-case slugs (the schema's propertyNames).
-        # The stdlib backend's leg lives in the expectedFailure test below:
-        # the fallback does not implement propertyNames yet, so this loop
-        # covers the jsonschema backend only until that lands.
+        # Top-level keys are kebab-case slugs (the schema's propertyNames);
+        # the stdlib fallback implements propertyNames, so both backends run.
         def mutate(d):
             d["Not Kebab Case!"] = d.pop("no-sycophancy")
-        instance = copy.deepcopy(self.instance)
-        mutate(instance)
-        errors = vd.validate_instance(instance, self.schema, force_stdlib=False)
-        self.assertTrue(errors, "mutation should fail validation")
-        self.assertTrue(
-            any("does not match" in error for error in errors),
-            f"no propertyNames error; got: {errors}",
-        )
+        # Both backends name the offending key (jsonschema doesn't echo the
+        # word "propertyNames" itself).
+        self.assert_invalid(mutate, "Not Kebab Case")
 
-    @unittest.expectedFailure
+
     def test_bad_top_level_slug_key_fails_stdlib(self):
         # EXPECTED FAILURE until the stdlib fallback implements propertyNames
         # (the hardening stream owns that change in validate_data.py). The
