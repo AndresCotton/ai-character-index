@@ -38,6 +38,17 @@ python3 engine/publish-coverage.py research/sweeps/02-calibration --check    # v
 
 The LLM panel judging pipeline: whole-spec judging calls, verdict parsing, the rollout driver, and the `site/llm-panel-review/` payload builder. See [`panel/README.md`](panel/README.md) for mechanics and reproduction; `python3 engine/panel/test_panel.py` runs its 27 offline unit tests.
 
+## generate_behaviour_constants.py (works today)
+
+[`data/behaviours.json`](../data/README.md) is the single behaviour registry (every behaviour in every set, keyed by slug). The derived copies of that identity regenerate from it -- never edit them by hand:
+
+```sh
+python3 engine/generate_behaviour_constants.py           # rewrite the constants in place
+python3 engine/generate_behaviour_constants.py --check   # exit 1 with a diff on drift
+```
+
+Rewritten constants: `GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in `build-spec-reader-data.py`, the key order and `title` fields of `panel/behaviours.json`, and `display.behaviours` in `panel/panel-config.json`. Only the constant blocks are touched; surrounding bytes are preserved. The panel<->registry mapping and the panel display list live in the generator (panel-pipeline metadata, deliberately not in the registry schema); both are validated against the registry, so a renamed slug fails loudly. `tests/test_behaviour_registry.py` is the drift gate.
+
 ## site builders and checks (work today)
 
 The reader surfaces render from generated payloads, never from hand-edited JSON:
@@ -55,7 +66,7 @@ text and nothing else, so work there cannot alter what the index publishes.
 
 ## data validation (works today)
 
-Every file in [`data/`](../data/) is validated against the JSON Schemas in [`data/schema/`](../data/schema/), plus the cross-file rules from [`data/README.md`](../data/README.md): no **published** coverage verdict without a citation (the reader-test bench models an absence finding as a record with empty citations), no eval without a URL, no coverage record pointing at a lab that `labs.json` doesn't define, and no unknown behaviour IDs in `reader-test-coverage.json` (checked against its own behaviours list). Behaviour IDs in `coverage.json` and `evals.json` are unchecked until a canonical behaviours registry (`behaviours.json`, planned in PLAN.md §2) exists.
+Every file in [`data/`](../data/) is validated against the JSON Schemas in [`data/schema/`](../data/schema/), plus the cross-file rules from [`data/README.md`](../data/README.md): no **published** coverage verdict without a citation (the reader-test bench models an absence finding as a record with empty citations), no eval without a URL, no coverage record pointing at a lab that `labs.json` doesn't define, no coverage record or `evals.json` reference to a behaviour id the registry's index set doesn't define, and no unknown behaviour IDs in `reader-test-coverage.json` (checked against its own behaviours list).
 
 ```sh
 python3 engine/validate_data.py          # uses jsonschema when installed, stdlib fallback otherwise

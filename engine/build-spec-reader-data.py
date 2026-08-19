@@ -39,8 +39,8 @@ BEHAVIOURS = [
         "slug": "no-sycophancy",
         "name": "No sycophancy",
         "definition": (
-            "The model should not shift its factual claims or assessments "
-            "to please the user."
+            "The model should not shift its factual claims or assessments to "
+            "please the user."
         ),
         "category": "Honesty & epistemics",
     },
