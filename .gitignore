@@ -35,5 +35,6 @@ specs/user/
 research/sources/Founding an AI Charter organisation.pdf
 outreach/
 
-# Builder smoke-test scratch (engine/test_build_reader_test_data.py)
+# Builder smoke-test scratch (engine/test_build_reader_test_data.py,
+# engine/test_builders_reproduce_payloads.py)
 .builder-repro-scratch/

@@ -729,7 +729,7 @@ for name in ("harness", "whole_doc", "run_rollout", "build_site_data"):
     sp = importlib.util.spec_from_file_location(name, HERE / (name + ".py"))
     m = importlib.util.module_from_spec(sp)
     sp.loader.exec_module(m)
-bad = [p for p in opened if p.endswith((".json", ".jsonl", ".txt", ".env"))]
+bad = [p for p in opened if p.endswith((".json", ".jsonl", ".txt", ".env", ".md"))]
 print(json.dumps({"bad": bad, "opened": opened}))
 '''
 

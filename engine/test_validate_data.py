@@ -408,6 +408,29 @@ class TestCrossFileRules(unittest.TestCase):
             any("behaviour_id" in e and "999" in e and "registry" in e for e in errors),
             f"no unknown-registry-behaviour error; got: {errors}",
         )
+    def test_duplicate_record_in_coverage_fails(self):
+        # The published reader absorbs duplicate (behaviour_id, lab_id)
+        # records silently (first wins) -- the gate must catch them.
+        def mutate(d):
+            d["coverage"].append(dict(d["coverage"][0]))
+        self.rewrite("coverage.json", mutate)
+        errors = vd.validate_all(self.tmp)
+        self.assertTrue(
+            any("coverage.json" in e and "duplicate record" in e for e in errors),
+            f"no duplicate-record error; got: {errors}",
+        )
+
+    def test_duplicate_record_in_reader_test_coverage_fails(self):
+        # The bench builder hard-crashes on a second record for the same
+        # behaviour x lab -- the gate must catch it before the builder sees it.
+        def mutate(d):
+            d["coverage"].append(dict(d["coverage"][0]))
+        self.rewrite("reader-test-coverage.json", mutate)
+        errors = vd.validate_all(self.tmp)
+        self.assertTrue(
+            any("reader-test-coverage.json" in e and "duplicate record" in e for e in errors),
+            f"no duplicate-record error; got: {errors}",
+        )
 
     def test_malformed_json_fails(self):
         # Unparseable data must fail the gate loudly, never pass silently.

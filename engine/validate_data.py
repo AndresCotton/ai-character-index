@@ -297,9 +297,28 @@ def _cross_file_checks(files: dict) -> list:
                     f"defined in data/labs.json (known: {sorted(lab_ids, key=str)})"
                 )
 
+    def check_unique_records(file_name, records):
+        # Exactly one record per (behaviour_id, lab_id): the published reader
+        # silently absorbs duplicates (first record wins) and the bench
+        # builder hard-crashes on them, so duplicates must fail at the gate.
+        seen = {}
+        for index, record in enumerate(records or []):
+            if not isinstance(record, dict):
+                continue
+            key = (record.get("behaviour_id"), record.get("lab_id"))
+            if key in seen:
+                errors.append(
+                    f"{file_name}: coverage[{index}]: duplicate record for "
+                    f"behaviour_id={key[0]!r} lab_id={key[1]!r} "
+                    f"(first at coverage[{seen[key]}])"
+                )
+            else:
+                seen[key] = index
+
     coverage = files.get("coverage.json")
     if isinstance(coverage, dict):
         check_lab_ids("coverage.json", coverage.get("coverage"))
+        check_unique_records("coverage.json", coverage.get("coverage"))
 
     registry = files.get("behaviours.json")
     index_ids = {
@@ -329,6 +348,7 @@ def _cross_file_checks(files: dict) -> list:
     if isinstance(reader_test, dict):
         records = reader_test.get("coverage")
         check_lab_ids("reader-test-coverage.json", records)
+        check_unique_records("reader-test-coverage.json", records)
         behaviour_ids = {
             behaviour.get("id")
             for behaviour in reader_test.get("behaviours", [])
