@@ -117,7 +117,7 @@ def parse_citations(part: str) -> list[dict]:
     return citations
 
 
-def parse_verdict_table(text: str) -> dict[str, dict]:
+def parse_verdict_table(text: str, source: str) -> dict[str, dict]:
     table = section(text, "## Verdict and depth", ["\n## "])
     rows = {}
     for line in table.splitlines():
@@ -131,9 +131,18 @@ def parse_verdict_table(text: str) -> dict[str, dict]:
             continue
         rationale = cells[3].replace("`", "")
         rationale = re.sub(r"\bNote: (\w)", lambda m: m.group(1).upper(), rationale)
+        try:
+            depth = int(cells[2])
+        except ValueError:
+            sys.exit(
+                f"publish-coverage layout error: {source}: verdict table depth "
+                f"cell {cells[2]!r} in the {cells[0]!r} row is not a number "
+                "-- expected the stage-4 layout "
+                "| spec | verdict | 0-4 depth | rationale |"
+            )
         rows[lab] = {
             "verdict": cells[1],
-            "depth_0_4": int(cells[2]),
+            "depth_0_4": depth,
             "depth_note": rationale,
         }
     if set(rows) != {"anthropic", "openai"}:
@@ -158,7 +167,10 @@ def parse_markdown(artifact_path: Path) -> tuple[int, list[dict]]:
     behaviour_id = int(header.group(1))
     behaviour_name = header.group(2).strip()
 
-    verdicts = parse_verdict_table(artifact)
+    verdicts = parse_verdict_table(
+        artifact,
+        f"{artifact_path.name} (behaviour {behaviour_id} {behaviour_name!r})",
+    )
     enders = ["\n## Considered and not kept", "\n## Verdict and depth"]
     records = []
     for lab_id, heading in LABS:

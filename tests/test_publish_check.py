@@ -281,6 +281,35 @@ class CheckOrderAndLayoutFailuresTest(unittest.TestCase):
         self.assertIn("missing the section", combined)
         self.assertNotIn("Traceback", combined)
 
+    def test_malformed_depth_cell_fails_cleanly(self):
+        """A non-numeric depth cell is a layout breakage, not a crash: the
+        publisher must exit cleanly with a message naming the artifact and
+        the behaviour, never a raw ValueError traceback."""
+        with tempfile.TemporaryDirectory() as tmp:
+            sweep_dir = Path(tmp) / "02-calibration"
+            shutil.copytree(SWEEPS / "02-calibration", sweep_dir)
+            # Target the markdown parse path; the sidecar would otherwise
+            # win and mask the mutation.
+            (sweep_dir / "4-spec-coverage.json").unlink(missing_ok=True)
+            artifact = sweep_dir / "4-spec-coverage.md"
+            text = artifact.read_text(encoding="utf-8")
+            head, sep, tail = text.partition("## Verdict and depth")
+            self.assertTrue(sep, "fixture source lost its verdict table")
+            mutated = tail.replace("| 3 |", "| three |", 1)
+            self.assertNotEqual(mutated, tail, "no depth cell was mutated")
+            artifact.write_text(head + sep + mutated, encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, str(PUBLISH), str(sweep_dir), "--check"],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+        self.assertNotEqual(result.returncode, 0)
+        combined = result.stdout + result.stderr
+        self.assertIn("layout error", combined)
+        self.assertIn("three", combined)
+        self.assertIn("4-spec-coverage.md", combined)
+        self.assertIn("behaviour 2", combined)
+        self.assertNotIn("Traceback", combined)
+
 
 if __name__ == "__main__":
     unittest.main()
