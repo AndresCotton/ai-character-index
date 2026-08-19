@@ -33,6 +33,6 @@ graph LR
 ## As-is observations
 - The two `sweeps/03-action-honesty/` records (`gates.md`, `4-spec-coverage.md`) reference the rubric by its earlier `research/spec-coverage-depth-rubric.md` path, annotated with the current location `methodology/spec-coverage-depth-rubric.md`.
 - Behaviour 1 exists twice: the standalone write-up (`01-no-sycophancy.md`, still the stage-5 content template) and the staged folder `01-no-sycophancy/`, which holds stage-1 artifacts only (Gate 1 unsigned). No `2-curation.md` or `3-scores.md` exists anywhere in `sweeps/`.
-- Only behaviours 1–3 have sweep folders; there is no `04-instruction-hierarchy` although behaviour 4 is Tier 1.
+- Only behaviours 1–3 have sweep folders on main; there is no `04-instruction-hierarchy` although behaviour 4 is Tier 1 (an untracked stage-4 working record for it exists locally — see `experiments-branches.md`).
 - `data/coverage.json` covers only behaviours 1–3 (6 rows); `data/evals.json` covers only behaviour 1 (5 curated + 9 rejected, `human_reviewed: false`, sweep date 2026-07-12). The planned `data/behaviours.json` (sourced from `core-behaviour-list.md` per `data/README.md`) does not exist yet.
 - `methodology/mentee-project-archetypes.md` states `core-behaviour-list.md` is stale vs Notion for rows 11–13 (Notion has an "Interaction with others" group absent here).
