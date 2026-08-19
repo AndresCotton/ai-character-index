@@ -13,7 +13,7 @@ Human/agent onboarding prose. The directory holds the spec-coverage track's onbo
 | `onboarding-spec-coverage.md` | The one true onboarding doc for the spec-coverage track: pipeline diagram, data contracts, conventions, and a reading order for a cold-start agent or mentee. Explicitly flags `cite.py` as untested ("the trickiest code in the repo"). |
 | `proposals/` | Two ruling-approved coverage-only rescopes of `.claude/skills/5-sweep-publish/` and `6-sweep-verify/` under the model-spec-reader scope (repo-owner ruling 2026-08-18). Not live skills; the skills-pass PR moves them into `.claude/skills/` when it merges. |
 
-Files that exist only in local working copies, **not on main**: `semantic-tagging-demo.md`.
+Out of snapshot scope: `semantic-tagging-demo.md` exists only in local working copies, not on main (local-only territory belongs in `experiments-branches.md`).
 
 ## Relationships
 
