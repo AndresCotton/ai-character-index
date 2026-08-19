@@ -177,6 +177,9 @@ def _check_supported_keywords(schema, location, errors) -> None:
 
 def _validate_node(instance, schema, root_schema, path, errors) -> None:
     if "$ref" in schema:
+        # Single-level resolution: the referenced node must not itself be a
+        # $ref. All schemas in data/schema/ use one hop into $defs; if a
+        # future schema chains refs, loop here instead.
         schema = _resolve_ref(schema["$ref"], root_schema)
 
     if "type" in schema:

@@ -155,6 +155,13 @@ class TestCoverageSchema(MutationMixin, unittest.TestCase):
             d["coverage"][0]["depth_0_4"] = -1
         self.assert_invalid(mutate, "depth_0_4")
 
+    def test_bool_depth_is_not_an_integer(self):
+        # In Python True == 1; both backends must still reject a boolean
+        # where an integer is required (the stdlib fallback's bool exclusion).
+        def mutate(d):
+            d["coverage"][0]["depth_0_4"] = True
+        self.assert_invalid(mutate, "depth_0_4")
+
     def test_unknown_record_key_fails(self):
         # Coverage records are closed: new fields need a schema change and review.
         def mutate(d):
