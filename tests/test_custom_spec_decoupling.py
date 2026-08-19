@@ -26,6 +26,8 @@ behaviour and assert they flow through:
 Run:  python3 -m unittest tests.test_custom_spec_decoupling -v
 """
 
+import contextlib
+import io
 import json
 import os
 import shutil
@@ -56,6 +58,36 @@ def run_builder(script, args, env_extra=None, cwd=ROOT):
         [sys.executable, str(script), *args],
         capture_output=True, text=True, encoding="utf-8", env=env, cwd=str(cwd),
     )
+
+
+def run_panel_builder(argv, data_dir, manifest=None):
+    """build_site_data.main() in-process with DATA_DIR rebound to data_dir --
+    the stacked `--out=` contract writes a bare filename inside DATA_DIR (a
+    path is rejected by check_out_name), so isolation means rebinding the
+    directory, not pointing --out elsewhere. manifest=None pins the
+    bundled-only state so an ambient local manifest cannot leak into a pinned
+    build; otherwise the given manifest is loaded first. Returns data_dir."""
+    import importlib.util
+    saved = os.environ.get(cite.MANIFEST_ENV_VAR)
+    os.environ[cite.MANIFEST_ENV_VAR] = (
+        str(manifest) if manifest is not None else "/nonexistent/specs.json")
+    cite.load_user_manifest()
+    try:
+        sp = importlib.util.spec_from_file_location(
+            "panel_builder_under_test", PANEL_BUILDER)
+        bs = importlib.util.module_from_spec(sp)
+        sp.loader.exec_module(bs)
+        data_dir.mkdir(parents=True, exist_ok=True)
+        bs.DATA_DIR = data_dir
+        with contextlib.redirect_stdout(io.StringIO()):
+            bs.main(argv)
+        return data_dir
+    finally:
+        if saved is None:
+            os.environ.pop(cite.MANIFEST_ENV_VAR, None)
+        else:
+            os.environ[cite.MANIFEST_ENV_VAR] = saved
+        cite.load_user_manifest()
 
 
 class DocumentsByteIdentityTest(unittest.TestCase):
@@ -265,16 +297,15 @@ class UserBehaviourInPanelTest(unittest.TestCase):
         return path
 
     def build(self, runlog, behaviours, panel="itest", rubric="v3w"):
-        out = Path(self._tmp.name) / "panel-payload.json"
-        result = run_builder(
-            PANEL_BUILDER,
+        data_dir = Path(self._tmp.name) / "panel-data"
+        run_panel_builder(
             [f"--runlog={runlog}", f"--registry={self.registry}",
              f"--behaviours={behaviours}", f"--panel={panel}",
-             f"--rubric={rubric}", "--run-date=2026-08-19", f"--out={out}"],
-            env_extra={cite.MANIFEST_ENV_VAR: str(self.manifest)},
+             f"--rubric={rubric}", "--run-date=2026-08-19",
+             "--out=panel-payload.json"],
+            data_dir, manifest=self.manifest,
         )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        return json.loads(out.read_text())
+        return json.loads((data_dir / "panel-payload.json").read_text())
 
     def test_user_behaviour_flows_into_payload(self):
         locators = self._user_spec_locators()
@@ -333,16 +364,15 @@ class UserBehaviourInPanelTest(unittest.TestCase):
     def test_unknown_display_behaviour_fails_loudly(self):
         rows = [{"behaviour": "helpfulness", "spec": "constitution", "model": "qwen-big",
                  "locator": "x", "rubric": "v3w", "parsed": True, "verdict": 1}]
-        out = Path(self._tmp.name) / "panel-payload.json"
-        result = run_builder(
-            PANEL_BUILDER,
-            [f"--runlog={self._write_runlog(rows)}", f"--registry={self.registry}",
-             "--behaviours=no-such-behaviour", "--panel=itest",
-             "--rubric=v3w", f"--out={out}"],
-            env_extra={cite.MANIFEST_ENV_VAR: str(self.manifest)},
-        )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("no-such-behaviour", result.stderr)
+        data_dir = Path(self._tmp.name) / "panel-data"
+        with self.assertRaises(SystemExit) as ctx:
+            run_panel_builder(
+                [f"--runlog={self._write_runlog(rows)}", f"--registry={self.registry}",
+                 "--behaviours=no-such-behaviour", "--panel=itest",
+                 "--rubric=v3w", "--out=panel-payload.json"],
+                data_dir, manifest=self.manifest,
+            )
+        self.assertIn("no-such-behaviour", str(ctx.exception.code))
 
 
 class PanelByteIdentityTest(unittest.TestCase):
@@ -353,21 +383,24 @@ class PanelByteIdentityTest(unittest.TestCase):
     runDate is the builder's one time-dependent field (date.today()); pinning
     it is what makes a rebuild reproducible. Only payloads whose source
     runlog is committed on this branch are pinned here (v4a, v5); the v3w
-    primary ships from runlog-v3.jsonl, which lives on the provenance branch,
-    and was verified byte-identical the same way out-of-tree."""
+    primary ships from runlog-v3.jsonl and is pinned by
+    engine/panel/verify_panel_provenance.py (byte-identical modulo the
+    documented runDate allowance)."""
 
     def _assert_rebuild_identical(self, payload_name, runlog, rubric, panel,
                                  behaviours, run_date):
-        out = Path(tempfile.mkdtemp()) / payload_name
-        self.addCleanup(shutil.rmtree, out.parent, ignore_errors=True)
-        result = run_builder(
-            PANEL_BUILDER,
+        data_dir = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, data_dir, ignore_errors=True)
+        # manifest=None pins the bundled-only state: an ambient local manifest
+        # must never leak into a byte-identity rebuild.
+        run_panel_builder(
             [f"--runlog={ROOT / runlog}", f"--rubric={rubric}", f"--panel={panel}",
-             f"--behaviours={behaviours}", f"--run-date={run_date}", f"--out={out}"],
+             f"--behaviours={behaviours}", f"--run-date={run_date}",
+             f"--out={payload_name}"],
+            data_dir, manifest=None,
         )
-        self.assertEqual(result.returncode, 0, result.stderr)
         committed = (PANEL_DATA / payload_name).read_bytes()
-        self.assertEqual(out.read_bytes(), committed,
+        self.assertEqual((data_dir / payload_name).read_bytes(), committed,
                          f"{payload_name} rebuild diverged from the committed payload")
 
     def test_v4a_payload_rebuilds_byte_identical(self):
