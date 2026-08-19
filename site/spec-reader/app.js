@@ -64,6 +64,7 @@ const elements = {
   readerStatus: document.querySelector("#reader-status"),
   sidebarResizer: document.querySelector("#sidebar-resizer"),
   sourceLink: document.querySelector("#source-link"),
+  specSwitcher: document.querySelector(".spec-switcher"),
   template: document.querySelector("#document-template"),
 };
 
@@ -925,18 +926,6 @@ function focusPassage(index, shouldScroll = true) {
   updatePassageCount();
 }
 
-document.querySelectorAll(".spec-option").forEach(option => {
-  option.addEventListener("click", () => {
-    state.selectedSpec = option.dataset.spec;
-    if (state.comparing) {
-      state.comparing = false;
-      elements.compareToggle.setAttribute("aria-pressed", "false");
-    }
-    syncURL();
-    rebuildReader();
-  });
-});
-
 elements.compareToggle.addEventListener("click", () => {
   state.comparing = !state.comparing;
   elements.compareToggle.setAttribute("aria-pressed", String(state.comparing));
@@ -963,12 +952,41 @@ window.addEventListener("resize", () => {
   requestAnimationFrame(updateRails);
 });
 
+/* Spec options follow documents.json rather than a hardcoded pair (C12), so a
+ * user-registered spec gets its own switcher button the moment it is folded in. */
+function renderSpecOptions() {
+  const options = state.payload.documents.map(doc => {
+    const option = document.createElement("button");
+    option.className = "spec-option";
+    option.dataset.spec = doc.id;
+    option.type = "button";
+    const name = document.createElement("span");
+    name.textContent = doc.lab;
+    const detail = document.createElement("small");
+    const version = (doc.version || "").replaceAll("-", ".");
+    detail.textContent = version ? `${doc.title} · ${version}` : doc.title;
+    option.append(name, detail);
+    option.addEventListener("click", () => {
+      state.selectedSpec = doc.id;
+      if (state.comparing) {
+        state.comparing = false;
+        elements.compareToggle.setAttribute("aria-pressed", "false");
+      }
+      syncURL();
+      rebuildReader();
+    });
+    return option;
+  });
+  elements.specSwitcher.replaceChildren(...options);
+}
+
 async function initialize() {
   renderBehaviourList();
   try {
     const response = await fetch("./data/documents.json");
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     state.payload = await response.json();
+    renderSpecOptions();
     const params = initialParams;
     const requestedBehaviour = params.get("behavior");
     if (state.payload.behaviours.some(behaviour => behaviour.slug === requestedBehaviour)) {
