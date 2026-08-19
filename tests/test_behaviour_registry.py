@@ -73,20 +73,12 @@ class TestRegistryStructure(unittest.TestCase):
     def test_published_index_slugs_are_pinned(self):
         # coverage.json joins on these ids and the reader URLs carry the slugs,
         # so the three published behaviours cannot be renamed silently.
-        for numeric_id, slug in [(1, "no-sycophancy"), (2, "calibration"), (3, "action-honesty")]:
-            with self.subTest(numeric_id=numeric_id):
-                entry = next(
-                    (e for e in self.registry.values()
-                     if e["set"] == "index" and e["numeric_id"] == numeric_id),
-                    None,
-                )
-                self.assertIsNotNone(entry)
         slugs_by_id = {
             e["numeric_id"]: slug for slug, e in self.registry.items() if e["set"] == "index"
         }
-        self.assertEqual(slugs_by_id[1], "no-sycophancy")
-        self.assertEqual(slugs_by_id[2], "calibration")
-        self.assertEqual(slugs_by_id[3], "action-honesty")
+        for numeric_id, slug in [(1, "no-sycophancy"), (2, "calibration"), (3, "action-honesty")]:
+            with self.subTest(numeric_id=numeric_id):
+                self.assertEqual(slugs_by_id.get(numeric_id), slug)
 
     def test_every_index_behaviour_has_a_group(self):
         # GROUPS renders the whole index set; a group-less entry cannot appear.
@@ -267,6 +259,17 @@ class TestDriftIsCaught(unittest.TestCase):
         result = self.run_check()
         self.assertEqual(result.returncode, 1)
         self.assertIn("helpfulness", result.stdout + result.stderr)
+
+    def test_bool_numeric_id_is_rejected(self):
+        # bool is an int subclass in Python (True == 1), so a JSON `true` would
+        # otherwise pass the integer >= 1 check; the loader's explicit
+        # isinstance(numeric_id, bool) guard is what rejects it.
+        def mutate(registry):
+            registry["calibration"]["numeric_id"] = True
+        self.mutate_registry(mutate)
+        result = self.run_check()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("numeric_id must be an integer >= 1", result.stdout + result.stderr)
 
     def test_unmutated_copy_passes(self):
         result = self.run_check()
