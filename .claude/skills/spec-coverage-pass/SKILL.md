@@ -51,7 +51,8 @@ Andrés spot-reads the artifact: the verdict table, the kept excerpts and their
 roles, and "Considered and not kept". Corrections are applied and re-verified
 before proceeding. On sign-off: tick the human spot-read checkbox, replace the
 artifact's pending note with the signed date, and append the Gate 4 entry to
-`gates.md` (date, approver, corrections, the scoped stage-5 authorization).
+`gates.md` (date, approver, corrections, stage-4 artifact approved -- proceed
+to stage 5; stage 5 publishes the coverage data and stops at its own Gate 5).
 
 ## Step 3 -- Publish, commit each surface, push
 

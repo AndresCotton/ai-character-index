@@ -100,6 +100,13 @@ This is the heart of the job. Each step names the file(s) it touches.
         ▼
  (6) PRESENT + VERIFY       site/spec-reader/  (index.html, app.js, styles.css)
                             engine/verify-spec-reader.mjs  (headless render check)
+        │  Gate 5: human sign-off  →  gates.md
+        ▼
+ (7) STAGE-6 AUDIT          .claude/skills/6-sweep-verify/SKILL.md  (fresh context)
+        │                   writes research/sweeps/NN-<slug>/verify.md
+        │  Gate 6: human sign-off  →  gates.md
+        ▼
+ MERGE                      PR merges only after Gate 6 (the merge deploys the site)
 ```
 
 ### Step by step
@@ -144,12 +151,24 @@ This is the heart of the job. Each step names the file(s) it touches.
    `documents.json`: it shows each spec with the behaviour's passages anchored in
    place. `engine/verify-spec-reader.mjs` drives it headlessly and asserts that
    every behaviour × spec view anchors exactly its published passage count with
-   no console errors. This is the closest thing to an end-to-end test.
+   no console errors. This is the closest thing to an end-to-end test. This is
+   the last step of stage 5 (publish the coverage data + the reader payload).
+   Stage 5 stops at **Gate 5**: a human sign-off in `gates.md`. Nothing has
+   deployed publicly at this point -- the site deploys only when the branch
+   merges.
+7. **Stage-6 audit, then merge.** A fresh-context audit
+   (`.claude/skills/6-sweep-verify/SKILL.md`) re-verifies the branch -- the
+   committed repo contents and a local render of `site/` -- and writes
+   `verify.md`. It stops at **Gate 6**. The branch PR merges only after Gate 6
+   is signed -- that merge is what deploys the site.
 
-The **campaign wrapper** that runs steps 1-6 for one behaviour, with a git
-commit at each step on a per-behaviour branch merged by PR, is the
+The **campaign wrapper** that runs steps 1-7 for one behaviour, with a git
+commit at each step on a per-behaviour branch, is the
 `spec-coverage-pass` skill (`.claude/skills/spec-coverage-pass/SKILL.md`). Read
-it to see the exact ordering, commit messages, and verification commands.
+it to see the exact ordering, commit messages, and verification commands. It
+stops at **Gate 5** after the reader is verified (nothing has deployed publicly
+yet); a fresh-context **stage-6 audit** then signs **Gate 6**, and the PR merges
+only after Gate 6 -- that merge is what deploys the site.
 
 ### The panel in detail (step 2)
 
