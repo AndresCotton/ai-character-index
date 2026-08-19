@@ -305,11 +305,12 @@ The first item is the headline objective of this collaboration; the rest are
 secondary observations.
 
 - **No validation CI.** `.github/workflows/` holds only `deploy.yml` (deploys
-  `site/**` to Cloudflare Pages), and `data/schema/` holds no schemas -- yet
-  `PLAN.md` describes CI that validates `data/*.json` against schemas and
-  re-resolves every locator in `coverage.json` on each PR. Today that
-  re-resolution only happens when someone runs `publish-coverage.py --check`
-  by hand. Wiring this up would make the "coverage claims stay true" guarantee
+  `site/**` to Cloudflare Pages). The schemas now exist (`data/schema/`) and
+  `engine/validate_data.py` is a locally runnable gate -- but no workflow runs
+  it yet, and `PLAN.md` describes CI that validates `data/*.json` against
+  schemas and re-resolves every locator in `coverage.json` on each PR. Today
+  that re-resolution only happens when someone runs `publish-coverage.py
+  --check` by hand. Wiring this up would make the "coverage claims stay true" guarantee
   real rather than aspirational.
 - **Behaviour metadata is duplicated in at least six places** that must be kept
   in sync by hand: `research/core-behaviour-list.md` (prose), the `BEHAVIOURS`
