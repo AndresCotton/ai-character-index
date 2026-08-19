@@ -18,7 +18,7 @@
 - `deploy.yml` triggers: `push` to `main` (paths: `site/**`, `.github/workflows/deploy.yml`) and manual `workflow_dispatch`. Concurrency group `deploy-production` with `cancel-in-progress: false`; `permissions: contents: read`; job environment `production`. Steps: checkout → `pnpm/action-setup@v4` → `actions/setup-node@v4` (Node 22, pnpm cache) → `cloudflare/wrangler-action@v3` (wrangler pinned 4.110.0) running `pages deploy site --project-name ai-character-index --branch main`. Secrets consumed: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 - The deploy has no build step: `site/` is committed static output, and the paths filter watches `site/**` only, so `data/**` or `engine/**` changes trigger nothing until they are baked into `site/`.
 - Its local twin is `pnpm deploy:site` from root `package.json`, documented in `workflows/README.md` as the interactive-`wrangler login` route to the same project.
-- The issue forms implement PLAN.md §1.3's inbound channels and are linked from `README.md` "Contributing". `submit-eval.yml`'s behaviour dropdown mirrors `research/core-behaviour-list.md`.
+- The issue forms implement PLAN.md §1.3's inbound channels and are named (not hyperlinked) in `README.md`'s "Contributing" section; GitHub surfaces them through the Issues form picker. `submit-eval.yml`'s behaviour dropdown mirrors `research/core-behaviour-list.md`.
 
 ## Dependency map
 ```mermaid
