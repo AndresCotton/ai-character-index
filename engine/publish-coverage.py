@@ -87,7 +87,11 @@ ENTRY_RE = re.compile(
 
 
 def section(text: str, start: str, enders: list[str]) -> str:
-    body = text.split(start, 1)[1]
+    parts = text.split(start, 1)
+    if len(parts) < 2:
+        sys.exit(f"publish-coverage: artifact is missing the section starting "
+                 f"{start!r} -- expected the stage-4 layout")
+    body = parts[1]
     cut = len(body)
     for ender in enders:
         position = body.find(ender)
@@ -353,8 +357,11 @@ def main() -> None:
     data = json.loads(COVERAGE.read_text())
     existing = [r for r in data["coverage"] if r["behaviour_id"] == behaviour_id]
 
+    def record_key(record):
+        return (record.get("behaviour_id"), record.get("lab_id"))
+
     if arguments.check:
-        if existing == records:
+        if sorted(existing, key=record_key) == sorted(records, key=record_key):
             print(f"CHECK OK: behaviour {behaviour_id} published records match the artifact")
         elif not existing:
             print(f"CHECK: behaviour {behaviour_id} not yet published; would add "

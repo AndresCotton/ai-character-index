@@ -239,5 +239,45 @@ class MarkdownVersionExtractionTest(unittest.TestCase):
         self.assertIn("spec@version", str(ctx.exception))
 
 
+
+class CheckOrderAndLayoutFailuresTest(unittest.TestCase):
+    """--check compares records order-insensitively, and layout breakage
+    fails cleanly (SystemExit with a message, never a traceback)."""
+
+    def test_lab_order_swapped_sidecar_still_checks_green(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            sweep_dir = Path(tmp) / "01-no-sycophancy"
+            shutil.copytree(SWEEPS / "01-no-sycophancy", sweep_dir)
+            sidecar_path = sweep_dir / "4-spec-coverage.json"
+            sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            sidecar["records"] = list(reversed(sidecar["records"]))
+            sidecar_path.write_text(json.dumps(sidecar, ensure_ascii=False, indent=2) + "\n",
+                                    encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, str(PUBLISH), str(sweep_dir), "--check"],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+        self.assertEqual(result.returncode, 0,
+                         "lab order must not break --check:\n" + result.stdout + result.stderr)
+        self.assertIn("CHECK OK", result.stdout)
+
+    def test_missing_verdict_section_fails_cleanly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            sweep_dir = Path(tmp) / "02-calibration"
+            shutil.copytree(SWEEPS / "02-calibration", sweep_dir)
+            (sweep_dir / "4-spec-coverage.json").unlink(missing_ok=True)
+            artifact = sweep_dir / "4-spec-coverage.md"
+            text = artifact.read_text(encoding="utf-8")
+            artifact.write_text(text.split("## Verdict and depth", 1)[0], encoding="utf-8")
+            result = subprocess.run(
+                [sys.executable, str(PUBLISH), str(sweep_dir), "--check"],
+                capture_output=True, text=True, encoding="utf-8",
+            )
+        self.assertNotEqual(result.returncode, 0)
+        combined = result.stdout + result.stderr
+        self.assertIn("missing the section", combined)
+        self.assertNotIn("Traceback", combined)
+
+
 if __name__ == "__main__":
     unittest.main()
