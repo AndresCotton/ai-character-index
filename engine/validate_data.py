@@ -8,7 +8,7 @@ Usage:
 Uses the `jsonschema` package when it is installed; otherwise falls back to a
 built-in stdlib validator covering the keyword subset data/schema/ uses
 ($ref within the same document, type, enum, required, properties,
-additionalProperties, items, minItems, minLength, minimum, maximum, pattern).
+additionalProperties, propertyNames, items, minItems, minLength, minimum, maximum, pattern).
 Neither path needs a dependency installed, and exit code is non-zero on any
 failure, so this can gate CI as-is.
 
@@ -156,6 +156,12 @@ def _check_supported_keywords(schema, location, errors) -> None:
     items = schema.get("items")
     if isinstance(items, dict):
         _check_supported_keywords(items, f"{location}.items", errors)
+    elif isinstance(items, list):
+        errors.append(
+            f"schema at {location}.items: list-valued items (tuple validation) "
+            f"is not implemented by the built-in validator -- extend the "
+            f"fallback or install jsonschema"
+        )
     additional = schema.get("additionalProperties")
     if isinstance(additional, dict):
         _check_supported_keywords(additional, f"{location}.additionalProperties", errors)

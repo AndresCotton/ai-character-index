@@ -359,18 +359,6 @@ class TestStdlibKeywordGuard(unittest.TestCase):
 class TestCrossFileRules(unittest.TestCase):
     """Rules a single-file schema cannot express, run against a scratch repo copy."""
 
-    def test_missing_behaviour_registry_fails_loudly(self):
-        # Without behaviours.json the registry membership checks cannot run;
-        # the gate must say so explicitly, not pass silently.
-        (self.tmp / "data" / "behaviours.json").unlink()
-        errors = vd.validate_all(self.tmp)
-        self.assertTrue(
-            any("behaviour registry checks skipped" in e for e in errors),
-            f"no registry-skip error; got: {errors}",
-        )
-
-
-
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="validate-data-test-"))
         self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
@@ -381,6 +369,16 @@ class TestCrossFileRules(unittest.TestCase):
         data = json.loads(path.read_text(encoding="utf-8"))
         mutate(data)
         path.write_text(json.dumps(data), encoding="utf-8")
+
+    def test_missing_behaviour_registry_fails_loudly(self):
+        # Without behaviours.json the registry membership checks cannot run;
+        # the gate must say so explicitly, not pass silently.
+        (self.tmp / "data" / "behaviours.json").unlink()
+        errors = vd.validate_all(self.tmp)
+        self.assertTrue(
+            any("behaviour registry checks skipped" in e for e in errors),
+            f"no registry-skip error; got: {errors}",
+        )
 
     def test_unknown_behaviour_id_in_reader_test_fails(self):
         def mutate(d):

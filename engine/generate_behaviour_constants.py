@@ -100,7 +100,7 @@ def load_registry(root: Path) -> dict:
         if behaviour_set not in SETS:
             sys.exit(f"data/behaviours.json: {slug}: unknown set {behaviour_set!r}")
         numeric_id = entry.get("numeric_id")
-        if not isinstance(numeric_id, int) or numeric_id < 1:
+        if not isinstance(numeric_id, int) or isinstance(numeric_id, bool) or numeric_id < 1:
             sys.exit(f"data/behaviours.json: {slug}: numeric_id must be an integer >= 1")
         key = (behaviour_set, numeric_id)
         if key in seen:
