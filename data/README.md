@@ -8,7 +8,7 @@ Current files:
 |---|---|---|
 | `coverage.json` | behaviour × lab verdict, with citations | behaviours 2–3: `engine/publish-coverage.py` (re-verifies every quote via `engine/spec-cite/cite.py` before writing); behaviour 1: hand-written, predates the pipeline |
 | `labs.json` | lab | hand-maintained (changes rarely); no code reads it today |
-| `evals.json` | eval, with rubric quality scores | hand-maintained (predates the staged pipeline: its `sweep_date` 2026-07-12 is earlier than any stage-5 run); no code reads it today |
+| `evals.json` | eval, with rubric quality scores | hand-maintained (written before the staged pipeline existed); no code reads it today |
 | `reader-test-coverage.json` | see below | hand-transcribed from [`behaviours-for-adria/`](../behaviours-for-adria/README.md) |
 
 Planned but absent: `behaviours.json` (the single behaviour registry — see the closeout list) and `meta.json` (site-wide metadata).
