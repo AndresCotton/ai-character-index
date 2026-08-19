@@ -26,6 +26,8 @@ so the only thing that can fail is the corruption under test.
 
 import importlib.util
 import json
+import contextlib
+import io
 import shutil
 import subprocess
 import sys
@@ -399,6 +401,53 @@ class SidecarCoverageSchemaGateTest(unittest.TestCase):
             with self.assertRaises(SystemExit) as ctx:
                 publish.validate_coverage_records(records, sidecar_path.name)
         self.assertIn("coverage-schema error", str(ctx.exception))
+
+
+
+class LocatorSeparatorTest(unittest.TestCase):
+    """Version extraction tolerates the separator variants CITATION.md
+    allows (artifacts use " \u203a "; ">" and " > " must work too)."""
+
+    def test_ascii_separator_sidecar_checks_green(self):
+        def mutate(sidecar):
+            for record in sidecar["records"]:
+                for citation in record["citations"]:
+                    citation["locator"] = citation["locator"].replace(" \u203a ", " > ")
+        result = run_check(make_fixture_sidecar(mutate=mutate))
+        self.assertEqual(
+            result.returncode, 0,
+            "ascii-separator locators must parse:\n" + result.stdout + result.stderr,
+        )
+        self.assertNotIn("does not start with spec@version",
+                         result.stdout + result.stderr)
+
+
+class WritePathRoundTripTest(unittest.TestCase):
+    """The load-bearing byte-stability claim, exercised through the
+    publisher's real write path: republishing a committed sidecar into a
+    scratch coverage.json reproduces the committed file byte-for-byte."""
+
+    def test_republish_behaviour_2_is_byte_identical(self):
+        spec = importlib.util.spec_from_file_location("publish_under_test", PUBLISH)
+        pub = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(pub)
+        with tempfile.TemporaryDirectory() as tmp:
+            scratch = Path(tmp) / "coverage.json"
+            shutil.copy(COVERAGE, scratch)
+            pub.COVERAGE = scratch
+            saved = sys.argv
+            sys.argv = ["publish-coverage.py", str(SWEEPS / "02-calibration")]
+            try:
+                buf = io.StringIO()
+                with contextlib.redirect_stdout(buf):
+                    pub.main()
+            finally:
+                sys.argv = saved
+            self.assertIn("using structured sidecar", buf.getvalue())
+            self.assertEqual(
+                scratch.read_bytes(), COVERAGE.read_bytes(),
+                "republish must reproduce data/coverage.json byte-for-byte",
+            )
 
 
 if __name__ == "__main__":
