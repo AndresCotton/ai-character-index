@@ -203,9 +203,14 @@ BEHAVIOUR_TEMPLATE_V3 = ("Behaviour: {title}\n"
 
 
 def env(name):
+    """Credential lookup: the process environment first, then a gitignored .env next
+    to the harness. PANEL_DOTENV overrides that .env path -- test_panel.py pins it at
+    a nonexistent file so its smoke subprocesses stay hermetic (never read a
+    developer's real keys) even on a machine that uses the pipeline."""
     v = os.environ.get(name)
-    if not v and (HERE / ".env").exists():
-        for line in (HERE / ".env").read_text().splitlines():
+    dotenv = Path(os.environ.get("PANEL_DOTENV", str(HERE / ".env")))
+    if not v and dotenv.exists():
+        for line in dotenv.read_text().splitlines():
             if line.strip().startswith(name + "="):
                 v = line.split("=", 1)[1].strip().strip("\"'")
     return v

@@ -27,6 +27,27 @@ def load(name):
     return mod
 
 
+def hermetic_env():
+    """Subprocess environment for EVERY probe and CLI smoke run in this file; by
+    construction no subprocess started with it can reach a provider:
+
+    - credential-shaped vars are scrubbed (every key_env name in panel-config.json
+      ends in API_KEY; TOKEN/SECRET swept for good measure), so a developer's real
+      keys never enter the subprocess;
+    - PANEL_DOTENV is pinned at a path that cannot exist, so harness.env() never
+      falls back to a developer's engine/panel/.env either;
+    - SPEC_CITE_USER_SPECS is pinned at a nonexistent manifest, so a developer's
+      local user-spec manifest never changes the registry under test.
+
+    The subprocesses therefore hit the dry-run / arg-parse / missing-key paths --
+    never an API call."""
+    env = {k: v for k, v in os.environ.items()
+           if not re.search(r"API_?KEY|API_TOKEN|SECRET|PASSWORD", k, re.I)}
+    env["PANEL_DOTENV"] = str(HERE / "no-such-dotenv")
+    env["SPEC_CITE_USER_SPECS"] = str(HERE / "no-such-user-manifest.json")
+    return env
+
+
 h = load("harness")
 rr = load("run_rollout")
 wd = load("whole_doc")
@@ -745,13 +766,12 @@ print(json.dumps({"bad": bad, "opened": opened}))
 '''
 
     def test_import_reads_no_config_or_data_file(self):
-        # Hermetic: force SPEC_CITE_USER_SPECS to a path that cannot exist, so a
-        # developer who uses the user-spec feature locally still passes the probe
-        # (it must see the repo's committed bundled-only state, not their manifest).
-        env = {**os.environ,
-               "SPEC_CITE_USER_SPECS": str(HERE / "no-such-user-manifest.json")}
+        # Hermetic: hermetic_env() pins SPEC_CITE_USER_SPECS at a path that cannot
+        # exist, so a developer who uses the user-spec feature locally still passes
+        # the probe (it must see the repo's committed bundled-only state, not their
+        # manifest). Keys are scrubbed too, though imports never call providers.
         r = subprocess.run([sys.executable, "-B", "-c", self.PROBE, str(HERE)],
-                           capture_output=True, text=True, env=env)
+                           capture_output=True, text=True, env=hermetic_env())
         self.assertEqual(r.returncode, 0, r.stderr)
         data = json.loads(r.stdout.strip().splitlines()[-1])
         self.assertEqual(data["bad"], [],
@@ -852,10 +872,10 @@ print(json.dumps(out))
 '''
 
     def test_config_panels_providers_resolve_through_shim(self):
-        env = {**os.environ,
-               "SPEC_CITE_USER_SPECS": str(HERE / "no-such-user-manifest.json")}
+        # hermetic_env() pins SPEC_CITE_USER_SPECS (and scrubs keys) exactly as the
+        # import probe does, so the shim is exercised in the same hermetic state.
         r = subprocess.run([sys.executable, "-B", "-c", self.PROBE, str(HERE)],
-                           capture_output=True, text=True, env=env)
+                           capture_output=True, text=True, env=hermetic_env())
         self.assertEqual(r.returncode, 0, r.stderr)
         d = json.loads(r.stdout.strip().splitlines()[-1])
         for key in ("config_cached", "config_equals_load_config", "panels_equal",
@@ -865,16 +885,26 @@ print(json.dumps(out))
 
 
 class TestMainSmoke(unittest.TestCase):
-    """CLI entry-point arg handling, run as real subprocesses. No network: the
-    rollout driver is dry-run by default and prints the plan before any API path
-    is reachable; both smokes are pointed at a runlog that cannot exist, so a
-    committed runlog can neither resume cells nor be rebuilt over."""
+    """CLI entry-point arg handling, run as real subprocesses. No network, and no
+    way to spend money even on a developer machine with live keys: every
+    subprocess runs under hermetic_env() (credential env vars scrubbed, the
+    harness's .env fallback pinned at a nonexistent path, user-spec manifest
+    pinned absent), the rollout driver is dry-run by default and gets a runlog
+    path that cannot exist (so it can never resume against a developer's real
+    runlog-v3.jsonl), and the builder is pointed at a runlog that cannot exist."""
+
+    def missing_runlog(self):
+        """A runlog path in a fresh empty tempdir: cannot exist, so the subprocess
+        can never read (or resume from) a developer's real runlog-v3.jsonl."""
+        d = tempfile.mkdtemp(prefix="panel-smoke-")
+        self.addCleanup(shutil.rmtree, d, ignore_errors=True)
+        return str(Path(d) / "runlog.jsonl")
 
     def test_run_rollout_dry_run_prints_plan_and_exits_zero(self):
-        missing = str(HERE / "no-such-runlog.jsonl")
         r = subprocess.run([sys.executable, str(HERE / "run_rollout.py"),
-                            "--behaviours=helpfulness", f"--runlog={missing}"],
-                           capture_output=True, text=True)
+                            "--behaviours=helpfulness",
+                            f"--runlog={self.missing_runlog()}"],
+                           capture_output=True, text=True, env=hermetic_env())
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("whole_doc.py helpfulness", r.stdout)
         self.assertIn("DRY RUN", r.stdout)
@@ -886,7 +916,7 @@ class TestMainSmoke(unittest.TestCase):
         missing = str(HERE / "no-such-runlog.jsonl")
         r = subprocess.run([sys.executable, str(HERE / "build_site_data.py"),
                             f"--runlog={missing}"],
-                           capture_output=True, text=True)
+                           capture_output=True, text=True, env=hermetic_env())
         self.assertNotEqual(r.returncode, 0)
         self.assertIn(missing, r.stderr)
 
@@ -894,8 +924,9 @@ class TestMainSmoke(unittest.TestCase):
         # --panel= swaps the executed seat list. itest is a single cheap judge, so the
         # override must plan ONLY qwen-big cells -- never the default frontier seats.
         r = subprocess.run([sys.executable, str(HERE / "run_rollout.py"),
-                            "--behaviours=helpfulness", "--panel=itest"],
-                           capture_output=True, text=True)
+                            "--behaviours=helpfulness", "--panel=itest",
+                            f"--runlog={self.missing_runlog()}"],
+                           capture_output=True, text=True, env=hermetic_env())
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("whole_doc.py helpfulness constitution qwen-big", r.stdout)
         self.assertIn("whole_doc.py helpfulness model-spec qwen-big", r.stdout)
@@ -904,26 +935,29 @@ class TestMainSmoke(unittest.TestCase):
 
     def test_run_rollout_unknown_panel_override_rejected(self):
         r = subprocess.run([sys.executable, str(HERE / "run_rollout.py"),
-                            "--behaviours=helpfulness", "--panel=no-such-panel"],
-                           capture_output=True, text=True)
+                            "--behaviours=helpfulness", "--panel=no-such-panel",
+                            f"--runlog={self.missing_runlog()}"],
+                           capture_output=True, text=True, env=hermetic_env())
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("unknown panel", r.stderr + r.stdout)
 
     def test_whole_doc_panel_name_expands_to_member_models(self):
         # whole_doc.py expands a panel NAME into its member tags before judging. A full
         # run needs API keys, so this is an arg-parse-level assertion: with every key
-        # removed, passing the panel NAME 'frontier' must expand to a real member and
-        # fail at that member's missing provider key -- NOT KeyError on 'frontier'
-        # (which would mean it was treated as a model tag, i.e. no expansion).
-        env = {k: v for k, v in os.environ.items()
-               if not k.upper().endswith("API_KEY") and "OPENROUTER" not in k.upper()}
+        # removed AND the harness's .env fallback pinned absent (hermetic_env -- the
+        # pre-fix hole: a developer's engine/panel/.env could still supply real keys
+        # and turn this test into a spend-money API call), passing the panel NAME
+        # 'frontier' must expand to a real member and fail at that member's missing
+        # provider key -- NOT KeyError on 'frontier' (which would mean it was treated
+        # as a model tag, i.e. no expansion).
         with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
             runlog = f.name
         self.addCleanup(lambda: Path(runlog).unlink(missing_ok=True))
         r = subprocess.run([sys.executable, str(HERE / "whole_doc.py"),
                             "helpfulness", "constitution", "frontier",
                             f"--runlog={runlog}"],
-                           capture_output=True, text=True, env=env, timeout=120)
+                           capture_output=True, text=True, env=hermetic_env(),
+                           timeout=120)
         self.assertNotEqual(r.returncode, 0)
         blob = r.stdout + r.stderr
         self.assertIn("for provider", blob)      # reached an expanded member's key check
@@ -951,10 +985,13 @@ class TestMainSmoke(unittest.TestCase):
                 f.write(json.dumps(row) + "\n")
             runlog = f.name
         self.addCleanup(lambda: Path(runlog).unlink(missing_ok=True))
+        # --go with a fully banked runlog plans zero cells, so nothing is sent;
+        # hermetic_env() is belt-and-braces: even a resume-logic regression could
+        # not reach a provider with keys scrubbed and the .env fallback pinned.
         r = subprocess.run([sys.executable, str(HERE / "run_rollout.py"), "--go",
                             "--behaviours=helpfulness", "--panel=frontier_primary",
                             f"--runlog={runlog}"],
-                           capture_output=True, text=True)
+                           capture_output=True, text=True, env=hermetic_env())
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("COMPLETE", r.stdout)
         m_panel = re.search(r"--panel=(\S+)", r.stdout)
