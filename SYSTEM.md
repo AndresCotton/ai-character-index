@@ -21,7 +21,7 @@ graph TB
   cite -->|"quote re-verification"| pub
   pub --> cov["data/coverage.json"]
   sweeps -->|"stage-5 transcribe"| unused["data/evals.json (no code consumers; nothing reads hand-maintained labs.json either)"]
-  panel -->|"runlog-v3.jsonl (uncommitted runtime artifact)"| bsd["engine/panel/build_site_data.py"]
+  panel -->|"runlog-v3.jsonl (untracked local file; not committed anywhere)"| bsd["engine/panel/build_site_data.py"]
   rtc["data/reader-test-coverage.json (hand-transcribed)"] --> bsd
   rtc --> brt["engine/build-reader-test-data.py"]
   cov --> bsr["engine/build-spec-reader-data.py"]
@@ -59,7 +59,7 @@ graph TB
 1. **Locator grammar** — `specs/CITATION.md` defines the format; `cite.py` implements it; every stored citation in `data/` and site payloads depends on byte-exact resolution. No CI re-resolves; only `publish-coverage.py` runs enforce it.
 2. **Stage-4 markdown format** — prescribed by `.claude/skills/4-sweep-spec-coverage`, regex-scraped by `engine/publish-coverage.py`. The artifact is simultaneously prose record, parser input, and gate evidence.
 3. **Behaviour identity** — at least six hand-synced copies: `core-behaviour-list.md` (12), `site/spec-reader/app.js GROUPS` (13), `engine/build-spec-reader-data.py BEHAVIOURS` (3), `engine/panel/behaviours.json`, `panel-config.json`, `.github/ISSUE_TEMPLATE/submit-eval.yml`. Worse, `behaviour_id` is **reused across disjoint numbering spaces**: id 1 = "No sycophancy" in `coverage.json` but "Helpfulness" in `reader-test-coverage.json`.
-4. **Runlog convention** — JSONL rows keyed by rubric version; defaults disagree between `harness.RUNLOG` and the executors; the canonical shipped runlog lives on the unmerged `experiment/panel-judges` branch.
+4. **Runlog convention** — JSONL rows keyed by rubric version; defaults disagree between `harness.RUNLOG` and the executors; the canonical shipped runlog is an UNTRACKED FILE in a local working copy of `experiment/panel-judges` (committed to no branch) — committing it is an open closeout item.
 5. **Site payloads** — `spec-reader/data/documents.json` is shared by all three reader surfaces; panel citations carry `exampleBlock` flags anchoring example blocks.
 6. **Deploy trigger** — pushes to main filtered to `site/**` and `.github/workflows/deploy.yml` (plus manual dispatch): data/engine changes are invisible to production until baked into committed payloads.
 
@@ -70,7 +70,7 @@ graph TB
 3. **Behaviour metadata fragmentation** — six hand-synced copies plus the disjoint-id collision above; one list change is a multi-file surgery with no error signal.
 4. **Documentation describes a system that half-exists**: PLAN.md promises Notion sync, four workflows, Astro, schemas; reality has one workflow, vanilla JS, and an empty `notion-sync/` — and this doc set now records the gap file-by-file.
 5. **Hand-maintained surfaces**: `index.html` inline data (diverged from its prototype source) and hand-transcribed `reader-test-coverage.json`.
-6. **Provenance fragility**: behaviour 1's published records are currently unregenerable (missing sweep artifact); shipped panel data's runlog lives on an unmerged branch.
+6. **Provenance fragility**: behaviour 1's published records are currently unregenerable (missing sweep artifact); shipped panel data's runlog exists only as an untracked local file — losing that working copy loses the provenance.
 7. **No Python packaging**: importlib/sys.path wiring, config read at import time, dead code and stale config in the panel modules.
 8. **Orphans and residue**: `llm-panel-review/` unlinked from all navs; `spec-watch`'s fetch still produces 0-byte release archives (the committed empty artifacts are gone; the fetch needs fixing); `labs.json`/`evals.json` read by nothing; sweep records referencing the rubric at a stale path (annotated with its current `methodology/` location); no root agent-context files (AGENTS.md/QWEN.md/CLAUDE.md) — the procedures are reachable only through the Claude-specific `.claude/skills/` path.
 

@@ -31,5 +31,6 @@ no network or keys, sub-second. Each test class names the shipped bug it guards.
 1. Verdicts: `python3 whole_doc.py <behaviour> <spec> sol,fable,kimi` per cell
    (runlog is append-only + resume-safe; rerunning skips banked cells).
 2. Site data: `python3 build_site_data.py --runlog=<runlog> --rubric=v3w --panel=frontier`.
-The runlog behind the shipped data lives on the experiment branch
-(`experiment/panel-judges`, `experiments/panel-judges/runlog-v3.jsonl`).
+The runlog behind the shipped data exists only as an UNTRACKED FILE in a local
+working copy of `experiment/panel-judges` (`experiments/panel-judges/runlog-v3.jsonl`);
+it is committed to no branch — committing it is an open closeout item.

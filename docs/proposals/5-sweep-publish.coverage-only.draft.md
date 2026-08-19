@@ -1,4 +1,4 @@
-> **Approved 2026-08-18** (repo-owner ruling, closeout list "Scope deletions" item: the `.claude/skills/` scope pass). The skills-pass PR promotes this file to `.claude/skills/5-sweep-publish/SKILL.md`.
+> **Approved 2026-08-18** (repo-owner ruling, closeout list "Scope deletions" item: the `.claude/skills/` scope pass). This banner is stripped on promotion; the skills-pass PR promotes this file to `.claude/skills/5-sweep-publish/SKILL.md`.
 > Rescoped replacement for `.claude/skills/5-sweep-publish/SKILL.md` under the model-spec-reader-only scope. Not a live skill until the skills-pass PR merges.
 > Stage numbering (4/5/6) is kept for continuity with signed gate records in `research/sweeps/02-calibration/` and `03-action-honesty/`.
 
