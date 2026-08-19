@@ -275,6 +275,111 @@ await page.waitForTimeout(250);
 }
 
 // =============================================================================
+console.log("== Panel: interactions (Tier-2) ==");
+await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
+{
+  await page.focus("#sidebar-resizer");
+  await page.keyboard.press("Home");
+  const atHome = await page.evaluate(() =>
+    document.querySelector("#sidebar-resizer").getAttribute("aria-valuenow"));
+  await page.keyboard.press("End");
+  const atEnd = await page.evaluate(() =>
+    document.querySelector("#sidebar-resizer").getAttribute("aria-valuenow"));
+  check(atHome === "200" && Number(atEnd) > Number(atHome),
+    "sidebar resizer: keyboard Home/End resize", `${atHome} -> ${atEnd}`);
+}
+await panelUrl("?compare=1");
+{
+  const split = () => page.evaluate(() =>
+    parseFloat(document.querySelector("#document-reader").style.getPropertyValue("--compare-first")));
+  const resizer = page.locator(".document-resizer");
+  const before = await split();
+  await resizer.press("ArrowRight");
+  const afterRight = await split();
+  await resizer.press("ArrowLeft");
+  await resizer.press("ArrowLeft");
+  const afterLeft = await split();
+  check(afterRight > before && afterLeft < afterRight,
+    "compare resizer: ArrowRight/ArrowLeft move the split",
+    `${before} -> ${afterRight} -> ${afterLeft}`);
+}
+await panelUrl("?behavior=helpfulness&spec=anthropic&tiers=defining,core,related");
+{
+  const collapsed = () => page.evaluate(() =>
+    document.querySelectorAll(".section-collapsed").length);
+  const c0 = await collapsed();
+  await page.click(".document-focus-toggle");
+  await page.waitForTimeout(250);
+  const c1 = await collapsed();
+  await page.click(".document-focus-toggle");
+  await page.waitForTimeout(250);
+  const c2 = await collapsed();
+  check(c0 !== c1 && c2 === c0,
+    "document focus toggle collapses/expands sections (reversible)",
+    `${c0} -> ${c1} -> ${c2} collapsed`);
+}
+await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
+{
+  const counter = () => page.evaluate(() =>
+    document.querySelector("#passage-count").textContent.trim());
+  const before = await counter();
+  await page.click("#next-passage");
+  await page.waitForTimeout(250);
+  const after = await counter();
+  check(after !== before, "next-passage advances the passage counter",
+    `${before} -> ${after}`);
+}
+await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
+{
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.click("#download-passages"),
+  ]);
+  const exportPath = join(scratch, "export-check.md");
+  await download.saveAs(exportPath);
+  const text = readFileSync(exportPath, "utf8");
+  check(text.includes("disclose compute usage"),
+    "export downloads markdown containing the selected passages", `${text.length} chars`);
+}
+await panelUrl("");
+{
+  await page.evaluate((user) => {
+    const label = [...document.querySelectorAll(".behaviour-option")]
+      .find(l => l.textContent.includes("Acme transparency"));
+    label.click();
+  }, USER);
+  await page.waitForTimeout(300);
+  const search = await page.evaluate(() => decodeURIComponent(location.search));
+  check(search.includes(USER),
+    "clicking a sidebar behaviour syncs it into ?behavior=", search);
+}
+
+// =============================================================================
+console.log("== Reader: interactions (Tier-2) ==");
+await load(readerBase, "?behavior=no-sycophancy");
+await page.click("#compare-toggle");
+await page.waitForTimeout(250);
+{
+  const out = await page.evaluate(() => ({
+    pressed: document.querySelector("#compare-toggle").getAttribute("aria-pressed"),
+    comparing: document.querySelector("#document-reader").classList.contains("compare"),
+  }));
+  check(out.pressed === "true" && out.comparing,
+    "reader compare toggle switches to the compare view");
+}
+await load(readerBase, "?behavior=no-sycophancy");
+{
+  const counter = () => page.evaluate(() =>
+    document.querySelector("#passage-count").textContent.trim());
+  const before = await counter();
+  await page.click("#next-passage");
+  await page.waitForTimeout(250);
+  const after = await counter();
+  check(after !== before, "reader next-passage advances the passage counter",
+    `${before} -> ${after}`);
+}
+
+// =============================================================================
 await browser.close();
 server.close();
 rmSync(scratch, { recursive: true, force: true });
