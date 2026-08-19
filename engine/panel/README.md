@@ -51,6 +51,11 @@ as JSON. To rebuild the shipped fallback (or any fixed filename) instead of emit
 a timestamped run, pass `--out=` -- e.g. `--out=behaviours.json`; the manifest is
 left alone on that path. The name is validated (URL-safe chars, no path separators
 or `..`), so `--out=` cannot write outside the data dir.
+- `runlog-v3.jsonl` -- the committed canonical runlog that produced the shipped
+  payload (`runlog-v3.md` documents its contents and provenance). Every other
+  `runlog*.jsonl` stays gitignored.
+- `verify_panel_provenance.py` -- proves the shipped payload rebuilds from that
+  log; `test_verify_panel_provenance.py` is its test suite.
 
 ## The procedure
 The end-to-end stage-4 procedure (dry run, execution, failure substitutions,
@@ -61,12 +66,31 @@ covers only the mechanics of the individual scripts.
 `python3 engine/panel/test_panel.py` -- unit tests for the pure logic (verdict
 parsing, resume planning, cost estimate, per-model API params, builder guards),
 no network or keys, sub-second. Each test class names the shipped bug it guards.
+`python3 engine/panel/test_verify_panel_provenance.py` -- tests for the
+provenance check below (green rebuild, tamper detection, missing-input failure).
 
-## Reproducing the shipped data
-1. Verdicts: `python3 whole_doc.py <behaviour> <spec> sol,fable,kimi` per cell
-   (runlog is append-only + resume-safe; rerunning skips banked cells).
-2. Site data: `python3 build_site_data.py --runlog=<runlog> --rubric=v3w --panel=frontier
-   --out=behaviours.json` (without `--out=` the build lands in a new timestamped run
-   file instead, which is what ordinary re-runs should do).
-The runlog behind the shipped data is committed in this directory
-(`engine/panel/runlog-v3.jsonl`; see `runlog-v3.md`).
+## Verifying + reproducing the shipped data
+The canonical runlog behind the shipped payload is committed here:
+`runlog-v3.jsonl` (see `runlog-v3.md` for its contents and provenance record).
+
+```sh
+python3 engine/panel/verify_panel_provenance.py
+```
+
+rebuilds the payload from that log into a scratch directory and proves
+`site/llm-panel-review/data/behaviours.json` matches byte-for-byte, with one
+documented exception: `provenance.runDate`, which the builder stamps with the
+build date (`date.today()`) and which cannot be re-derived because the log
+schema carries no timestamps. Exit 0 = verified.
+
+Manual rebuild: `python3 build_site_data.py` (defaults `--runlog=runlog-v3.jsonl
+--rubric=v3w --panel=frontier` are the shipped configuration). Without `--out=`
+the build lands in a new timestamped run file (see "Run outputs, manifest,
+pinning" above) -- what ordinary re-runs should do; `--out=behaviours.json`
+rebuilds the shipped payload in place, whose `runDate` a plain rebuild
+re-stamps with today's date.
+
+A NEW panel run must write a new runlog, and a regenerated payload needs its
+own committed log + passing check -- provenance travels with the data.
+(Regenerating verdicts from scratch: `python3 whole_doc.py <behaviour> <spec>
+sol,fable,kimi` per cell; the runlog is append-only + resume-safe.)
