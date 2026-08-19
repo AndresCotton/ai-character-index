@@ -48,7 +48,10 @@ let failures = 0;
 async function expectView(url, expected, label) {
   await page.goto(url, { waitUntil: "networkidle" });
   await page.waitForFunction(
-    () => !document.querySelector("#passage-count").textContent.startsWith("Loading"),
+    () => {
+      const el = document.querySelector("#passage-count");
+      return el && !el.textContent.startsWith("Loading");
+    },
     { timeout: 10000 },
   );
   await page.waitForTimeout(150);

@@ -7,8 +7,9 @@ description: Run one behaviour's spec-coverage pass end to end -- stage-4 extrac
 
 The loop for the spec-coverage campaign: stage 4 of the behaviour sweep plus the
 authorized slice of stage 5 (repo coverage data + spec reader). It does NOT
-publish to Notion and adds no eval data -- the full stage 5 still requires
-Gates 1-3 for the behaviour. One behaviour per pass; never batch.
+publish to Notion and adds no eval data -- the eval-discovery stages (1-3)
+are out of scope and no longer part of this pipeline. One behaviour per
+pass; never batch.
 
 Precedent: behaviour 2 (Calibration), `research/sweeps/02-calibration/`. Its
 artifact is both the format template and a parsing contract --
