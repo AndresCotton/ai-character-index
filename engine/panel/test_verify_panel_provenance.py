@@ -120,6 +120,23 @@ class TestEndToEnd(unittest.TestCase):
         self.assertIn("FAIL", out)
         self.assertIn("panel config", out)
 
+    def test_row_missing_consumed_key_fails_rc2_not_traceback(self):
+        # a rubric-matching row that lacks a key runlog_facts consumes (here:
+        # "model") is a malformed log -- it must hit the same rc-2 FAIL contract
+        # as an unreadable/unparseable one, naming the missing key, never a raw
+        # KeyError traceback
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
+            f.write(json.dumps({"behaviour": "helpfulness", "spec": "constitution",
+                                "locator": "x", "verdict": 2,
+                                "parsed": True, "rubric": "v3w"}) + "\n")
+            malformed = Path(f.name)
+        self.addCleanup(malformed.unlink, missing_ok=True)
+        rc, out = quietly(v.verify, runlog=malformed, verbose=True)
+        self.assertEqual(rc, 2)
+        self.assertIn("FAIL", out)
+        self.assertIn("'model'", out)
+        self.assertNotIn("Traceback", out)
+
 
 class TestBuilderCrashPath(unittest.TestCase):
     """Any BaseException raised inside the builder's main() must be reported as

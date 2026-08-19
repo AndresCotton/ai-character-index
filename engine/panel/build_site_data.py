@@ -55,7 +55,9 @@ DATA_DIR = ROOT / "site" / "llm-panel-review" / "data"
 MANIFEST_NAME = "manifest.json"
 FALLBACK_NAME = "behaviours.json"
 # The same character set app.js admits for ?data= -- a run name doubles as a URL param.
-SAFE_NAME = re.compile(r"^[\w.-]+$")
+# re.ASCII: JavaScript's \w is ASCII [A-Za-z0-9_], but Python's \w is Unicode by
+# default and would admit accented/non-Latin names the page's DATA_NAME rejects.
+SAFE_NAME = re.compile(r"^[\w.-]+$", re.ASCII)
 
 
 def run_timestamp(dt, seq=0):
@@ -93,11 +95,16 @@ def update_manifest(manifest, entry):
 
 
 def read_manifest(path):
-    """The manifest at `path`; a fresh clone (none yet) is an empty one."""
+    """The manifest at `path`; a fresh clone (none yet) is an empty one. A file that
+    parses to something other than a dict (a JSON null or array) is treated exactly
+    like an absent one -- the page tolerates an odd manifest by falling through its
+    fetch/parse guards, so the builder/CLI must degrade to the empty default too,
+    never crash on .get()."""
     try:
-        return json.loads(Path(path).read_text())
+        doc = json.loads(Path(path).read_text())
     except (OSError, ValueError):
         return {"latest": None, "runs": []}
+    return doc if isinstance(doc, dict) else {"latest": None, "runs": []}
 
 
 def _loadable(path):
@@ -158,8 +165,10 @@ def resolve_data_name(data_dir, pin=None, manifest=None):
 def check_out_name(name):
     """Loud-fail an --out= name that could write outside the site data dir: the same
     SAFE_NAME charset ?data= admits (so no path separators), no .. traversal, and
-    never the manifest itself -- a build must not clobber the provenance ledger."""
-    if name == MANIFEST_NAME:
+    never the manifest itself (case-insensitively -- on a case-insensitive
+    filesystem Manifest.JSON would clobber it too) -- a build must not overwrite
+    the provenance ledger."""
+    if name.casefold() == MANIFEST_NAME:
         sys.exit(f"error: --out={name!r} would overwrite the manifest/ledger -- "
                  "pick any other name; only the builder maintains the manifest")
     if not SAFE_NAME.match(name) or ".." in name or name.startswith("."):

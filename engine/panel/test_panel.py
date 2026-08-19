@@ -310,6 +310,32 @@ class TestManifestUpdate(unittest.TestCase):
         self.assertEqual(m["latest"], "behaviours-2026-08-18T12-00-00.json")
 
 
+class TestReadManifest(unittest.TestCase):
+    """A missing, unreadable, or non-dict manifest is always the empty manifest --
+    a corrupt ledger must degrade the builder/CLI exactly the way the page's
+    fetch/parse fallthrough degrades the page, never crash on .get()."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp(prefix="panel-manifest-"))
+        self.addCleanup(lambda: shutil.rmtree(self.dir, ignore_errors=True))
+        self.path = self.dir / "manifest.json"
+
+    def test_missing_manifest_is_the_empty_default(self):
+        self.assertEqual(bs.read_manifest(self.path), {"latest": None, "runs": []})
+
+    def test_non_dict_manifest_json_is_the_empty_default(self):
+        # JSON null/array/string/number all parse fine but are not a ledger
+        for odd in ("null", "[]", '["behaviours.json"]', '"manifest.json"', "42"):
+            self.path.write_text(odd)
+            self.assertEqual(bs.read_manifest(self.path), {"latest": None, "runs": []},
+                             f"manifest content {odd!r}")
+
+    def test_dict_manifest_passes_through_untouched(self):
+        doc = {"latest": "behaviours-x.json", "runs": [{"filename": "behaviours-x.json"}]}
+        self.path.write_text(json.dumps(doc))
+        self.assertEqual(bs.read_manifest(self.path), doc)
+
+
 class ResolveFixture(unittest.TestCase):
     """Shared temp-dir fixture: shipped fallback + two timestamped runs + a manifest."""
 
@@ -539,6 +565,25 @@ class TestBuildMain(unittest.TestCase):
         # rejection fires before any build work: runlog still the only file
         self.assertEqual([p.name for p in self.dir.iterdir()], ["synth-runlog.jsonl"])
 
+    def test_out_rejects_manifest_name_case_insensitively(self):
+        # case-insensitive filesystems (APFS) would let Manifest.JSON clobber
+        # manifest.json too -- the guard must fold case
+        for bad in ("Manifest.JSON", "MANIFEST.JSON"):
+            with self.assertRaises(SystemExit) as cm:
+                self.build(f"--out={bad}")
+            self.assertIn("ledger", str(cm.exception.code), bad)
+        self.assertEqual([p.name for p in self.dir.iterdir()], ["synth-runlog.jsonl"])
+
+    def test_build_recovers_from_non_dict_manifest(self):
+        # a corrupt manifest (parses, but not a dict) must not crash the build --
+        # it degrades to the empty ledger and is rewritten with the new run
+        self.freeze()
+        (self.dir / "manifest.json").write_text("null")
+        self.build()
+        manifest = json.loads((self.dir / "manifest.json").read_text())
+        self.assertEqual(manifest["latest"], f"behaviours-{self.TS}.json")
+        self.assertEqual(len(manifest["runs"]), 1)
+
 
 
 class TestPR32ReviewFixes(unittest.TestCase):
@@ -582,6 +627,26 @@ class TestPR32ReviewFixes(unittest.TestCase):
         self.assertIn("differs from the", buf.getvalue())
 
 
+class TestSafeNameAscii(unittest.TestCase):
+    """SAFE_NAME must mirror app.js's DATA_NAME exactly: JavaScript's \\w is ASCII
+    [A-Za-z0-9_], while Python's \\w is Unicode by default -- re.ASCII reins it in
+    so a non-ASCII name the page would reject can never pass the Python side."""
+
+    def test_non_ascii_payload_names_rejected(self):
+        for bad in ("behaviours-название.json", "behaviours-ünïcode", "日本語.json"):
+            self.assertFalse(bs._payload_name(bad), bad)
+
+    def test_non_ascii_out_names_rejected(self):
+        for bad in ("behaviours-übersicht.json", "панель.json"):
+            with self.assertRaises(SystemExit):
+                bs.check_out_name(bad)
+
+    def test_ascii_names_still_admitted(self):
+        self.assertTrue(bs.SAFE_NAME.match("behaviours-2026-08-18T10-00-00.json"))
+        self.assertTrue(bs.SAFE_NAME.match("explicit_v2.json"))
+        self.assertTrue(bs._payload_name("behaviours-v4a"))
+
+
 class TestAppJSResolution(unittest.TestCase):
     """site/llm-panel-review/app.js is the other half of the resolution chain
     select_run.py / build_site_data.py implement. These guard it without a browser:
@@ -609,7 +674,8 @@ class TestAppJSResolution(unittest.TestCase):
         names = ["manifest", "manifest.json", "behaviours", "behaviours.json",
                  "behaviours-2026-08-18T10-00-00.json", "behaviours-v4a",
                  "other.json", "explicit", "../x", "sub/dir.json", "",
-                 None, 123, ["behaviours.json"], "MANIFEST.JSON"]
+                 None, 123, ["behaviours.json"], "MANIFEST.JSON",
+                 "behaviours-ünïcode.json", "название.json"]
         expected = [bs._payload_name(n) for n in names]
         script = (
             'const fs=require("fs");'

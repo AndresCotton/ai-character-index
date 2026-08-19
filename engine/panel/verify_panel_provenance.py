@@ -294,6 +294,11 @@ def verify(runlog=DEFAULT_RUNLOG, payload=DEFAULT_PAYLOAD, rubric=DEFAULT_RUBRIC
     except (OSError, json.JSONDecodeError) as e:
         say(f"FAIL: cannot read/parse runlog {runlog}: {e}")
         return 2
+    except KeyError as e:
+        # a rubric-matching row missing a consumed key (model/behaviour/spec) is a
+        # malformed log -- same contract as an unreadable one, never a raw traceback
+        say(f"FAIL: malformed runlog {runlog}: a row is missing required key {e.args[0]!r}")
+        return 2
     if facts["rows_rubric"] == 0:
         say(f"FAIL: runlog has no rubric={rubric!r} rows ({facts['rows_total']} rows total) "
             "-- wrong log for this payload")
