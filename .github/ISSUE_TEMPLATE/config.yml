@@ -2,4 +2,4 @@ blank_issues_enabled: true
 contact_links:
   - name: Contact Andrés directly
     url: mailto:andrescotton@gmail.com
-    about: For anything you'd rather not post publicly, or that doesn't fit the issue templates.
+    about: For anything you'd rather not post publicly.
