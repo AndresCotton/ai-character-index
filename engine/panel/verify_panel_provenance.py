@@ -299,7 +299,12 @@ def verify(runlog=DEFAULT_RUNLOG, payload=DEFAULT_PAYLOAD, rubric=DEFAULT_RUBRIC
             "-- wrong log for this payload")
         return 1
 
-    config = json.loads((HERE / "panel-config.json").read_text())
+    config_path = HERE / "panel-config.json"
+    try:
+        config = json.loads(config_path.read_text())
+    except (OSError, json.JSONDecodeError) as e:
+        say(f"FAIL: cannot read/parse panel config {config_path}: {e}")
+        return 2
     sha = hashlib.sha256(runlog.read_bytes()).hexdigest()
     say(f"runlog: {runlog} ({facts['rows_rubric']}/{facts['rows_total']} rows rubric={rubric}, "
         f"judges {sorted(facts['models'])}; sha256 {sha[:16]}...)")
@@ -317,6 +322,8 @@ def verify(runlog=DEFAULT_RUNLOG, payload=DEFAULT_PAYLOAD, rubric=DEFAULT_RUBRIC
     except BaseException as e:   # a builder crash is a verification failure, not a traceback;
         # BaseException, not Exception: a sys.exit() inside the builder raises
         # SystemExit, which an `except Exception` would re-raise unreported
+        if isinstance(e, KeyboardInterrupt):
+            raise              # Ctrl-C is not a verification failure -- let it propagate
         say(f"FAIL: rebuild from the committed runlog crashed: {type(e).__name__}: {e}")
         return 1
     finally:

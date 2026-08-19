@@ -20,7 +20,8 @@ Output: by DEFAULT each run emits its own timestamped file
   site/llm-panel-review/data/manifest.json
 ({"latest": <filename>, "runs": [newest-first]}), which the page reads to pick what to
 show. A second build in the same second takes a numeric sequence suffix
-(behaviours-<ts>-2.json, then -3, ...) so a run is never silently overwritten.
+(behaviours-<ts>-02.json, then -03, ... -- zero-padded) so a run is never silently
+overwritten.
 --out=<name> writes that exact file instead and leaves the manifest alone --
 --out=behaviours.json rebuilds the shipped fallback a fresh clone loads. The name is
 validated (SAFE_NAME chars, no path separators or .. traversal), so it cannot write
@@ -108,25 +109,44 @@ def _loadable(path):
         return False
 
 
+def as_json_name(name):
+    """Normalize a pin/latest entry to its .json filename."""
+    return name[:-5] + ".json" if name.endswith(".json") else name + ".json"
+
+
+def _payload_name(name):
+    """Whether `name` may resolve as a payload in the pin/latest chain. It must pass
+    the SAFE_NAME charset AND be a behaviours payload -- never the manifest. Pinning
+    (or pointing `latest` at) manifest.json would render the run ledger as if it were
+    a behaviour set, so the chain refuses it; only behaviours*.json files are payloads
+    here. A non-string (malformed manifest latest) is refused too -- that subsumes the
+    old isinstance guard / app.js's `typeof latest === "string"` check. Mirrors
+    payloadName() in site/llm-panel-review/app.js."""
+    if not isinstance(name, str) or not name:
+        return False
+    if not SAFE_NAME.match(name):
+        return False
+    fname = as_json_name(name)
+    if fname == MANIFEST_NAME:
+        return False
+    return fname.startswith("behaviours")
+
+
 def resolve_data_name(data_dir, pin=None, manifest=None):
     """The resolution chain site/llm-panel-review/app.js implements, for CLI tooling:
     pin (?data= / --pin) -> manifest latest -> shipped behaviours.json.
     Returns (filename, source) with source one of pin/latest/fallback; a name that
-    fails the character check or a file that is absent or unparseable falls through
-    to the next source. (None, None) when nothing would load."""
+    fails _payload_name (charset, the manifest itself, a non-behaviours file, or a
+    non-string) or a file that is absent or unparseable falls through to the next
+    source. (None, None) when nothing would load."""
     data_dir = Path(data_dir)
 
-    def as_json_name(name):
-        return name[:-5] + ".json" if name.endswith(".json") else name + ".json"
-
-    if pin and SAFE_NAME.match(pin):
+    if _payload_name(pin):
         fname = as_json_name(pin)
         if _loadable(data_dir / fname):
             return fname, "pin"
     latest = (manifest or {}).get("latest")
-    # isinstance guard mirrors the `typeof latest === "string"` check in app.js: a
-    # malformed manifest must fall through to the shipped data, never crash the match.
-    if isinstance(latest, str) and SAFE_NAME.match(latest):
+    if _payload_name(latest):
         fname = as_json_name(latest)
         if _loadable(data_dir / fname):
             return fname, "latest"

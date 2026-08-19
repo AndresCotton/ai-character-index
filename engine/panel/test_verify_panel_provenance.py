@@ -92,6 +92,34 @@ class TestEndToEnd(unittest.TestCase):
         self.assertIn("FAIL", out)
         self.assertIn("no rubric=", out)
 
+    def test_shipped_payload_blob_hash_tripwire(self):
+        # Fast byte-identity tripwire for the committed payload (no rebuild needed).
+        # The shipped behaviours.json was once accidentally rebuilt in a worktree during
+        # assembly (provenance.runDate re-stamped) and had to be restored byte-identical;
+        # any rebuild or byte-level tamper of the committed file trips here. If a change
+        # is deliberate, update this hash AND the runlog-v3.md / runDate record together.
+        sha = hashlib.sha256(v.DEFAULT_PAYLOAD.read_bytes()).hexdigest()
+        self.assertEqual(
+            sha, "3a70b9f934da2e68987acabecfd8471238722f80e753ec671942955cb7a43a7c",
+            "committed site/llm-panel-review/data/behaviours.json changed bytes")
+
+    def test_unreadable_panel_config_fails_not_traceback(self):
+        # the panel-config.json read must honor the FAIL-not-traceback contract (rc 2),
+        # same as the runlog/payload reads. Point HERE at a dir with a broken config;
+        # verify() reaches the config read (real runlog/payload pass the earlier gates)
+        # and must return 2, not raise.
+        real_here = v.HERE
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "panel-config.json").write_text("{not json")
+            v.HERE = Path(tmp)
+            try:
+                rc, out = quietly(v.verify)
+            finally:
+                v.HERE = real_here
+        self.assertEqual(rc, 2)
+        self.assertIn("FAIL", out)
+        self.assertIn("panel config", out)
+
 
 class TestBuilderCrashPath(unittest.TestCase):
     """Any BaseException raised inside the builder's main() must be reported as
@@ -135,6 +163,20 @@ class TestBuilderCrashPath(unittest.TestCase):
                 mock.patch.object(v, "_load", lambda name, path: StubBuilder):
             rc = v.verify(verbose=True)
         self.assert_crash_reported(rc, out.getvalue(), err.getvalue(), "SystemExit")
+
+    def test_keyboard_interrupt_propagates_not_swallowed(self):
+        # Ctrl-C during the rebuild is NOT a verification failure -- it must propagate,
+        # not be swallowed into the FAIL/crash path by the except-BaseException handler.
+        class StubBuilder:
+            ROOT = None
+            @staticmethod
+            def main():
+                raise KeyboardInterrupt
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err), \
+                mock.patch.object(v, "_load", lambda name, path: StubBuilder):
+            with self.assertRaises(KeyboardInterrupt):
+                v.verify(verbose=True)
 
 
 class TestRunlogFacts(unittest.TestCase):

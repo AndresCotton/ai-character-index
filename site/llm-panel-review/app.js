@@ -34,9 +34,22 @@ function dataUrl(name) {
   return `./data/${name.replace(/\.json$/, "")}.json`;
 }
 
+/* Whether a ?data= pin or a manifest "latest" entry may resolve as a payload. It must
+ * pass the DATA_NAME charset AND be a behaviours payload -- never the manifest. Loading
+ * manifest.json itself would render the run ledger as if it were a behaviour set, so the
+ * chain refuses it; only behaviours*.json files are payloads here. Mirrors
+ * engine/panel/build_site_data.py's _payload_name(). */
+function payloadName(name) {
+  if (typeof name !== "string" || !name) return false;
+  if (!DATA_NAME.test(name)) return false;
+  const fname = name.endsWith(".json") ? name : `${name}.json`;
+  if (fname === "manifest.json") return false;
+  return fname.startsWith("behaviours");
+}
+
 async function loadBehaviours() {
   const pinned = new URLSearchParams(location.search).get("data");
-  if (pinned && DATA_NAME.test(pinned)) {
+  if (payloadName(pinned)) {
     const url = dataUrl(pinned);
     try {
       return await loadJSON(url);
@@ -50,7 +63,7 @@ async function loadBehaviours() {
   } catch {
     /* No manifest (fresh clone) or an unreadable one -- fall through to the shipped data. */
   }
-  if (typeof latest === "string" && DATA_NAME.test(latest)) {
+  if (payloadName(latest)) {
     const url = dataUrl(latest);
     try {
       return await loadJSON(url);

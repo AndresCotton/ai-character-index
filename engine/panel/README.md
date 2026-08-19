@@ -26,9 +26,10 @@ lexicographically sortable = chronological, URL-safe) and updates
 `site/llm-panel-review/data/manifest.json`:
 `{"latest": <filename>, "runs": [newest-first entries with filename, timestamp,
 rubric, panel and citation metadata]}`. A second build in the same second takes a
-numeric sequence suffix (`behaviours-<ts>-2.json`, then `-3`, ...) so a run is never
-silently overwritten; the suffix sorts after the bare stamp and before the next
-second, so lexical order stays chronological. Run files and the manifest are
+numeric sequence suffix (`behaviours-<ts>-02.json`, then `-03`, ... -- zero-padded to
+two digits) so a run is never silently overwritten; the suffix sorts after the bare
+stamp and before the next second, so lexical order stays chronological. Run files and
+the manifest are
 gitignored -- they stay local; the tracked `behaviours.json` is the fallback a fresh
 clone loads.
 
@@ -37,8 +38,10 @@ The page (`site/llm-panel-review/app.js`) resolves its payload in this order:
 2. manifest `latest`;
 3. the shipped `behaviours.json`.
 A source that fails to fetch or parse falls through to the next, so a stale pin or a
-missing manifest never breaks the page. Pinning is the inclusive OR of the URL param
-and the CLI:
+missing manifest never breaks the page. Pin and `latest` targets are validated the same
+way on both sides (`build_site_data.py::_payload_name` / `app.js::payloadName`): only
+`behaviours*.json` payloads resolve -- the manifest itself is never loadable as a
+payload. Pinning is the inclusive OR of the URL param and the CLI:
 
 ```
 python3 engine/panel/select_run.py                   # run ledger + what the page loads now

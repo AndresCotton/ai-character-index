@@ -9,6 +9,7 @@ import importlib.util
 import io
 import json
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -352,6 +353,28 @@ class TestResolveDataName(ResolveFixture):
             bs.resolve_data_name(self.dir, pin="../escape", manifest=self.manifest),
             (self.NEW, "latest"))
 
+    def test_pin_of_manifest_is_rejected_not_loaded(self):
+        # ?data=manifest.json (with or without the suffix) must never resolve the run
+        # ledger as a payload -- it falls through the pin tier to the next source.
+        for bad in ("manifest", "manifest.json"):
+            self.assertEqual(
+                bs.resolve_data_name(self.dir, pin=bad, manifest=self.manifest),
+                (self.NEW, "latest"), f"pin={bad!r}")
+
+    def test_manifest_latest_pointing_at_itself_falls_back(self):
+        # a self-referential manifest ("latest": "manifest.json") must not load the ledger
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, manifest={"latest": "manifest.json"}),
+            ("behaviours.json", "fallback"))
+
+    def test_pin_target_must_be_a_behaviours_payload(self):
+        # pin/latest targets are behaviours*.json payloads only -- a same-dir file with
+        # another name is refused even when it exists and parses
+        (self.dir / "other.json").write_text("{}")
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, pin="other", manifest=self.manifest),
+            (self.NEW, "latest"))
+
     def test_unparseable_pin_falls_through(self):
         (self.dir / "behaviours-broken.json").write_text("{not json")
         self.assertEqual(
@@ -557,6 +580,57 @@ class TestPR32ReviewFixes(unittest.TestCase):
                 rc = v.verify(runlog=v.DEFAULT_RUNLOG, payload=payload, verbose=True)
         self.assertEqual(rc, 1)
         self.assertIn("differs from the", buf.getvalue())
+
+
+class TestAppJSResolution(unittest.TestCase):
+    """site/llm-panel-review/app.js is the other half of the resolution chain
+    select_run.py / build_site_data.py implement. These guard it without a browser:
+    the three-tier fetch fallthrough drives the REAL app.js loadBehaviours in Node
+    against a stubbed loadJSON, and the name-validation check compares the REAL
+    app.js payloadName() against _payload_name() live. Both skip (not fail) when the
+    `node` binary is absent -- the panel Python suite itself has no JS dependency."""
+
+    APP_JS = HERE.parent.parent / "site" / "llm-panel-review" / "app.js"
+    HARNESS = HERE / "test_appjs_fallthrough.js"
+
+    def setUp(self):
+        if shutil.which("node") is None:
+            self.skipTest("node is not available")
+
+    def test_three_tier_fallthrough_in_appjs(self):
+        # pin -> manifest latest -> shipped default, incl. manifest-exclusion; the
+        # assertions live in the Node harness so they run standalone too.
+        out = subprocess.run(["node", str(self.HARNESS)],
+                             capture_output=True, text=True, timeout=120)
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("three-tier fallthrough: PASS", out.stdout)
+
+    def test_payload_name_parity_python_vs_js(self):
+        names = ["manifest", "manifest.json", "behaviours", "behaviours.json",
+                 "behaviours-2026-08-18T10-00-00.json", "behaviours-v4a",
+                 "other.json", "explicit", "../x", "sub/dir.json", "",
+                 None, 123, ["behaviours.json"], "MANIFEST.JSON"]
+        expected = [bs._payload_name(n) for n in names]
+        script = (
+            'const fs=require("fs");'
+            'const lines=fs.readFileSync(process.argv[1],"utf8").split("\\n");'
+            'const start=lines.findIndex(l=>l.startsWith("function payloadName(name)"));'
+            'let end=-1;for(let i=start+1;i<lines.length;i++){if(lines[i].trim()==="}"){end=i;break;}}'
+            'const dn=lines.find(l=>l.startsWith("const DATA_NAME"));'
+            'if(start<0||end<0||!dn){console.error("payloadName/DATA_NAME not found");process.exit(2);}'
+            'const names=JSON.parse(process.argv[2]);'
+            'const code=dn+"\\n"+lines.slice(start,end+1).join("\\n")+'
+            '"+\\nconsole.log(JSON.stringify(names.map(n=>payloadName(n))));";'
+            'eval(code);'
+        )
+        out = subprocess.run(["node", "-e", script, str(self.APP_JS), json.dumps(names)],
+                             capture_output=True, text=True, timeout=60)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        got = json.loads(out.stdout)
+        self.assertEqual(got, expected,
+                         "app.js payloadName drifted from build_site_data._payload_name: "
+                         + ", ".join(f"{n!r}: js={g} py={p}"
+                                     for n, g, p in zip(names, got, expected) if g != p))
 
 
 if __name__ == "__main__":
