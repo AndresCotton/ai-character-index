@@ -48,13 +48,16 @@ need it, but §1 and §2 give the context.
 - The coverage data (`data/coverage.json`) and the spec reader
   (`site/spec-reader/`).
 
-**Out of scope for now -- the evidence / evals track:**
+**Out of scope (owner ruling) -- the evidence / evals track:**
 
 - Finding pre-existing evals, judging paper quality, scoring the rubric,
   extracting lab adherence numbers. That is `Skills 1-3`
-  (`1-sweep-discover`, `2-sweep-curate`, `3-sweep-score`) and the files
-  `research/sweeps/NN-<slug>/{register,1-dossiers,2-curation,3-scores}.md`,
-  plus `data/evals.json`. **You can ignore all of it.**
+  (`1-sweep-discover`, `2-sweep-curate`, `3-sweep-score`). The
+  staged-pipeline artifacts of that track (the stage 1-3 sweep files and
+  `data/evals.json`) have been deleted under the owner's scope ruling --
+  the deliverable is the model-spec reader only. (One pre-staged sweep
+  write-up, `research/sweeps/01-no-sycophancy.md`, survives pending a
+  separate owner ruling.) **You can ignore all of it.**
 
 The two tracks are deliberately independent: Stage 4 runs in parallel with
 Stages 1-3 and shares none of their data. So you can work on the whole coverage
