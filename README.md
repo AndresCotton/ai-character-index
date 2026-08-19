@@ -24,7 +24,7 @@ Evidence enters through **behaviour sweeps**: a staged pipeline with a human sig
 | [`data/`](data/) | Machine-readable data behind the site — rendered via engine-built payloads; writers and hand-maintained exceptions in [`data/README.md`](data/README.md) |
 | [`engine/`](engine/) | The automation: `spec-cite/` (citation resolver), `panel/` (LLM panel judging), coverage/payload builders, site verifiers, `spec-watch/` (manual pulls); `notion-sync/` is a placeholder. See [`engine/README.md`](engine/README.md) |
 | [`site/`](site/) | The public static site |
-| [`docs/`](docs/) | Onboarding prose (the spec-coverage track) |
+| [`docs/`](docs/) | Onboarding prose (the spec-coverage track) + ruling-approved skill-rescope proposals — see [`docs/OVERVIEW.md`](docs/OVERVIEW.md) |
 | [`design/`](design/) | Aesthetics discussion: typography, palette, reference sites |
 | `outreach/` | Communication strategy and interview guides (internal, not published; gitignored, so it exists only in local clones) |
 | [`vision/`](vision/) | The original vision documents, including [features to build](vision/features%20to%20build.md) |
