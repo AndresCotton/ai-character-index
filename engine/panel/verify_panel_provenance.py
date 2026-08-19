@@ -54,6 +54,10 @@ DEFAULT_RUBRIC = "v3w"
 DEFAULT_PANEL = "frontier"
 # JSON paths the builder cannot reproduce deterministically; see module docstring.
 ALLOWED_FIELDS = [("provenance", "runDate")]
+# The allowance is anchored to the human-reviewed provenance record:
+# runlog-v3.md documents the shipped build date. Drift means the payload
+# was rebuilt after the note was written.
+DOCUMENTED_RUN_DATE = "2026-07-30"
 
 
 def _load(name, path):
@@ -274,6 +278,16 @@ def verify(runlog=DEFAULT_RUNLOG, payload=DEFAULT_PAYLOAD, rubric=DEFAULT_RUBRIC
     except OSError as e:
         say(f"FAIL: cannot read shipped payload: {e}")
         return 2
+    try:
+        shipped_doc = json.loads(shipped_raw)
+        shipped_rundate = shipped_doc.get("provenance", {}).get("runDate")
+    except (json.JSONDecodeError, AttributeError):
+        shipped_rundate = None
+    if shipped_rundate != DOCUMENTED_RUN_DATE:
+        say(f"FAIL: shipped payload runDate {shipped_rundate!r} differs from the "
+            f"documented build date {DOCUMENTED_RUN_DATE!r} (engine/panel/runlog-v3.md) "
+            "-- the payload was rebuilt after the provenance note was written")
+        return 1
     try:
         facts = runlog_facts(runlog, rubric)
     except (OSError, json.JSONDecodeError) as e:

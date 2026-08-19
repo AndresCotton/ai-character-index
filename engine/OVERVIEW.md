@@ -22,7 +22,7 @@ Everything that keeps the index alive: resolves spec citations, runs LLM panel j
 ## Relationships
 
 - `cite.py` is the shared foundation: imported by `panel/harness.py` (via a `sys.path` insertion) and invoked as a subprocess by `publish-coverage.py`.
-- The panel chain: `run_rollout.py` drives `whole_doc.py` → `runlog-v3.jsonl` (the shipped runlog is an UNTRACKED FILE in a local working copy of `experiment/panel-judges`, committed to no branch; committing it is an open closeout item) → `build_site_data.py` → `site/llm-panel-review/data/behaviours.json`. The builder also reads `data/reader-test-coverage.json` for behaviour names/slugs.
+- The panel chain: `run_rollout.py` drives `whole_doc.py` → `runlog-v3.jsonl` (the canonical log behind the shipped payload is committed here, documented in `runlog-v3.md`; other runlogs stay uncommitted) → `build_site_data.py` → `site/llm-panel-review/data/behaviours.json`. The builder also reads `data/reader-test-coverage.json` for behaviour names/slugs.
 - The curated chain: sweep stage-4 markdown → `publish-coverage.py` → `data/coverage.json` → `build-spec-reader-data.py` → `site/spec-reader/data/documents.json`.
 - `spec-watch` overwrites `specs/`, which `cite.py` and `build-spec-reader-data.py` consume (the test-bench builder reads only `data/reader-test-coverage.json`).
 

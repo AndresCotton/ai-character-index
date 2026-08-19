@@ -118,9 +118,9 @@ def main(argv=None):
         print("manifest: none (fresh clone -- no local runs)")
     if resolved:
         print(f"page loads: {resolved} (source: {source})")
-    else:
-        print("page loads: nothing -- no pin, no manifest run, and no shipped fallback")
-    return 0
+        return 0
+    print("page loads: nothing -- no pin, no manifest run, and no shipped fallback")
+    return 1
 
 
 if __name__ == "__main__":

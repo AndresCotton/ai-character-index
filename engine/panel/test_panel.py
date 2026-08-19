@@ -251,14 +251,14 @@ class TestRunTimestamp(unittest.TestCase):
     def test_same_second_suffix_still_sorts_chronologically(self):
         from datetime import datetime, timedelta
         dt = datetime(2026, 8, 18, 17, 26, 20)
-        self.assertEqual(bs.run_timestamp(dt, 2), "2026-08-18T17-26-20-2")
+        self.assertEqual(bs.run_timestamp(dt, 2), "2026-08-18T17-26-20-02")
         stamps = [bs.run_timestamp(dt), bs.run_timestamp(dt, 2), bs.run_timestamp(dt, 3),
                   bs.run_timestamp(dt + timedelta(seconds=1))]
         self.assertEqual(stamps, sorted(stamps))
 
 
 class TestNextRunName(unittest.TestCase):
-    """A same-second rebuild must never overwrite a run -- it takes a -2/-3/... suffix."""
+    """A same-second rebuild must never overwrite a run -- it takes a -02/-03/... suffix (zero-padded)."""
 
     def setUp(self):
         self.dir = Path(tempfile.mkdtemp(prefix="panel-names-"))
@@ -273,10 +273,10 @@ class TestNextRunName(unittest.TestCase):
     def test_sequence_suffix_until_unique(self):
         (self.dir / "behaviours-2026-08-18T17-26-20.json").write_text("{}")
         self.assertEqual(bs.next_run_name(self.dir, self.dt),
-                         ("behaviours-2026-08-18T17-26-20-2.json", "2026-08-18T17-26-20-2"))
-        (self.dir / "behaviours-2026-08-18T17-26-20-2.json").write_text("{}")
+                         ("behaviours-2026-08-18T17-26-20-02.json", "2026-08-18T17-26-20-02"))
+        (self.dir / "behaviours-2026-08-18T17-26-20-02.json").write_text("{}")
         self.assertEqual(bs.next_run_name(self.dir, self.dt),
-                         ("behaviours-2026-08-18T17-26-20-3.json", "2026-08-18T17-26-20-3"))
+                         ("behaviours-2026-08-18T17-26-20-03.json", "2026-08-18T17-26-20-03"))
 
 
 class TestManifestUpdate(unittest.TestCase):
@@ -485,7 +485,7 @@ class TestBuildMain(unittest.TestCase):
         self.freeze()
         self.build()
         self.build()
-        first, second = f"behaviours-{self.TS}.json", f"behaviours-{self.TS}-2.json"
+        first, second = f"behaviours-{self.TS}.json", f"behaviours-{self.TS}-02.json"
         self.assertTrue((self.dir / first).exists())
         self.assertTrue((self.dir / second).exists())
         manifest = json.loads((self.dir / "manifest.json").read_text())
@@ -506,6 +506,48 @@ class TestBuildMain(unittest.TestCase):
         # nothing was written anywhere: the data dir still holds only the runlog
         self.assertEqual([p.name for p in self.dir.iterdir()], ["synth-runlog.jsonl"])
         self.assertFalse((self.dir.parent / "evil.json").exists())
+
+
+
+class TestPR32ReviewFixes(unittest.TestCase):
+    """Pins for the PR-level review findings."""
+
+    def test_sequence_suffix_pads_past_nine(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("bsd_under_test",
+            Path(__file__).resolve().parents[0] / "build_site_data.py")
+        bsd = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bsd)
+        from datetime import datetime
+        dt = datetime(2026, 8, 18, 17, 26, 20)
+        names = [bsd.run_timestamp(dt, seq=s) for s in (0, 2, 9, 10, 11)]
+        self.assertEqual(names, [
+            "2026-08-18T17-26-20",
+            "2026-08-18T17-26-20-02",
+            "2026-08-18T17-26-20-09",
+            "2026-08-18T17-26-20-10",
+            "2026-08-18T17-26-20-11",
+        ])
+        # lexical order stays chronological across the padding boundary
+        self.assertEqual(sorted(names), names)
+
+    def test_run_date_tripwire_fails_on_drift(self):
+        import importlib.util, tempfile, json, shutil
+        here = Path(__file__).resolve().parents[0]
+        spec = importlib.util.spec_from_file_location("vpp_under_test",
+            here / "verify_panel_provenance.py")
+        v = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(v)
+        with tempfile.TemporaryDirectory() as tmp:
+            payload = Path(tmp) / "behaviours.json"
+            doc = {"provenance": {"runDate": "2026-08-18"}, "behaviours": []}
+            payload.write_text(json.dumps(doc))
+            import io, contextlib
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = v.verify(runlog=v.DEFAULT_RUNLOG, payload=payload, verbose=True)
+        self.assertEqual(rc, 1)
+        self.assertIn("differs from the", buf.getvalue())
 
 
 if __name__ == "__main__":

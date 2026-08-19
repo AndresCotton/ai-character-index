@@ -12,7 +12,7 @@ Behaviour names/definitions come from data/reader-test-coverage.json exactly as 
 (no rewriting). Curated row-level verdict/depth/notes are carried through untouched.
 
   python3 build_site_data.py --runlog=<runlog> --rubric=v3w --panel=frontier
-  (the shipped data: --runlog=runlog-v3.jsonl from the experiment branch, rubric v3w)
+  (the shipped data: --runlog=runlog-v3.jsonl committed in engine/panel/, rubric v3w)
 
 Output: by DEFAULT each run emits its own timestamped file
   site/llm-panel-review/data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json
@@ -59,11 +59,11 @@ SAFE_NAME = re.compile(r"^[\w.-]+$")
 
 def run_timestamp(dt, seq=0):
     """Run-file timestamp: hyphen-separated so it is URL-safe, and lexicographically
-    sortable = chronological. A same-second rerun takes a sequence suffix (seq >= 2,
-    e.g. …T17-26-20-2) that still sorts after the bare stamp and before the next
+    sortable = chronological. A same-second rerun takes a sequence suffix (seq >= 2, zero-padded to two digits,
+    e.g. …T17-26-20-02) that still sorts after the bare stamp and before the next
     second, so lexical == chronological survives collisions."""
     ts = dt.strftime("%Y-%m-%dT%H-%M-%S")
-    return f"{ts}-{seq}" if seq else ts
+    return f"{ts}-{seq:02d}" if seq else ts
 
 
 def next_run_name(data_dir, dt):
@@ -138,7 +138,7 @@ def resolve_data_name(data_dir, pin=None, manifest=None):
 def check_out_name(name):
     """Loud-fail an --out= name that could write outside the site data dir: the same
     SAFE_NAME charset ?data= admits (so no path separators), and no .. traversal."""
-    if not SAFE_NAME.match(name) or ".." in name or name == ".":
+    if not SAFE_NAME.match(name) or ".." in name or name.startswith("."):
         sys.exit(f"error: --out={name!r} is not a safe name for the site data dir -- "
                  "use a plain filename (word chars, dots, hyphens; no paths or ..)")
 
