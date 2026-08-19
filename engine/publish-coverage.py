@@ -141,6 +141,12 @@ def parse_verdict_table(text: str) -> dict[str, dict]:
     return rows
 
 
+def _locator_spec_part(locator: str) -> str:
+    """The spec@version prefix of a locator, tolerant of the separator
+    variants CITATION.md allows (" > " and ">"; the artifacts use " › ")."""
+    return re.split(r"\s*(?:\u203a|>)\s*", locator, maxsplit=1)[0]
+
+
 def parse_markdown(artifact_path: Path) -> tuple[int, list[dict]]:
     """The regex path: unchanged contract for 4-spec-coverage.md artifacts."""
     artifact = artifact_path.read_text()
@@ -162,7 +168,7 @@ def parse_markdown(artifact_path: Path) -> tuple[int, list[dict]]:
         if not citations:
             sys.exit(f"no citations parsed for {lab_id}")
         try:
-            version = citations[0]["locator"].split(" › ")[0].split("@")[1]
+            version = _locator_spec_part(citations[0]["locator"]).split("@")[1]
         except IndexError:
             sys.exit(
                 f"{artifact_path.name}: {lab_id} first locator does not "
@@ -253,7 +259,7 @@ def parse_sidecar(sidecar_path: Path, sweep_dir: Path) -> tuple[int, list[dict]]
                 "the project's citation convention (see CITATION_FORMAT)"
             )
         try:
-            version = record["citations"][0]["locator"].split(" › ")[0].split("@")[1]
+            version = _locator_spec_part(record["citations"][0]["locator"]).split("@")[1]
         except IndexError:
             sys.exit(
                 f"{sidecar_path.name}: records[{index}] first locator does not "
