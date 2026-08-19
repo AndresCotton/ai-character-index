@@ -138,6 +138,9 @@ class MarkdownSchemaParityTest(unittest.TestCase):
     def _mutated_scratch_sweep(self, tmp: str) -> Path:
         sweep_dir = Path(tmp) / self.SOURCE
         shutil.copytree(SWEEPS / self.SOURCE, sweep_dir)
+        # This test targets the markdown parse path; 02-calibration now
+        # ships a sidecar, which would otherwise win and mask the mutation.
+        (sweep_dir / "4-spec-coverage.json").unlink(missing_ok=True)
         artifact = sweep_dir / "4-spec-coverage.md"
         text = artifact.read_text(encoding="utf-8")
         head, sep, tail = text.partition("## Verdict and depth")
