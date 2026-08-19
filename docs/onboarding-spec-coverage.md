@@ -51,17 +51,17 @@ need it, but §1 and §2 give the context.
 **Out of scope (owner ruling) -- the evidence / evals track:**
 
 - Finding pre-existing evals, judging paper quality, scoring the rubric,
-  extracting lab adherence numbers. That is `Skills 1-3`
-  (`1-sweep-discover`, `2-sweep-curate`, `3-sweep-score`). The
-  staged-pipeline artifacts of that track (the stage 1-3 sweep files and
-  `data/evals.json`) have been deleted under the owner's scope ruling --
-  the deliverable is the model-spec reader only. (One pre-staged sweep
+  extracting lab adherence numbers. That was `Skills 1-3`
+  (`1-sweep-discover`, `2-sweep-curate`, `3-sweep-score`), deleted along
+  with the staged-pipeline artifacts of that track (the stage 1-3 sweep
+  files and `data/evals.json`) under the owner's scope ruling -- the
+  deliverable is the model-spec reader only. (One pre-staged sweep
   write-up, `research/sweeps/01-no-sycophancy.md`, survives pending a
   separate owner ruling.) **You can ignore all of it.**
 
-The two tracks are deliberately independent: Stage 4 runs in parallel with
-Stages 1-3 and shares none of their data. So you can work on the whole coverage
-pipeline without ever touching an eval.
+The two tracks are deliberately independent: the coverage pipeline shares none
+of the evals track's data. So you can work on the whole coverage pipeline
+without ever touching an eval.
 
 **The goal of the initial collaboration** is a cleaner, better-structured, and --
 above all -- **reproducible and well-documented** spec-coverage process: the same
