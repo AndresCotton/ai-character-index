@@ -11,6 +11,7 @@
 
 - [x] Merge prep PRs **#22** (gitignore + cruft) and **#24** (dead panel code) — done
 - [ ] Merge **#23** (docs + this list), then **#25** (intake forms, split out of #23), then **#26** (Phase-1 cleanup)
+  - Note: between #23 merging and #25 merging, the README Contributing section still names the eval-submission/appeal channels the scope ruling retires — a transient contradiction that #25 closes.
 - [ ] **Honest status note** (README or a top-level note): what this is (a spec reader + a toolkit to clone/fork), what works today vs. what is aspirational/unproven
 - [ ] **PLAN.md ruling:** rewrite as a living architecture doc, mark historical, or surgically update — the largest doc/reality gap (§8 lists `outreach/` which is gitignored and never on main; §2/§8 claim schema-enforced CI that doesn't exist; §8's engine row omits `panel/` and the builders; §1.2 promises four workflows where one exists)
 - [ ] **`site/methodology.html` + `methodology/site-copy-how-we-assess-coverage.md`:** describe the term-list method while the operative procedure is the LLM panel; the panel method needs writing for the public page

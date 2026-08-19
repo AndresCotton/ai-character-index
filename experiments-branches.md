@@ -1,6 +1,7 @@
 # Experiment branches & local-only territory — what exists outside origin/main
 
 > As-is snapshot of the working copy and branch list (main @ 72e2e6b). Describes what exists now, not what should exist. This document covers satellite territory only; `SYSTEM.md` covers main itself.
+> **Staleness warning:** this inventory is a dated snapshot of one working copy; it silently rots as local branches are deleted or merged, and several entries below have pending deletion rulings on the closeout list. Verify against the live repo before acting on any entry.
 
 ## Purpose
 
