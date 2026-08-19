@@ -713,10 +713,13 @@ class TestAppJSResolution(unittest.TestCase):
                                      for n, g, p in zip(names, got, expected) if g != p))
 class TestImportSideEffects(unittest.TestCase):
     """Config must be lazy: importing any panel module in a FRESH interpreter reads
-    no config/data file (guards the monkeypatch-to-inject debt the decoupling removed)."""
+    no PANEL config/data file (guards the monkeypatch-to-inject debt the decoupling
+    removed). The probe intercepts builtins.open, io.open, and Path.open. Scope note:
+    cite.py (imported by harness) reads specs/user/specs.json at import time WHEN
+    that manifest exists; it is absent in the repo's committed state."""
 
     PROBE = r'''
-import builtins, importlib.util, json, sys
+import builtins, importlib.util, io, json, sys
 from pathlib import Path
 HERE = Path(sys.argv[1])
 opened = []
@@ -725,6 +728,12 @@ def rec_open(file, *a, **k):
     opened.append(str(file))
     return _real_open(file, *a, **k)
 builtins.open = rec_open
+io.open = rec_open
+_real_path_open = Path.open
+def rec_path_open(self, *a, **k):
+    opened.append(str(self))
+    return _real_path_open(self, *a, **k)
+Path.open = rec_path_open
 for name in ("harness", "whole_doc", "run_rollout", "build_site_data"):
     sp = importlib.util.spec_from_file_location(name, HERE / (name + ".py"))
     m = importlib.util.module_from_spec(sp)

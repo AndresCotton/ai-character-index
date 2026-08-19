@@ -34,8 +34,10 @@ SPECS = ("constitution", "model-spec")
 
 # Providers/models/panels come from panel-config.json (credentials are env-var NAMES there,
 # never values). The old hardcoded tables are gone; edit the config, not this file.
-# Loaded lazily at USE time -- importing this module must stay file-free so config
+# Loaded lazily at USE time -- importing this module reads no PANEL config so it
 # can be injected (pass a parsed dict, or load_config() an alternate path).
+# Note: this module imports cite.py, which reads specs/user/specs.json at import
+# time WHEN THAT MANIFEST EXISTS (absent = bundled-only state, no read).
 DEFAULT_CONFIG_PATH = HERE / "panel-config.json"
 
 

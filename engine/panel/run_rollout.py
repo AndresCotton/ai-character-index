@@ -69,7 +69,7 @@ def main():
     sp.loader.exec_module(h)
     config = h.load_config()
     panels = config["panels"]
-    panel_name = "frontier"
+    panel_name = DEFAULT_PANEL
     go = "--go" in sys.argv
     runlog = HERE / "runlog-v3.jsonl"   # the SAME file whole_doc.py appends to
     behaviours = ROLLOUT

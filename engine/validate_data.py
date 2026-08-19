@@ -308,6 +308,8 @@ def _cross_file_checks(files: dict) -> list:
         for index, record in enumerate(records or []):
             if not isinstance(record, dict):
                 continue
+            if record.get("behaviour_id") is None or record.get("lab_id") is None:
+                continue  # schema-invalid record; the schema errors cover it
             key = (record.get("behaviour_id"), record.get("lab_id"))
             if key in seen:
                 errors.append(
