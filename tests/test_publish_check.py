@@ -188,5 +188,56 @@ class MarkdownSchemaParityTest(unittest.TestCase):
                 )
 
 
+class MarkdownVersionExtractionTest(unittest.TestCase):
+    """Symmetric failure behavior with the sidecar path: a markdown record's
+    first locator that does not start with spec@version must abort cleanly
+    (SystemExit) rather than raise an IndexError traceback. The sidecar path
+    wraps the identical extraction in try/except IndexError; the regex path
+    must fail the same way.
+    """
+
+    # The anthropic locator carries no @version; parse_markdown processes
+    # anthropic first, so version extraction aborts before OpenAI is read.
+    ARTIFACT = """# Behaviour 98: version fixture
+
+- **Behaviour:** 98, version fixture
+- **Sweep date:** 2026-01-01
+
+## Claude constitution
+
+- **Locator:** `constitution > Being helpful > ¶2 s1`
+  **Quote:** fixture quote
+  **Role:** fixture
+  **Flags:** --
+
+## OpenAI Model Spec
+
+- **Locator:** `model-spec@2025-12-18 > #avoid_sycophancy > ¶2 s1`
+  **Quote:** fixture quote
+  **Role:** fixture
+  **Flags:** --
+
+## Verdict and depth
+
+| Spec | Verdict | Depth | Note |
+| --- | --- | --- | --- |
+| Claude constitution | partial | 1 | fixture |
+| OpenAI Model Spec | partial | 1 | fixture |
+"""
+
+    def test_markdown_locator_without_version_fails_cleanly(self):
+        spec = importlib.util.spec_from_file_location("publish_coverage", PUBLISH)
+        publish = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(publish)
+        with tempfile.TemporaryDirectory() as tmp:
+            artifact = Path(tmp) / "4-spec-coverage.md"
+            artifact.write_text(self.ARTIFACT, encoding="utf-8")
+            # An uncaught IndexError would propagate as IndexError, not
+            # SystemExit -- so passing here pins the clean failure.
+            with self.assertRaises(SystemExit) as ctx:
+                publish.parse_markdown(artifact)
+        self.assertIn("spec@version", str(ctx.exception))
+
+
 if __name__ == "__main__":
     unittest.main()
