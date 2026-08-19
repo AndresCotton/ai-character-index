@@ -49,6 +49,18 @@ class TestEndToEnd(unittest.TestCase):
         self.assertIn("PASS", out)
         self.assertIn("byte-identical after splicing the shipped runDate", out)
 
+    def test_verify_is_read_only(self):
+        # verify() must never mutate the shipped payload or the frozen log:
+        # hash both before and after a green run.
+        def digest(path):
+            return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+        payload, runlog = v.DEFAULT_PAYLOAD, v.DEFAULT_RUNLOG
+        before = (digest(payload), digest(runlog))
+        rc, out = quietly(v.verify)
+        self.assertEqual(rc, 0, out)
+        self.assertEqual((digest(payload), digest(runlog)), before,
+                         "verify() modified the shipped payload or the frozen runlog")
+
     def test_cli_defaults_verify_green(self):
         rc, out = quietly(v.main, [])
         self.assertEqual(rc, 0, out)
