@@ -21,7 +21,7 @@ Evidence enters through **behaviour sweeps**: a staged pipeline with a human sig
 | [`specs/`](specs/) | Local mirrors of the specs the index scores against (Claude constitution, OpenAI Model Spec) |
 | [`methodology/`](methodology/) | Depth rubric (anchors every published depth score), the editable site methodology copy, method-exploration write-ups |
 | [`behaviours-for-adria/`](behaviours-for-adria/) | External reviewer's ten-behaviour stage-4 set — feeds the reader test bench and three rows of the panel surface |
-| [`data/`](data/) | Canonical machine-readable data the site renders from (see [`data/README.md`](data/README.md); `data/schema/` is a placeholder) |
+| [`data/`](data/) | Canonical machine-readable data the site renders from (see [`data/README.md`](data/README.md)) |
 | [`engine/`](engine/) | The automation: `spec-cite/` (citation resolver), `panel/` (LLM panel judging), coverage/payload builders, site verifiers, `spec-watch/` (manual pulls); `notion-sync/` is a placeholder. See [`engine/README.md`](engine/README.md) |
 | [`site/`](site/) | The public static site |
 | [`docs/`](docs/) | Onboarding prose (the spec-coverage track) |
