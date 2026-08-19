@@ -9,6 +9,5 @@ Shared by all sweep stage skills. Update here, nowhere else.
 | Canonical write-up per behaviour | `research/sweeps/NN-<slug>.md` |
 | Sweep working record (stage artifacts + gate log) | `research/sweeps/NN-<slug>/` |
 | Behaviour list (sweep input) | `research/core-behaviour-list.md` |
-| Data seeds | `data/evals.json`, `data/coverage.json`, `data/labs.json` |
-| Prototype | `design/prototypes/core-page.html` -- `B[NN]` object; 0-4 scales; `adh` may be `null` (rendering tolerates it) |
+| Data seeds | `data/coverage.json`, `data/labs.json` |
 | Reference sweep output (content templates) | `research/sweeps/01-no-sycophancy.md` (predates the staged layout; its content structure is still canonical) |
