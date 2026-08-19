@@ -53,6 +53,7 @@ const state = {
   documentFocus: { anthropic: false, openai: false },
   sidebarWidth: 292,
   compareFirst: 50,
+  compareWidths: [],
 };
 
 const elements = {
@@ -241,7 +242,53 @@ function setupSidebarResizer() {
   });
 }
 
-function createDocumentResizer() {
+/* Compare layout generalizes to N documents: the two-document case keeps the
+ * persisted --compare-first split exactly as before; with three-plus documents
+ * the panes take weighted shares (state.compareWidths, equal on entry, not
+ * persisted) and each boundary resizer moves its own boundary. */
+function comparePaneCount() {
+  return state.comparing ? state.payload.documents.length : 0;
+}
+
+function applyCompareLayout() {
+  const n = comparePaneCount();
+  if (n <= 2) return;   // two-pane layout stays CSS-var driven (setCompareFirst)
+  if (state.compareWidths.length !== n) state.compareWidths = Array.from({ length: n }, () => 100 / n);
+  const cols = [];
+  state.compareWidths.forEach((w, i) => {
+    cols.push(`minmax(0, ${w}fr)`);
+    if (i < n - 1) cols.push("9px");
+  });
+  elements.documentReader.style.gridTemplateColumns = cols.join(" ");
+  elements.documentReader.querySelectorAll(".document-resizer").forEach((resizer, i) => {
+    const w = state.compareWidths[i];
+    resizer.setAttribute("aria-valuemin", "10");
+    resizer.setAttribute("aria-valuemax", "90");
+    resizer.setAttribute("aria-valuenow", String(Math.round(w)));
+    resizer.setAttribute("aria-valuetext", `Specification ${i + 1} ${Math.round(w)} percent wide`);
+  });
+  requestAnimationFrame(updateRails);
+}
+
+function moveCompareBoundary(index, delta) {
+  const widths = state.compareWidths;
+  const min = 10;
+  const left = widths[index], right = widths[index + 1];
+  const d = clamp(delta, min - left, right - min);
+  widths[index] = left + d;
+  widths[index + 1] = right - d;
+  applyCompareLayout();
+}
+
+function setCompareBoundaryTo(index, pct) {
+  const widths = state.compareWidths;
+  const min = 10;
+  const cumBefore = widths.slice(0, index).reduce((a, b) => a + b, 0);
+  const target = clamp(pct - cumBefore, min, widths[index] + widths[index + 1] - min);
+  moveCompareBoundary(index, target - widths[index]);
+}
+
+function createDocumentResizer(index = 0) {
   const resizer = document.createElement("div");
   resizer.className = "column-resizer document-resizer";
   resizer.role = "separator";
@@ -252,23 +299,43 @@ function createDocumentResizer() {
   resizer.setAttribute("aria-valuemax", "100");
   resizer.addEventListener("pointerdown", event => {
     const bounds = elements.documentReader.getBoundingClientRect();
-    startColumnDrag(
-      event,
-      resizer,
-      clientX => setCompareFirst(((clientX - bounds.left) / bounds.width) * 100),
-      () => setCompareFirst(state.compareFirst, true),
-    );
+    if (comparePaneCount() <= 2) {
+      startColumnDrag(
+        event,
+        resizer,
+        clientX => setCompareFirst(((clientX - bounds.left) / bounds.width) * 100),
+        () => setCompareFirst(state.compareFirst, true),
+      );
+    } else {
+      startColumnDrag(
+        event,
+        resizer,
+        clientX => setCompareBoundaryTo(index, ((clientX - bounds.left) / bounds.width) * 100),
+        () => applyCompareLayout(),
+      );
+    }
   });
   resizer.addEventListener("keydown", event => {
     const step = event.shiftKey ? 10 : 2;
-    let next = state.compareFirst;
-    if (event.key === "ArrowLeft") next -= step;
-    else if (event.key === "ArrowRight") next += step;
-    else if (event.key === "Home") next = 0;
-    else if (event.key === "End") next = 100;
-    else return;
-    event.preventDefault();
-    setCompareFirst(next, true);
+    if (comparePaneCount() <= 2) {
+      let next = state.compareFirst;
+      if (event.key === "ArrowLeft") next -= step;
+      else if (event.key === "ArrowRight") next += step;
+      else if (event.key === "Home") next = 0;
+      else if (event.key === "End") next = 100;
+      else return;
+      event.preventDefault();
+      setCompareFirst(next, true);
+    } else {
+      let delta;
+      if (event.key === "ArrowLeft") delta = -step;
+      else if (event.key === "ArrowRight") delta = step;
+      else if (event.key === "Home") delta = -Infinity;
+      else if (event.key === "End") delta = Infinity;
+      else return;
+      event.preventDefault();
+      moveCompareBoundary(index, delta);
+    }
   });
   return resizer;
 }
@@ -1346,10 +1413,14 @@ function rebuildReader() {
   elements.documentReader.classList.toggle("compare", state.comparing);
   const panels = visibleDocuments().map(renderDocument);
   const children = state.comparing
-    ? [panels[0], createDocumentResizer(), panels[1]]
+    ? panels.flatMap((panel, i) => (i < panels.length - 1 ? [panel, createDocumentResizer(i)] : [panel]))
     : panels;
   elements.documentReader.replaceChildren(...children);
-  if (state.comparing) setCompareFirst(state.compareFirst);
+  if (state.comparing && panels.length > 2) applyCompareLayout();
+  else {
+    elements.documentReader.style.gridTemplateColumns = "";
+    if (state.comparing) setCompareFirst(state.compareFirst);
+  }
   state.passageIndex = 0;
   state.anchors = [];
 
