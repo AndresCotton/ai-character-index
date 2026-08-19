@@ -1,48 +1,41 @@
-# .claude/skills/ — the LLM-facing procedure layer: staged behaviour sweeps with human gates
+# .claude/skills/ — the LLM-facing procedure layer: coverage-only sweeps with human gates
 
-> As-is snapshot of origin/main @ 72e2e6b (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
+> Current-state doc: describes what exists now, not what should exist. Brought current with the Phase-2 stack (#28–#34) and the scope ruling.
 
 ## Purpose
 
-The agent-executable playbook for extending the index: a six-stage "behaviour sweep" pipeline (plus one campaign wrapper), where each stage ends at a human sign-off gate. This is the primary LLM-facing interface to the repo — an agent asked to "sweep behaviour N" starts at `README.md` and follows these files.
+The agent-executable playbook for the coverage workflow (scope ruling 2026-08-19: the evidence-discovery stages 1–3, the `behaviour-sweep` orchestrator, and `exclusion-criteria.md` were deleted): stage 4 (LLM-panel spec coverage), stage 5 (publish, coverage-only), stage 6 (verify, coverage-only), plus the one-behaviour campaign wrapper. Each stage ends at a human sign-off gate. These files are the primary LLM-facing interface to the repo — an agent asked to "run coverage for behaviour N" starts at `README.md` and follows these files. They are plain markdown and agent-neutral: any agent that reads them can follow them (the `.claude/skills/` path is a Claude Code / Qwen Code convention; see root `AGENTS.md` for pointers).
 
 ## Contents
 
 | Path | What it is |
 |---|---|
-| `README.md` | Entry point: invoking a sweep, the gate table, artifact layout under `research/sweeps/NN-<slug>/`. |
-| `behaviour-sweep/SKILL.md` | Orchestrator: stage sequencing, gate protocol (render checklist with evidence → STOP → human signs `gates.md`), two tracks (evidence stages 1→2→3 in parallel with spec stage 4), publication order (stage 5 writes internal surfaces; public deploy only after Gate 6). |
-| `1-sweep-discover/SKILL.md` | Fan agents over eval literature; dossiers + candidate register. Gate 1: evidence base real/complete; human spot-checks 2 candidates against primary sources. |
-| `2-sweep-curate/SKILL.md` | Final disposition per candidate against pre-registered exclusion codes (`references/exclusion-criteria.md`). Gate 2: human confirms/overrides every disposition. |
-| `3-sweep-score/SKILL.md` | 0–4 I/E/R rubric scoring + adherence extraction. Gate 3: human spot-audits one eval × dimension. |
+| `README.md` | Entry point: invoking a coverage sweep, the gate table, artifact layout under `research/sweeps/NN-<slug>/`. |
 | `4-sweep-spec-coverage/SKILL.md` | **LLM panel** grades every spec passage (drives `engine/panel/run_rollout.py`, `whole_doc.py`, `build_site_data.py`; cites `engine/spec-cite/cite.py`, `specs/CITATION.md`, `methodology/spec-coverage-depth-rubric.md`). Gate 4: mechanical re-resolution with zero mismatches + human spot-read of unanimous-core passages. |
-| `5-sweep-publish/SKILL.md` | Transcribe gate-approved artifacts to three internal surfaces: repo data + write-up (`data/coverage.json` via `engine/publish-coverage.py`; `data/evals.json` by hand transcription), Notion (IDs in `references/locations.md`), prototype (`design/prototypes/core-page.html`). Gate 5: human verifies every surface. |
-| `6-sweep-verify/SKILL.md` | Fresh-context audit (register accounting, score identity, live links, quote re-resolution, gate log) — must run in a NEW session. Gate 6: human signs sweep complete; then `pnpm deploy:site`. |
+| `5-sweep-publish/SKILL.md` | Coverage-only publication: gate-approved stage-4 artifact → `data/coverage.json` via `engine/publish-coverage.py` (structured `4-spec-coverage.json` sidecar preferred, markdown fallback), plus the sweep write-up. Gate 5: human verifies every surface. |
+| `6-sweep-verify/SKILL.md` | Fresh-context audit (quote re-resolution, gate log, live links) — must run in a NEW session. Gate 6: human signs sweep complete; then deploy (`pnpm deploy:site` or the auto-deploy workflow). |
 | `spec-coverage-pass/SKILL.md` | Campaign wrapper: stage 4 + the repo/reader slice of stage 5 for one behaviour, on a `sweep/NN-<slug>` branch merged by PR with per-step commits. Precedent: `research/sweeps/02-calibration/`. |
-| `behaviour-sweep/references/` | `locations.md` (Notion page/DB IDs, spec versions, canonical paths — accurate against this checkout) and `exclusion-criteria.md`. |
+| `references/locations.md` | Spec versions and canonical paths (Notion IDs stripped by the scope pass). |
 
 ## Relationships
 
-- Input: `research/core-behaviour-list.md` (the behaviour under sweep); outputs land in `research/sweeps/NN-<slug>/` artifacts, `data/evals.json`, `data/coverage.json`, Notion, and the prototype page.
-- Stage 4 is the coupling point to the engine: it is the procedure around `engine/panel/` (config, dry-run/`--go`, substitution handling, provenance sections) and to `specs/CITATION.md`'s locator grammar.
-- Stage 5's repo writes flow through `engine/publish-coverage.py`, which regex-parses the stage-4 artifact format — the markdown layout these skills prescribe is a de facto API.
+- Input: `research/core-behaviour-list.md` (the behaviour under sweep) + the `specs/` mirrors; outputs land in `research/sweeps/NN-<slug>/` artifacts (markdown + sidecar) and `data/coverage.json`.
+- Stage 4 is the coupling point to the engine: it is the procedure around `engine/panel/` (config, dry-run/`--go`, substitution handling, timestamped runs + manifest, provenance) and to `specs/CITATION.md`'s locator grammar (including user-registered specs via `specs/user/specs.json`).
+- Stage 5's repo writes flow through `engine/publish-coverage.py`, which prefers the schema-checked sidecar and falls back to regex-parsing the markdown — the artifact layout these skills prescribe is a de facto API.
 
 ## Dependency map
 
 ```mermaid
 graph LR
-  core["research/core-behaviour-list.md"] --> s1["1 Discover"] --> g1{{Gate 1}} --> s2["2 Curate"] --> g2{{Gate 2}} --> s3["3 Score"] --> g3{{Gate 3}} --> s5["5 Publish"]
-  s4["4 Spec coverage (LLM panel)"] --> g4{{Gate 4}} --> s5
+  core["research/core-behaviour-list.md"] --> s4["4 Spec coverage (LLM panel)"]
   s4 -->|drives| panel["engine/panel/*"]
-  s5 --> g5{{Gate 5}} --> s6["6 Verify (fresh session)"] --> g6{{Gate 6}} --> deploy["pnpm deploy:site"]
-  s5 --> data["data/evals.json + data/coverage.json"]
-  s5 --> notion["Notion DBs"]
-  s5 --> proto["design/prototypes/core-page.html"]
+  s4 --> g4{{Gate 4}} --> s5["5 Publish (coverage-only)"]
+  s5 -->|publish-coverage.py| data["data/coverage.json"]
+  s5 --> g5{{Gate 5}} --> s6["6 Verify (fresh session)"] --> g6{{Gate 6}} --> deploy["deploy (pnpm deploy:site / workflow)"]
 ```
 
 ## As-is observations
 
-- Stage 4 fully describes the LLM panel (every path it names exists on this checkout), but the artifact template it points to (`research/sweeps/02-calibration/4-spec-coverage.md`) contains a `## Term sweep` section the current procedure does not produce (the skill asks for "Panel run") — an agent copying the template reproduces a section the publisher does not ingest.
-- Stage 6 and the orchestrator name manual `pnpm deploy:site` as THE release act and do not mention `.github/workflows/deploy.yml`, which auto-deploys on merge to main; both mechanisms exist.
-- The README repo map's `data/` row defers its detail to `data/README.md`; the caveat itself lives there: the readers render engine-built payloads, `index.html` renders inline prototype data, and nothing renders `evals.json` yet.
-- The runlog stage 4 names (`engine/panel/runlog-v3.jsonl`) is not committed to ANY branch and is not yet gitignored (adding panel runtime artifacts to `.gitignore` is an open closeout item); the only copy is an UNTRACKED FILE in a local working copy of `experiment/panel-judges` — reproducing the shipped dataset depends on that working copy surviving, and committing the log is an open closeout item.
+- The artifact template stage 4 points to (`research/sweeps/02-calibration/4-spec-coverage.md`) contains a `## Term sweep` section the current procedure does not produce (the skill asks for "Panel run") — an agent copying the template reproduces a section the publisher does not ingest.
+- Stage 6 names manual `pnpm deploy:site` as THE release act and does not mention `.github/workflows/deploy.yml`, which auto-deploys on merge to main; both mechanisms exist.
+- Resolved by the stack: the canonical panel runlog `engine/panel/runlog-v3.jsonl` is committed and documented (`runlog-v3.md`), its byte-identity is verified by `engine/panel/verify_panel_provenance.py`, and panel runtime artifacts (other runlogs, metrics, timestamped payloads, manifest) are gitignored.

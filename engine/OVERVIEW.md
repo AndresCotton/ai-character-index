@@ -1,6 +1,6 @@
 # engine/ — the automation layer: citation resolution, LLM panel judging, and site-payload builders
 
-> As-is snapshot of origin/main @ 72e2e6b (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
+> Current-state doc: describes what exists now, not what should exist. Brought current with the Phase-2 stack (#28–#34).
 
 ## Purpose
 
@@ -10,20 +10,22 @@ Everything that keeps the index alive: resolves spec citations, runs LLM panel j
 
 | Path | What it is |
 |---|---|
-| `spec-cite/cite.py` | Locator resolver/verifier (`outline`/`show`/`resolve`/`find`). Grammar defined by `specs/CITATION.md`; spec registry hardcoded (`SPECS` dict). Stdlib-only; CLI **and** imported library. No tests. |
+| `spec-cite/cite.py` | Locator resolver/verifier (`outline`/`show`/`resolve`/`find`). Grammar defined by `specs/CITATION.md`; bundled specs (`BUNDLED_SPECS`) plus an optional user-spec manifest (`specs/user/specs.json`, gitignored; `SPEC_CITE_USER_SPECS` overrides) whose entries can carry `title`/`sourceUrl` rendering metadata (`spec_meta()`/`user_specs()`). Stdlib-only; CLI **and** imported library. Tests: `tests/test_cite.py`, `tests/test_cite_user_specs.py`. |
 | `spec-watch/pull-latest.sh` | Pulls upstream OpenAI/Anthropic specs into `specs/` via `gh`. Manual today; no version pinning or diff detection. Known issue: the dated upstream HTML release archives exceed the contents API's 1 MB inline limit and are fetched as 0-byte files. |
-| `panel/` | LLM panel pipeline: `harness.py` (library: config, frozen rubrics v1/v2/v3, prompt builders, verdict parsing, resume), `whole_doc.py` (one API call per behaviour×spec×model), `run_rollout.py` (grid driver, dry-run default), `build_site_data.py` (runlog → site payload; parameterized via `--runlog=`/`--rubric=`/`--panel=`/`--behaviours=`/`--out=` for iteration builds; with no `--out=`, a run writes timestamped `behaviours-<ts>.json` + `data/manifest.json`, latest-by-default), `select_strata.py` (validation sampler), `select_run.py` (pin → manifest-latest → shipped-fallback resolution, same order as the page), `verify_panel_provenance.py` (proves the shipped payload rebuilds byte-identically from the committed runlog), `test_panel.py` (72 offline tests), `test_verify_panel_provenance.py`, `panel-config.json`, `behaviours.json`, `runlog-v3.jsonl` (canonical runlog, documented in `runlog-v3.md`). |
-| `publish-coverage.py` | Parses a stage-4 artifact (`research/sweeps/NN-slug/4-spec-coverage.md`) via regexes and publishes records into `data/coverage.json`, re-verifying every quote through `cite.py resolve` (subprocess). |
-| `build-spec-reader-data.py` | `data/coverage.json` + spec markdown → `site/spec-reader/data/documents.json`. Hardcoded `BEHAVIOURS` list (ids 1–3 only). |
+| `panel/` | LLM panel pipeline: `harness.py` (library: lazy injectable config, frozen rubrics v1/v2/v3, explicit prompt composition, verdict parsing, resume), `whole_doc.py` (one API call per behaviour×spec×model), `run_rollout.py` (grid driver, dry-run default), `build_site_data.py` (runlog → site payload; behaviour metadata registry-driven from `data/behaviours.json`; parameterized via `--runlog=`/`--rubric=`/`--panel=`/`--behaviours=`/`--registry=`/`--run-date=`/`--out=` for iteration builds; with no `--out=`, a run writes timestamped `behaviours-<ts>.json` + `data/manifest.json`, latest-by-default), `select_strata.py` (validation sampler), `select_run.py` (pin → manifest-latest → shipped-fallback resolution, same order as the page), `verify_panel_provenance.py` (proves the shipped payload rebuilds byte-identically from the committed runlog), `test_panel.py` (88 offline tests), `test_verify_panel_provenance.py`, `panel-config.json`, `behaviours.json`, `runlog-v3.jsonl` (canonical runlog, documented in `runlog-v3.md`). |
+| `publish-coverage.py` | Parses a stage-4 artifact — the structured `4-spec-coverage.json` sidecar when present (schema-checked), else the `4-spec-coverage.md` markdown via regexes — and publishes records into `data/coverage.json`, re-verifying every quote through `cite.py resolve` (subprocess). Sidecar contract pinned by `tests/test_sidecar.py`. |
+| `generate_behaviour_constants.py` | Regenerates the derived behaviour constants from `data/behaviours.json` (the registry): `GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in `build-spec-reader-data.py`, and the panel slug lists. `--check` exits 1 with a diff on drift; `tests/test_behaviour_registry.py` is the drift gate. |
+| `build-spec-reader-data.py` | `data/coverage.json` + spec markdown → `site/spec-reader/data/documents.json`. Index behaviour list (`BEHAVIOURS`, ids 1–3) hardcoded; `--user-manifest=PATH` folds user-registered specs in as extra documents (byte-identical output with no manifest — pinned by test). |
 | `build-reader-test-data.py` | `data/reader-test-coverage.json` → `site/spec-reader-test/data/behaviours.json`. Contains a near-verbatim duplicate of `coverage_payload()` from the script above (identical modulo a `document_id`→`lab_id` parameter rename). |
 | `verify-spec-reader.mjs`, `verify-reader-test.mjs` | Playwright E2E checks (need Chrome): every published passage must anchor, no console errors. Hardcode site DOM selectors; duplicate a static-server harness between them. |
 | `notion-sync/` | Empty placeholder (`.gitkeep`) — Phase 3 per PLAN.md; does not exist. |
 
 ## Relationships
 
-- `cite.py` is the shared foundation: imported by `panel/harness.py` (via a `sys.path` insertion) and invoked as a subprocess by `publish-coverage.py`.
-- The panel chain: `run_rollout.py` drives `whole_doc.py` → `runlog-v3.jsonl` (the canonical log behind the shipped payload is committed here, documented in `runlog-v3.md`; other runlogs stay uncommitted) → `build_site_data.py` → `site/llm-panel-review/data/behaviours.json`. The builder also reads `data/reader-test-coverage.json` for behaviour names/slugs.
-- The curated chain: sweep stage-4 markdown → `publish-coverage.py` → `data/coverage.json` → `build-spec-reader-data.py` → `site/spec-reader/data/documents.json`.
+- `cite.py` is the shared foundation: imported by `panel/harness.py` and invoked as a subprocess by `publish-coverage.py`.
+- Behaviour identity is registry-driven: `data/behaviours.json` → `generate_behaviour_constants.py` → the derived constants (reader `GROUPS`, reader-builder `BEHAVIOURS`, panel slug lists); `tests/test_behaviour_registry.py` fails any drift.
+- The panel chain: `run_rollout.py` drives `whole_doc.py` → `runlog-v3.jsonl` (the canonical log behind the shipped payload is committed here, documented in `runlog-v3.md`; other runlogs stay gitignored) → `build_site_data.py` → `site/llm-panel-review/data/`. The builder reads `data/behaviours.json` for behaviour metadata and `data/reader-test-coverage.json` for the curated coverage rows; with no `--out=` it writes a timestamped payload + `data/manifest.json` (latest-by-default, both gitignored).
+- The curated chain: sweep stage-4 artifact (sidecar JSON preferred, markdown fallback) → `publish-coverage.py` → `data/coverage.json` → `build-spec-reader-data.py` → `site/spec-reader/data/documents.json` (user-registered specs fold in via `--user-manifest=`).
 - `spec-watch` overwrites `specs/`, which `cite.py` and `build-spec-reader-data.py` consume (the test-bench builder reads only `data/reader-test-coverage.json`).
 
 ## Dependency map
@@ -33,13 +35,18 @@ graph LR
   watch["spec-watch/pull-latest.sh"] -->|overwrites| specs["specs/ mirrors"]
   specs --> cite["spec-cite/cite.py"]
   specs --> bsr["build-spec-reader-data.py"]
+  um["specs/user/specs.json (gitignored)"] -.->|user-manifest| cite
+  um -.-> bsr
   cite --> harness["panel/harness.py"]
   rollout["panel/run_rollout.py"] --> wholedoc["panel/whole_doc.py"]
   harness --> wholedoc
   wholedoc --> runlog["runlog-v3.jsonl (committed canonical log; see runlog-v3.md)"]
   runlog --> bsd["panel/build_site_data.py"]
-  bsd --> panelpayload["site/llm-panel-review/data/behaviours.json"]
-  sweep4["research/sweeps/NN/4-spec-coverage.md"] --> publish["publish-coverage.py"]
+  reg["data/behaviours.json (registry)"] --> gbc["generate_behaviour_constants.py"]
+  gbc -->|derived constants| bsr
+  reg -->|behaviour metadata| bsd
+  bsd --> panelpayload["site/llm-panel-review/data/behaviours-*.json + manifest.json"]
+  sweep4["research/sweeps/NN/4-spec-coverage.json sidecar (or .md)"] --> publish["publish-coverage.py"]
   cite --> publish
   publish --> coverage["data/coverage.json"]
   coverage --> bsr
@@ -54,13 +61,13 @@ graph LR
 ## As-is observations
 
 - No Python package structure: no `__init__.py`/`pyproject.toml`; all cross-module wiring is `importlib` file-loading and a `sys.path` hack. Renames/moves break only at runtime.
-- `cite.py` is the untested foundation of every chain (flagged in `docs/onboarding-spec-coverage.md` as "the trickiest code in the repo").
-- Markdown-as-API: `publish-coverage.py` regex-scrapes human-written stage-4 artifacts; formatting drift breaks publication.
-- Spec identity duplicated in 4+ places (`cite.py SPECS`, `build-spec-reader-data.py DOCUMENTS`, `data/labs.json`, `specs/CITATION.md` examples); behaviour metadata in six places.
-- Four panel modules read `panel-config.json` at import time; config cannot be injected without monkeypatching.
+- `cite.py` is the foundation of every chain (flagged in `docs/onboarding-spec-coverage.md` as "the trickiest code in the repo"); its bundled + user-manifest contracts are pinned by `tests/test_cite.py` and `tests/test_cite_user_specs.py` (plus the corpus goldens in `tests/golden/`).
+- Markdown-as-API (mitigated): `publish-coverage.py` regex-scrapes human-written stage-4 artifacts when no structured sidecar is present; the `4-spec-coverage.json` sidecar is the preferred, schema-checked contract.
+- Behaviour identity is registry-driven (`data/behaviours.json` → `generate_behaviour_constants.py`, drift-gated); spec identity still lives in `cite.py`'s bundled registry + `specs/CITATION.md` examples.
+- Config loads lazily at use time and is injectable (`harness.load_config()`); the import-side-effect probe in `test_panel.py` pins that no panel module reads files at import.
 - Runlog defaults disagree: `harness.RUNLOG` = `runlog.jsonl`, executors default to `runlog-v3.jsonl`; resume silently reads the wrong file if the override is forgotten.
 - Locator separators diverge by producer: panel chain emits `" > "`, curated chain `" › "`; cite.py tolerates both, consumers must know which producer they face.
-- The former dead symbols (`harness.BATCH`, `user_msg()`, `panel-config.json batch_size`, `build_site_data.VERDICT_WORD`) have been removed by the dead-code cleanup; `display.threshold`/`solid_threshold` are still marked "unused legacy" in the config comment but both are read by `build_site_data.py` (`solid_threshold` is baked into the payload; the stale comment is closeout item W7).
-- Rubric-text coupling: `whole_doc.py` derives prompts by `str.replace` + `assert` on frozen strings in `harness.py` — rubric edits are two-file surgery.
+- The former dead symbols (`harness.BATCH`, `user_msg()`, `panel-config.json batch_size`, `build_site_data.VERDICT_WORD`) have been removed by the dead-code cleanup; the stale "unused legacy" config comment was fixed (closeout W7) — `threshold`/`solid_threshold` are both live (`solid_threshold` bakes into the payload's `adjacent` flag; tier display is client-side).
+- Rubric prompts compose explicitly from named slots (`harness.render_system_v3`), with frozen-prompt tests pinning byte-identity to the pre-refactor strings (replaced the former `str.replace`+`assert` coupling).
 - Nothing runs in CI: no workflow executes `test_panel.py`, `publish-coverage.py --check`, locator re-resolution, or the verifiers.
 - Hygiene: `__pycache__/` + `*.pyc` are now gitignored (the committed `.pyc` was removed); `wholedoc-FAILED-*.txt` outputs are still not gitignored.
