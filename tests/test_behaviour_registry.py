@@ -184,15 +184,14 @@ class TestDerivedConstantsMatchRegistry(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
-class TestDriftIsCaught(unittest.TestCase):
-    """Mutate a copy, expect --check to fail: the gate must have teeth.
-
-    Runs against a scratch tree (--root) so the committed files stay pristine.
-    """
+class ScratchTreeTestCase(unittest.TestCase):
+    """Shared scaffolding: run the generator against a scratch copy of the
+    committed tree (--root) so the real files stay pristine."""
 
     COPIES = (
         "data/behaviours.json",
         "data/coverage.json",
+        "data/schema/behaviours.schema.json",
         "site/spec-reader/app.js",
         "engine/build-spec-reader-data.py",
         "engine/panel/panel-config.json",
@@ -214,11 +213,21 @@ class TestDriftIsCaught(unittest.TestCase):
             capture_output=True, text=True,
         )
 
+    def run_write(self):
+        return subprocess.run(
+            [sys.executable, str(GENERATOR), "--root", str(self.tmp)],
+            capture_output=True, text=True,
+        )
+
     def mutate_registry(self, mutate):
         path = self.tmp / "data" / "behaviours.json"
         registry = json.loads(path.read_text(encoding="utf-8"))
         mutate(registry)
         path.write_text(json.dumps(registry, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+class TestDriftIsCaught(ScratchTreeTestCase):
+    """Mutate a copy, expect --check to fail: the gate must have teeth."""
 
     def test_renaming_a_registry_behaviour_fails(self):
         def mutate(registry):
@@ -274,6 +283,8 @@ class TestDriftIsCaught(unittest.TestCase):
     def test_entry_missing_required_field_fails_loudly(self):
         # An entry missing a required field used to die as a bare KeyError deep
         # in a renderer; the loader must name the slug and the missing field.
+        # The loader's required list comes from behaviours.schema.json, so this
+        # covers every field the schema marks required.
         def mutate(registry):
             del registry["calibration"]["name"]
         self.mutate_registry(mutate)
@@ -282,9 +293,87 @@ class TestDriftIsCaught(unittest.TestCase):
         self.assertIn("calibration", result.stdout + result.stderr)
         self.assertIn("missing required field 'name'", result.stdout + result.stderr)
 
+    def test_entry_missing_group_fails_loudly(self):
+        # Before the loader validated the full schema-required set, a missing
+        # `group` on an index entry died as a bare KeyError in render_groups_js
+        # instead of being reported against the slug.
+        def mutate(registry):
+            del registry["calibration"]["group"]
+        self.mutate_registry(mutate)
+        result = self.run_check()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("calibration", result.stdout + result.stderr)
+        self.assertIn("missing required field 'group'", result.stdout + result.stderr)
+
+    def test_entry_missing_definition_fails_loudly(self):
+        # Before the loader validated the full schema-required set, a missing
+        # `definition` on a reader-test entry passed the whole --check run
+        # silently: no renderer reads it. The loader must catch it anyway.
+        def mutate(registry):
+            del registry["helpfulness"]["definition"]
+        self.mutate_registry(mutate)
+        result = self.run_check()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("helpfulness", result.stdout + result.stderr)
+        self.assertIn("missing required field 'definition'", result.stdout + result.stderr)
+
+    def test_duplicate_top_level_slug_fails_loudly(self):
+        # JSON parsing silently keeps the LAST of duplicate keys in an object,
+        # which in the identity registry would erase an entry without a trace.
+        # json.dumps cannot emit duplicate keys, so splice the duplicate in as
+        # raw text; the loader must reject it at parse time and name the slug.
+        path = self.tmp / "data" / "behaviours.json"
+        registry = json.loads(path.read_text(encoding="utf-8"))
+        raw = json.dumps(registry, indent=2, ensure_ascii=False)
+        self.assertTrue(raw.endswith("\n}"))
+        slug = "calibration"
+        entry_text = json.dumps(registry[slug], ensure_ascii=False)
+        path.write_text(raw[:-2] + f',\n  "{slug}": {entry_text}\n}}', encoding="utf-8")
+        result = self.run_check()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("duplicate top-level slug 'calibration'", result.stdout + result.stderr)
+
     def test_unmutated_copy_passes(self):
         result = self.run_check()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+
+class TestWriteModeRoundTrip(ScratchTreeTestCase):
+    """generate -> re-load -> unchanged: write mode must restore consistency
+    and then be idempotent, so a clean --check implies the tree really is
+    byte-stable under regeneration."""
+
+    def test_write_mode_round_trip(self):
+        pristine = {
+            relative: (self.tmp / relative).read_bytes() for relative in self.COPIES
+        }
+
+        # Disturb a derived constant, then let write mode restore it.
+        app_js = self.tmp / "site" / "spec-reader" / "app.js"
+        app_js.write_text(
+            app_js.read_text(encoding="utf-8").replace(
+                '[2, "Calibration"]', '[2, "DRIFT"]'
+            ),
+            encoding="utf-8",
+        )
+        write = self.run_write()
+        self.assertEqual(write.returncode, 0, write.stdout + write.stderr)
+        self.assertEqual(
+            pristine,
+            {relative: (self.tmp / relative).read_bytes() for relative in self.COPIES},
+            "write mode must regenerate the committed tree byte-identically",
+        )
+
+        # Re-load: a second write run and --check must both see no drift.
+        rewrite = self.run_write()
+        self.assertEqual(rewrite.returncode, 0, rewrite.stdout + rewrite.stderr)
+        self.assertEqual(
+            pristine,
+            {relative: (self.tmp / relative).read_bytes() for relative in self.COPIES},
+            "write mode on an already-consistent tree must change nothing",
+        )
+        check = self.run_check()
+        self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
 
 
 if __name__ == "__main__":

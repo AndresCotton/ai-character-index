@@ -89,14 +89,51 @@ DEFINITION_WIDTH = 67
 
 
 def load_registry(root: Path) -> dict:
-    registry = json.loads((root / "data" / "behaviours.json").read_text(encoding="utf-8"))
+    """Load data/behaviours.json, failing loud on any structural break.
+
+    The required-field list is read from data/schema/behaviours.schema.json so
+    the loader cannot drift from the schema: an entry missing any required
+    field exits naming the slug and the field (before this, a missing field
+    died as a bare KeyError in a renderer for index entries, or passed
+    silently for reader-test entries). Duplicate keys are rejected at parse
+    time -- JSON's default is silent last-wins, which would erase an entry in
+    the identity source of truth.
+    """
+    schema = json.loads(
+        (root / "data" / "schema" / "behaviours.schema.json").read_text(encoding="utf-8")
+    )
+    required_fields = schema["$defs"]["entry"]["required"]
+
+    def reject_duplicate_keys(pairs):
+        # object_pairs_hook for json.loads below, called for every JSON object
+        # (innermost first). The top-level object maps slugs to entry objects,
+        # so all its values are dicts; entry objects carry scalar values. That
+        # tells the two messages apart.
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                if isinstance(value, dict) and all(isinstance(v, dict) for v in result.values()):
+                    sys.exit(
+                        f"data/behaviours.json: duplicate top-level slug {key!r} -- JSON "
+                        "silently keeps the last of duplicate keys, erasing the earlier entry"
+                    )
+                sys.exit(f"data/behaviours.json: duplicate key {key!r} inside one entry")
+            result[key] = value
+        return result
+
+    registry = json.loads(
+        (root / "data" / "behaviours.json").read_text(encoding="utf-8"),
+        object_pairs_hook=reject_duplicate_keys,
+    )
     if not isinstance(registry, dict):
         sys.exit("data/behaviours.json: top level must be an object keyed by slug")
     seen = {}
     for slug, entry in registry.items():
         if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", slug):
             sys.exit(f"data/behaviours.json: {slug!r} is not a kebab-case slug")
-        for field in ("name", "set", "numeric_id"):
+        if not isinstance(entry, dict):
+            sys.exit(f"data/behaviours.json: {slug}: entry must be an object")
+        for field in required_fields:
             if field not in entry:
                 sys.exit(f"data/behaviours.json: {slug}: entry is missing required field {field!r}")
         behaviour_set = entry.get("set")
