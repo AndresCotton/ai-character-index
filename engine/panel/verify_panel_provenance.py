@@ -294,8 +294,10 @@ def verify(runlog=DEFAULT_RUNLOG, payload=DEFAULT_PAYLOAD, rubric=DEFAULT_RUBRIC
     try:
         rebuilt_path = rebuild(runlog, rubric, panel, scratch_root)
         rebuilt_raw = rebuilt_path.read_bytes()
-    except Exception as e:   # a builder crash is a verification failure, not a traceback
-        say(f"FAIL: rebuild from the committed runlog crashed: {e}")
+    except BaseException as e:   # a builder crash is a verification failure, not a traceback;
+        # BaseException, not Exception: a sys.exit() inside the builder raises
+        # SystemExit, which an `except Exception` would re-raise unreported
+        say(f"FAIL: rebuild from the committed runlog crashed: {type(e).__name__}: {e}")
         return 1
     finally:
         if cleanup:

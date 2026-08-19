@@ -10,12 +10,14 @@ no keys.
 Run:  python3 engine/panel/test_verify_panel_provenance.py   (or pytest)
 """
 import contextlib
+import hashlib
 import importlib.util
 import io
 import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 HERE = Path(__file__).resolve().parent
 
@@ -79,6 +81,50 @@ class TestEndToEnd(unittest.TestCase):
         self.assertIn("no rubric=", out)
 
 
+class TestBuilderCrashPath(unittest.TestCase):
+    """Any BaseException raised inside the builder's main() must be reported as
+    FAIL + exit 1 -- never an unhandled traceback, and never a re-raised
+    SystemExit carrying the builder's own exit code."""
+
+    def assert_crash_reported(self, rc, out, err, exc_name):
+        self.assertEqual(rc, 1, out + err)
+        self.assertIn("FAIL", out)
+        self.assertIn("crashed", out)
+        self.assertIn(exc_name, out)
+        self.assertNotIn("Traceback", err)
+
+    def test_builder_exception_reports_fail_not_traceback(self):
+        # Crafted input through the script's own override path: a row that
+        # passes runlog_facts (model/behaviour/spec present, so the script's
+        # zero-row guard lets it through) but omits "locator" -- a key only
+        # build_site_data.py touches. The builder KeyErrors on the row.
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
+            f.write(json.dumps({"behaviour": "helpfulness", "spec": "constitution",
+                                "model": "sol", "verdict": 2,
+                                "parsed": True, "rubric": "v3w"}) + "\n")
+            crashy = Path(f.name)
+        self.addCleanup(crashy.unlink, missing_ok=True)
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            rc = v.verify(runlog=crashy, verbose=True)
+        self.assert_crash_reported(rc, out.getvalue(), err.getvalue(), "KeyError")
+
+    def test_builder_systemexit_reports_fail_not_traceback(self):
+        # SystemExit is a BaseException, not an Exception -- exactly the class
+        # the old `except Exception` wrapper re-raised unreported. Spoof the
+        # builder load so its main() exits; no real rebuild needed.
+        class StubBuilder:
+            ROOT = None
+            @staticmethod
+            def main():
+                raise SystemExit(2)
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err), \
+                mock.patch.object(v, "_load", lambda name, path: StubBuilder):
+            rc = v.verify(verbose=True)
+        self.assert_crash_reported(rc, out.getvalue(), err.getvalue(), "SystemExit")
+
+
 class TestRunlogFacts(unittest.TestCase):
     """Tripwires on the canonical log's identity (it is frozen data; if these
     fail, the log changed -- runlog-v3.md must change with it, deliberately)."""
@@ -91,6 +137,10 @@ class TestRunlogFacts(unittest.TestCase):
         self.assertEqual(set(facts["models"]), {"sol", "fable", "kimi", "opus", "kimi-k2"})
         self.assertEqual(set(facts["behaviours"]),
                          {"helpfulness", "third-party-harm", "over-under-caution"})
+        # full sha256 recorded in engine/panel/runlog-v3.md -- any byte-level
+        # alteration of the frozen log trips here, via the documented hash
+        sha = hashlib.sha256(v.DEFAULT_RUNLOG.read_bytes()).hexdigest()
+        self.assertEqual(sha, "971f16c7459a16e9a52a7ea4a0e87c5c1db1c1f45e8b69b5ae80af6b58f85740")
 
     def test_zero_matching_rows_detected(self):
         with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
