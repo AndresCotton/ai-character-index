@@ -19,10 +19,12 @@ do the spec coverage for behaviour N
 ```
 
 (or any behaviour number from `research/core-behaviour-list.md`). The
-`spec-coverage-pass` skill runs one behaviour end to end -- stage 4, Gate 4,
-publish, verify -- on a `sweep/NN-<slug>` branch with a commit at every step,
-merged by PR. Each stage ends by rendering its gate checklist in chat with
-evidence, then **stops** -- nothing proceeds until you review and sign.
+`spec-coverage-pass` skill runs one behaviour through stages 4-5 -- stage 4,
+Gate 4, publish, verify, Gate 5 -- on a `sweep/NN-<slug>` branch with a
+commit at every step. The stage-6 audit then runs in a fresh context, and the
+branch's PR merges only after you sign Gate 6. Each stage ends by rendering
+its gate checklist in chat with evidence, then **stops** -- nothing proceeds
+until you review and sign.
 
 ## The stages
 

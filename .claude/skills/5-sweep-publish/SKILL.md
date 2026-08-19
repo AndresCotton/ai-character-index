@@ -15,8 +15,8 @@ the fix in `gates.md` under its gate, then re-publish. Divergence between the
 published rows and the artifact is always a bug.
 
 **This stage is internal publication.** The public site updates when the payload
-commit merges to main — merges touching `site/**` deploy automatically via
-`.github/workflows/deploy.yml` — and that merge happens only after stage 6 signs
+commit merges to main -- merges touching `site/**` deploy automatically via
+`.github/workflows/deploy.yml` -- and that merge happens only after stage 6 signs
 Gate 6.
 
 ## Repo
@@ -24,7 +24,7 @@ Gate 6.
 - **`data/coverage.json`:** the behaviour's rows with `locator` + `quote` citations
   (roles, `adjacent`/`example_block` flags), verdict, depth + note, spec version,
   verified date. Publish through `engine/publish-coverage.py
-  research/sweeps/NN-<slug>` — it re-resolves every quote through
+  research/sweeps/NN-<slug>` -- it re-resolves every quote through
   `engine/spec-cite/cite.py` before writing. Run `--check` first; write only on a
   clean check.
 - **`research/core-behaviour-list.md`:** extend the behaviour's spec-coverage

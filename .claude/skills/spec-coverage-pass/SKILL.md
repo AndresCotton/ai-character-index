@@ -1,6 +1,6 @@
 ---
 name: spec-coverage-pass
-description: Run one behaviour's spec-coverage pass end to end -- stage-4 extraction by a fresh-context agent, Gate 4 sign-off, scoped publish to data/coverage.json and the spec reader, mechanical verification -- with a commit pushed at every step on a per-behaviour branch merged by PR. Use when asked to do the next behaviour's spec coverage.
+description: Run one behaviour's spec-coverage pass -- stage-4 extraction by a fresh-context agent, Gate 4 sign-off, scoped publish to data/coverage.json and the spec reader, mechanical verification, Gate 5 sign-off -- with a commit pushed at every step on a per-behaviour branch whose PR merges only after the stage-6 audit signs Gate 6. Use when asked to do the next behaviour's spec coverage.
 ---
 
 # Spec-coverage pass (one behaviour at a time)
@@ -10,6 +10,10 @@ authorized slice of stage 5 (repo coverage data + spec reader). It does NOT
 publish to Notion and adds no eval data -- the eval-discovery stages (1-3)
 are out of scope and no longer part of this pipeline. One behaviour per
 pass; never batch.
+
+The pass signs Gate 5, then opens the PR. The stage-6 audit
+(`6-sweep-verify/SKILL.md`) runs next, in a fresh context, and the branch
+merges -- which deploys the site -- only after Gate 6 is signed.
 
 Precedent: behaviour 2 (Calibration), `research/sweeps/02-calibration/`. Its
 artifact is both the format template and a parsing contract --
@@ -62,7 +66,7 @@ artifact's pending note with the signed date, and append the Gate 4 entry to
 - Commit B: `feat(site): add <slug> to the spec reader` -- the build script
   entry and regenerated documents.json. Push.
 
-## Step 4 -- Verify
+## Step 4 -- Verify, then STOP for Gate 5
 
 - `node engine/verify-spec-reader.mjs` -- every behaviour x spec view must
   PASS (this re-checks all previously published behaviours too).
@@ -71,13 +75,19 @@ artifact's pending note with the signed date, and append the Gate 4 entry to
 - Local look for the human: `cd site && python3 -m http.server 8000`, then
   http://localhost:8000/spec-reader/?behavior=<slug>. Never open via file:// --
   module scripts are blocked there and the page renders as a dead shell.
+- Render the Gate 5 checklist (`5-sweep-publish/SKILL.md`) with these command
+  outputs, then STOP for sign-off; on approval append the Gate 5 entry to
+  `gates.md` (date, approver, corrections).
 
-## Step 5 -- PR and merge
+## Step 5 -- PR; merge after Gate 6
 
 - `gh pr create` on the branch: title `Behaviour N (<name>): spec coverage`;
   body lists verdict + depth per spec, citation counts, verification output,
   and links the gate log.
-- Andrés merges. Then: `git checkout main && git pull --ff-only` and
+- The stage-6 audit (`6-sweep-verify/SKILL.md`) runs next, in a fresh context
+  that did not execute this pass. Nothing merges before Gate 6 is signed.
+- After Gate 6: Andrés merges -- the merge deploys the site. Then:
+  `git checkout main && git pull --ff-only` and
   `git branch -d sweep/NN-<slug>`.
 
 ## Rules

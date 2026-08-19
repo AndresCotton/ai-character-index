@@ -1,6 +1,6 @@
 ---
 name: 6-sweep-verify
-description: Stage 6 of a coverage sweep -- fresh-context audit of published coverage: locator re-resolution, payload identity, live render, gate-log completeness. Produces the final sign-off (Gate 6). Run in a new session or subagent that did not execute the sweep.
+description: Stage 6 of a coverage sweep -- fresh-context audit of published coverage: locator re-resolution, payload identity, local render, gate-log completeness. Produces the final sign-off (Gate 6). Run in a new session or subagent that did not execute the sweep.
 ---
 
 # Sweep stage 6: verify (coverage only)
@@ -11,24 +11,27 @@ resolution.
 
 **Independence rule:** this stage is run by a context that did not produce the sweep
 -- a fresh session or a subagent given only this skill and the behaviour number. The
-auditor reads the repo and the live site; it does not read the sweeping session's
-conversation. An auditor that watched the sweep shares its blind spots.
+auditor reads the repo and (if deployed) the live site; it does not read the sweeping
+session's conversation. An auditor that watched the sweep shares its blind spots.
 
 ## Checks
 
 1. **Quotes.** Every locator in `data/coverage.json` (and the stage-4 artifact)
    re-resolved with `engine/spec-cite/cite.py`; stored quotes byte-identical to
-   resolver output. `publish-coverage.py --check` performs the same verification —
+   resolver output. `publish-coverage.py --check` performs the same verification --
    re-run it here; an audit that trusts the publisher's earlier check without
    re-running it is not independent.
 2. **Payload identity.** The behaviour's entries in
    `site/spec-reader/data/documents.json` match `data/coverage.json` exactly
    (verdict, depth, passage set). If the behaviour feeds the panel surface, its row
    in `site/llm-panel-review/data/behaviours.json` matches
-   `data/reader-test-coverage.json`.
-3. **Live render.** `node engine/verify-spec-reader.mjs` passes (and
+   `data/reader-test-coverage.json`. Extract mechanically (jq for the JSON) and
+   diff -- do not eyeball.
+3. **Local render.** `node engine/verify-spec-reader.mjs` passes (and
    `engine/verify-reader-test.mjs` if the bench is affected): every passage anchors,
-   no unresolved-anchor warnings, no console errors.
+   no unresolved-anchor warnings, no console errors. The verifiers serve the
+   committed `site/` tree locally -- the right surface for a pre-merge audit, which
+   the deployed site does not yet reflect.
 4. **Gate log.** The stage gates are signed with dates in `gates.md`; every open
    item accepted at a gate is recorded in the sweep record.
 
@@ -49,7 +52,7 @@ record.
 ## After Gate 6
 
 Merge the sweep branch; the merge deploys the site automatically
-(`.github/workflows/deploy.yml` fires on `site/**` changes — `pnpm deploy:site` is
+(`.github/workflows/deploy.yml` fires on `site/**` changes -- `pnpm deploy:site` is
 the manual twin) and record the merge/deploy date in `gates.md` under Gate 6.
 
 The behaviour's transparency chain is closed: every quote traces to a resolver call,
