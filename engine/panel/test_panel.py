@@ -754,6 +754,31 @@ class TestAppJSTiers(unittest.TestCase):
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
 
 
+class TestRunlogPathResolution(unittest.TestCase):
+    """--runlog= must reach the spawned whole_doc.py cells as an absolute
+    path: cells run with cwd=engine/panel, so a caller-relative path would
+    resolve there and lose the file even though the parent's resume read (in
+    the caller's cwd) found it."""
+
+    def test_absolute_path_passes_through(self):
+        self.assertEqual(rr.resolve_runlog("/tmp/some/runlog.jsonl"),
+                         Path("/tmp/some/runlog.jsonl"))
+
+    def test_relative_path_anchors_to_caller_cwd(self):
+        got = rr.resolve_runlog("my-runlog.jsonl")
+        self.assertTrue(got.is_absolute(), got)
+        self.assertEqual(got, Path.cwd() / "my-runlog.jsonl")
+
+    def test_dry_run_accepts_caller_relative_runlog(self):
+        out = subprocess.run([sys.executable, str(HERE / "run_rollout.py"),
+                              "--behaviours=helpfulness", "--panel=itest",
+                              "--runlog=engine/panel/runlog-v3.jsonl"],
+                             capture_output=True, text=True, timeout=300,
+                             cwd=str(HERE.parent.parent))
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("DRY RUN", out.stdout)
+
+
 class TestImportSideEffects(unittest.TestCase):
     """Config must be lazy: importing any panel module in a FRESH interpreter reads
     no PANEL config/data file (guards the monkeypatch-to-inject debt the decoupling

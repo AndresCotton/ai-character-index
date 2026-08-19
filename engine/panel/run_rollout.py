@@ -34,6 +34,17 @@ DEFAULT_PANEL = "frontier_primary"   # primaries only; substitutes run manually 
 OUT_TOKENS_PER_PASSAGE = 8   # floor: "N: v" verdict lines only
 
 
+def resolve_runlog(arg):
+    """A --runlog= value as an absolute path.
+
+    Cells are spawned as `whole_doc.py ... --runlog=<path>` with cwd=HERE
+    (engine/panel), so a relative path must be anchored to the CALLER's cwd
+    here; otherwise the child resolves it under engine/panel and loses the
+    file even though the parent's resume read found it."""
+    p = Path(arg)
+    return p if p.is_absolute() else Path.cwd() / p
+
+
 def build_plan(behaviours, specs, panel, done, first_loc):
     """Pure: which cells to run vs which the runlog already covers."""
     plan, skipped = [], []
@@ -76,7 +87,7 @@ def main():
     panel = list(panels[DEFAULT_PANEL])
     for a in sys.argv[1:]:
         if a.startswith("--runlog="):
-            runlog = Path(a.split("=", 1)[1])
+            runlog = resolve_runlog(a.split("=", 1)[1])
         elif a.startswith("--behaviours="):
             behaviours = a.split("=", 1)[1].split(",")
         elif a.startswith("--panel="):
