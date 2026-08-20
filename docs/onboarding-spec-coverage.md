@@ -130,23 +130,28 @@ This is the heart of the job. Each step names the file(s) it touches.
    *"The panel in detail" below covers the method's properties.*
 
 3. **The Stage-4 artifact.** All of the above is written to
-   `research/sweeps/NN-<slug>/4-spec-coverage.md`. This file is both the human
-   record and a **machine-parsed contract** (see §5). It ends at **Gate 4**: a
-   checklist the human verifies, then signs in `gates.md`. Nothing publishes
-   before the gate is signed. The behaviour-2 artifact
-   (`research/sweeps/02-calibration/4-spec-coverage.md`) is the canonical template
-   -- copy its shape exactly.
+   `research/sweeps/NN-<slug>/4-spec-coverage.md`, with a structured sidecar
+   (`4-spec-coverage.json`) emitted alongside. The sidecar is the preferred
+   **machine-parsed contract**; the markdown is the human record and the parse
+   fallback (see §5). It ends at **Gate 4**: a checklist the human verifies, then
+   signs in `gates.md`. Nothing publishes before the gate is signed. The
+   behaviour-2 artifact (`research/sweeps/02-calibration/4-spec-coverage.md`) is
+   the canonical template -- copy its shape exactly.
 
 4. **Publish to the canonical data.** `engine/publish-coverage.py
-   research/sweeps/NN-<slug>` parses the artifact, **re-resolves every quote
-   byte-for-byte** through `cite.py`, and rewrites that behaviour's records in
-   `data/coverage.json`. That JSON file is the single source of truth the rest of
-   the system renders from. `--check` mode re-verifies and diffs without writing.
+   research/sweeps/NN-<slug>` parses the artifact (the structured
+   `4-spec-coverage.json` sidecar when present, else the markdown), **re-resolves
+   every quote byte-for-byte** through `cite.py`, and rewrites that behaviour's
+   records in `data/coverage.json`. That JSON file is the single source of truth
+   the rest of the system renders from. `--check` mode re-verifies and diffs
+   without writing.
 5. **Build the reader payload.** `engine/build-spec-reader-data.py` reads
    `data/coverage.json`, joins it to the raw spec markdown and per-behaviour
    metadata, and emits the static blob `site/spec-reader/data/documents.json`.
-   **Adding a newly-published behaviour requires adding it to the `BEHAVIOURS`
-   list in this script** (id, slug, name, definition, category).
+   Its `BEHAVIOURS` list is **generated, not hand-edited**: add the behaviour to
+   the `data/behaviours.json` registry and publish a coverage record for it, then
+   regenerate the derived constants with `engine/generate_behaviour_constants.py`
+   (drift-gated by `tests/test_behaviour_registry.py`).
 6. **Present and verify.** The public spec reader (`site/spec-reader/`) renders
    `documents.json`: it shows each spec with the behaviour's passages anchored in
    place. `engine/verify-spec-reader.mjs` drives it headlessly and asserts that
@@ -196,7 +201,7 @@ the supplied definitions.
 | **Depth rubric** | `methodology/spec-coverage-depth-rubric.md` | anchors the 0-4 depth score + boundary tests + precedent |
 | **Skill 4 (extraction procedure)** | `.claude/skills/4-sweep-spec-coverage/SKILL.md` | how a passage set is built and gated |
 | **End-to-end campaign skill** | `.claude/skills/spec-coverage-pass/SKILL.md` | one behaviour, extract → publish → verify → PR |
-| **Stage-4 artifact (per behaviour)** | `research/sweeps/NN-<slug>/4-spec-coverage.md` | the passage set + verdict + depth; a parsing contract |
+| **Stage-4 artifact (per behaviour)** | `research/sweeps/NN-<slug>/4-spec-coverage.md` (+ `4-spec-coverage.json` sidecar) | the passage set + verdict + depth; the sidecar is the preferred parse, markdown the fallback |
 | **Artifact template** | `research/sweeps/02-calibration/4-spec-coverage.md` | copy this shape |
 | **Gate log (per behaviour)** | `research/sweeps/NN-<slug>/gates.md` | dated human sign-offs |
 | **Publish script** | `engine/publish-coverage.py` | artifact → `data/coverage.json` (re-verifies quotes) |
@@ -234,10 +239,13 @@ its readers too.
   and list markers collapsed). Nothing is ever elided inside a quote -- a
   discontinuous quotation is two locators.
 
-### b) The Stage-4 artifact as a parsing contract (`4-spec-coverage.md`)
+### b) The Stage-4 artifact as a parsing contract
 
-`publish-coverage.py` reads the artifact with strict regexes. Each excerpt is a
-fixed four-line block:
+Two shapes, one preferred: the structured sidecar (`4-spec-coverage.json`,
+validated against `data/schema/spec-coverage-sidecar.schema.json`) is what
+`publish-coverage.py` reads when it is present; the markdown
+(`4-spec-coverage.md`) is the regex-parsed fallback. In the markdown fallback,
+each excerpt is a fixed four-line block:
 
 ```
 - **Locator:** `<locator>`
@@ -248,8 +256,9 @@ fixed four-line block:
 
 Per-spec sections are the headings `## Claude constitution ...` and
 `## OpenAI Model Spec ...`; the score comes from a `## Verdict and depth` table
-with one row per spec. Deviate from this shape and the publish step breaks.
-(This tight coupling is one of the seams worth revisiting -- see §7.)
+with one row per spec. Deviate from the fallback's shape and the markdown parse
+breaks. (The sidecar removes most of this tight coupling -- see §7; the regex
+fallback is kept for artifacts without a sidecar.)
 
 ### c) The published record (`data/coverage.json`)
 
@@ -319,36 +328,35 @@ about one's own actions) are published against 2 labs (Anthropic, OpenAI) =
 scripts, and reader all work. Data is hand-maintained via reviewed PRs (Phase 1);
 Notion sync is Phase 3 and not built.
 
-**What is described but not yet built** (so it is a natural place for your work).
-The first item is the headline objective of this collaboration; the rest are
-secondary observations.
+**The seams an earlier draft of this doc flagged, with current status.** Most
+have since been closed; the one remaining open item is CI.
 
-- **No validation CI.** `.github/workflows/` holds only `deploy.yml` (deploys
-  `site/**` to Cloudflare Pages). The schemas now exist (`data/schema/`) and
-  `engine/validate_data.py` is a locally runnable gate -- but no workflow runs
-  it yet, and `PLAN.md` describes CI that validates `data/*.json` against
-  schemas and re-resolves every locator in `coverage.json` on each PR. Today
-  that re-resolution only happens when someone runs `publish-coverage.py
-  --check` by hand. Wiring this up would make the "coverage claims stay true" guarantee
-  real rather than aspirational.
-- **Behaviour metadata is duplicated in at least six places** that must be kept
-  in sync by hand: `research/core-behaviour-list.md` (prose), the `BEHAVIOURS`
-  list in `engine/build-spec-reader-data.py`, the `GROUPS` list in
-  `site/spec-reader/app.js`, `engine/panel/behaviours.json`,
-  `panel-config.json` `display.behaviours`, and the `submit-eval.yml` issue
-  dropdown. Two data files additionally reuse `behaviour_id` across disjoint
-  numbering spaces (`coverage.json` vs `reader-test-coverage.json`). A single
-  source these derive from is an obvious
-  cleanup.
-- **The artifact is both prose and a parser input.** `publish-coverage.py` scrapes
-  a human-written markdown file with regexes (§5b). It works, but the coupling is
-  brittle -- small formatting drift breaks publication. Whether the artifact
-  should emit a structured sidecar, or the parser should be more forgiving, is an
-  open design question.
-- **No unit tests for `cite.py`.** Its correctness is currently proven only
-  indirectly, by the re-resolution in `publish-coverage.py` and by
-  `verify-spec-reader.mjs`. The sentence splitter, block segmenter, and locator
-  parser are the trickiest code in the repo and would benefit from direct tests.
+- **No validation CI. (OPEN)** `.github/workflows/` holds only `deploy.yml`
+  (deploys `site/**` to Cloudflare Pages). The schemas now exist
+  (`data/schema/`) and `engine/validate_data.py` is a locally runnable gate --
+  but no workflow runs it yet, and `PLAN.md` describes CI that validates
+  `data/*.json` against schemas and re-resolves every locator in `coverage.json`
+  on each PR. Today that re-resolution only happens when someone runs
+  `publish-coverage.py --check` by hand. Wiring this up would make the "coverage
+  claims stay true" guarantee real rather than aspirational.
+- **Behaviour metadata duplicated in six places. (RESOLVED)** Behaviour identity
+  is now registry-driven: `data/behaviours.json` is the single source of truth,
+  and `engine/generate_behaviour_constants.py` regenerates the derived constants
+  (`GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in
+  `engine/build-spec-reader-data.py`, and the panel slug lists), drift-gated by
+  `tests/test_behaviour_registry.py`. Residual: `behaviour_id` is still reused
+  across two disjoint per-file numbering spaces (`coverage.json` vs
+  `reader-test-coverage.json`); the registry documents those as file-local, with
+  slugs as the global join key.
+- **The artifact as a parsing contract. (RESOLVED)** Stage-4 artifacts now emit a
+  structured sidecar (`4-spec-coverage.json`, schema-checked) that
+  `publish-coverage.py` prefers, with the markdown regex parse kept as a fallback
+  (§5b). The brittle-coupling concern is closed for sidecar-producing sweeps.
+- **No unit tests for `cite.py`. (RESOLVED)** `tests/test_cite.py` now covers the
+  resolver directly. The sentence splitter, block segmenter, and locator parser
+  are still the trickiest code in the repo, but they now have direct tests,
+  extended by `tests/test_cite_user_specs.py` and the corpus goldens under
+  `tests/golden/`.
 
 Treat these as observations, not a backlog; confirm the direction with Andrés before large refactors. The whole point is *cleaner, reproducible* structure, so leave each
 file at least as legible as you found it.

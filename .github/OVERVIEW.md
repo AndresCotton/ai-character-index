@@ -1,6 +1,6 @@
 # .github — one production deploy workflow + two public intake forms
 
-> As-is snapshot of origin/main @ 72e2e6b (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
+> Current-state doc: describes what exists now, not what should exist. Brought current with the Phase-2 stack (#28–#41).
 
 ## Purpose
 `.github/` holds the repo's only CI/CD automation — a Cloudflare Pages deploy fired by merges to `main` — plus the two GitHub issue forms that are the project's public inbound channels (eval submissions, appeals).
@@ -36,5 +36,5 @@ graph LR
 - A `ci.yml` exists only on `ci/fast-suite` ("ci: run the fast suite on every PR") — a local-only branch that was never pushed (see `experiments-branches.md`); it is not an ancestor of `origin/main`.
 - `engine/notion-sync/` contains only `.gitkeep`: the Notion sync engine promised by PLAN.md §1.2/§6 Phase 3 has no code.
 - `engine/spec-watch/pull-latest.sh` exists and is used, but manually — sweep records log it being run (`research/sweeps/*/4-spec-coverage.md`, `behaviours-for-adria/*/4-spec-coverage.md`), and `docs/onboarding-spec-coverage.md` lists it as the "Mirror refresher". No workflow invokes it.
-- `data/schema/` holds only `.gitkeep`, so the `ci.yml` promise to "validate `data/*.json` against schemas in `data/schema/`" (PLAN.md §2/§5, `engine/README.md`) has no schemas to run against on main either.
+- `data/schema/` now holds a JSON Schema per canonical `data/*.json` file (plus the stage-4 sidecar schema), enforced locally by `engine/validate_data.py`; what is still missing is the `ci.yml` to run that gate, so the PLAN.md §2/§5 promise to "validate `data/*.json` against schemas in `data/schema/`" on each PR remains unmet on main.
 - With no `ci.yml` on main there is no PR-time validation and no per-PR preview deploy; production deploys fire only post-merge.

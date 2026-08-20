@@ -32,8 +32,8 @@ graph LR
 - Schemas exist for every canonical file and `engine/validate_data.py` (+ its test suite) enforces them; no CI workflow runs the gate yet.
 - `meta.json` (site-wide metadata) is still planned-but-absent; `behaviours.json` is the registry (see Contents).
 - Behaviour IDs collide across files: `coverage.json` id 1 = "No sycophancy", `reader-test-coverage.json` id 1 = "Helpfulness"; the registry namespaces ids per set and documents the join semantics (ids are file-local, slugs are the global key).
-- The reader's published behaviour definitions (ids 1-3) still live as a hardcoded `BEHAVIOURS` constant in `engine/build-spec-reader-data.py`; the panel's metadata is registry-driven.
+- The reader's published behaviour definitions (ids 1-3) live as a generated `BEHAVIOURS` constant in `engine/build-spec-reader-data.py`, regenerated from `data/behaviours.json` by `engine/generate_behaviour_constants.py` (ids 1-3 because those are the covered behaviours); the panel's metadata is registry-driven too.
 - `labs.json`'s only programmatic consumer is the validation gate; `site/index.html` is a static prototype that fetches no JSON.
 - `reader-test-coverage.json` has two consumers: `engine/build-reader-test-data.py` (the whole set) and `engine/panel/build_site_data.py` (the curated rows behind the panel display list).
-- `research/sweeps/01-no-sycophancy/` publishes from a reconstructed `4-spec-coverage.json` sidecar (built from the 20 published citations), so behaviour 1's records are regenerable via `publish-coverage.py`; behaviours 2-3 publish from their markdown artifacts.
+- `research/sweeps/01-no-sycophancy/` publishes from a reconstructed `4-spec-coverage.json` sidecar (built from the 20 published citations), so behaviour 1's records are regenerable via `publish-coverage.py`; behaviours 2-3 publish from their structured `4-spec-coverage.json` sidecars (sidecar preferred, markdown fallback).
 - `coverage.json` `citation_format` claims quotes are exact `cite.py resolve` output; enforcement happens only when `publish-coverage.py` is run, not in CI.
