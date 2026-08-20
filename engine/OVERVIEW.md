@@ -1,6 +1,6 @@
 # engine/ — the automation layer: citation resolution, LLM panel judging, and site-payload builders
 
-> Current-state doc: describes what exists now, not what should exist. Brought current with the Phase-2 stack (#28–#34).
+> Current-state doc: describes what exists now, not what should exist. Brought current with the Phase-2 stack (#28–#41).
 
 ## Purpose
 
@@ -18,6 +18,7 @@ Everything that keeps the index alive: resolves spec citations, runs LLM panel j
 | `build-spec-reader-data.py` | `data/coverage.json` + spec markdown → `site/spec-reader/data/documents.json`. Index behaviour list (`BEHAVIOURS`) generated from `data/behaviours.json` by `generate_behaviour_constants.py` (currently ids 1–3, the covered behaviours); `--user-manifest=PATH` folds user-registered specs in as extra documents (byte-identical output with no manifest — pinned by test). |
 | `build-reader-test-data.py` | `data/reader-test-coverage.json` → `site/spec-reader-test/data/behaviours.json`. Shares `coverage_payload()` with the script above via `engine/coverage_payload.py` (W5 de-duplication done). |
 | `verify-spec-reader.mjs`, `verify-reader-test.mjs` | Playwright E2E checks (need Chrome): every published passage must anchor, no console errors. Hardcode site DOM selectors; duplicate a static-server harness between them. |
+| `verify-panel-features.mjs`, `stage_user_demo.py` | Site feature harness (needs Chrome): drives the panel + reader against BOTH the bundled payload and a user-extended staging, pinning URL/DOM-state features (payload resolution, tier bands incl. the single-judge floor, N-document compare, export) and interactions (resizers, focus toggle, passage navigation, URL sync). `stage_user_demo.py` stages a clone/fork-style site into scratch (synthetic user spec + a `set:user` behaviour); the repo's own site data is restored exactly after. |
 | `notion-sync/` | Empty placeholder (`.gitkeep`) — Phase 3 per PLAN.md; does not exist. |
 
 ## Relationships

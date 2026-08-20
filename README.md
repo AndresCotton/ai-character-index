@@ -31,7 +31,4 @@ Spec coverage enters through **coverage sweeps**: a staged pipeline with a human
 
 ## Contributing
 
-Two channels (live on GitHub):
-
-- **Submit an eval** you think the index should track → "Submit an eval" issue form.
-- **Think we made a mistake?** → "Appeal a score" issue form. Appeals and their resolutions are public.
+Questions, corrections, or anything you think we've got wrong: use the **contact link** on the repo's Issues page ("Contact Andrés directly"), or open a blank issue. We read everything.

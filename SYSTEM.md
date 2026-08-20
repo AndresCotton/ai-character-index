@@ -1,6 +1,6 @@
 # SYSTEM — global map of the AI Character Index repository
 
-> Current-state doc, plus the branch/local territory documented in `experiments-branches.md`. Describes what exists now, not what should exist. Each directory has its own `OVERVIEW.md`; this file stitches them together. Brought current with the Phase-2 stack (#28–#34).
+> Current-state doc, plus the branch/local territory documented in `experiments-branches.md`. Describes what exists now, not what should exist. Each directory has its own `OVERVIEW.md`; this file stitches them together. Brought current with the Phase-2 stack (#28–#41).
 
 > **Scope (repo-owner decision):** the deliverable is the **model spec reader only** — behaviour × spec coverage with cited passages. The eval-discovery/quality workflow (sweep stages 1–3, `evals.json`, `sources/`, evidence-strength lens) is outside the deliverable and was deleted by the scope ruling (2026-08-19). This document maps the whole repo as-is; in/out rulings and removal tasks are tracked in [CLOSEOUT-LIST.md](CLOSEOUT-LIST.md).
 
@@ -45,14 +45,14 @@ graph TB
 | Directory | One-line role | Detail |
 |---|---|---|
 | `.claude/skills/` | LLM-facing procedure layer: coverage-only stages 4–6 with human gates (agent-neutral markdown; root `AGENTS.md` points here) | [.claude/skills/OVERVIEW.md](.claude/skills/OVERVIEW.md) |
-| `engine/` | Automation: citation resolution, LLM panel judging, payload builders, E2E verifiers | [engine/OVERVIEW.md](engine/OVERVIEW.md) |
+| `engine/` | Automation: citation resolution, LLM panel judging, payload builders, E2E + feature-harness verifiers | [engine/OVERVIEW.md](engine/OVERVIEW.md) |
 | `data/` | Canonical machine-readable data: behaviour registry, coverage ledgers, labs, schema/ | [data/OVERVIEW.md](data/OVERVIEW.md) |
 | `specs/` | Version-pinned lab-spec mirrors + locator grammar | [specs/OVERVIEW.md](specs/OVERVIEW.md) |
 | `research/` | Canonical behaviour list + per-behaviour sweep records | [research/OVERVIEW.md](research/OVERVIEW.md) |
 | `behaviours-for-adria/` | Independent reviewer-batch stage-4 set (test bench, plus 3 rows feeding the panel surface) | [behaviours-for-adria/OVERVIEW.md](behaviours-for-adria/OVERVIEW.md) |
 | `methodology/` | Depth rubric, public site copy, method-exploration findings | [methodology/OVERVIEW.md](methodology/OVERVIEW.md) |
 | `site/` | Five static surfaces, no build step | [site/OVERVIEW.md](site/OVERVIEW.md) |
-| `.github/` | One deploy workflow + two public intake forms | [.github/OVERVIEW.md](.github/OVERVIEW.md) |
+| `.github/` | One deploy workflow + Issues-page contact link | [.github/OVERVIEW.md](.github/OVERVIEW.md) |
 | `docs/` | One onboarding document bridging both repo eras | [docs/OVERVIEW.md](docs/OVERVIEW.md) |
 | `design/`, `vision/` | Settled-design log (Jul 2026) and the originating brief | [design/OVERVIEW.md](design/OVERVIEW.md), [vision/OVERVIEW.md](vision/OVERVIEW.md) |
 | root files | PLAN.md, README.md, pnpm-for-wrangler setup | [ROOT.md](ROOT.md) |
@@ -64,7 +64,7 @@ graph TB
 2. **Stage-4 artifact format** — prescribed by `.claude/skills/4-sweep-spec-coverage`: the structured `4-spec-coverage.json` sidecar (schema-checked) is preferred, with `engine/publish-coverage.py` falling back to regex-scraping the markdown. The artifact is simultaneously prose record, parser input, and gate evidence.
 3. **Behaviour identity** — registry-driven since #28: `data/behaviours.json` is the source of truth; `engine/generate_behaviour_constants.py` regenerates the derived constants (`spec-reader/app.js GROUPS`, `build-spec-reader-data.py BEHAVIOURS`, panel slug lists), with `tests/test_behaviour_registry.py` as the drift gate. `behaviour_id` remains **file-local across disjoint numbering spaces** (id 1 = "No sycophancy" in `coverage.json`, "Helpfulness" in `reader-test-coverage.json`); the registry namespaces ids per set and slugs are the global key.
 4. **Runlog convention** — JSONL rows keyed by rubric version; defaults still disagree between `harness.RUNLOG` and the executors. The canonical shipped runlog is committed (`engine/panel/runlog-v3.jsonl`, documented in `runlog-v3.md`) and `engine/panel/verify_panel_provenance.py` proves the shipped payload rebuilds from it byte-identically; other runlogs stay gitignored.
-5. **Site payloads** — `spec-reader/data/documents.json` is shared by all three reader surfaces; panel citations carry `exampleBlock` flags anchoring example blocks. Panel runs emit timestamped payloads + `manifest.json` (latest-by-default, gitignored); the committed `behaviours.json` is the fresh-clone fallback.
+5. **Site payloads** — `spec-reader/data/documents.json` is shared by all three reader surfaces; panel citations carry `exampleBlock` flags anchoring example blocks. Panel runs emit timestamped payloads + `manifest.json` (latest-by-default, gitignored); the committed `behaviours.json` is the fresh-clone fallback. The compare view generalizes to N documents — every document renders as a pane with a boundary resizer between adjacent panes (a user-registered spec is a first-class pane).
 6. **Deploy trigger** — pushes to main filtered to `site/**` and `.github/workflows/deploy.yml` (plus manual dispatch): data/engine changes are invisible to production until baked into committed payloads.
 
 ## Cross-cutting as-is risks (synthesized from all overviews)
