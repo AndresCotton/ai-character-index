@@ -1,19 +1,22 @@
 /*
- * Reader test -- a standalone copy of the published spec reader (site/spec-reader/),
- * kept separate so an external reviewer's behaviour set can be published, revised and
- * withdrawn without touching the index's own reader.
+ * LLM panel -- a standalone fork of the published spec reader (site/spec-reader/),
+ * kept separate so a panel of LLM judges' citation verdicts can be displayed, tiered
+ * and exported without touching the index's own reader.
  *
- * Differences from the original: the behaviour menu is built from whatever set has
- * been published to this bench (rather than the index's fixed thirteen); the reader
- * degrades to plain reading -- both specs in full, nothing highlighted -- when that set
- * is empty; and the menu is a checklist rather than a single choice, so any number of
- * behaviours can be read over the same text at once. Each behaviour carries its own
- * colour, a core passage is that colour at full strength and a related one the same
- * colour washed out, and a passage cited by more than one selected behaviour blends
- * their colours and shows one gutter rule per behaviour. Colour distinguishes the
- * behaviours; the margin rule's texture distinguishes the groups -- see GROUP_TEXTURE
- * below. The spec text itself is shared with the published reader, so both surfaces
- * always render the same document versions.
+ * Differences from the reader: the behaviour set and its per-passage citations come
+ * from a panel run (engine/panel/build_site_data.py) rather than the index's curated
+ * coverage, resolved in order from a ?data=<name> pin, data/manifest.json "latest", or
+ * the shipped data/behaviours.json fallback (see loadBehaviours); each citation carries
+ * per-model verdicts scored into tiers -- defining / core / related -- which the header
+ * band toggles show or hide (applyPanelThreshold); and the menu is a checklist, so any
+ * number of behaviours can be read over the same text at once, side by side in the
+ * compare view when it is open. Each behaviour carries its own colour, a core passage is
+ * that colour at full strength and a related one the same colour washed out, and a
+ * passage cited by more than one selected behaviour blends their colours and shows one
+ * gutter rule per behaviour. Colour distinguishes the behaviours; the margin rule's
+ * texture distinguishes the groups -- see GROUP_TEXTURE below. The spec text itself is
+ * shared with the published reader, so both surfaces always render the same document
+ * versions.
  */
 
 const DOCUMENTS_URL = "../spec-reader/data/documents.json";
@@ -578,9 +581,9 @@ function passagesMarkdown() {
   const behaviours = selectedBehaviours();
   const documents = state.payload?.documents || [];
   const lines = [
-    "# Reader test -- specification passages",
+    "# LLM panel -- specification passages",
     "",
-    `Exported from the AI Character Index reader test bench on ${today()}.`,
+    `Exported from the AI Character Index LLM panel on ${today()}.`,
     "",
     `Behaviors: ${behaviours.map(behaviour => `${paddedNumber(behaviour)} ${behaviour.name}`).join(", ")}.`,
     "",
@@ -634,7 +637,7 @@ function exportFilename() {
   const subject = behaviours.length === 1
     ? behaviours[0].slug
     : `${behaviours.length}-behaviors`;
-  return `reader-test-${subject}-passages-${today()}.md`;
+  return `llm-panel-${subject}-passages-${today()}.md`;
 }
 
 function downloadPassages() {
@@ -980,6 +983,10 @@ function passageFragments(quote) {
 }
 
 function containsInOrder(haystack, fragments) {
+  // A quote that yields no fragments (only an admonition marker and/or cross
+  // references) must not match every block -- treat it as unresolved instead of
+  // silently anchoring the first block.
+  if (!fragments.length) return false;
   let cursor = 0;
   for (const fragment of fragments) {
     const at = haystack.indexOf(fragment, cursor);
@@ -1644,6 +1651,9 @@ document.addEventListener("keydown", event => {
     window.parent.postMessage({ type: "aci-spec-reader-close" }, location.origin);
     return;
   }
+  // Browser/OS shortcuts keep their keys: Ctrl/Cmd/Alt + a letter must not move the
+  // passage cursor (e.g. Ctrl+J opens the browser's downloads).
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
   if (event.key === "j") focusPassage(state.passageIndex + 1);
   if (event.key === "k") focusPassage(state.passageIndex - 1);
 });

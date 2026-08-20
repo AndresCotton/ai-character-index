@@ -1013,6 +1013,9 @@ document.addEventListener("keydown", event => {
     window.parent.postMessage({ type: "aci-spec-reader-close" }, location.origin);
     return;
   }
+  // Browser/OS shortcuts keep their keys: Ctrl/Cmd/Alt + a letter must not move the
+  // passage cursor (e.g. Ctrl+J opens the browser's downloads).
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
   if (event.key === "j") focusPassage(state.passageIndex + 1);
   if (event.key === "k") focusPassage(state.passageIndex - 1);
 });

@@ -36,6 +36,7 @@ validated (SAFE_NAME chars, no path separators or .. traversal), so it cannot wr
 outside the data dir.
   --registry=PATH      read the behaviour registry from PATH (default data/behaviours.json)
   --run-date=YYYY-MM-DD  pin provenance.runDate (default: today) so a rebuild can
+                         reproduce a committed payload byte-for-byte.
 """
 import collections
 import importlib.util

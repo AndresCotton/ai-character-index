@@ -555,8 +555,11 @@ def cmd_resolve(args):
 
 
 def cmd_find(args):
+    if len(args) < 2:
+        sys.exit("find needs a spec and a query, e.g. find constitution@2026-01-20 <query>")
     spec, _, version = args[0].partition("@")
-    needle = match_normalize(args[1])
+    query = args[1]
+    needle = match_normalize(query)
     version, sections, lines = load_spec(spec, version or None)
     found = 0
     for sec in sections:
@@ -589,7 +592,10 @@ def cmd_find(args):
             print("  " + " ".join(sents[lo - 1:hi]))
             found += 1
     if not found:
-        sys.exit("not found (note: matching is whitespace- and quote-style-insensitive)")
+        sys.exit(
+            f"find: no passage in {spec}@{version} matches {query!r} "
+            "(note: matching is whitespace- and quote-style-insensitive)"
+        )
 
 
 def main():
