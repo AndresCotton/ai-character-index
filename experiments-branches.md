@@ -43,7 +43,7 @@ graph LR
 
 ### Other unmerged/untracked items
 
-- `feat/cite-sweep`: the term-sweep stage 4 this branch implements is not the operative procedure (the LLM panel is); branch kept as the **only remote custodian of the cite.py regression suite**; permanent home TBD.
+- `feat/cite-sweep`: the term-sweep stage 4 this branch implements is not the operative procedure (the LLM panel is); kept as the **only remote custodian of the cite.py regression suite**. That TBD is now resolved — the Phase-2 stack committed the suite into its `tests/` (`test_cite.py`, `test_cite_user_specs.py`, the corpus goldens, and `dump_goldens.py`), so once the stack merges into main the suite's permanent home is `tests/` and this branch's custodial role ends. (This worktree's own `tests/` is still empty — the suite lives on the stack, not here.)
 - `research/sweeps/04-instruction-hierarchy/` — untracked working record.
 - `docs/semantic-tagging-demo.md` — untracked working-copy file (semantic-tagging demo); belongs to no branch.
 - `tests/` in this worktree — empty except bytecode.
@@ -55,4 +55,4 @@ graph LR
 - Published-data provenance depends on one working copy: the canonical run log is an untracked file in the `experiment/panel-judges` working copy (committed to no branch), so the loss event is losing that working copy — branch deletion is irrelevant to it. Committing the log is an open closeout item.
 - The experiment's analysis artifacts (whole-doc reports, threshold tables, probe outputs) are untracked: the experiment's conclusions currently live only in this working copy.
 - Local disk footprint is dominated by re-downloadable caches (`ckpts/`); actual experiment data is ~24 MB.
-- The test-infrastructure cluster (cite suite + CI + hook experiments) has no decided home — it is the subject of an open architecture decision, not debris.
+- The test-infrastructure cluster is partly placed: the cite suite has a home (the Phase-2 stack's `tests/`, which merges into main), while the CI workflow + hook experiments still have no decided home — that remainder is the subject of an open architecture decision, not debris.
