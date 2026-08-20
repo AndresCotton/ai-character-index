@@ -586,7 +586,6 @@ def cmd_find(args):
             hi = next(i for i, (a, b) in enumerate(bounds, 1) if end <= b)
             label = f"#{sec.anchor}" if sec.anchor else sec.path_str
             srange = f"s{lo}" if lo == hi else f"s{lo}-{hi}"
-            full = " s1-" + str(len(sents)) if (lo, hi) == (1, len(sents)) else f" {srange}"
             loc = f"{spec}@{version} > {label} > ¶{bi} {srange}"
             print(loc)
             print("  " + " ".join(sents[lo - 1:hi]))

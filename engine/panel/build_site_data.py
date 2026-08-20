@@ -3,9 +3,11 @@
 
 Implements the MVP display rules from panel-config.json `display`:
   - only the listed behaviours appear in the sidebar;
-  - each passage gets score = sum over panel models of (core=2, related=1, unrelated=0);
-  - every passage with score >= 1 is emitted as a citation (the page filters at
-    render time via ?threshold= / ?related= URL params, defaults 6/1);
+  - each passage gets score = sum of each panel model's verdict
+    (defining=3, core=2, related=1, unrelated=0);
+  - a passage is emitted as a citation when score >= 1 AND it carries at least
+    min(2, panel-size) votes (keeps_citation drops a lone stray vote on a
+    multi-judge panel); the page re-filters at render time via tier bands;
   - the citation `role` (shown when the reader clicks "?") lists each model's decision.
 
 Behaviour identity (name/definition/category) comes from the behaviour

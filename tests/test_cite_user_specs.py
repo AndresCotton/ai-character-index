@@ -120,7 +120,9 @@ class UserSpecCliTest(unittest.TestCase):
 
     def test_find_miss_exits_with_hint(self):
         out, err = self.cli("find", "user-spec", "not in this fixture", check=False)
-        self.assertIn("not found", err)
+        # The miss exits loud, naming the spec and the query that matched nothing.
+        self.assertIn("no passage", err)
+        self.assertIn("not in this fixture", err)
 
     def test_bundled_spec_still_resolves_with_manifest_loaded(self):
         out, _ = self.cli(

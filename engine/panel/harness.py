@@ -30,7 +30,6 @@ import cite  # noqa: E402
 
 RUNLOG = HERE / "runlog.jsonl"
 METRICS = HERE / "metrics.jsonl"   # per-call latency + token usage (for cost/time reporting)
-SPECS = ("constitution", "model-spec")
 
 # Providers/models/panels come from panel-config.json (credentials are env-var NAMES there,
 # never values). The old hardcoded tables are gone; edit the config, not this file.
