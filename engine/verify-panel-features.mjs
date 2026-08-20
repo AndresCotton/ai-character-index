@@ -109,7 +109,7 @@ await panelUrl("");
 {
   const sb = await sidebar();
   check(sb.includes("Behaviours under test"),
-    "group header present (B2: user behaviour shares the bundled group spelling)",
+    "group header present (user behaviour shares the bundled group spelling)",
     sb.replace(/\s+/g, " ").slice(0, 100));
   check(sb.includes("Helpfulness"), "bundled behaviour present in the user-extended payload");
 }
@@ -139,7 +139,7 @@ await acmeAll("");                       // default bands: defining + core
 await acmeAll("&tiers=defining,core,related");
 {
   const n = await cards();
-  check(n === 2, "all bands on: the single judge's related vote is reachable (B1)", `${n} cards`);
+  check(n === 2, "all bands on: the single judge's related vote is reachable", `${n} cards`);
   const role = await page.evaluate(() =>
     [...document.querySelectorAll(".passage")].some(p => /score 2\/2/.test(p.textContent)));
   check(role, "passage card carries the recomputed score text (score 2/2)");
@@ -167,7 +167,7 @@ await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`
 await panelUrl(`?behavior=${USER}&spec=no-such-spec`);
 check(pageErrors.length === 0, "unknown ?spec= degrades to the default document without errors",
   pageErrors.join("; "));
-// Panel spec switcher is generated from documents.json (C12): the user spec
+// Panel spec switcher is generated from documents.json: the user spec
 // gets a button, and clicking it selects the spec.
 await panelUrl(`?behavior=${USER}`);
 {
@@ -244,7 +244,7 @@ await load(readerBase, "");
   const options = await page.evaluate(() =>
     [...document.querySelectorAll(".spec-option")].map(o => o.dataset.spec));
   check(options.join(",") === `anthropic,openai,${USER_SPEC}`,
-    "reader spec options are generated from documents.json, incl. the user spec (C12)",
+    "reader spec options are generated from documents.json, incl. the user spec",
     options.join(","));
 }
 // Selecting the user spec VIA ITS GENERATED BUTTON renders it.
