@@ -13,20 +13,20 @@ Human/agent onboarding prose. The directory holds the spec-coverage track's onbo
 | Path | What it is |
 |---|---|
 | `onboarding-spec-coverage.md` | The one true onboarding doc for the spec-coverage track: pipeline diagram, data contracts, conventions, and a reading order for a cold-start agent or mentee. Calls `cite.py` the trickiest code in the repo (now directly tested). |
-| `proposals/` | Two ruling-approved coverage-only rescopes of `.claude/skills/5-sweep-publish/` and `6-sweep-verify/` under the model-spec-reader scope (repo-owner ruling 2026-08-18). Not live skills; the skills-pass PR moves them into `.claude/skills/` when it merges. |
+| `proposals/` | Two historical drafts — the ruling-approved coverage-only rescopes (repo-owner ruling 2026-08-18) that became `.claude/skills/sweep-publish/` and `.claude/skills/sweep-verify/`; kept as the ruling record. |
 
 Out of snapshot scope: `semantic-tagging-demo.md` exists only in local working copies, not on main (local-only territory belongs in `experiments-branches.md`).
 
 ## Relationships
 
-- Documents the curated chain: `.claude/skills/4-sweep-spec-coverage` artifacts → `engine/publish-coverage.py` → `data/coverage.json` → `engine/build-spec-reader-data.py` → `site/spec-reader/`.
+- Documents the curated chain: `.claude/skills/sweep-coverage` artifacts → `engine/publish-coverage.py` → `data/coverage.json` → `engine/build-spec-reader-data.py` → `site/spec-reader/`.
 - Its §7 status list tracks the testing/CI hardening seams; most are now resolved (JSON schemas, direct `cite.py` tests, single behaviour-metadata source, the structured sidecar), with validation CI the remaining open item.
 
 ## Dependency map
 
 ```mermaid
 graph LR
-  onb["docs/onboarding-spec-coverage.md"] --> skills[".claude/skills/4-sweep-spec-coverage"]
+  onb["docs/onboarding-spec-coverage.md"] --> skills[".claude/skills/sweep-coverage"]
   onb --> engine["engine/ (cite.py, publish-coverage.py, panel/)"]
   onb --> meth["methodology/spec-coverage-depth-rubric.md"]
   onb --> cite["specs/CITATION.md"]

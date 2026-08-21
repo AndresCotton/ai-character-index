@@ -27,7 +27,7 @@ HERE = Path(__file__).resolve().parent
 # undermine-oversight), which were the rubric-development vehicles, not index rows.
 ROLLOUT = ["helpfulness", "harmlessness-to-user", "third-party-harm", "proportionate-risk",
            "tradeoffs", "over-under-caution", "objectivity", "user-autonomy", "general-welfare"]
-DEFAULT_PANEL = "frontier_primary"   # primaries only; substitutes run manually (Skill 4); --panel= overrides
+DEFAULT_PANEL = "frontier_primary"   # primaries only; substitutes run manually (coverage skill); --panel= overrides
 # Cost is derived from config, not a hardcoded table: input is deterministic
 # (spec token count times price_per_mtok); output is a range, bare verdict lines
 # up to the model's max_output ceiling (models differ this much: 3k to 48k).

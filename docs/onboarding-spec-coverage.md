@@ -36,9 +36,9 @@ need it, but §1 and §2 give the context.
 
 ## 2. Scope of this collaboration
 
-**In scope -- the spec-coverage track (Stage 4 of a sweep + its publication):**
+**In scope -- the spec-coverage track (the coverage stage of a sweep + its publication):**
 
-- `Skill 4` (`.claude/skills/4-sweep-spec-coverage/SKILL.md`) -- your primary
+- The coverage skill (`.claude/skills/sweep-coverage/SKILL.md`) -- your primary
   procedure. It defines how a behaviour's spec passages are extracted.
 - The citation resolver (`engine/spec-cite/cite.py`) and its convention
   (`specs/CITATION.md`).
@@ -83,14 +83,14 @@ This is the heart of the job. Each step names the file(s) it touches.
 ```
  (1) BEHAVIOUR              research/core-behaviour-list.md   (id, name, definition, facets)
         │
-        │  Skill 4  +  specs/CITATION.md  +  engine/spec-cite/cite.py
+        │  Coverage skill  +  specs/CITATION.md  +  engine/spec-cite/cite.py
         ▼
  (2) SCORE PASSAGES         specs/*  (ground truth)  →  LLM panel, cite, author verdict
         │                   methodology/spec-coverage-depth-rubric.md  (score depth 0-4)
         ▼
- (3) STAGE-4 ARTIFACT       research/sweeps/NN-<slug>/4-spec-coverage.md
+ (3) COVERAGE ARTIFACT      research/sweeps/NN-<slug>/spec-coverage.md
         │                   (verdict + depth + every excerpt, resolver-verbatim)
-        │  Gate 4: human sign-off  →  gates.md
+        │  Coverage gate: human sign-off  →  gates.md
         ▼
  (4) PUBLISH DATA           engine/publish-coverage.py  →  data/coverage.json
         │
@@ -100,13 +100,13 @@ This is the heart of the job. Each step names the file(s) it touches.
         ▼
  (6) PRESENT + VERIFY       site/spec-reader/  (index.html, app.js, styles.css)
                             engine/verify-spec-reader.mjs  (headless render check)
-        │  Gate 5: human sign-off  →  gates.md
+        │  Publish gate: human sign-off  →  gates.md
         ▼
- (7) STAGE-6 AUDIT          .claude/skills/6-sweep-verify/SKILL.md  (fresh context)
+ (7) VERIFY AUDIT           .claude/skills/sweep-verify/SKILL.md  (fresh context)
         │                   writes research/sweeps/NN-<slug>/verify.md
-        │  Gate 6: human sign-off  →  gates.md
+        │  Verify gate: human sign-off  →  gates.md
         ▼
- MERGE                      PR merges only after Gate 6 (the merge deploys the site)
+ MERGE                      PR merges only after the verify gate (the merge deploys the site)
 ```
 
 ### Step by step
@@ -123,24 +123,26 @@ This is the heart of the job. Each step names the file(s) it touches.
    behaviour with a dry-run-first driver; each kept passage carries a **locator**
    that pins the spec version and section, a quote produced by
    `engine/spec-cite/cite.py` (never typed by hand), and every judge's named verdict. The procedure is
-   `Skill 4`; locator rules are `specs/CITATION.md`. Each spec then gets a
+   the coverage skill; locator rules are `specs/CITATION.md`. Each spec then gets a
    **verdict** (covered / partial / not-in-spec) and a **depth 0-4** scored
    against `methodology/spec-coverage-depth-rubric.md` -- these remain authored
    judgments, made from the panel's citation set.
    *"The panel in detail" below covers the method's properties.*
 
-3. **The Stage-4 artifact.** All of the above is written to
-   `research/sweeps/NN-<slug>/4-spec-coverage.md`, with a structured sidecar
-   (`4-spec-coverage.json`) emitted alongside. The sidecar is the preferred
+3. **The coverage artifact.** All of the above is written to
+   `research/sweeps/NN-<slug>/spec-coverage.md`, with a structured sidecar
+   (`spec-coverage.json`) emitted alongside. (The committed sweeps predate the
+   rename and keep the legacy `4-spec-coverage.*` names; the publisher resolves
+   both.) The sidecar is the preferred
    **machine-parsed contract**; the markdown is the human record and the parse
-   fallback (see §5). It ends at **Gate 4**: a checklist the human verifies, then
+   fallback (see §5). It ends at **the coverage gate**: a checklist the human verifies, then
    signs in `gates.md`. Nothing publishes before the gate is signed. The
    behaviour-2 artifact (`research/sweeps/02-calibration/4-spec-coverage.md`) is
    the canonical template -- copy its shape exactly.
 
 4. **Publish to the canonical data.** `engine/publish-coverage.py
    research/sweeps/NN-<slug>` parses the artifact (the structured
-   `4-spec-coverage.json` sidecar when present, else the markdown), **re-resolves
+   `spec-coverage.json` sidecar when present, else the markdown), **re-resolves
    every quote byte-for-byte** through `cite.py`, and rewrites that behaviour's
    records in `data/coverage.json`. That JSON file is the single source of truth
    the rest of the system renders from. `--check` mode re-verifies and diffs
@@ -157,23 +159,24 @@ This is the heart of the job. Each step names the file(s) it touches.
    place. `engine/verify-spec-reader.mjs` drives it headlessly and asserts that
    every behaviour × spec view anchors exactly its published passage count with
    no console errors. This is the closest thing to an end-to-end test. This is
-   the last step of stage 5 (publish the coverage data + the reader payload).
-   Stage 5 stops at **Gate 5**: a human sign-off in `gates.md`. Nothing has
+   the last step of the publish stage (publish the coverage data + the reader
+   payload). The publish stage stops at **the publish gate**: a human sign-off in
+   `gates.md`. Nothing has
    deployed publicly at this point -- the site deploys only when the branch
    merges.
-7. **Stage-6 audit, then merge.** A fresh-context audit
-   (`.claude/skills/6-sweep-verify/SKILL.md`) re-verifies the branch -- the
+7. **Verify audit, then merge.** A fresh-context audit
+   (`.claude/skills/sweep-verify/SKILL.md`) re-verifies the branch -- the
    committed repo contents and a local render of `site/` -- and writes
-   `verify.md`. It stops at **Gate 6**. The branch PR merges only after Gate 6
-   is signed -- that merge is what deploys the site.
+   `verify.md`. It stops at **the verify gate**. The branch PR merges only after
+   the verify gate is signed -- that merge is what deploys the site.
 
 The **campaign wrapper** that runs steps 1-7 for one behaviour, with a git
 commit at each step on a per-behaviour branch, is the
 `spec-coverage-pass` skill (`.claude/skills/spec-coverage-pass/SKILL.md`). Read
 it to see the exact ordering, commit messages, and verification commands. It
-stops at **Gate 5** after the reader is verified (nothing has deployed publicly
-yet); a fresh-context **stage-6 audit** then signs **Gate 6**, and the PR merges
-only after Gate 6 -- that merge is what deploys the site.
+stops at **the publish gate** after the reader is verified (nothing has deployed
+publicly yet); a fresh-context **verify audit** then signs **the verify gate**,
+and the PR merges only after that gate -- that merge is what deploys the site.
 
 ### The panel in detail (step 2)
 
@@ -184,7 +187,7 @@ logged, resumable command. The judgement inputs live in the behaviour's
 definition fields (`behaviours.json`: definition, optional clarifications and
 scope); the mechanics are a script with an append-only run log. Provider
 failures are caught, named, and substituted openly -- see the failure modes and
-substitution rules in `Skill 4`. Earlier methods and their artifacts are
+substitution rules in the coverage skill. Earlier methods and their artifacts are
 preserved under `research/sweeps/` and `behaviours-for-adria/`, which also hold
 the supplied definitions.
 
@@ -199,9 +202,9 @@ the supplied definitions.
 | **Citation convention** | `specs/CITATION.md` | locator grammar, block/sentence rules, normalizations |
 | **Resolver** | `engine/spec-cite/cite.py` | `outline` / `show` / `resolve` / `find`; every quote is its output |
 | **Depth rubric** | `methodology/spec-coverage-depth-rubric.md` | anchors the 0-4 depth score + boundary tests + precedent |
-| **Skill 4 (extraction procedure)** | `.claude/skills/4-sweep-spec-coverage/SKILL.md` | how a passage set is built and gated |
+| **Coverage skill (extraction procedure)** | `.claude/skills/sweep-coverage/SKILL.md` | how a passage set is built and gated |
 | **End-to-end campaign skill** | `.claude/skills/spec-coverage-pass/SKILL.md` | one behaviour, extract → publish → verify → PR |
-| **Stage-4 artifact (per behaviour)** | `research/sweeps/NN-<slug>/4-spec-coverage.md` (+ `4-spec-coverage.json` sidecar) | the passage set + verdict + depth; the sidecar is the preferred parse, markdown the fallback |
+| **Coverage artifact (per behaviour)** | `research/sweeps/NN-<slug>/spec-coverage.md` (+ `spec-coverage.json` sidecar; committed sweeps keep the legacy `4-spec-coverage.*` names) | the passage set + verdict + depth; the sidecar is the preferred parse, markdown the fallback |
 | **Artifact template** | `research/sweeps/02-calibration/4-spec-coverage.md` | copy this shape |
 | **Gate log (per behaviour)** | `research/sweeps/NN-<slug>/gates.md` | dated human sign-offs |
 | **Publish script** | `engine/publish-coverage.py` | artifact → `data/coverage.json` (re-verifies quotes) |
@@ -239,12 +242,13 @@ its readers too.
   and list markers collapsed). Nothing is ever elided inside a quote -- a
   discontinuous quotation is two locators.
 
-### b) The Stage-4 artifact as a parsing contract
+### b) The coverage artifact as a parsing contract
 
-Two shapes, one preferred: the structured sidecar (`4-spec-coverage.json`,
+Two shapes, one preferred: the structured sidecar (`spec-coverage.json`,
 validated against `data/schema/spec-coverage-sidecar.schema.json`) is what
 `publish-coverage.py` reads when it is present; the markdown
-(`4-spec-coverage.md`) is the regex-parsed fallback. In the markdown fallback,
+(`spec-coverage.md`) is the regex-parsed fallback. (Committed sweeps keep the
+legacy `4-spec-coverage.*` names; both resolve.) In the markdown fallback,
 each excerpt is a fixed four-line block:
 
 ```
@@ -348,8 +352,8 @@ have since been closed; the one remaining open item is CI.
   across two disjoint per-file numbering spaces (`coverage.json` vs
   `reader-test-coverage.json`); the registry documents those as file-local, with
   slugs as the global join key.
-- **The artifact as a parsing contract. (RESOLVED)** Stage-4 artifacts now emit a
-  structured sidecar (`4-spec-coverage.json`, schema-checked) that
+- **The artifact as a parsing contract. (RESOLVED)** Coverage artifacts now emit a
+  structured sidecar (`spec-coverage.json`, schema-checked) that
   `publish-coverage.py` prefers, with the markdown regex parse kept as a fallback
   (§5b). The brittle-coupling concern is closed for sidecar-producing sweeps.
 - **No unit tests for `cite.py`. (RESOLVED)** `tests/test_cite.py` now covers the
@@ -386,7 +390,7 @@ file at least as legible as you found it.
 2. `specs/CITATION.md` -- the locator grammar. Then play with
    `engine/spec-cite/cite.py` (`outline`, `show`, `resolve`, `find`) against both
    specs until locators feel natural.
-3. `.claude/skills/4-sweep-spec-coverage/SKILL.md` -- the extraction procedure
+3. `.claude/skills/sweep-coverage/SKILL.md` -- the extraction procedure
    you own.
 4. `methodology/spec-coverage-depth-rubric.md` -- how the 0-4 depth score is decided.
 5. `research/sweeps/02-calibration/4-spec-coverage.md` -- a real artifact, the

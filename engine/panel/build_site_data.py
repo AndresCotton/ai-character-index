@@ -364,7 +364,7 @@ def main(argv=None):
                 })
             cits.sort(key=lambda c: (-c["score"], c["locator"]))
             cov[lab] = {"verdict": src_entry.get("verdict"), "depth": src_entry.get("depth_0_4"),
-                        # depth_note stays in the stage-4 record; beside re-run panel data the
+                        # depth_note stays in the coverage record; beside re-run panel data the
                         # curation-era prose goes stale, so the bench ships passage sets only
                         "note": "",
                         "verifiedDate": src_entry.get("verified_date", ""),

@@ -17,8 +17,8 @@ graph TB
   um["specs/user/specs.json (gitignored)"] -.->|user-manifest| cite
   core["research/core-behaviour-list.md (12 behaviours)"] --> skills[".claude/skills/ coverage-only stages 4-6 + human gates"]
   skills --> sweeps["research/sweeps/NN-slug/ artifacts"]
-  skills -->|"stage 4 drives"| panel["engine/panel/ (LLM judge APIs)"]
-  sweeps -->|"stage-4 sidecar preferred, markdown fallback"| pub["engine/publish-coverage.py"]
+  skills -->|"the coverage stage drives"| panel["engine/panel/ (LLM judge APIs)"]
+  sweeps -->|"coverage sidecar preferred, markdown fallback"| pub["engine/publish-coverage.py"]
   cite -->|"quote re-verification"| pub
   pub --> cov["data/coverage.json"]
   panel -->|"runlog-v3.jsonl (committed canonical log; provenance-verified)"| bsd["engine/panel/build_site_data.py"]
@@ -49,7 +49,7 @@ graph TB
 | `data/` | Canonical machine-readable data: behaviour registry, coverage ledgers, labs, schema/ | [data/OVERVIEW.md](data/OVERVIEW.md) |
 | `specs/` | Version-pinned lab-spec mirrors + locator grammar | [specs/OVERVIEW.md](specs/OVERVIEW.md) |
 | `research/` | Canonical behaviour list + per-behaviour sweep records | [research/OVERVIEW.md](research/OVERVIEW.md) |
-| `behaviours-for-adria/` | Independent reviewer-batch stage-4 set (test bench, plus 3 rows feeding the panel surface) | [behaviours-for-adria/OVERVIEW.md](behaviours-for-adria/OVERVIEW.md) |
+| `behaviours-for-adria/` | Independent reviewer-batch coverage set (test bench, plus 3 rows feeding the panel surface) | [behaviours-for-adria/OVERVIEW.md](behaviours-for-adria/OVERVIEW.md) |
 | `methodology/` | Depth rubric, public site copy, method-exploration findings | [methodology/OVERVIEW.md](methodology/OVERVIEW.md) |
 | `site/` | Five static surfaces, no build step | [site/OVERVIEW.md](site/OVERVIEW.md) |
 | `.github/` | One deploy workflow + Issues-page contact link | [.github/OVERVIEW.md](.github/OVERVIEW.md) |
@@ -61,7 +61,7 @@ graph TB
 ## System-level contracts (the tissue between components)
 
 1. **Locator grammar** — `specs/CITATION.md` defines the format; `cite.py` implements it (bundled specs + optional user manifest); every stored citation in `data/` and site payloads depends on byte-exact resolution. No CI re-resolves; only `publish-coverage.py` runs enforce it.
-2. **Stage-4 artifact format** — prescribed by `.claude/skills/4-sweep-spec-coverage`: the structured `4-spec-coverage.json` sidecar (schema-checked) is preferred, with `engine/publish-coverage.py` falling back to regex-scraping the markdown. The artifact is simultaneously prose record, parser input, and gate evidence.
+2. **Coverage artifact format** — prescribed by `.claude/skills/sweep-coverage`: the structured `spec-coverage.json` sidecar (schema-checked) is preferred, with `engine/publish-coverage.py` falling back to regex-scraping the markdown. (Sweeps predating the rename keep the legacy `4-spec-coverage.*` filenames; the publisher resolves both.) The artifact is simultaneously prose record, parser input, and gate evidence.
 3. **Behaviour identity** — registry-driven since #28: `data/behaviours.json` is the source of truth; `engine/generate_behaviour_constants.py` regenerates the derived constants (`spec-reader/app.js GROUPS`, `build-spec-reader-data.py BEHAVIOURS`, panel slug lists), with `tests/test_behaviour_registry.py` as the drift gate. `behaviour_id` remains **file-local across disjoint numbering spaces** (id 1 = "No sycophancy" in `coverage.json`, "Helpfulness" in `reader-test-coverage.json`); the registry namespaces ids per set and slugs are the global key.
 4. **Runlog convention** — JSONL rows keyed by rubric version; defaults still disagree between `harness.RUNLOG` and the executors. The canonical shipped runlog is committed (`engine/panel/runlog-v3.jsonl`, documented in `runlog-v3.md`) and `engine/panel/verify_panel_provenance.py` proves the shipped payload rebuilds from it byte-identically; other runlogs stay gitignored.
 5. **Site payloads** — `spec-reader/data/documents.json` is shared by all three reader surfaces; panel citations carry `exampleBlock` flags anchoring example blocks. Panel runs emit timestamped payloads + `manifest.json` (latest-by-default, gitignored); the committed `behaviours.json` is the fresh-clone fallback. The compare view generalizes to N documents — every document renders as a pane with a boundary resizer between adjacent panes (a user-registered spec is a first-class pane).

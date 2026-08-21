@@ -76,8 +76,8 @@ user forks point it elsewhere) and `--run-date=YYYY-MM-DD` (pins
 payload byte-for-byte).
 
 ## The procedure
-The end-to-end stage-4 procedure (dry run, execution, failure substitutions,
-Gate 4 checks) is `.claude/skills/4-sweep-spec-coverage/SKILL.md`. This README
+The end-to-end coverage procedure (dry run, execution, failure substitutions,
+coverage-gate checks) is `.claude/skills/sweep-coverage/SKILL.md`. This README
 covers only the mechanics of the individual scripts.
 
 ## Tests

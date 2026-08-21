@@ -7,14 +7,14 @@ published, revised and withdrawn without touching the index's own reader, whose 
 set is the gate-approved output of the [behaviour sweeps](../../.claude/skills/README.md).
 
 **Current state:** ten behaviours are under test -- the set in
-[`behaviours-for-adria/`](../../behaviours-for-adria/README.md), published from their stage-4
+[`behaviours-for-adria/`](../../behaviours-for-adria/README.md), published from their
 spec-coverage sweeps, 294 citations across the two specifications. Eight of them appear under
 the menu heading "Behaviours under test", because that is how the set was supplied: a flat
 list, with no grouping of ours imposed on it. The other two make up a second group,
 ["General Guidelines"](../../behaviours-for-adria/general-guidelines/README.md), which is drawn
 differently -- see below. Those two are one supplied definition read two ways: General welfare
 impacts, and a strict reading of it that keeps a passage only where both specifications state
-the same rule, so the reader can hold the two side by side. Each behaviour's Gate-4 human
+the same rule, so the reader can hold the two side by side. Each behaviour's coverage-gate human
 spot-read is still open; this bench is the surface it happens on, which is why the set is
 published before sign-off.
 

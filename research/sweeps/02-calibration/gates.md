@@ -1,5 +1,7 @@
 # Behaviour 2 (Calibration) -- gate log
 
+> [EDIT 2026-08-21: the pipeline's vocabulary changed after this sweep ran (PR #46). Old → new mapping: stage 4 / Gate 4 = the coverage stage (`sweep-coverage`), stage 5 / Gate 5 = the publish stage (`sweep-publish`), stage 6 / Gate 6 = the verify stage (`sweep-verify`); the `4-spec-coverage.md` artifact is named `spec-coverage.md` for new sweeps. The record below preserves its original wording.]
+
 Stage 4 (spec coverage) ran as a parallel track under the staged pipeline on
 2026-07-20; its output is `4-spec-coverage.md`. Stages 1-3 (discover, curate,
 score) have not run for this behaviour. Each gate is appended here on human
