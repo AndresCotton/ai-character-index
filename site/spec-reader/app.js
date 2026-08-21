@@ -729,8 +729,12 @@ function updateSectionVisibility(panel) {
   });
 
   const toggle = panel.querySelector(".document-focus-toggle");
+  // The label names the action the click performs, so this is a command button, not
+  // a state toggle: aria-pressed would describe a "focus highlights" mode that the
+  // label is already offering to leave. Announcing "Focus highlights, pressed" while
+  // nothing is focused -- the default state -- is worse than announcing no state.
   toggle.textContent = focused ? "Expand all" : "Focus highlights";
-  toggle.setAttribute("aria-pressed", String(!focused));
+  toggle.removeAttribute("aria-pressed");
 }
 
 function setPanelFocus(panel, focused) {
