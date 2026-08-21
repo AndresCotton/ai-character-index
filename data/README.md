@@ -9,7 +9,7 @@ Current files:
 | `behaviours.json` | behaviour, across every set (see below) | hand-maintained (the source of truth for behaviour identity; derived constants regenerate from it) |
 | `coverage.json` | behaviour × lab verdict, with citations | behaviours 2–3: `engine/publish-coverage.py` (re-verifies every quote via `engine/spec-cite/cite.py` before writing); behaviour 1: hand-written, predates the pipeline |
 | `labs.json` | lab | hand-maintained (changes rarely); read by `engine/validate_data.py` (cross-file `lab_id` rule); no site code reads it |
-| `reader-test-coverage.json` | see below | hand-transcribed from [`behaviours-for-adria/`](../behaviours-for-adria/README.md) |
+| `reader-test-coverage.json` | see below | transcribed from [`behaviours-for-adria/`](../behaviours-for-adria/README.md); machine-checked by `engine/generate-reader-test-ledger.py --check` |
 
 Planned but absent: `meta.json` (site-wide metadata).
 

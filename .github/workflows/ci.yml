@@ -64,6 +64,9 @@ jobs:
       - name: Registry drift gate
         run: python3 engine/generate_behaviour_constants.py --check
 
+      - name: Reader-test ledger vs sweep artifacts
+        run: python3 engine/generate-reader-test-ledger.py --check
+
       - name: app.js resolution harnesses
         run: |
           node engine/panel/test_appjs_fallthrough.js
