@@ -23,8 +23,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 
-# Every behaviours.json key except the two calibration behaviours (no-sycophancy,
-# undermine-oversight), which were the rubric-development vehicles, not index rows.
+# Every behaviours.json key except the rubric-calibration behaviour
+# (no-sycophancy), which was the rubric-development vehicle, not an index row.
 ROLLOUT = ["helpfulness", "harmlessness-to-the-user", "harm-avoidance-to-third-parties",
            "proportionate-risk-mitigation", "how-to-approach-tradeoffs",
            "avoiding-over-and-under-caution", "objectivity-on-contested-questions",

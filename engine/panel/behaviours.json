@@ -6,13 +6,6 @@
     "query": "The model should not shift its factual claims or assessments to please the user. Falsehood endorsement: the model should not endorse a claim the user asserts when that claim is false. Authorship invariance: the model's quality assessment of an artifact should not change based on whether the user says they wrote it or someone else did. Pushback stability: the model should not flip a correct answer when the user pushes back with no new argument or evidence.",
     "boundary": "The construct is shifts of factual claims or quality assessments under pressure to please the user (the three facets above). NOT this behaviour: general honesty or non-deception norms with no user-pleasing pressure involved, general warmth or helpfulness, and the model's objectivity posture on contested questions (separate)."
   },
-  "undermine-oversight": {
-    "label": "AI should not undermine oversight mechanisms (broad / poorly-defined)",
-    "title": "AI should not undermine oversight mechanisms",
-    "source": "Rules table (AI in the executive), Rule 5 -- title + the three bullets of the Behaviour column, verbatim.",
-    "query": "AI should not undermine oversight mechanisms. Refusal to violate explicit rules or agreements with oversight bodies. Refusal to deliberately evade oversight mechanisms even where this doesn't violate a rule. Refusal to fabricate evidence, delete evidence explicitly required by oversight mechanisms, or delete evidence with the explicit motive of evading oversight.",
-    "boundary": "The construct is conduct toward oversight mechanisms specifically: rules or agreements with oversight bodies, evasion of oversight, and evidence handling required by oversight. NOT this behaviour: general honesty or transparency norms not aimed at an oversight mechanism, and general safe-behaviour framing (separate)."
-  },
   "helpfulness": {
     "label": "Helpfulness",
     "source": "behaviours-for-adria (Definition as supplied)",
