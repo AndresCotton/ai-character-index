@@ -5,6 +5,17 @@ produced the published panel numbers in
 `site/llm-panel-review/data/behaviours.json`. It is committed data, not a
 runtime artifact: every other `runlog*.jsonl` in this directory stays gitignored.
 
+> [EDIT 2026-08-21 (PR #46): the `behaviour` keys were re-keyed from the
+> panel pipeline's legacy short keys to registry slugs — the identity rule is
+> now "a runlog behaviour key is its registry slug" everywhere. Mapping:
+> third-party-harm → harm-avoidance-to-third-parties, over-under-caution →
+> avoiding-over-and-under-caution (helpfulness unchanged). Only the
+> `behaviour` field changed; every other byte of every row is preserved, and
+> the shipped payload still rebuilds byte-identically (the keys are labels —
+> the payload carries registry slugs). The sha256 below is the post-re-key
+> hash; the pre-re-key hash was
+> 971f16c7459a16e9a52a7ea4a0e87c5c1db1c1f45e8b69b5ae80af6b58f85740.]
+
 ## What it is
 
 Append-only JSONL written by `whole_doc.py` (whole-document judging, rubric tag
@@ -21,7 +32,7 @@ tag are ignored by the site builder at `--rubric=v3w`. Duplicate
 (behaviour, locator, model) keys are resume overwrites — the later row wins,
 which is exactly `build_site_data.py`'s consumption rule.
 
-Contents (as committed, sha256 `971f16c7459a16e9a52a7ea4a0e87c5c1db1c1f45e8b69b5ae80af6b58f85740`):
+Contents (as committed, sha256 `d46e2b69428916f46674af72680889529b09ffa748fca8d38cf5591b5d1153dc`):
 
 | fact | value |
 | --- | --- |
@@ -29,12 +40,13 @@ Contents (as committed, sha256 `971f16c7459a16e9a52a7ea4a0e87c5c1db1c1f45e8b69b5
 | rows rubric `v3w` (consumed by the builder) | 9,415 (all `parsed: true`) |
 | rows rubric `v3s` / `v3` (validation sample / smoke; not consumed at v3w) | 748 / 135 |
 | judges (v3w rows) | sol 2,889 · kimi 2,674 · fable 2,300 · opus 963 · kimi-k2 589 |
-| behaviours (v3w rows) | helpfulness · third-party-harm · over-under-caution |
+| behaviours (v3w rows) | helpfulness · harm-avoidance-to-third-parties · avoiding-over-and-under-caution |
 | specs (v3w rows) | constitution 4,114 · model-spec 5,301 |
 
 Substitutes, per `panel-config.json`: `opus` replaces `fable` on
-third-party-harm × model-spec (fable output content-filtered); `kimi-k2`
-replaces `kimi` on over-under-caution × model-spec (K3 exhausted its output
+harm-avoidance-to-third-parties × model-spec (fable output content-filtered);
+`kimi-k2` replaces `kimi` on avoiding-over-and-under-caution × model-spec (K3
+exhausted its output
 budget on reasoning). `build_site_data.py` applies the substitution-merge rules
 when it rebuilds.
 

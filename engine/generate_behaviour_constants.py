@@ -3,7 +3,7 @@
 
 data/behaviours.json is the behaviour-identity registry (Decision 1, 2026-08-18):
 one entry per behaviour across all sets, keyed by slug. This script rewrites the
-four derived constants that must stay in lockstep with it:
+derived constants that must stay in lockstep with it:
 
   1. GROUPS               site/spec-reader/app.js
                           All index-set entries, listed under their group in
@@ -15,21 +15,18 @@ four derived constants that must stay in lockstep with it:
                           the builder can render. A coverage record with no
                           registry definition is an error; a definition with no
                           coverage record is stored but not published.
-  3. key order + titles   engine/panel/behaviours.json
-                          Panel-harness keys stay curated here (judge prompts),
-                          but their order follows PANEL_BEHAVIOURS below and any
-                          entry's `title` field is rewritten from the mapped
-                          registry name. The panel<->registry mapping is owned
-                          here (it is panel-pipeline metadata, deliberately not
-                          in the registry schema); engine/panel/build_site_data.py
-                          derives its SLUGS from PANEL_BEHAVIOURS below.
-  4. display.behaviours   engine/panel/panel-config.json
-                          Renders PANEL_DISPLAY_SLUGS below -- the reader-test
-                          slugs shown in site/llm-panel-review. Membership lives
-                          here because the registry schema deliberately carries
-                          no panel-display flag; every slug is validated against
-                          the registry, so a renamed slug fails loudly instead
-                          of going silently stale.
+  3. titles               engine/panel/behaviours.json
+                          The judge prompts stay curated here; their keys are
+                          registry slugs (the panel runlogs are keyed by the
+                          same slugs), committed key order is preserved, and
+                          any entry's `title` field is rewritten from the
+                          registry name. A key the registry does not carry
+                          (e.g. a staged prompt for a behaviour not yet in any
+                          set) keeps its committed title.
+
+display.behaviours in engine/panel/panel-config.json is curated configuration,
+not generated: the builder validates every entry against the registry, so a
+renamed or unknown slug fails loudly at build time.
 
 Modes:
     python3 engine/generate_behaviour_constants.py            # rewrite in place
@@ -53,32 +50,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 SETS = ("index", "reader-test", "user")
-
-# Panel-harness keys in the committed engine/panel/behaviours.json order, mapped
-# to their registry slug. None = panel-only key with no registry entry (the two
-# rubric-calibration behaviours live in the harness, not in any behaviour set).
-PANEL_BEHAVIOURS = (
-    ("no-sycophancy", "no-sycophancy"),
-    ("undermine-oversight", None),
-    ("helpfulness", "helpfulness"),
-    ("harmlessness-to-user", "harmlessness-to-the-user"),
-    ("third-party-harm", "harm-avoidance-to-third-parties"),
-    ("proportionate-risk", "proportionate-risk-mitigation"),
-    ("tradeoffs", "how-to-approach-tradeoffs"),
-    ("over-under-caution", "avoiding-over-and-under-caution"),
-    ("objectivity", "objectivity-on-contested-questions"),
-    ("user-autonomy", "user-autonomy"),
-    ("general-welfare", "animal-welfare-impacts"),
-)
-
-# Reader-test slugs shown in site/llm-panel-review (rendered into
-# panel-config.json display.behaviours). The two general-guidelines slugs join
-# when the full rollout data lands (panel-config.json _activation_note).
-PANEL_DISPLAY_SLUGS = (
-    "helpfulness",
-    "harm-avoidance-to-third-parties",
-    "avoiding-over-and-under-caution",
-)
 
 # Definitions render as implicit string concatenations, greedy-wrapped so each
 # quoted part is at most this many characters including its trailing space.
@@ -260,36 +231,16 @@ def render_behaviours_py(registry: dict, covered: set) -> str:
     return "\n".join(lines)
 
 
-def render_display_array() -> str:
-    """The display.behaviours array literal for engine/panel/panel-config.json."""
-    lines = ["["]
-    for index, slug in enumerate(PANEL_DISPLAY_SLUGS):
-        comma = "," if index < len(PANEL_DISPLAY_SLUGS) - 1 else ""
-        lines.append(f'      "{slug}"{comma}')
-    lines.append("    ]")
-    return "\n".join(lines)
-
-
 def render_panel_behaviours(root: Path, registry: dict) -> str:
-    """engine/panel/behaviours.json with key order pinned and titles refreshed
-    from the registry; every other byte of the curated entries is preserved."""
+    """engine/panel/behaviours.json with `title` fields refreshed from the
+    registry; keys are registry slugs, committed key order is preserved, and
+    every other byte of the curated entries is untouched."""
     path = root / "engine" / "panel" / "behaviours.json"
     committed = json.loads(path.read_text(encoding="utf-8"))
-    expected_keys = [panel_key for panel_key, _ in PANEL_BEHAVIOURS]
-    if list(committed) != expected_keys:
-        sys.exit(
-            "engine/panel/behaviours.json keys diverge from PANEL_BEHAVIOURS in "
-            f"generate_behaviour_constants.py:\n  file:     {list(committed)}\n"
-            f"  expected: {expected_keys}\nReconcile the mapping deliberately, then re-run."
-        )
-    for panel_key, slug in PANEL_BEHAVIOURS:
-        if slug is None:
-            continue
-        if slug not in registry:
-            sys.exit(f"PANEL_BEHAVIOURS maps {panel_key!r} to unknown registry slug {slug!r}")
-        entry = committed[panel_key]
-        if "title" in entry:
-            entry["title"] = registry[slug]["name"]
+    for slug, entry in committed.items():
+        reg_entry = registry.get(slug)
+        if reg_entry is not None and "title" in entry:
+            entry["title"] = reg_entry["name"]
     return json.dumps(committed, indent=2, ensure_ascii=False)
 
 
@@ -307,31 +258,17 @@ def regenerate(root: Path) -> dict:
     """Returns {repo-relative path: new full text} for every derived file."""
     registry = load_registry(root)
 
-    for slug in PANEL_DISPLAY_SLUGS:
-        entry = registry.get(slug)
-        if entry is None or entry["set"] != "reader-test":
-            sys.exit(f"PANEL_DISPLAY_SLUGS lists {slug!r}, which the registry does not carry as a reader-test behaviour")
-
     app_js = (root / "site" / "spec-reader" / "app.js").read_text(encoding="utf-8")
     new_app_js = _splice(app_js, "const GROUPS = [", "\n];\n", render_groups_js(registry) + "\n")
 
     builder = (root / "engine" / "build-spec-reader-data.py").read_text(encoding="utf-8")
     new_builder = _splice(builder, "BEHAVIOURS = [", "\n]\n", render_behaviours_py(registry, coverage_ids(root)) + "\n")
 
-    config = (root / "engine" / "panel" / "panel-config.json").read_text(encoding="utf-8")
-    display_start = config.index('"display": {')
-    array_start = config.index('"behaviours": [', display_start)
-    open_bracket = config.index("[", array_start)
-    close_bracket = config.index("]", open_bracket)
-    new_config = config[:open_bracket] + render_display_array() + config[close_bracket + 1:]
-    json.loads(new_config)  # the splice must leave valid JSON behind
-
     new_panel = render_panel_behaviours(root, registry)
 
     return {
         "site/spec-reader/app.js": new_app_js,
         "engine/build-spec-reader-data.py": new_builder,
-        "engine/panel/panel-config.json": new_config,
         "engine/panel/behaviours.json": new_panel,  # written without trailing newline
     }
 

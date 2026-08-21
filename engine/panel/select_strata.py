@@ -16,8 +16,6 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-SITE2BEH = {"helpfulness": "helpfulness", "harm-avoidance-to-third-parties": "third-party-harm",
-            "avoiding-over-and-under-caution": "over-under-caution"}
 
 
 def main():
@@ -38,7 +36,7 @@ def main():
         d = json.loads(line)
         if d.get("rubric", "v1") == rubric and d.get("parsed", True) and d["model"] in cheap:
             votes[(d["behaviour"], d["locator"])][d["model"]] = d.get("verdict", 0)
-    behs = [SITE2BEH[s] for s in CONFIG["display"]["behaviours"]]
+    behs = list(CONFIG["display"]["behaviours"])   # runlog keys are registry slugs
     for beh in behs:
         strata = {"likely-relevant": [], "in-between": [], "likely-not": []}
         for (b, loc), mv in votes.items():

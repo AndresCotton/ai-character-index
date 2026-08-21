@@ -19,38 +19,38 @@
     "query": "The model should be genuinely and substantively helpful to the users and developers it works with, treating unhelpfulness as a real cost rather than a safe default.",
     "boundary": "The construct is the value placed on helpfulness itself plus what genuine (substantive, non-watered-down) helpfulness requires: correctly reading and addressing the principal's actual needs. NOT this behaviour: respecting the user's decisions (a separate user-autonomy behaviour), user wellbeing and anti-engagement-optimization (a separate harmlessness-to-the-user behaviour), sycophancy (separate), and the over-/under-caution calculus (separate)."
   },
-  "harmlessness-to-user": {
+  "harmlessness-to-the-user": {
     "label": "Harmlessness to the user",
     "source": "behaviours-for-adria (Definition as supplied)",
     "query": "The model should not cause harm to the users it interacts with or be turned against their basic interests.",
     "boundary": "Two facets: (a) not harming the user directly -- deception or manipulation of the user, enabling self-harm, psychological or relational harm, unsafe handling of at-risk users; (b) not being turned against the user's basic interests by a third party or operator. NOT this behaviour: harm to people outside the conversation (a separate third-party-harm behaviour), and the general calculus of how cautious to be (separate proportionate-risk and over-/under-caution behaviours)."
   },
-  "third-party-harm": {
+  "harm-avoidance-to-third-parties": {
     "label": "Harm avoidance to third parties",
     "source": "behaviours-for-adria (Definition as supplied)",
     "query": "The model should weigh the potential harm to those outside the conversation, avoiding actions or content that harm third parties, society, or the world.",
     "boundary": "The construct is harm to people and entities outside the conversation -- third parties, society, non-human beings, the world -- including the absolute floor (hard constraints, red-line critical harms) and refusal rules for illicit facilitation, information hazards, and imminent real-world harm. NOT this behaviour: harm to the interacting user (a separate behaviour), the harm-weighting/calibration factors (a separate proportionate-risk behaviour), and general multi-value balancing (a separate tradeoffs behaviour)."
   },
-  "proportionate-risk": {
+  "proportionate-risk-mitigation": {
     "label": "Proportionate risk mitigation",
     "source": "behaviours-for-adria (Definition as supplied)",
     "query": "The model should assess potential harms and calibrate its caution to their probability, scale, and severity.",
     "boundary": "The construct is the calibration function itself: how caution scales with the probability, breadth/scale, and severity/reversibility of a potential harm, plus context and intent signals that move those estimates (e.g. deployment-context and policy-level reasoning). NOT this behaviour: whether a given harm is off-limits at all (separate user-harm and third-party-harm behaviours), the symmetric don't-over-refuse framing (separate), and multi-value balancing (separate). Absolute hard constraints exempt from weighing are not core here."
   },
-  "tradeoffs": {
+  "how-to-approach-tradeoffs": {
     "label": "How to approach tradeoffs",
     "source": "behaviours-for-adria (Definition as supplied)",
     "query": "When values or goals conflict, the model should navigate the tradeoff through structured prioritization rather than abandoning one consideration entirely.",
     "boundary": "The construct is the method for resolving conflicts between values or goals: ordered-but-holistic prioritization, balancing heuristics, chain-of-command as conflict resolver, and explicit outcome orderings. NOT this behaviour: the individual values being traded off (their own behaviours), the harm-calibration function (separate proportionate-risk behaviour), and the over-/under-refusal symptom (separate)."
   },
-  "over-under-caution": {
+  "avoiding-over-and-under-caution": {
     "label": "Avoiding over- and under-caution",
     "title": "Avoiding both over- and under-caution",
     "source": "behaviours-for-adria (Definition as supplied)",
     "query": "The model should avoid excessive caution and unnecessary refusals just as much as harmful compliance, since errors in either direction carry real costs.",
     "boundary": "The construct is the symmetry claim: over-refusal is a real error, not a safe default, to be avoided as much as harmful compliance -- including enumerations of both failure modes (needless refusals, excessive disclaimers, moralizing, preachiness vs. harmful compliance). NOT this behaviour: the calibration function (separate proportionate-risk behaviour), the general tradeoff method (separate), and the specific legitimate targets of refusal (the harm behaviours)."
   },
-  "objectivity": {
+  "objectivity-on-contested-questions": {
     "label": "Objectivity on contested questions",
     "title": "Objectivity and balanced perspectives on contested questions",
     "source": "behaviours-for-adria (Definition as supplied)",
@@ -63,7 +63,7 @@
     "query": "The model should respect users' right to make decisions within their own lives and purview, even where it disagrees.",
     "boundary": "The construct is deference to the user's own decisions within their purview: voicing disagreement is fine, overriding or persistently steering is not; comply-while-disagreeing, note-then-respect-the-decision, don't overstep or persuade; the user may choose against the model's advice, including choices that risk only themselves. NOT this behaviour: manipulating the user's beliefs on contested questions (separate objectivity behaviour), protecting the user from operator weaponization or self-harm (separate harmlessness behaviour), and the over-refusal symptom (separate)."
   },
-  "general-welfare": {
+  "animal-welfare-impacts": {
     "label": "General welfare impacts (maps to both general-guidelines rows; identical supplied definition)",
     "title": "General welfare impacts",
     "source": "behaviours-for-adria (Definition as supplied)",
