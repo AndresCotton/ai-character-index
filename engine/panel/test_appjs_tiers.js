@@ -79,6 +79,12 @@ check(1, 2, 4, 1, null, "2j lone related still hidden (floor applies)");
  * live -- a wrong answer here either hides a working control or leaves an inert
  * one on screen. Must agree with tierBand: a band is reachable exactly when some
  * score in 0..maxCell lands in it. */
+// TIERS is load-bearing for strongestBand (it must be strongest-first) and also drives
+// ?tiers= serialisation and the legacy ?tier= mapping, so it is pinned here explicitly.
+// `const` inside eval stays block-scoped, so it is re-declared as `var` to reach here.
+eval(lines.filter(l => l.startsWith("const TIERS =")).join("\n").replace(/^const /, "var "));
+eval(extractFn("function strongestBand(bands) {"));
+eval(extractFn("function bandLabel(band) {"));
 eval(extractFn("function achievableScores(judges, maxCell, related) {"));
 eval(extractFn("function bandReachable(judges, maxCell, related) {"));
 
@@ -126,5 +132,28 @@ for (const [judges, maxCell] of [[1, 2], [2, 4], [3, 6], [4, 8], [1, 3], [3, 9]]
       `scores (j=${judges}, maxCell=${maxCell}, related=${related})`);
   }
 }
+
+/* strongestBand / bandLabel: the vocabulary the rail and the export print. */
+function checkEq(actual, expected, label) {
+  const ok = JSON.stringify(actual) === JSON.stringify(expected);
+  if (!ok) failures += 1;
+  console.log(`${ok ? "PASS" : "FAIL"}  ${label}: ${JSON.stringify(actual)} (expected ${JSON.stringify(expected)})`);
+}
+
+// The order of TIERS IS the precedence rule. strongestBand reads it directly, and
+// reordering it would silently relabel every multi-behaviour block, so pin it.
+checkEq(TIERS, ["defining", "core", "related"], "TIERS is ordered strongest-first");
+
+checkEq(strongestBand(["related", "defining"]), "defining",
+  "a block that is defining for one behaviour and related to another is named by the stronger");
+checkEq(strongestBand(["related", "core"]), "core", "core outranks related");
+checkEq(strongestBand(["related"]), "related", "a lone related block stays related");
+checkEq(strongestBand([]), null, "no bands -> null");
+checkEq(strongestBand([null, undefined]), null, "only empty bands -> null");
+
+checkEq(bandLabel("defining"), "Defining", "bandLabel capitalises the band");
+checkEq(bandLabel("related"), "Related", "bandLabel capitalises related");
+checkEq(bandLabel(null), "Scored", "an unbanded passage falls back to a neutral word");
+checkEq(bandLabel(""), "Scored", "an empty data-band falls back too");
 
 process.exit(failures ? 1 : 0);

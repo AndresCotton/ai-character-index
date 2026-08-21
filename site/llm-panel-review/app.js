@@ -205,6 +205,19 @@ function achievableScores(judges, maxCell, related) {
  * (Deriving it from the cuts alone gets j=2 / maxCell=4 / ?related=0.5 wrong -- the
  * related cut of 3 sits between the achievable 2.5 and 4.) Pure, like tierBand, so
  * engine/panel/test_appjs_tiers.js can extract and pin it. */
+/* The strongest band among several, or null if none is set. A block can carry more
+ * than one behaviour's citation, and a passage that is defining for one and related to
+ * another should be named by the stronger claim. */
+function strongestBand(bands) {
+  return TIERS.find(tier => bands.includes(tier)) || null;
+}
+
+/* "defining" -> "Defining". The tier vocabulary is what the header toggles call these,
+ * so the rail and the export must use the same words. */
+function bandLabel(band) {
+  return band ? band[0].toUpperCase() + band.slice(1) : "Scored";
+}
+
 function bandReachable(judges, maxCell, related) {
   const hit = { defining: false, core: false, related: false };
   achievableScores(judges, maxCell, related).forEach(score => {
@@ -673,7 +686,7 @@ function passagesMarkdown() {
       coverage.passages.forEach((passage, index) => {
         lines.push(
           "",
-          `#### ${index + 1}. ${passage.adjacent ? "Related" : "Core"} passage`,
+          `#### ${index + 1}. ${bandLabel(passage.band)} passage`,
           "",
           `\`${passage.locator}\``,
           "",
@@ -1259,6 +1272,7 @@ function annotatePassages(panel, doc) {
           hue: behaviourHue(behaviour),
           texture: behaviourTexture(behaviour),
           adjacent: own.every(item => item.passage.adjacent),
+          band: strongestBand(own.map(item => item.passage.band)),
           anchored: own.filter(item => item.anchored).map(item => item.passage),
         };
       })
@@ -1270,6 +1284,9 @@ function annotatePassages(panel, doc) {
 
     block.classList.add("passage");
     block.classList.toggle("adjacent", marks.every(mark => mark.adjacent));
+    // The rail and the export read this rather than inferring a tier from the
+    // `adjacent` class, which can only ever answer "related or not".
+    block.dataset.band = strongestBand(marks.map(mark => mark.band)) || "";
     block.classList.toggle("passage-continuation", !anchored);
     block.classList.toggle("passage-overlap", marks.length > 1);
     block.style.setProperty("--tint", tintGradient(marks, false));
@@ -1756,7 +1773,7 @@ function updateRails() {
       mark.style.height = `max(5px, ${(anchor.offsetHeight / body.scrollHeight) * 100}%)`;
       mark.setAttribute(
         "aria-label",
-        `${overlap ? "Shared" : anchor.classList.contains("adjacent") ? "Related" : "Core"}`
+        `${overlap ? "Shared" : bandLabel(anchor.dataset.band)}`
         + ` passage ${localIndex + 1}, ${anchor.dataset.behaviours}: ${anchor.dataset.role}`,
       );
       mark.title = `${anchor.dataset.behaviours} · ${anchor.dataset.role}`;
@@ -1876,7 +1893,10 @@ function applyPanelThreshold(payload) {
       cov.panelFiltered = before - subTier - cov.passages.length;   // hidden by the tier toggles, NOT absent
       cov.passages.forEach(p => {
         if (p.score === undefined) return;
-        p.adjacent = band(p.score) === "related";
+        // The band is what the passage IS; `adjacent` is one question about it, kept
+        // because the tint and gutter styling key off it.
+        p.band = band(p.score);
+        p.adjacent = p.band === "related";
         // the baked role text carries the build-time score; rewrite it with the recomputed one
         const shown = Number.isInteger(p.score) ? p.score : p.score.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
         p.role = (p.role || "").replace(/\(score [^)]*\)/, `(score ${shown}/${p.maxScore})`);

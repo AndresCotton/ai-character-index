@@ -440,6 +440,14 @@ body.resizing-columns {
     linear-gradient(to left, rgb(var(--hue-1) / var(--rule-core)) 0 2px, transparent 2px),
     linear-gradient(rgb(var(--hue-1) / var(--tint-core)), rgb(var(--hue-1) / var(--tint-core)));
 }
+/* Defining carries the widest margin rule, the same way .legend-mark.defining is the
+   widest mark in the header: the tier the shipped 3-point data actually puts its
+   passages in was missing from the key entirely. */
+.key-swatch.defining {
+  background:
+    linear-gradient(to left, rgb(var(--hue-1) / var(--rule-core)) 0 4px, transparent 4px),
+    linear-gradient(rgb(var(--hue-1) / var(--tint-core)), rgb(var(--hue-1) / var(--tint-core)));
+}
 .key-swatch.related {
   background:
     linear-gradient(to left, rgb(var(--hue-1) / var(--rule-related)) 0 2px, transparent 2px),
