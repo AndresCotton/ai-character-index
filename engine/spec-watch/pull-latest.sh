@@ -44,10 +44,12 @@ upstream_model=$(gh api repos/openai/model_spec/contents/docs/version-manifest.j
 [ "$upstream_model" = "$MODEL_PIN" ] || fail "upstream model-spec is at $upstream_model but the registry pins $MODEL_PIN (engine/spec-cite/cite.py). Bump the registry and re-sweep deliberately; not pulling."
 
 CONSTITUTION_PIN="$(registry_version constitution)"
-pinned_file="$(basename "$(registry_path constitution "$CONSTITUTION_PIN")")"
+pinned_path="$(registry_path constitution "$CONSTITUTION_PIN")" \
+  || fail "registry_path lookup failed for constitution/$CONSTITUTION_PIN"
+pinned_file="$(basename "$pinned_path")"
 upstream_constitutions=$(gh api repos/anthropics/claude-constitution/contents/ \
   --jq '[.[].name | select(test("constitution\\.md$"))] | .[]')
-echo "$upstream_constitutions" | grep -qx "$pinned_file" \
+echo "$upstream_constitutions" | grep -Fqx "$pinned_file" \
   || fail "upstream no longer carries $pinned_file (registry pin: $CONSTITUTION_PIN); not pulling."
 newest=$(echo "$upstream_constitutions" | sort | tail -1)
 [ "$newest" = "$pinned_file" ] || fail "upstream carries a newer constitution ($newest) than the registry pin ($pinned_file). Bump the registry and re-sweep deliberately; not pulling."
