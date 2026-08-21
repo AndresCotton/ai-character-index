@@ -618,7 +618,16 @@ body.resizing-columns {
   cursor: pointer;
 }
 .document-focus-toggle:hover { border-color: var(--accent); color: var(--accent); }
-.rail-legend { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+/* The toggles carry their counts, which makes the legend wide enough to overrun a
+   phone-width header. Each button stays unbroken (nowrap); the row wraps instead. */
+.rail-legend {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
 /* Neutral: the legend explains intensity, and the colour belongs to the behaviour. */
 .legend-mark { width: 3px; height: 9px; display: inline-block; border-radius: 2px; background: var(--muted); }
 .legend-mark.adjacent { margin-left: 3px; opacity: .4; }
@@ -647,6 +656,15 @@ body.resizing-columns {
   background: var(--chrome-deep);
   color: var(--ink);
 }
+.tier-count { font-variant-numeric: tabular-nums; opacity: .7; }
+/* A tier this data cannot reach: dimmed, not clickable, and it keeps its count (0)
+   so the reason is legible rather than implied by silence. */
+.tier-toggle.unreachable {
+  opacity: .4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+.tier-toggle.unreachable:hover { color: var(--faint); border-color: transparent; }
 .legend-mark.defining { width: 5px; }
 .document-scroll { position: relative; flex: 1; min-height: 0; overflow: auto; scroll-behavior: smooth; }
 

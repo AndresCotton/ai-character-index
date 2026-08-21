@@ -152,6 +152,28 @@ check((await cards()) === 0, "?tiers=none hides every band");
 await acmeAll("&tiers=defining,core,related&related=0");
 check((await cards()) === 1, "?related=0 zeroes the lone related vote (weight tuning survives B1)");
 
+// The toggles report what they hold, and a tier this data cannot reach is disabled
+// rather than left inert. On the staged single-judge v3w cell the defining cut clamps
+// onto the core cut, so core is structurally empty -- the case the counts exist for.
+await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
+{
+  const tiers = () => page.evaluate(() =>
+    Object.fromEntries([...document.querySelectorAll(".document-panel .tier-toggle")].map(b => [
+      b.dataset.tier,
+      { count: (b.textContent.match(/\((\d+)\)/) || [])[1], disabled: b.disabled },
+    ])));
+  const t = await tiers();
+  check(t.core?.disabled === true && t.core?.count === "0",
+    "unreachable tier is disabled and reports (0)", JSON.stringify(t.core));
+  check(t.defining?.disabled === false && t.related?.disabled === false,
+    "reachable tiers stay live", `defining=${JSON.stringify(t.defining)} related=${JSON.stringify(t.related)}`);
+  const rendered = await cards();
+  const shown = Object.values(t).filter(x => !x.disabled)
+    .reduce((a, x) => a + Number(x.count || 0), 0);
+  check(shown >= rendered,
+    "tier counts account for every rendered passage", `counts ${shown} >= rendered ${rendered}`);
+}
+
 // =============================================================================
 console.log("== Panel: document view, source link, compare, embedded ==");
 await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);

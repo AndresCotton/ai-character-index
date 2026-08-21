@@ -158,6 +158,41 @@ const DEFAULT_BANDS = ["defining", "core"];
  * weight; with the weight set to 0 the user has zeroed related votes, so they
  * stay hidden (cut falls back to 1). Extracted verbatim-friendly for
  * engine/panel/test_appjs_tiers.js. */
+/* The scores a cell can actually produce. applyPanelThreshold tallies each passage as
+ * `sum over judges of (v >= 2 ? v : v === 1 ? related : 0)`, so a judge contributes one
+ * of {0, related, 2..maxVerdict} -- NOT any integer. With a fractional ?related= weight
+ * the reachable set is sparse, and assuming a contiguous 0..maxCell range invents scores
+ * no passage can hold. */
+function achievableScores(judges, maxCell, related) {
+  const maxVerdict = judges > 0 ? Math.round(maxCell / judges) : 2;
+  const perJudge = [0, ...(related > 0 ? [related] : []),
+                    ...Array.from({ length: Math.max(0, maxVerdict - 1) }, (_, i) => i + 2)];
+  let sums = new Set([0]);
+  for (let j = 0; j < judges; j += 1) {
+    const next = new Set();
+    sums.forEach(s => perJudge.forEach(v => next.add(s + v)));
+    sums = next;
+  }
+  return sums;
+}
+
+/* Which tiers a cell can actually put a passage in. The cuts can collide: on a 3-point
+ * rubric maxCell is 2j, so the defining cut clamps onto the core cut and NO score can
+ * land in core -- its toggle would sit in the header doing nothing. Answered by asking
+ * tierBand about every score the cell can actually produce, so the two cannot disagree
+ * by construction: a band is reachable exactly when some achievable score lands in it.
+ * (Deriving it from the cuts alone gets j=2 / maxCell=4 / ?related=0.5 wrong -- the
+ * related cut of 3 sits between the achievable 2.5 and 4.) Pure, like tierBand, so
+ * engine/panel/test_appjs_tiers.js can extract and pin it. */
+function bandReachable(judges, maxCell, related) {
+  const hit = { defining: false, core: false, related: false };
+  achievableScores(judges, maxCell, related).forEach(score => {
+    const band = tierBand(score, judges, maxCell, related);
+    if (band) hit[band] = true;
+  });
+  return hit;
+}
+
 function tierBand(score, judges, maxCell, related) {
   const defCut = Math.min(2 * judges + 1, maxCell || 2 * judges + 1);
   const relatedCut = judges > 1 ? judges + 1 : related > 0 ? related : 1;
@@ -1447,6 +1482,33 @@ function coverageDepthLine(doc) {
   return `Coverage depth ${low}–${high} / 4 · ${depths.length} behaviors`;
 }
 
+/* Tier toggles report what they hold and stop pretending to be live when they
+ * cannot hold anything. Counts are summed over the ticked behaviours for THIS
+ * document, from the same cells the rail renders, so the number on the button and
+ * the passages on the page can never disagree. A tier no contributing cell can
+ * reach is disabled rather than left inert: on a 3-point rubric the defining cut
+ * clamps onto the core cut, so "Core" is structurally empty and a user toggling
+ * it would otherwise get silence and no reason for it. */
+function updateTierToggles(panel, doc) {
+  const cells = selectedBehaviours()
+    .map(behaviour => behaviour.coverage?.[doc.id])
+    .filter(cov => cov && cov.bandCounts);
+  panel.querySelectorAll(".tier-toggle").forEach(button => {
+    const tier = button.dataset.tier;
+    const count = cells.reduce((total, cov) => total + (cov.bandCounts[tier] || 0), 0);
+    const reachable = cells.length === 0 || cells.some(cov => cov.bandReachable?.[tier]);
+    button.querySelector(".tier-count").textContent = ` (${count})`;
+    button.disabled = !reachable;
+    button.classList.toggle("unreachable", !reachable);
+    if (!reachable) {
+      button.title = `No ${tier} band in this data: on a 3-point rubric the defining `
+        + `cut clamps onto the core cut, so no passage can score into ${tier}.`;
+    } else if (button.dataset.titleDefault) {
+      button.title = button.dataset.titleDefault;
+    }
+  });
+}
+
 function updatePanelMeta(panel, doc) {
   const tracking = highlightsActive();
   const depth = panel.querySelector(".coverage-depth");
@@ -1454,6 +1516,7 @@ function updatePanelMeta(panel, doc) {
   depth.hidden = !tracking;
   panel.querySelector(".rail-legend").hidden = !tracking;
   panel.querySelector(".document-focus-toggle").hidden = !tracking;
+  if (tracking) updateTierToggles(panel, doc);
 
   // Counted from the published set, not from what resolved: a passage that failed to
   // anchor is an unresolved-anchor warning, not an absence of coverage.
@@ -1694,6 +1757,15 @@ function applyPanelThreshold(payload) {
       const band = score => tierBand(score, judges, maxCell, related);
       const shownBands = state.bands ?? new Set(DEFAULT_BANDS);
       const before = cov.passages.length;
+      // Per-band tallies and reachability, taken BEFORE the toggle filter so the
+      // header can report what a tier holds even while that tier is switched off.
+      cov.bandCounts = { defining: 0, core: 0, related: 0 };
+      cov.bandReachable = bandReachable(judges, maxCell, related);
+      cov.passages.forEach(p => {
+        if (p.score === undefined) return;
+        const b = band(p.score);
+        if (b) cov.bandCounts[b] += 1;
+      });
       let subTier = 0;   // below every tier -- never rendered, so never "toggled off"
       cov.passages = cov.passages.filter(p => {
         if (p.score === undefined) return true;
