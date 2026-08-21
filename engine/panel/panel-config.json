@@ -272,6 +272,7 @@
       "harm-avoidance-to-third-parties",
       "avoiding-over-and-under-caution"
     ],
+    "_generated_note": "The behaviours array is GENERATED from data/behaviours.json by engine/generate_behaviour_constants.py (the reader-test slugs listed in its PANEL_DISPLAY_SLUGS) -- edit the registry, then regenerate; do not hand-edit the array.",
     "panel": "frontier",
     "threshold": 3,
     "solid_threshold": 5,

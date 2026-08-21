@@ -56,7 +56,8 @@ Commit the audit record -- `verify.md` plus the signed Gate 6 entry in
 `gates.md` -- and push, so both reach the branch before it merges. Then merge the
 sweep branch; the merge deploys the site automatically
 (`.github/workflows/deploy.yml` fires on `site/**` changes -- `pnpm deploy:site` is
-the manual twin) and record the merge/deploy date in `gates.md` under Gate 6.
+the manual twin). The merge date itself lives in GitHub's merge commit --
+never commit to main after the merge.
 
 The behaviour's transparency chain is closed: every quote traces to a resolver call,
 every published row to the gate-approved artifact, and every review step to a dated
