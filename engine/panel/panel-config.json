@@ -26,7 +26,7 @@
       "key_env": "OPENROUTER_API_KEY"
     }
   },
-  "routing_comment": "`provider`/`id` is the native route and stays the default. The optional `openrouter` block is a fallback harness.resolve() takes only when the native key is absent; tags and panel membership are unchanged either way, and metrics.jsonl records the id actually called. OpenRouter mirror ids and prices verified against openrouter.ai/api/v1/models on 2026-08-17; OpenRouter has no Batch API, so a fallback-routed tag must run realtime.",
+  "routing_comment": "`provider`/`id` is the native route and stays the default. The optional `openrouter` block is a fallback harness.resolve() takes only when the native key is absent; tags and panel membership are unchanged either way, and metrics.jsonl records the id actually called. OpenRouter has no Batch API, so a fallback-routed tag must run realtime. Mirror ids and prices are hand-maintained against openrouter.ai/api/v1/models and nothing checks them -- re-verify before trusting a cost estimate.",
   "models": {
     "haiku": {
       "provider": "anthropic",
@@ -252,7 +252,7 @@
       "fable",
       "deepseek"
     ],
-    "_frontier_fast_note": "calibration-loop panel (2026-08-17): deepseek replaces kimi as third seat -- K3 spends 8-18 min and 25-57k reasoning tokens per whole-doc call; V3.2 is frontier-class, open-weights, and fast. Seat confirmed by a 4-way audition on the v5 rubric (runlog-v5.jsonl, 5 cells each): V3.2 4/4 named-core hits at 28-86s/call with the sparsest positives; glm (GLM-5.2) 3/4 at 43-153s = designated substitute; deepseek-v4 (V4-Pro-0813) 4/4 but 93-1132s/call and 2-4x looser; qwen38-max 2 length-overflow parse failures. Production frontier/frontier_primary unchanged until the shipped data is regenerated.",
+    "_frontier_fast_note": "Calibration panel: deepseek holds the third seat instead of kimi, because K3 spends 8-18 minutes and 25-57k reasoning tokens on a whole-doc call. glm is the designated substitute if deepseek fails. The audition data behind that choice lives with the calibration runlogs in experiments/panel-calibration/, not here. Production frontier/frontier_primary are unaffected.",
     "_comment": "frontier = every tag whose rows the site builder may admit (primaries AND substitutes). frontier_primary = the judges the run driver executes; substitutes (opus, kimi-k2) are run manually per Skill 4 when a primary fails.",
     "itest": [
       "qwen-big"
@@ -266,7 +266,7 @@
   ],
   "param_quirks_comment": "gpt-5*: max_completion_tokens + reasoning_effort (gpt-5.6: low, else minimal), no temperature. fable/mythos: no temperature. others: temperature=0.",
   "display": {
-    "_comment": "Behaviours shown in site/llm-panel-review (build_site_data.py: `behaviours` = sidebar list, `panel` = which config panel's runlog rows are admitted). Thresholds: build_site_data.py reads BOTH values below, but neither controls what the page renders. `threshold` (3) appears only in build_site_data.py's closing summary print. `solid_threshold` (5) is baked into every citation as `adjacent: score < solid_threshold`, but applyPanelThreshold() in site/llm-panel-review/app.js recomputes each citation's score from its baked `verdicts` on load (and on every tier toggle), then OVERWRITES `adjacent` from its own per-cell bands (j judges: defining >= min(2j+1, maxCell), core >= 2j, related >= j+1, weaker scores never rendered; defaults show defining+core, so on the shipped 3-judge cells only score >= 6 renders until the related tier is toggled on). Line anchors in app.js as of this PR: the band math is `defCut`/`band` at lines 1556-1558 (judge count at 1555), the `adjacent` overwrite is line 1571, DEFAULT_BANDS (defining+core) is line 95, applyPanelThreshold runs at load via initialize() (line 1637) and on every toggle via toggleBand (line 1602). The baked flag is therefore vestigial -- every citation this builder emits carries verdicts, so the reader recomputes it every time -- and it would even disagree with the client at score 5 (baked says solid, client says related). Legacy URL params in app.js: ?threshold= only maps to tier bands once at load (>=7 defining only, >=6 defining+core, else all tiers), ?solid= is no longer read (only stripped from the URL), and the config values 3/5 play no client-side role.",
+    "_comment": "Behaviours shown in site/llm-panel-review (build_site_data.py): `behaviours` is the sidebar list, `panel` selects which config panel's runlog rows the builder admits. `threshold` and `solid_threshold` are read by build_site_data.py but neither controls what the page renders: applyPanelThreshold() in site/llm-panel-review/app.js recomputes every citation's score from its baked per-judge verdicts on load and on every tier toggle, then derives the band from the per-cell judge count. `threshold` appears only in the builder's closing summary; `solid_threshold` is baked into each citation as `adjacent`, which the reader overwrites on load, so the baked flag is not what you see. Legacy URL params: ?threshold= maps to tier bands once at load, ?solid= is stripped and ignored. The band cuts live with tierBand() and bandReachable() in app.js and are pinned by engine/panel/test_appjs_tiers.js -- read them there, not from a line number here.",
     "behaviours": [
       "helpfulness",
       "harm-avoidance-to-third-parties",
@@ -278,5 +278,5 @@
     "solid_threshold": 5,
     "_activation_note": "The two general-guidelines slugs (animal-welfare-impacts, general-welfare-impacts-strict) join this list when the full rollout data lands; until then the dual-slug mapping in build_site_data.py is inert by design."
   },
-  "_opus_note": "opus substitutes for fable on harm-avoidance-to-third-parties x model-spec only (fable output content-filtered there, 3 attempts); opus rows exist for no other cell."
+  "_opus_note": "Substitution: opus stands in for fable on harm-avoidance-to-third-parties x model-spec, and only there; opus rows exist for no other cell. Why, and the matching kimi-k2 substitution, are recorded in SUBSTITUTION_NOTES in engine/panel/build_site_data.py, which is what puts them in the payload."
 }
