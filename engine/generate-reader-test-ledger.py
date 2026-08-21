@@ -30,6 +30,17 @@ source artifact (named, with its reason). The check fails on any NEW
 divergence, and also fails if a disclosed one disappears without being
 removed from DISCLOSED -- disclosures are not a place to park fixes.
 
+A row-level disclosure (locator None) only shelters divergences that are
+themselves punctuation-only (equal once trailing punctuation/whitespace is
+stripped) -- it cannot be used to wave through a substantive rewrite of a
+field it claims is "lightly edited". Anything else at that field, at any
+locator, fails loudly and by name, disclosed or not.
+
+--check also verifies the ledger has exactly one coverage row per
+(behaviour, lab) pair implied by ledger["behaviours"] x the labs the
+artifacts define -- a silently dropped row is a failure, and the failure
+names every missing pair.
+
 Usage:
     python3 engine/generate-reader-test-ledger.py            # rewrite in place
     python3 engine/generate-reader-test-ledger.py --check    # exit 1 on drift
@@ -70,9 +81,21 @@ DISCLOSED = {
 }
 
 
-def is_disclosed(slug: str, lab: str, locator, field: str) -> bool:
-    return ((slug, lab, locator, field) in DISCLOSED
-            or (slug, lab, None, field) in DISCLOSED)
+def is_disclosed(slug: str, lab: str, locator, field: str, a=None, b=None) -> bool:
+    """Is this (row or cell) divergence covered by DISCLOSED?
+
+    A cell-level entry ((slug, lab, locator, field)) covers whatever it
+    names, no further questions asked -- it is pinned to one exact locator.
+    A row-level entry ((slug, lab, None, field)) covers a field across the
+    whole row, but only where the actual divergence is punctuation-only;
+    `a`/`b` are the two compared values, and a genuinely different `a`/`b`
+    is refused even though the row is nominally disclosed.
+    """
+    if (slug, lab, locator, field) in DISCLOSED:
+        return True
+    if (slug, lab, None, field) in DISCLOSED:
+        return a is not None and b is not None and punct_stripped(a) == punct_stripped(b)
+    return False
 
 
 def norm_locator(locator: str) -> str:
@@ -81,6 +104,12 @@ def norm_locator(locator: str) -> str:
 
 def norm_prose(text: str) -> str:
     return (text or "").replace("`", "").strip()
+
+
+def punct_stripped(text: str) -> str:
+    """Trailing punctuation/whitespace stripped, for judging "punctuation
+    cleanup" divergences. Apply to already norm_prose'd text."""
+    return re.sub(r"[.,;:!?'\"]+$", "", text or "").rstrip()
 
 
 def parse_artifact(path: Path) -> dict:
@@ -131,15 +160,42 @@ def parse_artifact(path: Path) -> dict:
     return out
 
 
+DIR_NUMBER_PREFIX = re.compile(r"^\d+-")
+
+
 def artifact_for(slug: str) -> Path:
-    """The sweep artifact a ledger behaviour was transcribed from."""
+    """The sweep artifact a ledger behaviour was transcribed from.
+
+    Matches a directory whose name, with its leading "NN-" sweep-order
+    prefix stripped, equals the slug exactly -- not a substring match, so a
+    future slug that happens to be a substring of another can't silently
+    bind to the wrong artifact.
+    """
+    matches = []
     for base in (BATCH, BATCH / "general-guidelines"):
         if not base.is_dir():
             continue
         for entry in sorted(base.iterdir()):
-            if entry.is_dir() and slug in entry.name:
-                return entry / "4-spec-coverage.md"
-    sys.exit(f"no sweep artifact under behaviours-for-adria/ for behaviour {slug!r}")
+            if entry.is_dir() and DIR_NUMBER_PREFIX.sub("", entry.name) == slug:
+                matches.append(entry / "4-spec-coverage.md")
+    if len(matches) == 1:
+        return matches[0]
+    if not matches:
+        sys.exit(f"no sweep artifact under behaviours-for-adria/ for behaviour {slug!r}")
+    sys.exit(f"ambiguous sweep artifact for behaviour {slug!r}: "
+              f"{len(matches)} directories match: {[str(m.parent) for m in matches]}")
+
+
+def missing_coverage(ledger: dict) -> list[tuple[str, str]]:
+    """(behaviour slug, lab) pairs ledger["coverage"] is missing a row for,
+    against the full cross of ledger["behaviours"] x the labs the sweep
+    artifacts define. Sorted for stable, name-everything failure output."""
+    labs = sorted(set(SPEC_SECTIONS.values()))
+    expected = {(b["slug"], lab) for b in ledger["behaviours"] for lab in labs}
+    behaviours = {b["id"]: b for b in ledger["behaviours"]}
+    present = {(behaviours[row["behaviour_id"]]["slug"], row["lab_id"])
+               for row in ledger["coverage"]}
+    return sorted(expected - present)
 
 
 def diff_ledger(ledger: dict) -> tuple[list, list]:
@@ -147,9 +203,14 @@ def diff_ledger(ledger: dict) -> tuple[list, list]:
     problems, disclosed_present = [], []
     behaviours = {b["id"]: b for b in ledger["behaviours"]}
 
-    def note(slug, lab, locator, field, message):
+    for slug, lab in missing_coverage(ledger):
+        problems.append(
+            f"{slug}/{lab}: no coverage row in ledger for this behaviour/lab "
+            f"pair (dropped, or never written)")
+
+    def note(slug, lab, locator, field, message, a=None, b=None):
         loc = norm_locator(locator) if locator else None
-        if is_disclosed(slug, lab, loc, field):
+        if is_disclosed(slug, lab, loc, field, a, b):
             disclosed_present.append((slug, lab, loc, field))
         else:
             problems.append(f"{slug}/{lab}: {message}")
@@ -190,8 +251,10 @@ def diff_ledger(ledger: dict) -> tuple[list, list]:
             block = art_by_loc[loc]
             if (block["quote"] or "").strip() != (cit["quote"] or "").strip():
                 note(slug, lab, loc, "quote", f"quote diverges at {cit['locator']!r}")
-            if norm_prose(block["role"]) != norm_prose(cit["role"]):
-                note(slug, lab, loc, "role", f"role diverges at {cit['locator']!r}")
+            role_art, role_ledger = norm_prose(block["role"]), norm_prose(cit["role"])
+            if role_art != role_ledger:
+                note(slug, lab, loc, "role", f"role diverges at {cit['locator']!r}",
+                     role_art, role_ledger)
             if bool(block["adjacent"]) != bool(cit.get("adjacent", False)):
                 note(slug, lab, loc, "adjacent",
                      f"core/adjacent flag diverges at {cit['locator']!r} "
@@ -257,8 +320,9 @@ def main(argv=None) -> int:
                     "reconcile before regenerating")
             loc = norm_locator(cit["locator"])
             cit["quote"] = block["quote"]
-            if not is_disclosed(slug, lab, loc, "role") \
-                    and norm_prose(block["role"]) != norm_prose(cit["role"]):
+            role_art, role_ledger = norm_prose(block["role"]), norm_prose(cit["role"])
+            if role_art != role_ledger \
+                    and not is_disclosed(slug, lab, loc, "role", role_art, role_ledger):
                 cit["role"] = block["role"]
             if not is_disclosed(slug, lab, loc, "adjacent"):
                 cit["adjacent"] = block["adjacent"]
