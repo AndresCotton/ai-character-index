@@ -23,7 +23,7 @@ python3 engine/spec-cite/cite.py resolve "model-spec@2025-12-18 > #avoid_sycopha
 python3 engine/spec-cite/cite.py find model-spec "some remembered phrase"   # text → locator
 ```
 
-No CI re-resolves locators today (the only workflow is `.github/workflows/deploy.yml`). Re-resolution happens when `engine/publish-coverage.py` runs — it verifies every quote through `cite.py` before writing `data/coverage.json` — and a PR-time locator check is on the closeout list. Combined with spec-watch, that is what keeps coverage claims verifiable over time.
+Locators are re-resolved in CI on every PR (`.github/workflows/ci.yml` runs the `tests/` suite, which re-resolves every published locator through `cite.py`) and again at publish time — `engine/publish-coverage.py` verifies every quote through `cite.py` before writing `data/coverage.json`. Combined with spec-watch, that is what keeps coverage claims verifiable over time.
 
 ### User specs (bring your own document)
 
