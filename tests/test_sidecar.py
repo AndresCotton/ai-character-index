@@ -1,4 +1,4 @@
-"""Gate tests for the structured stage-4 sidecar (4-spec-coverage.json).
+"""Gate tests for the structured coverage sidecar (spec-coverage.json).
 
 Pins the sidecar path of engine/publish-coverage.py:
 
@@ -47,6 +47,14 @@ import validate_data  # noqa: E402
 # Behaviour 99 is unpublished, so --check can never pass via the
 # records-match branch; only parsing + quote verification run on fixtures.
 FIXTURE_DIR_NAME = "99-negative-fixture"
+
+
+def committed_sidecars() -> list[Path]:
+    """Every committed sidecar under both the current and the legacy name."""
+    return sorted(
+        set(SWEEPS.glob("*/spec-coverage.json"))
+        | set(SWEEPS.glob("*/4-spec-coverage.json"))
+    )
 
 
 def pick_single_line_quote(lab_id):
@@ -118,7 +126,7 @@ class CommittedSidecarTest(unittest.TestCase):
     reconstruction carries the full provenance the honesty bar requires."""
 
     def test_committed_sidecars_validate(self):
-        sidecars = sorted(SWEEPS.glob("*/4-spec-coverage.json"))
+        sidecars = committed_sidecars()
         self.assertTrue(sidecars, "no sidecars committed")
         schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
         for path in sidecars:
@@ -153,7 +161,7 @@ class CommittedSidecarTest(unittest.TestCase):
         for record in data["coverage"]:
             published.setdefault(record["behaviour_id"], []).append(record)
         checked = 0
-        for path in sorted(SWEEPS.glob("*/4-spec-coverage.json")):
+        for path in committed_sidecars():
             sidecar = json.loads(path.read_text(encoding="utf-8"))
             behaviour_id = sidecar["behaviour_id"]
             if behaviour_id not in published:
@@ -345,7 +353,7 @@ class SidecarCrossCheckTest(unittest.TestCase):
             sweep_dir = Path(tmp) / self.SOURCE
             shutil.copytree(SWEEPS / self.SOURCE, sweep_dir)
             (sweep_dir / "4-spec-coverage.md").write_text(
-                "not a stage-4 artifact\n", encoding="utf-8"
+                "not a coverage artifact\n", encoding="utf-8"
             )
             result = subprocess.run(
                 [sys.executable, str(PUBLISH), str(sweep_dir), "--check"],
@@ -452,8 +460,8 @@ class SidecarMarkdownConsistencyTest(unittest.TestCase):
 
     def test_markdown_path_still_checks_green_beside_sidecar(self):
         checked = set()
-        for sidecar_path in sorted(SWEEPS.glob("*/4-spec-coverage.json")):
-            md_path = sidecar_path.with_name("4-spec-coverage.md")
+        for sidecar_path in committed_sidecars():
+            md_path = sidecar_path.with_suffix(".md")
             if not md_path.exists():
                 continue  # reconstruction-only sidecars have no sibling markdown
             with self.subTest(sweep=sidecar_path.parent.name):
@@ -474,11 +482,11 @@ class SidecarMarkdownConsistencyTest(unittest.TestCase):
                 checked.add(sidecar_path.parent.name)
         # Existence pins: the dual-artifact consistency set is exactly the
         # sweeps that ship both artifacts (01 ships a reconstruction-only
-        # sidecar -- it never had a stage-4 markdown), and every committed
+        # sidecar -- it never had a coverage markdown), and every committed
         # sidecar is present. Deleting either side must turn this test red,
         # not silently shrink the coverage the suite claims to hold.
         self.assertEqual(checked, {"02-calibration", "03-action-honesty"})
-        all_sidecars = {path.parent.name for path in SWEEPS.glob("*/4-spec-coverage.json")}
+        all_sidecars = {path.parent.name for path in committed_sidecars()}
         self.assertEqual(
             all_sidecars,
             {"01-no-sycophancy", "02-calibration", "03-action-honesty"},

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Publish a behaviour's stage-4 spec coverage into data/coverage.json.
+"""Publish a behaviour's spec coverage into data/coverage.json.
 
 Usage:
     publish-coverage.py research/sweeps/NN-<slug> [--check]
 
-Reads the behaviour's stage-4 artifact, re-verifies every stored quote
+Reads the behaviour's coverage artifact, re-verifies every stored quote
 byte-for-byte against engine/spec-cite/cite.py, and replaces that behaviour's
 records in data/coverage.json. With --check, verifies and diffs against the
 currently published records without writing.
 
 Two artifact forms; the sidecar wins when both exist:
 
-1. Structured sidecar `4-spec-coverage.json` -- validated against
+1. Structured sidecar `spec-coverage.json` -- validated against
    data/schema/spec-coverage-sidecar.schema.json (through validate_data.py's
    jsonschema/stdlib backends) plus cross-checks a single-file schema cannot
    express: records agree with the top-level behaviour identity and with the
@@ -21,7 +21,7 @@ Two artifact forms; the sidecar wins when both exist:
    locator, and a reconstructed sidecar names its source and date. Records
    are published verbatim (citation key order included), so a sidecar derived
    from data/coverage.json round-trips byte-for-byte.
-2. Markdown `4-spec-coverage.md` -- the original layout contract, parsed by
+2. Markdown `spec-coverage.md` -- the layout contract, parsed by
    regex; the fallback when no sidecar exists (behaviour 2 is the template):
   - header bullet:  - **Behaviour:** <id>, <name> (...)
   - header bullet:  - **Sweep date:** YYYY-MM-DD
@@ -77,8 +77,12 @@ COVERAGE_SCHEMA = ROOT / "data" / "schema" / "coverage.schema.json"
 
 SUPPORTED_SIDECAR_VERSION = 1
 
-MARKDOWN_NAME = "4-spec-coverage.md"
-SIDECAR_NAME = "4-spec-coverage.json"
+MARKDOWN_NAME = "spec-coverage.md"
+SIDECAR_NAME = "spec-coverage.json"
+# Sweeps that predate the artifact rename keep their original filenames; the
+# publisher accepts both and prefers the current names (never both at once).
+LEGACY_MARKDOWN_NAME = "4-" + MARKDOWN_NAME
+LEGACY_SIDECAR_NAME = "4-" + SIDECAR_NAME
 
 CITATION_FORMAT = (
     "specs/CITATION.md; quotes are exact output of engine/spec-cite/cite.py resolve; "
@@ -102,7 +106,7 @@ def section(text: str, start: str, enders: list[str]) -> str:
     parts = text.split(start, 1)
     if len(parts) < 2:
         sys.exit(f"publish-coverage: artifact is missing the section starting "
-                 f"{start!r} -- expected the stage-4 layout")
+                 f"{start!r} -- expected the coverage-artifact layout")
     body = parts[1]
     cut = len(body)
     for ender in enders:
@@ -156,7 +160,7 @@ def parse_verdict_table(text: str, source: str) -> dict[str, dict]:
             sys.exit(
                 f"publish-coverage layout error: {source}: verdict table depth "
                 f"cell {cells[2]!r} in the {cells[0]!r} row is not a number "
-                "-- expected the stage-4 layout "
+                "-- expected the coverage-artifact layout "
                 "| spec | verdict | 0-4 depth | rationale |"
             )
         rows[lab] = {
@@ -176,7 +180,8 @@ def _locator_spec_part(locator: str) -> str:
 
 
 def parse_markdown(artifact_path: Path) -> tuple[int, list[dict]]:
-    """The regex path: unchanged contract for 4-spec-coverage.md artifacts."""
+    """The regex path: unchanged contract for spec-coverage.md artifacts
+    (sweeps predating the rename keep the legacy name 4-spec-coverage.md)."""
     artifact = artifact_path.read_text()
 
     header = re.search(r"\*\*Behaviour:\*\* (\d+), ([^(\n]+?)(?: \(|\n)", artifact)
@@ -221,7 +226,7 @@ def parse_markdown(artifact_path: Path) -> tuple[int, list[dict]]:
 
 
 def parse_sidecar(sidecar_path: Path, sweep_dir: Path) -> tuple[int, list[dict]]:
-    """The structured path: schema-validate 4-spec-coverage.json, then apply
+    """The structured path: schema-validate spec-coverage.json, then apply
     the cross-checks a single-file schema cannot express. Returns its records
     verbatim (citation key order included) for byte-stable publication."""
     try:
@@ -358,14 +363,32 @@ def verify_citations(citations: list[dict]) -> None:
     print(f"{len(citations)} locators re-verified against cite.py, 0 mismatches")
 
 
+def resolve_artifact_path(directory: Path, current: str, legacy: str) -> Path:
+    """Path of a sweep artifact under its current name, else its legacy name.
+
+    Sweeps that predate the artifact rename keep their original filenames; both
+    names resolve, the current one wins. Both present is ambiguous -- fail loud.
+    """
+    current_path = directory / current
+    legacy_path = directory / legacy
+    if current_path.exists() and legacy_path.exists():
+        sys.exit(
+            f"{directory}: both {current} and {legacy} exist -- keep exactly "
+            f"one artifact of each form"
+        )
+    return current_path if current_path.exists() else legacy_path
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("behaviour_dir", type=Path)
     parser.add_argument("--check", action="store_true")
     arguments = parser.parse_args()
 
-    sidecar_path = arguments.behaviour_dir / SIDECAR_NAME
-    markdown_path = arguments.behaviour_dir / MARKDOWN_NAME
+    sidecar_path = resolve_artifact_path(
+        arguments.behaviour_dir, SIDECAR_NAME, LEGACY_SIDECAR_NAME)
+    markdown_path = resolve_artifact_path(
+        arguments.behaviour_dir, MARKDOWN_NAME, LEGACY_MARKDOWN_NAME)
     if sidecar_path.exists():
         behaviour_id, records = parse_sidecar(sidecar_path, arguments.behaviour_dir)
         print(f"using structured sidecar {sidecar_path.name}")
@@ -375,8 +398,9 @@ def main() -> None:
         artifact_name = markdown_path.name
     else:
         sys.exit(
-            f"no stage-4 artifact in {arguments.behaviour_dir}: expected "
-            f"{SIDECAR_NAME} or {MARKDOWN_NAME}"
+            f"no coverage artifact in {arguments.behaviour_dir}: expected "
+            f"{SIDECAR_NAME} or {MARKDOWN_NAME} (legacy: "
+            f"{LEGACY_SIDECAR_NAME} / {LEGACY_MARKDOWN_NAME})"
         )
 
     # Both paths gate their records against the real coverage schema before

@@ -5,8 +5,9 @@ data/reader-test-coverage.json (the reader-test bench), whose citations cite
 the same specs through the same locator format.
 
 The publish --check gate (test_publish_check.py) only covers behaviours
-with a stage-4 artifact (`4-spec-coverage.md` or its structured sidecar
-`4-spec-coverage.json`). This test is the net under that: it re-resolves
+with a coverage artifact (`spec-coverage.md` or its structured sidecar
+`spec-coverage.json`; sweeps predating the rename keep the legacy
+`4-spec-coverage.*` names). This test is the net under that: it re-resolves
 every stored locator in data/coverage.json against cite.py and
 byte-compares the quote, whether or not the behaviour has any artifact --
 the same guarantee PLAN.md promises CI will enforce on every PR, run here

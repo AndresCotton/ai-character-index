@@ -34,8 +34,9 @@ One test file per subject under test:
   the corpus-wide invariant that every published quote stays findable
   under folding.
 - `test_publish_check.py` -- runs `publish-coverage.py --check` for every
-  sweep directory holding a stage-4 artifact (`4-spec-coverage.md` or its
-  structured sidecar `4-spec-coverage.json`): re-resolves every published
+  sweep directory holding a coverage artifact (`spec-coverage.md` or its
+  structured sidecar `spec-coverage.json`; sweeps predating the rename keep
+  the legacy `4-spec-coverage.*` names): re-resolves every published
   quote byte-for-byte and diffs the artifact against `data/coverage.json`.
   Mutation guards pin the corrupted-quote detector, the coverage-schema gate
   on the regex path's parsed records (schema-validated before cite.py runs),

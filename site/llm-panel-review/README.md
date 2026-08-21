@@ -2,7 +2,7 @@
 
 The spec reader with passages scored for behaviour relevance by a panel of frontier
 LLMs -- a copy of `site/spec-reader-test/` whose highlights come from model verdicts
-instead of the curated stage-4 sweeps.
+instead of the curated coverage sweeps.
 
 ## What it shows
 Three behaviours (Helpfulness, Harm avoidance to third parties, Avoiding both over-
