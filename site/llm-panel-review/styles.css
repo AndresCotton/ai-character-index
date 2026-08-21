@@ -656,6 +656,40 @@ body.resizing-columns {
   background: var(--chrome-deep);
   color: var(--ink);
 }
+/* The run block sits under the key, closing the sidebar: collapsed it is one line of
+   run identity, opened it is the payload's full provenance. */
+.sidebar-run {
+  padding: 10px 22px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10px;
+}
+.sidebar-run > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sidebar-run > summary::-webkit-details-marker { display: none; }
+.sidebar-run > summary::before { content: "▸"; opacity: .6; font-size: 9px; }
+.sidebar-run[open] > summary::before { content: "▾"; }
+.sidebar-run > summary:hover { color: var(--ink); }
+/* A pin that could not be served still renders the page; the marker is the only
+   on-screen sign that what you asked for is not what you are looking at. */
+.sidebar-run.fell-through > summary::after {
+  content: "pin unavailable";
+  margin-left: auto;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  color: var(--warn, #b4690e);
+  font-size: 9px;
+}
+.run-detail { margin: 9px 0 0; display: grid; grid-template-columns: 1fr; gap: 2px; }
+.run-detail dt { color: var(--faint); text-transform: uppercase; letter-spacing: .04em; font-size: 9px; }
+.run-detail dd { margin: 0 0 7px; color: var(--muted); overflow-wrap: anywhere; }
+
 .tier-count { font-variant-numeric: tabular-nums; opacity: .7; }
 /* A tier this data cannot reach: dimmed, not clickable, and it keeps its count (0)
    so the reason is legible rather than implied by silence. */

@@ -31,10 +31,16 @@ const DOCUMENTS_URL = "../spec-reader/data/documents.json";
  * page. The same chain, CLI-side, is engine/panel/select_run.py. */
 const MANIFEST_URL = "./data/manifest.json";
 const FALLBACK_DATA_URL = "./data/behaviours.json";
+const FALLBACK_DATA_NAME = "behaviours.json";
 const DATA_NAME = /^[\w.-]+$/;
 
 function dataUrl(name) {
-  return `./data/${name.replace(/\.json$/, "")}.json`;
+  return `./data/${dataName(name)}`;
+}
+
+/* payloadName() is a predicate; this is the filename it approves. */
+function dataName(name) {
+  return `${name.replace(/\.json$/, "")}.json`;
 }
 
 /* Whether a ?data= pin or a manifest "latest" entry may resolve as a payload. It must
@@ -50,16 +56,28 @@ function payloadName(name) {
   return fname.startsWith("behaviours");
 }
 
+/* Resolves the payload AND records which source won, in state.payloadSource:
+ * {origin: "pin"|"latest"|"fallback", name, requested}. The fall-through itself is
+ * deliberate -- a stale pin must never break the page -- but the viewer has to be able
+ * to tell that it happened, or a dead link is indistinguishable from a live one. The
+ * sidebar run block reads this; `requested` is set only when a pin was asked for and
+ * not served, which is exactly the case worth flagging. */
 async function loadBehaviours() {
   const pinned = new URLSearchParams(location.search).get("data");
   if (payloadName(pinned)) {
     const url = dataUrl(pinned);
     try {
-      return await loadJSON(url);
+      const payload = await loadJSON(url);
+      state.payloadSource = { origin: "pin", name: dataName(pinned) };
+      return payload;
     } catch (error) {
       console.warn(`Pinned panel data ${url} unavailable (${error.message}); falling back.`);
     }
   }
+  // Two different failures, and the reader deserves to know which: a validly-named
+  // pin that could not be fetched (stale link) versus a name payloadName() refuses
+  // outright (manifest.json, a traversal attempt). Both fall through by design.
+  const requested = pinned ? { name: pinned, refused: !payloadName(pinned) } : null;
   let latest = null;
   try {
     latest = (await loadJSON(MANIFEST_URL)).latest;
@@ -69,11 +87,14 @@ async function loadBehaviours() {
   if (payloadName(latest)) {
     const url = dataUrl(latest);
     try {
-      return await loadJSON(url);
+      const payload = await loadJSON(url);
+      state.payloadSource = { origin: "latest", name: dataName(latest), requested };
+      return payload;
     } catch (error) {
       console.warn(`Latest run ${url} unavailable (${error.message}); falling back.`);
     }
   }
+  state.payloadSource = { origin: "fallback", name: FALLBACK_DATA_NAME, requested };
   return loadJSON(FALLBACK_DATA_URL);
 }
 
@@ -1509,6 +1530,85 @@ function updateTierToggles(panel, doc) {
   });
 }
 
+/* The run block: which payload is on screen and who judged it. The payload has always
+ * carried this -- rubric, panel, the judges actually seen in the data, and any
+ * substitution -- and the page has never drawn any of it, so a reader could not tell
+ * one run from another, could not see that a judge was substituted on some cells, and
+ * had no way to know the judge count that sets the tier cuts they are toggling.
+ * It doubles as the fall-through signal: when a ?data= pin cannot be served the page
+ * still renders (by design), and this is where it says so. */
+/* The judge count that MATTERS is the per-cell one: applyPanelThreshold derives every
+ * tier cut from `Math.max(1, ...)` over a CELL's passages, so that per-cell maximum is
+ * the number explaining the bands -- not the count on any individual passage. A
+ * passage missing one judge's verdict does not lower its cell's cut, so flattening
+ * per-passage counts would report a cut that no cell uses. Reported as a range only
+ * when cells genuinely differ from each other.
+ *
+ * It is also not the length of judges_seen_in_data: the shipped payload lists five
+ * judges across the run while each cell was scored by three, because two of the five
+ * are substitutes standing in on single cells. */
+function judgesPerCellLabel() {
+  const perCell = [];
+  (state.rawBehaviours || []).forEach(behaviour => {
+    Object.values(behaviour.coverage || {}).forEach(cov => {
+      const counts = (cov.passages || [])
+        .filter(p => p.verdicts)
+        .map(p => Object.values(p.verdicts).length);
+      if (counts.length) perCell.push(Math.max(1, ...counts));   // mirrors applyPanelThreshold
+    });
+  });
+  if (!perCell.length) return null;
+  const lo = Math.min(...perCell), hi = Math.max(...perCell);
+  const n = lo === hi ? `${lo}` : `${lo}\u2013${hi}`;
+  return `${n} judge${hi === 1 ? "" : "s"} per cell`;
+}
+
+function renderRunProvenance() {
+  const box = document.getElementById("run-provenance");
+  const summary = document.getElementById("run-summary");
+  const detail = document.getElementById("run-detail");
+  if (!box || !summary || !detail) return;
+  const prov = state.provenance || {};
+  const src = state.payloadSource || {};
+  const bits = [
+    prov.panel_config,
+    prov.rubric,
+    judgesPerCellLabel(),
+    prov.runDate,
+  ].filter(Boolean);
+  summary.textContent = bits.length ? bits.join(" · ") : "Run details";
+  box.classList.toggle("fell-through", Boolean(src.requested));
+
+  const rows = [];
+  if (src.requested) {
+    rows.push(["Requested", src.requested.refused
+      ? `${src.requested.name} — not a loadable payload name`
+      : `${src.requested.name} — not available`]);
+  }
+  rows.push(["Showing", `${src.name || "—"}${src.origin ? ` (${src.origin})` : ""}`]);
+  if (prov.method) rows.push(["Method", prov.method]);
+  if (prov.rubric) rows.push(["Rubric", prov.rubric]);
+  if ((prov.panel || []).length) rows.push(["Panel", prov.panel.join(", ")]);
+  if ((prov.judges_seen_in_data || []).length) {
+    rows.push(["Judges appearing anywhere in this run", prov.judges_seen_in_data.join(", ")]);
+  }
+  const perCell = judgesPerCellLabel();
+  // Spelled out because it is not the length of the list above, and it is the number
+  // the tier cuts are derived from.
+  if (perCell) rows.push(["Judges scoring each cell", perCell.replace(" per cell", "")]);
+  // Published verdicts partly come from substitute judges. Concealing that while
+  // publishing the verdicts it produced would misrepresent the panel.
+  if (prov.substitution) rows.push(["Substitutions", prov.substitution]);
+
+  detail.replaceChildren(...rows.flatMap(([term, value]) => {
+    const dt = document.createElement("dt");
+    dt.textContent = term;
+    const dd = document.createElement("dd");
+    dd.textContent = value;
+    return [dt, dd];
+  }));
+}
+
 function updatePanelMeta(panel, doc) {
   const tracking = highlightsActive();
   const depth = panel.querySelector(".coverage-depth");
@@ -1867,12 +1967,14 @@ async function initialize() {
       loadBehaviours(),
     ]);
     state.rawBehaviours = behaviours.behaviours || [];
+    state.provenance = behaviours.provenance || {};
     state.bands = initialBands();
     state.payload = {
       documents: documents.documents,
       behaviours: applyPanelThreshold({ behaviours: structuredClone(state.rawBehaviours) }).behaviours,
     };
     renderSpecOptions();
+    renderRunProvenance();
     const bench = state.payload.behaviours;
     state.documentFocus = { anthropic: bench.length > 0, openai: bench.length > 0 };
     const params = initialParams;
