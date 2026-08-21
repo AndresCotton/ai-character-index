@@ -69,6 +69,16 @@ FALLBACK_NAME = "behaviours.json"
 SAFE_NAME = re.compile(r"^[\w.-]+$", re.ASCII)
 
 
+# Why the shipped frontier run needed substitutes -- provider failures no runlog records.
+# Keyed to the panel it describes; a panel with no entry emits no substitution claim.
+SUBSTITUTION_NOTES = {
+    "frontier": "opus (claude-opus-4-8) replaces fable on harm-to-third-parties x "
+                "model-spec (fable output content-filtered, 3 attempts); kimi-k2 "
+                "(Kimi-K2.6) replaces kimi on over-under-caution x model-spec (K3 "
+                "exhausted a 65k output budget on reasoning without emitting verdicts, "
+                "finish_reason length)",
+}
+
 def run_timestamp(dt, seq=0):
     """Run-file timestamp: hyphen-separated so it is URL-safe, and lexicographically
     sortable = chronological. A same-second rerun takes a sequence suffix (seq >= 2, zero-padded to two digits,
@@ -374,13 +384,20 @@ def main(argv=None):
                                "coverage": cov})
     seats = sorted({m for b_ in out_behaviours for cov in b_["coverage"].values()
                     for p in cov["passages"] for m in p.get("verdicts", {})})
+    # The substitution note records WHY a provider failed on a given cell -- something
+    # no runlog carries, so it cannot be derived and must not be asserted. It was a
+    # constant, which stamped the shipped run's opus/kimi-k2 substitutions onto every
+    # payload the builder emitted, including runs those judges never touched. Keyed to
+    # the panel it actually describes; omitted entirely for any other panel.
+    substitution = SUBSTITUTION_NOTES.get(DISPLAY["panel"])
+
     out = {"generatedFrom": [f"engine/panel/build_site_data.py ({rubric})"],
            "provenance": {
                "method": "llm-panel whole-document judging", "rubric": rubric,
                "panel_config": DISPLAY["panel"],
                "panel": ["sol (gpt-5.6-sol)", "fable (claude-fable-5)", "kimi (moonshotai/Kimi-K3)"]
                         if DISPLAY["panel"] == "frontier" else sorted(panel),
-               "substitution": "opus (claude-opus-4-8) replaces fable on harm-to-third-parties x model-spec (fable output content-filtered, 3 attempts); kimi-k2 (Kimi-K2.6) replaces kimi on over-under-caution x model-spec (K3 exhausted a 65k output budget on reasoning without emitting verdicts, finish_reason length)",
+               **({"substitution": substitution} if substitution else {}),
                "judges_seen_in_data": seats,
                "runDate": run_date,
                "scoring": "per passage: sum over judges of core=2/related=1/neither=0; display thresholds are client-side URL params"},

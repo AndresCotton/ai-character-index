@@ -11,7 +11,6 @@
    "kimi",
    "sol"
   ],
-  "substitution": "opus (claude-opus-4-8) replaces fable on harm-to-third-parties x model-spec (fable output content-filtered, 3 attempts); kimi-k2 (Kimi-K2.6) replaces kimi on over-under-caution x model-spec (K3 exhausted a 65k output budget on reasoning without emitting verdicts, finish_reason length)",
   "judges_seen_in_data": [
    "fable",
    "kimi",
