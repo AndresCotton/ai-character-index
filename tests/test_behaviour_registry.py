@@ -6,8 +6,13 @@ engine/generate_behaviour_constants.py:
 
   - GROUPS in site/spec-reader/app.js
   - BEHAVIOURS in engine/build-spec-reader-data.py
-  - key order + titles in engine/panel/behaviours.json
-  - display.behaviours in engine/panel/panel-config.json
+  - titles in engine/panel/behaviours.json (keys are registry slugs, committed
+    order preserved; the judge prompts themselves stay curated)
+
+display.behaviours in engine/panel/panel-config.json is curated configuration,
+not generated: engine/panel/build_site_data.py validates every entry against
+the registry at build time (a renamed or unknown slug fails the build), and
+this suite pins the same invariant against the committed tree.
 
 This suite fails when the registry's structure breaks, when the registry
 disagrees with the published ledgers it mirrors (data/coverage.json names,
@@ -127,7 +132,7 @@ class TestRegistryMatchesPublishedLedgers(unittest.TestCase):
 
 
 class TestDerivedConstantsMatchRegistry(unittest.TestCase):
-    """The four derived constants must equal the generator's rendering."""
+    """The derived constants must equal the generator's rendering."""
 
     @classmethod
     def setUpClass(cls):
@@ -154,19 +159,21 @@ class TestDerivedConstantsMatchRegistry(unittest.TestCase):
             "BEHAVIOURS in engine/build-spec-reader-data.py drifted from the registry",
         )
 
-    def test_display_behaviours_match_panel_config(self):
-        config = (ROOT / "engine" / "panel" / "panel-config.json").read_text(encoding="utf-8")
-        display_start = config.index('"display": {')
-        array_start = config.index('"behaviours": [', display_start)
-        open_bracket = config.index("[", array_start)
-        close_bracket = config.index("]", open_bracket)
-        self.assertEqual(
-            config[open_bracket:close_bracket + 1],
-            gbc.render_display_array(),
-            "display.behaviours in engine/panel/panel-config.json drifted from the generator",
+    def test_display_behaviours_are_registry_reader_test_slugs(self):
+        # display.behaviours is curated configuration, not a generated
+        # constant; the enforcement point is engine/panel/build_site_data.py,
+        # which exits loud on any display slug the registry does not carry as
+        # reader-test (covered by test_custom_spec_decoupling's
+        # test_unknown_display_behaviour_fails_loudly). This test pins the
+        # same invariant against the committed tree.
+        config = json.loads(
+            (ROOT / "engine" / "panel" / "panel-config.json").read_text(encoding="utf-8")
         )
-        rendered = json.loads(config[open_bracket:close_bracket + 1])
-        self.assertEqual(rendered, list(gbc.PANEL_DISPLAY_SLUGS))
+        for slug in config["display"]["behaviours"]:
+            with self.subTest(slug=slug):
+                entry = self.registry.get(slug)
+                self.assertIsNotNone(entry, f"display slug {slug!r} not in the registry")
+                self.assertEqual(entry["set"], "reader-test")
 
     def test_panel_behaviours_json_matches(self):
         path = ROOT / "engine" / "panel" / "behaviours.json"
@@ -245,29 +252,6 @@ class TestDriftIsCaught(ScratchTreeTestCase):
         result = self.run_check()
         self.assertEqual(result.returncode, 1)
         self.assertIn("app.js", result.stdout + result.stderr)
-
-    def test_reordering_display_behaviours_fails(self):
-        path = self.tmp / "engine" / "panel" / "panel-config.json"
-        text = path.read_text(encoding="utf-8")
-        path.write_text(
-            text.replace(
-                '"helpfulness",\n      "harm-avoidance-to-third-parties"',
-                '"harm-avoidance-to-third-parties",\n      "helpfulness"',
-            ),
-            encoding="utf-8",
-        )
-        result = self.run_check()
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("panel-config.json", result.stdout + result.stderr)
-
-    def test_renaming_a_ledger_slug_fails_loudly(self):
-        # A display slug the registry no longer carries is an error, not a skip.
-        def mutate(registry):
-            registry["helpful"] = registry.pop("helpfulness")
-        self.mutate_registry(mutate)
-        result = self.run_check()
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("helpfulness", result.stdout + result.stderr)
 
     def test_bool_numeric_id_is_rejected(self):
         # bool is an int subclass in Python (True == 1), so a JSON `true` would

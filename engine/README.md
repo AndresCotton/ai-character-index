@@ -72,7 +72,7 @@ python3 engine/generate_behaviour_constants.py           # rewrite the constants
 python3 engine/generate_behaviour_constants.py --check   # exit 1 with a diff on drift
 ```
 
-Rewritten constants: `GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in `build-spec-reader-data.py`, the key order and `title` fields of `panel/behaviours.json`, and `display.behaviours` in `panel/panel-config.json`. Only the constant blocks are touched; surrounding bytes are preserved. The panel<->registry mapping and the panel display list live in the generator (panel-pipeline metadata, deliberately not in the registry schema); both are validated against the registry, so a renamed slug fails loudly. `tests/test_behaviour_registry.py` is the drift gate.
+Rewritten constants: `GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in `build-spec-reader-data.py`, and the `title` fields of `panel/behaviours.json` (its keys are registry slugs -- the panel runlogs are keyed by the same slugs -- and the committed key order is preserved). Only the constant blocks are touched; surrounding bytes are preserved. `display.behaviours` in `panel/panel-config.json` is curated configuration, not generated: the panel payload builder validates every entry against the registry at build time, so a renamed or unknown slug fails loudly. `tests/test_behaviour_registry.py` is the drift gate.
 
 ## site builders and checks
 

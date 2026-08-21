@@ -272,11 +272,11 @@
       "harm-avoidance-to-third-parties",
       "avoiding-over-and-under-caution"
     ],
-    "_generated_note": "The behaviours array is GENERATED from data/behaviours.json by engine/generate_behaviour_constants.py (the reader-test slugs listed in its PANEL_DISPLAY_SLUGS) -- edit the registry, then regenerate; do not hand-edit the array.",
+    "_generated_note": "Curated panel-review display list (registry reader-test slugs), hand-maintained; engine/panel/build_site_data.py validates every entry against data/behaviours.json, so a renamed or unknown slug fails the build.",
     "panel": "frontier",
     "threshold": 3,
     "solid_threshold": 5,
     "_activation_note": "The two general-guidelines slugs (animal-welfare-impacts, general-welfare-impacts-strict) join this list when the full rollout data lands; until then the dual-slug mapping in build_site_data.py is inert by design."
   },
-  "_opus_note": "opus substitutes for fable on third-party-harm x model-spec only (fable output content-filtered there, 3 attempts); opus rows exist for no other cell."
+  "_opus_note": "opus substitutes for fable on harm-avoidance-to-third-parties x model-spec only (fable output content-filtered there, 3 attempts); opus rows exist for no other cell."
 }
