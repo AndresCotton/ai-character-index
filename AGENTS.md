@@ -38,6 +38,28 @@ Everything stays local — nothing pushes back.
    `http://localhost:8123/spec-reader/` and `http://localhost:8123/llm-panel-review/`
    (panel loads the manifest's latest run by default; pin with `?data=<name>`).
 
+### Where your run lands, and where it does not
+
+Your run stays on your machine. `manifest.json` and the timestamped
+`behaviours-<ts>.json` payloads are gitignored, so a panel run cannot be pushed even
+by accident, and the deployed site can only ever serve the committed fallback.
+
+It lands on **`site/llm-panel-review/`** and nowhere else. That surface is the
+project's own calibration bench: unlisted, `noindex`, and linked from nothing in
+`site/`. Once a user specification is registered, every surface marks itself "Local
+data" and grows a "Local analysis" nav link to it, so it is reachable while you have
+a local run and invisible on the published site (`site/shared/local-mode.js`).
+
+The spec reader will **not** show your behaviours. It renders published coverage from
+`data/coverage.json` -- the index's own behaviours, each one gated through
+`publish-coverage.py`, locator re-resolution and the sweep gates. A panel run is
+ungated by construction, so it is deliberately not folded in. Your specification does
+appear in the reader as a document, with no passages against it.
+
+There is no supported path from a panel run to published coverage. Publishing means
+running the sweep pipeline for a behaviour and passing its gates; that is what
+`.claude/skills/` documents.
+
 ## Verification (offline, no API spend)
 
 ```sh

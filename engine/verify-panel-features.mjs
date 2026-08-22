@@ -316,6 +316,39 @@ console.log("== Reader: compare is a two-document choice ==");
 }
 
 // =============================================================================
+console.log("== Local mode: a run of your own is marked and reachable ==");
+// The staged site registers a user specification, so every surface is showing local
+// data and should say so -- and the panel, which nothing otherwise links to, has to be
+// reachable from the surfaces a reader actually lands on.
+{
+  for (const [name, url] of [["panel", panelBase], ["reader", readerBase]]) {
+    await load(url, "");
+    const out = await page.evaluate(() => ({
+      marked: document.body.dataset.localData === "true",
+      badge: (document.querySelector("#local-data-note")?.textContent || "").trim(),
+      badgeVisible: !!document.querySelector("#local-data-note")?.offsetParent,
+      panelLink: !!document.querySelector('nav a[href*="llm-panel-review"]'),
+      panelNavCount: [...document.querySelectorAll("nav a")]
+        .filter(a => /llm-panel-review|Local analysis/.test(a.getAttribute("href") + a.textContent)
+                     || a.getAttribute("aria-current") === "page").length,
+    }));
+    check(out.marked, `${name}: local data is marked on the document`);
+    check(out.badgeVisible && /local/i.test(out.badge),
+      `${name}: a visible note says the data is local`, out.badge);
+    // The panel's own nav marks itself with href="./", so "reachable" is only a
+    // question on the surfaces a reader lands on instead.
+    if (name !== "panel") check(out.panelLink, `${name}: the panel is reachable from the nav`);
+    // ...and on the panel the risk is the opposite one: a second link, under another
+    // name, to the page you are already on.
+    if (name === "panel") {
+      check(out.panelNavCount === 1,
+        "panel: no duplicate nav entry for the page you are on", `${out.panelNavCount} entries`);
+    }
+  }
+  check(pageErrors.length === 0, "local mode: no console errors", pageErrors.join("; "));
+}
+
+// =============================================================================
 console.log("== Reader: user-extended documents ==");
 await load(readerBase, "");
 {

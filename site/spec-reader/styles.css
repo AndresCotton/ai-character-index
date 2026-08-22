@@ -735,3 +735,19 @@ button:focus-visible, a:focus-visible, .column-resizer:focus-visible {
   letter-spacing: 0;
 }
 .compare-picker select:hover { border-color: var(--accent); }
+
+/* Local mode: the marker that this page is showing specifications registered on this
+   machine, and the nav link to the analysis surface that only exists once there is a
+   local run to look at. Added by site/shared/local-mode.js. */
+.local-data-note {
+  padding: 2px 8px;
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  color: var(--accent);
+  font-size: 10px;
+  font-variant-caps: all-small-caps;
+  letter-spacing: .12em;
+  white-space: nowrap;
+  cursor: help;
+}
+nav a[data-local-only] { font-variant-caps: all-small-caps; }
