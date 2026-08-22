@@ -160,6 +160,31 @@ if (linkIssues.length) {
   console.log("PASS  navigation anchors: every same-site link resolves");
 }
 
+// This harness serves the repo's own site, which carries exactly the two bundled
+// specifications. With no third document there is no choice to make, so compare must
+// stay exactly as it was: no picker, and no new query parameter on a shared link.
+{
+  await page.goto(`${base}?compare=1`, { waitUntil: "networkidle" });
+  await page.waitForFunction(() => {
+    const el = document.querySelector("#passage-count");
+    return el && !el.textContent.startsWith("Loading");
+  }, undefined, { timeout: 15000 }).catch(() => {});
+  await page.waitForTimeout(500);
+  const twoDoc = await page.evaluate(() => ({
+    docs: document.querySelectorAll(".spec-option").length,
+    panes: document.querySelectorAll(".document-panel").length,
+    pickerHidden: document.querySelector("#compare-picker")?.hidden,
+    compareWith: new URL(location.href).searchParams.get("compare-with"),
+  }));
+  if (twoDoc.docs === 2 && twoDoc.panes === 2 && twoDoc.pickerHidden === true
+      && twoDoc.compareWith === null) {
+    console.log("PASS  two-document compare is unchanged: no picker, no ?compare-with=");
+  } else {
+    failures += 1;
+    console.log(`FAIL  two-document compare changed: ${JSON.stringify(twoDoc)}`);
+  }
+}
+
 if (consoleErrors.length) {
   failures += 1;
   console.log("console errors:", consoleErrors);

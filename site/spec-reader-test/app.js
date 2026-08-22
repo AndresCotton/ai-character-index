@@ -115,7 +115,13 @@ function syncURL() {
   params.set("spec", state.selectedSpec);
   if (state.comparing) {
     params.set("compare", "1");
-    params.set("compare-with", comparePair().join(","));
+    // Only when there is a choice to record. With the two bundled specifications the
+    // pair is forced, so a shared two-document link keeps the shape it always had.
+    if ((state.payload?.documents || []).length > 2) {
+      params.set("compare-with", comparePair().join(","));
+    } else {
+      params.delete("compare-with");
+    }
   } else {
     params.delete("compare");
     params.delete("compare-with");
@@ -255,9 +261,6 @@ function setupSidebarResizer() {
  * floor: five documents left a 37px text column inside 116px of padding, and the
  * panes overflowed the page. Which two is the reader's choice once there are more
  * than two to choose from. */
-function comparePaneCount() {
-  return state.comparing ? 2 : 0;
-}
 
 /* Compare is a two-document view. With exactly two documents registered there is
  * nothing to choose and the picker stays hidden; with more, the reader picks the two.
@@ -271,7 +274,7 @@ function comparePair() {
   return [first, second];
 }
 
-function createDocumentResizer(index = 0) {
+function createDocumentResizer() {
   const resizer = document.createElement("div");
   resizer.className = "column-resizer document-resizer";
   resizer.role = "separator";

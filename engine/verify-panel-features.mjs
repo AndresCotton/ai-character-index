@@ -312,6 +312,7 @@ console.log("== Reader: compare is a two-document choice ==");
   check(c.panes === 2 && c.a !== c.b,
     "an unknown ?compare-with= falls back to two real documents", `${c.a} / ${c.b}`);
   check(pageErrors.length === 0, "compare picker: no console errors", pageErrors.join("; "));
+
 }
 
 // =============================================================================
