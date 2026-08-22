@@ -23,15 +23,20 @@
 const PANEL_HREF = "llm-panel-review";
 
 const onPanel = () => location.pathname.includes(`/${PANEL_HREF}/`);
+let DOCUMENTS_URL_HINT = "documents.json";   // for the diagnostic below
 
 /* The panel already sits in its own nav, marked as the current page. A second link to
  * it under another name would just be two names for where you already are, so the link
  * is only ever added to the surfaces a reader arrives on. */
+/* The link says what the page it lands on is called. "Local analysis" describes the
+ * job better, but the page is still titled "LLM panel review", and a link that names
+ * its destination something else is a broken contract -- the rename, if it happens,
+ * moves both together. */
 function addPanelLink(nav) {
   if (!nav || onPanel() || nav.querySelector(`a[href*="${PANEL_HREF}"]`)) return;
   const link = document.createElement("a");
   link.href = `../${PANEL_HREF}/`;
-  link.textContent = "Local analysis";
+  link.textContent = "LLM panel review";
   link.dataset.localOnly = "true";
   /* Before the palette button, so the nav keeps its shape: links, then the control. */
   const mode = nav.querySelector("#mode");
@@ -39,20 +44,34 @@ function addPanelLink(nav) {
   else nav.append(link);
 }
 
-function addNote(nav) {
-  if (!nav || document.getElementById("local-data-note")) return;
+/* A status marker, not a destination: it goes in the header beside the wordmark, not
+ * into the navigation list, where anything traversing the links -- a screen reader
+ * included -- would read it as one.
+ *
+ * It names WHAT is local rather than announcing that something is. "Local data" reads
+ * as offline or stale; the fact is that this page is showing specifications registered
+ * on this machine. The tooltip carries the consequence, and is treated as an extra:
+ * it does not exist on a touch device. */
+function addNote(header, nav) {
+  if (!header || document.getElementById("local-data-note")) return;
   const note = document.createElement("span");
   note.id = "local-data-note";
   note.className = "local-data-note";
-  note.textContent = "Local data";
-  note.title = "This page is showing specifications registered on this machine. "
+  note.textContent = "Local specifications";
+  note.title = "Specifications registered on this machine are included here. "
     + "Runs you make stay local -- they are never published to the index.";
-  nav.prepend(note);
+  if (nav) header.insertBefore(note, nav);
+  else header.append(note);
 }
 
 /* documents.json is the one file every surface loads, so it is the one place the
- * answer can come from. A fetch failure is not an error worth surfacing here: the page
- * has its own loader for that, and this file only ever adds things. */
+ * answer can come from.
+ *
+ * "No user specification" and "could not tell" are different answers and must not look
+ * the same. The first is the ordinary bundled case and is silent. The second -- a parse
+ * error, a 404 from a moved path, a blocked request -- would leave a page that IS local
+ * showing nothing, which is exactly the ambiguity this file exists to remove, so it
+ * says so on the console. */
 export async function initLocalMode() {
   let documents = [];
   try {
@@ -62,15 +81,18 @@ export async function initLocalMode() {
     const url = location.pathname.includes("/spec-reader/")
       ? "./data/documents.json"
       : "../spec-reader/data/documents.json";
+    DOCUMENTS_URL_HINT = url;
     documents = (await (await fetch(url)).json()).documents || [];
-  } catch {
+  } catch (error) {
+    console.warn(`local-mode: could not read ${DOCUMENTS_URL_HINT} (${error.message}); `
+      + "a local run would not be marked.");
     return;
   }
   if (!documents.some(document_ => document_.lab === "User")) return;
 
   document.body.dataset.localData = "true";
   const nav = document.querySelector("nav");
-  addNote(nav);
+  addNote(document.querySelector(".site-header") || nav?.parentElement, nav);
   addPanelLink(nav);
 }
 
