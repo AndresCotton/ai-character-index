@@ -50,13 +50,16 @@ const state = {
   documentFocus: { anthropic: true, openai: true },
   sidebarWidth: 292,
   compareFirst: 50,
-  compareWidths: [],
+  comparePair: null,   // [idA, idB]; null = the first two documents
 };
 
 const elements = {
   appShell: document.querySelector(".app-shell"),
   behaviourList: document.querySelector("#behaviour-list"),
   compareToggle: document.querySelector("#compare-toggle"),
+  comparePicker: document.querySelector("#compare-picker"),
+  compareA: document.querySelector("#compare-a"),
+  compareB: document.querySelector("#compare-b"),
   documentReader: document.querySelector("#document-reader"),
   findingBehaviour: document.querySelector("#finding-behaviour"),
   findingDefinition: document.querySelector("#finding-definition"),
@@ -84,8 +87,13 @@ function syncURL() {
   const params = new URLSearchParams(location.search);
   params.set("behavior", activeBehaviour()?.slug || "no-sycophancy");
   params.set("spec", state.selectedSpec);
-  if (state.comparing) params.set("compare", "1");
-  else params.delete("compare");
+  if (state.comparing) {
+    params.set("compare", "1");
+    params.set("compare-with", comparePair().join(","));
+  } else {
+    params.delete("compare");
+    params.delete("compare-with");
+  }
   if (state.embedded) params.set("embedded", "1");
   else params.delete("embedded");
   history.replaceState(null, "", `${location.pathname}?${params}${location.hash}`);
@@ -216,51 +224,27 @@ function setupSidebarResizer() {
   });
 }
 
-/* Compare layout generalizes to N documents: the two-document case keeps the
- * persisted --compare-first split exactly as before; with three-plus documents
- * the panes take weighted shares (state.compareWidths, equal on entry, not
- * persisted) and each boundary resizer moves its own boundary. */
+/* Compare is always exactly two documents, split at the persisted --compare-first
+ * boundary. Showing every registered document instead divided the width without a
+ * floor: five documents left a 37px text column inside 116px of padding, and the
+ * panes overflowed the page. Which two is the reader's choice once there are more
+ * than two to choose from. */
 function comparePaneCount() {
-  return state.comparing ? state.payload.documents.length : 0;
+  return state.comparing ? 2 : 0;
 }
 
-function applyCompareLayout() {
-  const n = comparePaneCount();
-  if (n <= 2) return;   // two-pane layout stays CSS-var driven (setCompareFirst)
-  if (state.compareWidths.length !== n) state.compareWidths = Array.from({ length: n }, () => 100 / n);
-  const cols = [];
-  state.compareWidths.forEach((w, i) => {
-    cols.push(`minmax(0, ${w}fr)`);
-    if (i < n - 1) cols.push("9px");
-  });
-  elements.documentReader.style.gridTemplateColumns = cols.join(" ");
-  elements.documentReader.querySelectorAll(".document-resizer").forEach((resizer, i) => {
-    const w = state.compareWidths[i];
-    resizer.setAttribute("aria-valuemin", "10");
-    resizer.setAttribute("aria-valuemax", "90");
-    resizer.setAttribute("aria-valuenow", String(Math.round(w)));
-    resizer.setAttribute("aria-valuetext", `Specification ${i + 1} ${Math.round(w)} percent wide`);
-  });
-  requestAnimationFrame(updateRails);
+/* Compare is a two-document view. With exactly two documents registered there is
+ * nothing to choose and the picker stays hidden; with more, the reader picks the two.
+ * An unknown or duplicated id in ?compare-with= falls back to the first two, so a
+ * stale link still renders something coherent. */
+function comparePair() {
+  const ids = state.payload.documents.map(doc => doc.id);
+  const [a, b] = state.comparePair || [];
+  const first = ids.includes(a) ? a : ids[0];
+  const second = ids.includes(b) && b !== first ? b : ids.find(id => id !== first);
+  return [first, second];
 }
 
-function moveCompareBoundary(index, delta) {
-  const widths = state.compareWidths;
-  const min = 10;
-  const left = widths[index], right = widths[index + 1];
-  const d = clamp(delta, min - left, right - min);
-  widths[index] = left + d;
-  widths[index + 1] = right - d;
-  applyCompareLayout();
-}
-
-function setCompareBoundaryTo(index, pct) {
-  const widths = state.compareWidths;
-  const min = 10;
-  const cumBefore = widths.slice(0, index).reduce((a, b) => a + b, 0);
-  const target = clamp(pct - cumBefore, min, widths[index] + widths[index + 1] - min);
-  moveCompareBoundary(index, target - widths[index]);
-}
 
 function createDocumentResizer(index = 0) {
   const resizer = document.createElement("div");
@@ -273,43 +257,23 @@ function createDocumentResizer(index = 0) {
   resizer.setAttribute("aria-valuemax", "100");
   resizer.addEventListener("pointerdown", event => {
     const bounds = elements.documentReader.getBoundingClientRect();
-    if (comparePaneCount() <= 2) {
-      startColumnDrag(
-        event,
-        resizer,
-        clientX => setCompareFirst(((clientX - bounds.left) / bounds.width) * 100),
-        () => setCompareFirst(state.compareFirst, true),
-      );
-    } else {
-      startColumnDrag(
-        event,
-        resizer,
-        clientX => setCompareBoundaryTo(index, ((clientX - bounds.left) / bounds.width) * 100),
-        () => applyCompareLayout(),
-      );
-    }
+    startColumnDrag(
+      event,
+      resizer,
+      clientX => setCompareFirst(((clientX - bounds.left) / bounds.width) * 100),
+      () => setCompareFirst(state.compareFirst, true),
+    );
   });
   resizer.addEventListener("keydown", event => {
     const step = event.shiftKey ? 10 : 2;
-    if (comparePaneCount() <= 2) {
-      let next = state.compareFirst;
-      if (event.key === "ArrowLeft") next -= step;
-      else if (event.key === "ArrowRight") next += step;
-      else if (event.key === "Home") next = 0;
-      else if (event.key === "End") next = 100;
-      else return;
-      event.preventDefault();
-      setCompareFirst(next, true);
-    } else {
-      let delta;
-      if (event.key === "ArrowLeft") delta = -step;
-      else if (event.key === "ArrowRight") delta = step;
-      else if (event.key === "Home") delta = -Infinity;
-      else if (event.key === "End") delta = Infinity;
-      else return;
-      event.preventDefault();
-      moveCompareBoundary(index, delta);
-    }
+    let next = state.compareFirst;
+    if (event.key === "ArrowLeft") next -= step;
+    else if (event.key === "ArrowRight") next += step;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = 100;
+    else return;
+    event.preventDefault();
+    setCompareFirst(next, true);
   });
   return resizer;
 }
@@ -889,8 +853,45 @@ function visibleDocuments() {
     ...document,
     coverage: behaviour.coverage[document.id],
   }));
-  if (state.comparing) return withCoverage;
+  if (state.comparing) {
+    const byId = new Map(withCoverage.map(document => [document.id, document]));
+    return comparePair().map(id => byId.get(id)).filter(Boolean);
+  }
   return [withCoverage.find(document => document.id === state.selectedSpec)];
+}
+
+/* The picker is the only new control, and it earns its place only when there is a
+ * choice to make: with the two bundled documents it stays hidden and compare behaves
+ * exactly as it always has. A user spec registered locally is what brings it out. */
+function renderComparePicker() {
+  const docs = state.payload?.documents || [];
+  const box = elements.comparePicker;
+  if (!box) return;
+  const choosable = state.comparing && docs.length > 2;
+  box.hidden = !choosable;
+  if (!choosable) return;
+  const [a, b] = comparePair();
+  [[elements.compareA, a], [elements.compareB, b]].forEach(([select, selected]) => {
+    if (!select) return;
+    select.replaceChildren(...docs.map(doc => {
+      const option = document.createElement("option");
+      option.value = doc.id;
+      option.textContent = doc.title || doc.id;
+      option.selected = doc.id === selected;
+      return option;
+    }));
+  });
+}
+
+/* Picking a document that is already on the other side swaps them rather than
+ * refusing: comparing a document with itself is the one selection with no meaning. */
+function setComparePair(side, id) {
+  const [a, b] = comparePair();
+  const next = side === "a" ? [id, b] : [a, id];
+  if (next[0] === next[1]) next[side === "a" ? 1 : 0] = side === "a" ? a : b;
+  state.comparePair = next;
+  syncURL();
+  rebuildReader();
 }
 
 function rebuildReader() {
@@ -898,11 +899,11 @@ function rebuildReader() {
   elements.documentReader.classList.toggle("compare", state.comparing);
   const panels = documents.map(renderDocument);
   const children = state.comparing
-    ? panels.flatMap((panel, i) => (i < panels.length - 1 ? [panel, createDocumentResizer(i)] : [panel]))
+    ? panels.flatMap((panel, i) => (i < panels.length - 1 ? [panel, createDocumentResizer()] : [panel]))
     : panels;
   elements.documentReader.replaceChildren(...children);
-  if (state.comparing && panels.length > 2) applyCompareLayout();
-  else {
+  renderComparePicker();
+  {
     elements.documentReader.style.gridTemplateColumns = "";
     if (state.comparing) setCompareFirst(state.compareFirst);
   }
@@ -1003,6 +1004,9 @@ function focusPassage(index, shouldScroll = true) {
   updatePassageCount();
 }
 
+elements.compareA?.addEventListener("change", event => setComparePair("a", event.target.value));
+elements.compareB?.addEventListener("change", event => setComparePair("b", event.target.value));
+
 elements.compareToggle.addEventListener("click", () => {
   state.comparing = !state.comparing;
   elements.compareToggle.setAttribute("aria-pressed", String(state.comparing));
@@ -1077,6 +1081,8 @@ async function initialize() {
       state.selectedSpec = requestedSpec;
     }
     state.comparing = params.get("compare") === "1";
+    const pair = (params.get("compare-with") || "").split(",").filter(Boolean);
+    if (pair.length === 2) state.comparePair = pair;   // validated by comparePair()
     state.compareFirst = savedNumber("aci-compare-first", state.compareFirst);
     elements.compareToggle.setAttribute("aria-pressed", String(state.comparing));
     updateFindingBar();

@@ -72,6 +72,14 @@
     <section class="workspace" aria-label="Specification reader">
       <div class="reader-toolbar">
         <div class="spec-switcher" role="group" aria-label="Choose specification"></div>
+        <div id="compare-picker" class="compare-picker" hidden>
+          <label class="compare-picker-field">Compare
+            <select id="compare-a" aria-label="First specification to compare"></select>
+          </label>
+          <label class="compare-picker-field">with
+            <select id="compare-b" aria-label="Second specification to compare"></select>
+          </label>
+        </div>
 
         <div class="view-actions">
           <button id="compare-toggle" class="compare-toggle" type="button" aria-pressed="false">
