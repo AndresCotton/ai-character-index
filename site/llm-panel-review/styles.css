@@ -1144,9 +1144,15 @@ body.no-behaviours .sidebar-export { display: none; }
 .compare-picker select:hover { border-color: var(--accent); }
 
 /* Local mode: the marker that this page is showing specifications registered on this
-   machine, and the nav link to the analysis surface that only exists once there is a
-   local run to look at. Added by site/shared/local-mode.js. */
+   machine, and the nav link to the analysis surface that only exists once a user
+   specification is registered. Added by site/shared/local-mode.js. */
 .local-data-note {
+  /* Third child of a space-between header built for two: without an auto margin the
+     free space is split into two equal gaps and the marker floats to the middle of
+     them -- a position that varies with nav length and jumps ~200px when the 900px
+     query collapses the nav. margin-right:auto absorbs that space before
+     justify-content sees it, so the marker stays beside the wordmark at every width. */
+  margin: 0 auto 0 16px;
   padding: 2px 8px;
   border: 1px solid var(--accent);
   border-radius: 3px;
@@ -1158,3 +1164,13 @@ body.no-behaviours .sidebar-export { display: none; }
   cursor: help;
 }
 nav a[data-local-only] { font-variant-caps: all-small-caps; }
+
+/* The 16px above is 16px the wordmark no longer has, which moves its wrap threshold
+   up: measured, the margin alone pushes the width at which the wordmark breaks out of
+   the fixed-height header from 380 to 395 on the panel, newly breaking 390/393. Below
+   400 there is not room for wordmark + marker + nav on one row at all, so the marker
+   stands down. Scoped to the body flag local-mode.js sets, so a bundled-only site --
+   which never sets it -- is untouched: measured drift 0 at every width. */
+@media (max-width: 400px) {
+  body[data-local-data] .local-data-note { display: none; }
+}
