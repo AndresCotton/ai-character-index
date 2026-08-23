@@ -43,6 +43,16 @@ const documents = JSON.parse(
   await readFile(join(SITE, "spec-reader/data/documents.json"), "utf8"),
 ).documents;
 
+/* The two payloads above are built by different scripts and can legally diverge.
+ * The bench set carries no document list of its own, so the list comes from the
+ * published reader -- which grows a document the moment a user registers a spec
+ * (build-spec-reader-data.py --user-manifest=), while the bench behaviours are
+ * rebuilt only from data/reader-test-coverage.json and still cover the bundled
+ * pair. A document the bench says nothing about anchors nothing: assert that,
+ * rather than dereferencing a coverage record that was never written. On the
+ * committed two-document tree every document has a record, so this is a no-op. */
+const coveredPassages = (behaviour, id) => behaviour.coverage[id]?.passages ?? [];
+
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const page = await browser.newPage();
 const consoleErrors = [];
@@ -153,7 +163,7 @@ if (behaviours.length === 0) {
   for (const behaviour of behaviours) {
     let total = 0;
     for (const document of documents) {
-      const passages = anchorCount(behaviour.coverage[document.id].passages);
+      const passages = anchorCount(coveredPassages(behaviour, document.id));
       total += passages;
       await expectView(
         `${base}?behavior=${behaviour.slug}&spec=${document.id}`,
@@ -177,9 +187,9 @@ if (behaviours.length === 0) {
     for (const document of documents) {
       const seen = await readView(`${base}?behavior=${slugs.join(",")}&spec=${document.id}`);
       const short = selection.map(behaviour =>
-        `${behaviour.slug} ${seen.byBehaviour[behaviour.name] || 0}/${anchorCount(behaviour.coverage[document.id].passages)}`);
+        `${behaviour.slug} ${seen.byBehaviour[behaviour.name] || 0}/${anchorCount(coveredPassages(behaviour, document.id))}`);
       const accounted = selection.every(behaviour =>
-        (seen.byBehaviour[behaviour.name] || 0) === anchorCount(behaviour.coverage[document.id].passages));
+        (seen.byBehaviour[behaviour.name] || 0) === anchorCount(coveredPassages(behaviour, document.id)));
       report(
         accounted
           && seen.status === ""
@@ -261,7 +271,7 @@ if (behaviours.length === 0) {
   // sentences of one paragraph are two citations even where they light one passage.
   const exported = behaviours.slice(0, 3);
   const citations = exported.flatMap(behaviour =>
-    documents.flatMap(document => behaviour.coverage[document.id].passages));
+    documents.flatMap(document => coveredPassages(behaviour, document.id)));
   await readView(`${base}?behavior=${exported.map(behaviour => behaviour.slug).join(",")}&spec=anthropic`);
   const [download] = await Promise.all([
     page.waitForEvent("download"),
