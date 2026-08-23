@@ -33,7 +33,12 @@ Everything stays local — nothing pushes back.
 2. Reader payload: `python3 engine/build-spec-reader-data.py --user-manifest=specs/user/specs.json`
 3. Panel: add a `set:user` behaviour to a local copy of `data/behaviours.json`
    and build with `--registry=`; see `engine/panel/README.md`
-   ("Behaviour metadata is registry-driven").
+   ("Behaviour metadata is registry-driven"). The entry needs the registry's full
+   shape -- `name`, `set: "user"`, `numeric_id` (integer >= 1, per set: its display
+   order and its payload `id`), `group`, `definition`, `facets`. See
+   `data/schema/behaviours.schema.json` for the contract and
+   `engine/stage_user_demo.py` for a complete worked entry; the shipped registry
+   carries no `set:user` rows to copy from. A missing field fails the build.
 4. View: `python3 -m http.server 8123 --directory site` →
    `http://localhost:8123/spec-reader/` and `http://localhost:8123/llm-panel-review/`
    (panel loads the manifest's latest run by default; pin with `?data=<name>`).
@@ -47,8 +52,9 @@ by accident, and the deployed site can only ever serve the committed fallback.
 It lands on **`site/llm-panel-review/`** and nowhere else. That surface is the
 project's own calibration bench: unlisted, `noindex`, and linked from nothing in
 `site/`. Once a user specification is registered, every surface marks itself "Local
-data" and grows a "Local analysis" nav link to it, so it is reachable while you have
-a local run and invisible on the published site (`site/shared/local-mode.js`).
+specifications", and the reader and the bench grow an "LLM panel review" nav link to
+the panel, so it is reachable from a local clone and invisible on the published site
+(`site/shared/local-mode.js`).
 
 The spec reader will **not** show your behaviours. It renders published coverage from
 `data/coverage.json` -- the index's own behaviours, each one gated through
