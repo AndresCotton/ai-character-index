@@ -797,7 +797,7 @@ class TestAppJSWiring(unittest.TestCase):
         out = subprocess.run(["node", str(self.HARNESS)],
                              capture_output=True, text=True, timeout=120)
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
-        self.assertIn("23 checks, 0 failures", out.stdout, out.stdout)
+        self.assertIn("27 checks, 0 failures", out.stdout, out.stdout)
 
 
 class TestRunlogPathResolution(unittest.TestCase):

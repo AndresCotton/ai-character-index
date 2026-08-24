@@ -124,6 +124,36 @@ check(p.behaviours[0].coverage.spec.passages[0].score, 4,
       "?related=0 zeroes the weight of a related verdict");
 setParams("");
 
+/* ---- ragged cells: the cut follows the passage, not the cell ---- */
+
+/* A cell where one passage got two judges and another got three. The 2-judge
+ * passage tops out at 4, so measuring it against the cell's 3-judge cut of 6
+ * made it structurally incapable of reaching the band it earned -- three
+ * passages in behaviours-v4a-ds.json scored a unanimous 4/4 and rendered as
+ * "Related". Each passage is banded on its own scale now. */
+setParams("");
+state.bands = new Set(TIERS);
+p = payload([cell([{ a: 2, b: 2 }, { a: 2, b: 2, c: 2 }])]);
+applyPanelThreshold(p);
+check(bandsOf(p), ["defining", "defining"],
+      "a unanimous 2-judge passage is defining on its own scale, not related");
+check(p.behaviours[0].coverage.spec.passages[0].maxScore, 4,
+      "and it is scored out of its own maximum, not the cell's");
+
+/* The counterweight: promotion must come from the passage's own scale, not from
+ * a blanket lowering of the cut. A 2-judge passage that did NOT sweep stays put. */
+p = payload([cell([{ a: 2, b: 1 }, { a: 2, b: 2, c: 2 }])]);
+applyPanelThreshold(p);
+check(bandsOf(p), ["related", "defining"],
+      "a split 2-judge passage stays related -- the cut moved, not the floor");
+
+/* The header tallies read the same per-passage bands, so a promoted passage is
+ * counted where it is actually rendered. */
+p = payload([cell([{ a: 2, b: 2 }, { a: 2, b: 2, c: 2 }])]);
+applyPanelThreshold(p);
+check(p.behaviours[0].coverage.spec.bandCounts, { defining: 2, core: 0, related: 0 },
+      "bandCounts follows the per-passage bands");
+
 /* ---- initialBands: the legacy mapping is actually WIRED IN ---- */
 
 /* Every check below would still pass if initialBands ignored its helpers and
