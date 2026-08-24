@@ -1,12 +1,14 @@
-"""Gate test: every published behaviour's records match its stage-4 artifact.
+"""Gate test: every published behaviour's records match its coverage artifact.
 
 Runs `engine/publish-coverage.py <sweep-dir> --check` for every
-research/sweeps/*/ directory holding a stage-4 artifact
-(`4-spec-coverage.md` or its structured sidecar `4-spec-coverage.json`).
-The publish script re-resolves every stored quote byte-for-byte against
-cite.py and diffs the parsed records against data/coverage.json, so this
-single test covers quote fidelity, the artifact parsing contract, and the
-published data in one shot.
+research/sweeps/*/ directory holding a coverage artifact
+(`spec-coverage.md` or its structured sidecar `spec-coverage.json`; sweeps
+predating the rename keep the legacy names `4-spec-coverage.md` /
+`4-spec-coverage.json`, which the publisher still resolves). The publish
+script re-resolves every stored quote byte-for-byte against cite.py and diffs
+the parsed records against data/coverage.json, so this single test covers
+quote fidelity, the artifact parsing contract, and the published data in one
+shot.
 """
 
 import importlib.util
@@ -32,10 +34,11 @@ class PublishCheckGateTest(unittest.TestCase):
     def test_published_behaviours_match_their_artifacts(self):
         sweep_dirs = sorted({
             artifact.parent
-            for pattern in ("*/4-spec-coverage.md", "*/4-spec-coverage.json")
+            for pattern in ("*/spec-coverage.md", "*/spec-coverage.json",
+                            "*/4-spec-coverage.md", "*/4-spec-coverage.json")
             for artifact in ROOT.glob(f"research/sweeps/{pattern}")
         })
-        self.assertTrue(sweep_dirs, "no stage-4 artifacts found")
+        self.assertTrue(sweep_dirs, "no coverage artifacts found")
         for sweep_dir in sweep_dirs:
             with self.subTest(behaviour=sweep_dir.name):
                 result = subprocess.run(
@@ -108,7 +111,7 @@ class CorruptedQuoteNegativeTest(unittest.TestCase):
 | OpenAI Model Spec | partial | 1 | negative fixture |
 """
         with tempfile.TemporaryDirectory() as sweep_dir:
-            target = Path(sweep_dir) / "4-spec-coverage.md"
+            target = Path(sweep_dir) / "spec-coverage.md"
             target.write_text(artifact, encoding="utf-8")
             result = subprocess.run(
                 [sys.executable, str(PUBLISH), sweep_dir, "--check"],
@@ -233,7 +236,7 @@ class MarkdownVersionExtractionTest(unittest.TestCase):
         publish = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(publish)
         with tempfile.TemporaryDirectory() as tmp:
-            artifact = Path(tmp) / "4-spec-coverage.md"
+            artifact = Path(tmp) / "spec-coverage.md"
             artifact.write_text(self.ARTIFACT, encoding="utf-8")
             # An uncaught IndexError would propagate as IndexError, not
             # SystemExit -- so passing here pins the clean failure.
@@ -241,6 +244,46 @@ class MarkdownVersionExtractionTest(unittest.TestCase):
                 publish.parse_markdown(artifact)
         self.assertIn("spec@version", str(ctx.exception))
 
+
+
+class ArtifactNameLookupTest(unittest.TestCase):
+    """The artifact lookup resolves both the current and the legacy filenames
+    (sweeps predating the rename keep their original names), and fails loud
+    when one form exists under both names."""
+
+    @staticmethod
+    def load_publish():
+        spec = importlib.util.spec_from_file_location("publish_coverage", PUBLISH)
+        publish = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(publish)
+        return publish
+
+    def test_current_name_resolves(self):
+        publish = self.load_publish()
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "spec-coverage.md").write_text("x", encoding="utf-8")
+            path = publish.resolve_artifact_path(
+                Path(tmp), publish.MARKDOWN_NAME, publish.LEGACY_MARKDOWN_NAME)
+            self.assertEqual(path.name, "spec-coverage.md")
+
+    def test_legacy_name_resolves(self):
+        publish = self.load_publish()
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "4-spec-coverage.md").write_text("x", encoding="utf-8")
+            path = publish.resolve_artifact_path(
+                Path(tmp), publish.MARKDOWN_NAME, publish.LEGACY_MARKDOWN_NAME)
+            self.assertEqual(path.name, "4-spec-coverage.md")
+
+    def test_both_names_of_one_form_fail_loud(self):
+        publish = self.load_publish()
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "spec-coverage.md").write_text("x", encoding="utf-8")
+            (Path(tmp) / "4-spec-coverage.md").write_text("x", encoding="utf-8")
+            with self.assertRaises(SystemExit) as ctx:
+                publish.resolve_artifact_path(
+                    Path(tmp), publish.MARKDOWN_NAME,
+                    publish.LEGACY_MARKDOWN_NAME)
+            self.assertIn("keep exactly one artifact", str(ctx.exception))
 
 
 class CheckOrderAndLayoutFailuresTest(unittest.TestCase):

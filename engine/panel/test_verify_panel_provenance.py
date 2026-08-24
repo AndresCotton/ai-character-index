@@ -206,12 +206,15 @@ class TestRunlogFacts(unittest.TestCase):
         self.assertEqual(facts["rows_rubric"], 9415)
         self.assertEqual(facts["parsed_false"], 0)
         self.assertEqual(set(facts["models"]), {"sol", "fable", "kimi", "opus", "kimi-k2"})
+        # registry slugs since the PR #46 re-key (runlog-v3.md carries the
+        # EDIT note with the legacy-key mapping and the pre-re-key hash)
         self.assertEqual(set(facts["behaviours"]),
-                         {"helpfulness", "third-party-harm", "over-under-caution"})
+                         {"helpfulness", "harm-avoidance-to-third-parties",
+                          "avoiding-over-and-under-caution"})
         # full sha256 recorded in engine/panel/runlog-v3.md -- any byte-level
         # alteration of the frozen log trips here, via the documented hash
         sha = hashlib.sha256(v.DEFAULT_RUNLOG.read_bytes()).hexdigest()
-        self.assertEqual(sha, "971f16c7459a16e9a52a7ea4a0e87c5c1db1c1f45e8b69b5ae80af6b58f85740")
+        self.assertEqual(sha, "d46e2b69428916f46674af72680889529b09ffa748fca8d38cf5591b5d1153dc")
 
     def test_zero_matching_rows_detected(self):
         with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:

@@ -16,8 +16,8 @@ file does not duplicate them — it points at the canonical copies.
 ## Procedures (agent-executable)
 
 - `.claude/skills/README.md` — entry point: how to run a coverage sweep, gate table
-- `.claude/skills/4-sweep-spec-coverage/SKILL.md` — LLM-panel spec coverage (stage 4)
-- `.claude/skills/5-sweep-publish/SKILL.md`, `6-sweep-verify/SKILL.md` — publish/verify
+- `.claude/skills/sweep-coverage/SKILL.md` — LLM-panel spec coverage (the coverage stage)
+- `.claude/skills/sweep-publish/SKILL.md`, `sweep-verify/SKILL.md` — publish/verify
 - `.claude/skills/spec-coverage-pass/SKILL.md` — the one-behaviour campaign wrapper
 
 The `.claude/skills/` path is a Claude Code / Qwen Code convention; agents that

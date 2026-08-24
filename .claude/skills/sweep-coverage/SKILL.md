@@ -1,13 +1,12 @@
 ---
-name: 4-sweep-spec-coverage
-description: Stage 4 of a behaviour sweep (parallel track, independent of stages 1-3) -- score every passage of the local spec copies against one behaviour with the frontier LLM panel, build the citation set from the panel verdicts, assign per-spec verdict and depth, and stop at Gate 4.
+name: sweep-coverage
+description: The coverage stage of a behaviour sweep -- score every passage of the local spec copies against one behaviour with the frontier LLM panel, build the citation set from the panel verdicts, assign per-spec verdict and depth, and stop at the coverage gate.
 ---
 
-# Sweep stage 4: spec coverage
+# The coverage stage of a sweep
 
-Input: the behaviour (number, name, definition, facets). Independent of stages 1-3;
-may run in parallel with them.
-Output: `research/sweeps/NN-<slug>/4-spec-coverage.md` plus panel verdicts in the
+Input: the behaviour (number, name, definition, facets).
+Output: `research/sweeps/NN-<slug>/spec-coverage.md` plus panel verdicts in the
 run log consumed by `engine/panel/build_site_data.py`.
 Read first: `engine/panel/README.md` (pipeline mechanics) and `specs/CITATION.md`
 (locator format). Passages and locators come from `engine/spec-cite/cite.py` via the
@@ -27,7 +26,7 @@ treat rerun stability as an empirical check, not a guarantee.
 
 The claim is "scored against the latest published version of each spec as of the
 run date". Refresh the mirrors with `engine/spec-watch/pull-latest.sh` (or verify
-upstream directly), and record in `4-spec-coverage.md` the mirror versions and the
+upstream directly), and record in `spec-coverage.md` the mirror versions and the
 date confirmed. If a pull changes a mirror, all existing locators must re-resolve
 before new work builds on the moved text, and the panel must re-run: verdicts are
 pinned to `spec@version`.
@@ -48,8 +47,8 @@ pinned to `spec@version`.
 2. Dry-run first -- prints the exact call plan, what resume skips, and the cost
    estimate, and sends nothing. The canonical run log is
    `engine/panel/runlog-v3.jsonl` (the driver, `whole_doc.py`, and the builder all
-   default to it; the shipped history exists only as an untracked file in a
-   local working copy of `experiment/panel-judges`, committed to no branch):
+   default to it; the committed history is documented in
+   `engine/panel/runlog-v3.md`):
    `python3 engine/panel/run_rollout.py --behaviours=<key>`
 3. Execute with `--go`. Interrupting is safe: the run log is append-only and rerun
    skips completed cells. Never hold verdicts only in memory.
@@ -68,11 +67,12 @@ pinned to `spec@version`.
 5. Build: `python3 engine/panel/build_site_data.py --runlog=<runlog> --rubric=v3w
    --panel=frontier`.
 
-## The stage-4 artifact (format is a parsing contract)
+## The coverage artifact (format is a parsing contract)
 
-`4-spec-coverage.md` is read by `engine/publish-coverage.py`; keep the
+`spec-coverage.md` is read by `engine/publish-coverage.py`; keep the
 behaviour-2 template's shape exactly (`research/sweeps/02-calibration/
-4-spec-coverage.md`): the `- **Sweep date:**` header bullets, one `##` section
+4-spec-coverage.md`, which predates this naming and keeps its original
+filename): the `- **Sweep date:**` header bullets, one `##` section
 per spec, and one entry per kept excerpt with the four lines
 `**Locator:** / **Quote:** / **Role:** / **Flags:**`. Build the entries FROM the
 panel results: unanimous-core and majority-core passages are the core entries;
@@ -99,9 +99,9 @@ Base both on the citation set: passages every judge marked core are the
 strongest evidence; the related band shows where the behaviour's boundary
 sits. Do not grade from memory of the spec.
 
-## Gate 4 -- verdicts are mechanical, not remembered
+## The coverage gate -- verdicts are mechanical, not remembered
 
-Record the run in `4-spec-coverage.md`, then STOP.
+Record the run in `spec-coverage.md`, then STOP.
 
 - [ ] Mirror freshness confirmed this run; versions and check date recorded.
 - [ ] Panel provenance recorded: rubric tag, judges (and any substitutions with

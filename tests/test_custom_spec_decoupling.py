@@ -414,7 +414,7 @@ class PanelByteIdentityTest(unittest.TestCase):
         )
 
     def test_v5_payload_rebuilds_byte_identical(self):
-        # v5 exercises the SLUGS_EXTRA dual-slug path (general-welfare feeds
+        # v5 exercises the SLUGS_EXTRA dual-slug path (animal-welfare-impacts feeds
         # both general-guidelines rows) as well as all ten reader-test slugs
         self._assert_rebuild_identical(
             "behaviours-v5.json",

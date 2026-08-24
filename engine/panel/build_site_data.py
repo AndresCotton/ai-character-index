@@ -50,18 +50,14 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-sys.path.insert(0, str(HERE.parent))       # engine/panel -> engine (behaviour constants generator)
-import generate_behaviour_constants as constants  # noqa: E402
 
 LAB = {"constitution": "anthropic", "model-spec": "openai"}
 MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3", "kimi-k2": "Kimi-K2.6", "qwen-big": "Qwen3-235B", "opus": "Claude Opus 4.8",
                "gpt-mini": "GPT-5 mini", "haiku": "Claude Haiku 4.5", "qwen-small": "Qwen3-32B"}
-# panel behaviour keys -> site slugs, derived from the registry mapping owned
-# by generate_behaviour_constants (the single panel<->registry source of
-# truth; it used to be a hand-mirrored copy here). set:user runlog keys map
-# to themselves via behaviour_slug() below, so they need no entry here.
-SLUGS = {panel_key: slug for panel_key, slug in constants.PANEL_BEHAVIOURS if slug is not None}
-SLUGS_EXTRA = {"general-welfare": ["general-welfare-impacts-strict"]}   # one run feeds both general-guidelines rows
+# Runlog behaviour keys are registry slugs: the bundled panel keys were
+# re-keyed to slugs, and a user behaviour's runlog key is its registry slug.
+# One runlog key additionally feeds a second display row:
+SLUGS_EXTRA = {"animal-welfare-impacts": ["general-welfare-impacts-strict"]}   # one run feeds both general-guidelines rows
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 DATA_DIR = ROOT / "site" / "llm-panel-review" / "data"
@@ -225,16 +221,11 @@ def citation_quote(text):
     return clean_quote(text), False
 
 
-def behaviour_slug(panel_key, registry):
-    """The site slug a runlog behaviour key points at. Bundled panel keys map
-    through SLUGS; a set:user key maps to itself (the user seam -- a user
-    behaviour's runlog key is its registry slug)."""
-    if panel_key in SLUGS:
-        return SLUGS[panel_key]
-    entry = registry.get(panel_key)
-    if entry is not None and entry["set"] == "user":
-        return panel_key
-    return None
+def behaviour_slug(runlog_key, registry):
+    """The site slug a runlog behaviour key points at: the key itself --
+    runlog keys are registry slugs. Unknown keys never reach here: main()
+    exits loud on any runlog key the registry does not carry."""
+    return runlog_key if runlog_key in registry else None
 
 
 def display_behaviours(keep, registry, registry_path):
@@ -303,12 +294,20 @@ def main(argv=None):
     registry = json.loads(registry_path.read_text())
     votes = collections.defaultdict(dict)
     spec_of = {}
+    runlog_keys = set()
     for line in runlog.read_text().splitlines():
         d = json.loads(line)
+        runlog_keys.add(d["behaviour"])
         if d.get("rubric", "v1") != rubric or not d.get("parsed", True) or d["model"] not in panel:
             continue
         votes[(d["behaviour"], d["locator"])][d["model"]] = d.get("verdict", 0)
         spec_of[(d["behaviour"], d["locator"])] = d["spec"]
+    unknown_keys = sorted(runlog_keys - set(registry))
+    if unknown_keys:
+        sys.exit(
+            f"runlog behaviour key(s) {unknown_keys} are not registry slugs "
+            f"(data/behaviours.json) -- every runlog key must be a slug"
+        )
 
     # passage text for every spec the payload covers: the bundled specs, plus
     # any user spec referenced by the runlog (its passages resolve through
@@ -364,7 +363,7 @@ def main(argv=None):
                 })
             cits.sort(key=lambda c: (-c["score"], c["locator"]))
             cov[lab] = {"verdict": src_entry.get("verdict"), "depth": src_entry.get("depth_0_4"),
-                        # depth_note stays in the stage-4 record; beside re-run panel data the
+                        # depth_note stays in the coverage record; beside re-run panel data the
                         # curation-era prose goes stale, so the bench ships passage sets only
                         "note": "",
                         "verifiedDate": src_entry.get("verified_date", ""),

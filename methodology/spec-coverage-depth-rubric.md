@@ -1,6 +1,6 @@
 # Spec-coverage depth rubric
 
-Anchors the 0-4 depth score assigned per spec in every stage-4 artifact and
+Anchors the 0-4 depth score assigned per spec in every coverage artifact and
 published in `data/coverage.json`. Depth qualifies a covered/partial verdict:
 it measures how much the spec gives an eval designer to work with for this
 behaviour, not how much the lab appears to care. Every score carries a one-line
