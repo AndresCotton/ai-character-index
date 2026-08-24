@@ -5,12 +5,15 @@ Regression tests for the spec-coverage tooling.
 ## Running
 
 ```sh
-python3 -m unittest discover -s tests        # the whole fast suite (~20s)
+python3 -m unittest discover -s tests        # the tests/ suite (~20s)
+python3 engine/test_coverage_payload.py      # engine/: reader payload builder
+python3 engine/test_validate_data.py         # engine/: data-validation gate
 python3 -m unittest discover -s tests -v     # verbose
 ```
 
-The suite is the fast gate: run it before committing any change to
-`engine/`. It does not replace the slow end-to-end check, which needs
+All three commands together are the fast gate: run them before committing
+any change to `engine/` (the engine-side test files live next to the code
+they pin). This does not replace the slow end-to-end check, which needs
 Node deps (`pnpm install`) and Chrome:
 
 ```sh
@@ -31,13 +34,30 @@ One test file per subject under test:
   the corpus-wide invariant that every published quote stays findable
   under folding.
 - `test_publish_check.py` -- runs `publish-coverage.py --check` for every
-  `research/sweeps/*/4-spec-coverage.md`: re-resolves every published quote
-  byte-for-byte and diffs the artifact against `data/coverage.json`.
+  sweep directory holding a stage-4 artifact (`4-spec-coverage.md` or its
+  structured sidecar `4-spec-coverage.json`): re-resolves every published
+  quote byte-for-byte and diffs the artifact against `data/coverage.json`.
+  Mutation guards pin the corrupted-quote detector, the coverage-schema gate
+  on the regex path's parsed records (schema-validated before cite.py runs),
+  and the clean failure when a markdown first locator lacks a `spec@version`
+  prefix.
+- `test_sidecar.py` -- pins the structured sidecar path of
+  `publish-coverage.py`: committed sidecars validate against
+  `data/schema/spec-coverage-sidecar.schema.json` (both validator backends)
+  with complete reconstruction provenance; corrupted quotes still fail at
+  the cite.py re-resolution gate; schema violations, a `sidecar_version`
+  other than 1, and missing reconstruction provenance fail loudly at
+  publish time; the sidecar path's records are additionally gated by the
+  real `data/schema/coverage.schema.json` (a drift guard proves this gate,
+  not the sidecar schema's mirrored $def, is load-bearing); every
+  post-schema cross-check (slug vs directory, record identity,
+  citation_format, verified_against_version, duplicate labs, unknown lab,
+  sidecar-beats-markdown precedence) has a mutation guard on a scratch
+  copy of the behaviour-1 sweep.
 - `test_coverage_json.py` -- re-resolves **every** locator in
-  `data/coverage.json` against `cite.py`, including behaviour 1, whose
-  old-format artifact the publish gate cannot parse. Resolution is
-  in-process (one spec load per spec), so this stays near-instant as
-  behaviours accumulate.
+  `data/coverage.json` against `cite.py`, whether or not the behaviour has
+  any artifact. Resolution is in-process (one spec load per spec), so this
+  stays near-instant as behaviours accumulate.
 - `test_behaviour_registry.py` -- the drift gate for behaviour identity:
   `data/behaviours.json` is the source of truth, and the derived constants
   (`GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in
@@ -47,6 +67,10 @@ One test file per subject under test:
   names, `data/reader-test-coverage.json` behaviours) and proves the gate
   has teeth by mutating scratch copies (--check must fail). After an
   intentional registry change, run the generator and commit both sides.
+
+The engine-side files in the gate live next to the code they pin and are
+documented in `engine/README.md`: `engine/test_coverage_payload.py` and
+`engine/test_validate_data.py`.
 
 To run one class during a tight edit loop (the goldens take ~20s; the unit
 tests are instant):
