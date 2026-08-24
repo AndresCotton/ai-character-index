@@ -21,8 +21,8 @@ four derived constants that must stay in lockstep with it:
                           entry's `title` field is rewritten from the mapped
                           registry name. The panel<->registry mapping is owned
                           here (it is panel-pipeline metadata, deliberately not
-                          in the registry schema); it mirrors the SLUGS dict in
-                          engine/panel/build_site_data.py.
+                          in the registry schema); engine/panel/build_site_data.py
+                          derives its SLUGS from PANEL_BEHAVIOURS below.
   4. display.behaviours   engine/panel/panel-config.json
                           Renders PANEL_DISPLAY_SLUGS below -- the reader-test
                           slugs shown in site/llm-panel-review. Membership lives

@@ -101,11 +101,14 @@ def runlog_facts(runlog, rubric):
 def rebuild(runlog, rubric, panel, scratch_root):
     """Run build_site_data.main() with its ROOT rebound to scratch_root and the
     scratch `--runlog`; returns the rebuilt payload path. Reads from the repo
-    (panel-config.json, spec texts; data/reader-test-coverage.json is byte-copied
-    into scratch because main() resolves it through ROOT); writes only to scratch."""
+    (panel-config.json, spec texts; data/reader-test-coverage.json and the
+    data/behaviours.json registry are byte-copied into scratch because main()
+    resolves both through ROOT); writes only to scratch."""
     (scratch_root / "data").mkdir(parents=True, exist_ok=True)
     shutil.copyfile(ROOT / "data" / "reader-test-coverage.json",
                     scratch_root / "data" / "reader-test-coverage.json")
+    shutil.copyfile(ROOT / "data" / "behaviours.json",
+                    scratch_root / "data" / "behaviours.json")
     (scratch_root / "site" / "llm-panel-review" / "data").mkdir(parents=True, exist_ok=True)
     bs = _load("build_site_data_under_test", HERE / "build_site_data.py")
     bs.ROOT = scratch_root

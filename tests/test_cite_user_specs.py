@@ -223,6 +223,7 @@ class ManifestValidationTest(unittest.TestCase):
             path = make_manifest(self._tmp.name, manifest_or_text)
         before_specs = dict(cite.SPECS)
         before_defaults = dict(cite.DEFAULT_VERSION)
+        before_meta = dict(cite.USER_SPEC_META)
         with self.assertRaises(SystemExit) as cm:
             cite.load_user_manifest(path)
         message = str(cm.exception)
@@ -231,6 +232,7 @@ class ManifestValidationTest(unittest.TestCase):
         # a rejected manifest must leave the registry exactly as it was
         self.assertEqual(cite.SPECS, before_specs)
         self.assertEqual(cite.DEFAULT_VERSION, before_defaults)
+        self.assertEqual(cite.USER_SPEC_META, before_meta)
 
     def test_shadowing_constitution_fails(self):
         self.assert_manifest_rejected(
@@ -265,8 +267,32 @@ class ManifestValidationTest(unittest.TestCase):
 
     def test_unknown_entry_key_rejected(self):
         self.assert_manifest_rejected(
-            {"user-spec": {"2026-01-01": {"path": FIXTURE_PATH, "title": "x"}}},
-            "unknown key", "title",
+            {"user-spec": {"2026-01-01": {"path": FIXTURE_PATH, "flavour": "x"}}},
+            "unknown key", "flavour",
+        )
+
+    def test_non_string_title_rejected(self):
+        self.assert_manifest_rejected(
+            {"user-spec": {"2026-01-01": {"path": FIXTURE_PATH, "title": 42}}},
+            "'title'", "non-empty string",
+        )
+
+    def test_empty_title_rejected(self):
+        self.assert_manifest_rejected(
+            {"user-spec": {"2026-01-01": {"path": FIXTURE_PATH, "title": ""}}},
+            "'title'", "non-empty string",
+        )
+
+    def test_non_string_source_url_rejected(self):
+        self.assert_manifest_rejected(
+            {"user-spec": {"2026-01-01": {"path": FIXTURE_PATH, "sourceUrl": 7}}},
+            "'sourceUrl'", "non-empty string",
+        )
+
+    def test_empty_source_url_rejected(self):
+        self.assert_manifest_rejected(
+            {"user-spec": {"2026-01-01": {"path": FIXTURE_PATH, "sourceUrl": ""}}},
+            "'sourceUrl'", "non-empty string",
         )
 
     def test_non_boolean_default_rejected(self):
@@ -368,6 +394,104 @@ class ManifestAbsenceTest(unittest.TestCase):
             cite.USER_MANIFEST_PATH,
             cite.REPO_ROOT / "specs" / "user" / "specs.json",
         )
+
+
+class SpecMetaTest(unittest.TestCase):
+    """spec_meta(): rendering metadata (title / sourceUrl) for display
+    surfaces. title passes through, else derives from the first heading;
+    sourceUrl passes through, else None. Citation never reads this."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.addCleanup(cite.load_user_manifest)  # restore ambient state
+
+    def load(self, manifest):
+        path = make_manifest(self._tmp.name, manifest)
+        cite.load_user_manifest(path)
+
+    def test_title_and_source_url_pass_through(self):
+        self.load({"user-spec": {"2026-01-01": {
+            "path": FIXTURE_PATH, "default": True,
+            "title": "My Custom Title",
+            "sourceUrl": "https://example.com/spec",
+        }}})
+        meta = cite.spec_meta("user-spec")
+        self.assertEqual(meta["title"], "My Custom Title")
+        self.assertEqual(meta["sourceUrl"], "https://example.com/spec")
+
+    def test_absent_title_derives_from_first_heading(self):
+        # fixture's first heading is "# Sample User Spec"
+        self.load({"user-spec": {"2026-01-01": {"path": FIXTURE_PATH}}})
+        meta = cite.spec_meta("user-spec")
+        self.assertEqual(meta["title"], "Sample User Spec")
+        self.assertIsNone(meta["sourceUrl"])
+
+    def test_absent_source_url_is_none(self):
+        self.load({"user-spec": {"2026-01-01": {
+            "path": FIXTURE_PATH, "title": "T",
+        }}})
+        self.assertIsNone(cite.spec_meta("user-spec")["sourceUrl"])
+
+    def test_meta_follows_default_version(self):
+        self.load({"user-spec": {
+            "2026-01-01": {"path": FIXTURE_PATH, "title": "Old"},
+            "2026-02-02": {"path": FIXTURE_PATH, "default": True, "title": "New"},
+        }})
+        self.assertEqual(cite.spec_meta("user-spec")["title"], "New")
+        # an explicitly pinned version reads its own entry
+        self.assertEqual(cite.spec_meta("user-spec", "2026-01-01")["title"], "Old")
+
+    def test_no_title_and_no_heading_fails_loudly(self):
+        headingless = Path(self._tmp.name) / "headingless.md"
+        headingless.write_text("Just prose, no heading at all.\n", encoding="utf-8")
+        self.load({"bare-spec": {"2026-01-01": {"path": str(headingless)}}})
+        with self.assertRaises(SystemExit) as cm:
+            cite.spec_meta("bare-spec")
+        message = str(cm.exception)
+        self.assertIn("no heading", message)
+        self.assertIn("'title'", message)
+
+    def test_bundled_specs_derive_title_from_heading(self):
+        # bundled specs carry no manifest meta; the helper still works and
+        # derives from the document, with no sourceUrl
+        meta = cite.spec_meta("constitution")
+        self.assertTrue(meta["title"])
+        self.assertIsNone(meta["sourceUrl"])
+
+    def test_unknown_spec_fails_like_load_spec(self):
+        with self.assertRaises(SystemExit) as cm:
+            cite.spec_meta("no-such-spec")
+        self.assertIn("unknown spec", str(cm.exception))
+
+
+class UserSpecsEnumerationTest(unittest.TestCase):
+    """user_specs(): enumerate registered user specs (never the bundled)."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.addCleanup(cite.load_user_manifest)
+
+    def test_no_manifest_means_no_user_specs(self):
+        cite.load_user_manifest("/nonexistent/specs.json")
+        self.assertEqual(cite.user_specs(), {})
+
+    def test_lists_only_user_specs_sorted(self):
+        path = make_manifest(self._tmp.name, {
+            "zeta-spec": {"2026-01-01": {"path": FIXTURE_PATH}},
+            "alpha-spec": {
+                "2026-02-02": {"path": FIXTURE_PATH},
+                "2026-01-01": {"path": FIXTURE_PATH, "default": True},
+            },
+        })
+        cite.load_user_manifest(path)
+        self.assertEqual(cite.user_specs(), {
+            "alpha-spec": ["2026-01-01", "2026-02-02"],
+            "zeta-spec": ["2026-01-01"],
+        })
+        self.assertNotIn("constitution", cite.user_specs())
+        self.assertNotIn("model-spec", cite.user_specs())
 
 
 if __name__ == "__main__":

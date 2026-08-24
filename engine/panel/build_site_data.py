@@ -8,8 +8,16 @@ Implements the MVP display rules from panel-config.json `display`:
     render time via ?threshold= / ?related= URL params, defaults 6/1);
   - the citation `role` (shown when the reader clicks "?") lists each model's decision.
 
-Behaviour names/definitions come from data/reader-test-coverage.json exactly as supplied
-(no rewriting). Curated row-level verdict/depth/notes are carried through untouched.
+Behaviour identity (name/definition/category) comes from the behaviour
+registry (data/behaviours.json), the source of truth for behaviour identity.
+For the bundled reader-test set the registry matches
+data/reader-test-coverage.json field-for-field (pinned by
+tests/test_behaviour_registry.py), so sourcing from the registry is
+byte-identical for the shipped data; the registry additionally lets set:user
+behaviours (the clone/fork seam) flow into the payload -- display them with
+--behaviours=<slug>, judge them under their slug as the runlog behaviour key.
+reader-test-coverage.json still supplies the curated per-lab
+verdict/depth/verifiedDate rows, carried through untouched.
 
   python3 build_site_data.py --runlog=<runlog> --rubric=v3w --panel=frontier
   (the shipped data: --runlog=runlog-v3.jsonl committed in engine/panel/, rubric v3w)
@@ -26,6 +34,8 @@ overwritten.
 --out=behaviours.json rebuilds the shipped fallback a fresh clone loads. The name is
 validated (SAFE_NAME chars, no path separators or .. traversal), so it cannot write
 outside the data dir.
+  --registry=PATH      read the behaviour registry from PATH (default data/behaviours.json)
+  --run-date=YYYY-MM-DD  pin provenance.runDate (default: today) so a rebuild can
 """
 import collections
 import importlib.util
@@ -37,17 +47,19 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
+sys.path.insert(0, str(HERE.parent))       # engine/panel -> engine (behaviour constants generator)
+import generate_behaviour_constants as constants  # noqa: E402
+
 LAB = {"constitution": "anthropic", "model-spec": "openai"}
 MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwen3.7-Max", "kimi": "Kimi-K3", "kimi-k2": "Kimi-K2.6", "qwen-big": "Qwen3-235B", "opus": "Claude Opus 4.8",
                "gpt-mini": "GPT-5 mini", "haiku": "Claude Haiku 4.5", "qwen-small": "Qwen3-32B"}
-# panel behaviour keys -> site slugs
-SLUGS = {"helpfulness": "helpfulness", "third-party-harm": "harm-avoidance-to-third-parties",
-         "over-under-caution": "avoiding-over-and-under-caution",
-         "harmlessness-to-user": "harmlessness-to-the-user",
-         "proportionate-risk": "proportionate-risk-mitigation", "tradeoffs": "how-to-approach-tradeoffs",
-         "objectivity": "objectivity-on-contested-questions", "user-autonomy": "user-autonomy",
-         "general-welfare": "animal-welfare-impacts"}
+# panel behaviour keys -> site slugs, derived from the registry mapping owned
+# by generate_behaviour_constants (the single panel<->registry source of
+# truth; it used to be a hand-mirrored copy here). set:user runlog keys map
+# to themselves via behaviour_slug() below, so they need no entry here.
+SLUGS = {panel_key: slug for panel_key, slug in constants.PANEL_BEHAVIOURS if slug is not None}
 SLUGS_EXTRA = {"general-welfare": ["general-welfare-impacts-strict"]}   # one run feeds both general-guidelines rows
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 DATA_DIR = ROOT / "site" / "llm-panel-review" / "data"
 MANIFEST_NAME = "manifest.json"
@@ -210,6 +222,50 @@ def citation_quote(text):
     return clean_quote(text), False
 
 
+def behaviour_slug(panel_key, registry):
+    """The site slug a runlog behaviour key points at. Bundled panel keys map
+    through SLUGS; a set:user key maps to itself (the user seam -- a user
+    behaviour's runlog key is its registry slug)."""
+    if panel_key in SLUGS:
+        return SLUGS[panel_key]
+    entry = registry.get(panel_key)
+    if entry is not None and entry["set"] == "user":
+        return panel_key
+    return None
+
+
+def display_behaviours(keep, registry, registry_path):
+    """Metadata for the displayed behaviours, registry-driven: the reader-test
+    bench set in numeric_id order (the shipped order), then any set:user
+    behaviours in keep. Fails loudly on a keep slug the registry does not
+    carry as reader-test/user -- a display list pointing at a renamed or
+    unknown behaviour must not build silently."""
+    ordered = {}
+    for slug, entry in registry.items():
+        if entry["set"] in ("reader-test", "user"):
+            ordered[slug] = entry
+    bench = sorted((s for s, e in ordered.items() if e["set"] == "reader-test"),
+                   key=lambda s: ordered[s]["numeric_id"])
+    user = sorted((s for s, e in ordered.items() if e["set"] == "user"),
+                  key=lambda s: ordered[s]["numeric_id"])
+    behaviours = []
+    for slug in bench + user:
+        if slug not in keep:
+            continue
+        entry = ordered[slug]
+        behaviours.append({"id": entry["numeric_id"], "slug": slug, "name": entry["name"],
+                           "definition": entry["definition"], "category": entry["group"]})
+    known = {b["slug"] for b in behaviours}
+    for slug in keep:
+        if slug not in known and slug in registry:
+            sys.exit(f"display behaviour '{slug}' is set:{registry[slug]['set']} in the "
+                     "registry; the panel displays reader-test and user behaviours")
+        if slug not in known:
+            sys.exit(f"display behaviour '{slug}' is not in the behaviour registry "
+                     f"({registry_path}) -- add it there first")
+    return behaviours
+
+
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     sp = importlib.util.spec_from_file_location("h", HERE / "harness.py")
@@ -220,6 +276,8 @@ def main(argv=None):
     runlog = HERE / "runlog-v3.jsonl"   # same default as whole_doc.py and run_rollout.py
     rubric = config["rubric"]
     out_name = None
+    registry_path = ROOT / "data" / "behaviours.json"
+    run_date = str(date.today())
     for a in argv:
         if a.startswith("--runlog="):
             runlog = Path(a.split("=", 1)[1])
@@ -229,10 +287,17 @@ def main(argv=None):
             DISPLAY["panel"] = a.split("=", 1)[1]
         elif a.startswith("--behaviours="):     # site slugs, comma-separated; overrides display list
             DISPLAY["behaviours"] = a.split("=", 1)[1].split(",")
+        elif a.startswith("--registry="):       # behaviour registry override (tests / user forks)
+            registry_path = Path(a.split("=", 1)[1])
+        elif a.startswith("--run-date="):       # pin provenance.runDate for reproducible rebuilds
+            run_date = a.split("=", 1)[1]
+            if not DATE_RE.match(run_date):
+                sys.exit(f"--run-date must be YYYY-MM-DD, got '{run_date}'")
         elif a.startswith("--out="):            # alternate FILENAME in site data dir (iteration builds)
             out_name = a.split("=", 1)[1]
             check_out_name(out_name)            # loud error before any build work
     panel = set(config["panels"][DISPLAY["panel"]])
+    registry = json.loads(registry_path.read_text())
     votes = collections.defaultdict(dict)
     spec_of = {}
     for line in runlog.read_text().splitlines():
@@ -242,25 +307,36 @@ def main(argv=None):
         votes[(d["behaviour"], d["locator"])][d["model"]] = d.get("verdict", 0)
         spec_of[(d["behaviour"], d["locator"])] = d["spec"]
 
+    # passage text for every spec the payload covers: the bundled specs, plus
+    # any user spec referenced by the runlog (its passages resolve through
+    # cite.py's user manifest exactly as the run itself did). A user spec's
+    # coverage key is its spec name -- the same string is its documents.json
+    # document id, so the page's behaviour.coverage[doc.id] join holds.
+    spec_coverage_key = dict(LAB)
+    for spec_name in sorted(set(spec_of.values()) - set(LAB)):
+        spec_coverage_key[spec_name] = spec_name
     text = {}
-    for s in config["specs"]:
+    for s in spec_coverage_key:
         for loc, sec, t in h.passages(s):
             text[loc] = t
 
     src = json.loads((ROOT / "data" / "reader-test-coverage.json").read_text())
     keep = DISPLAY["behaviours"]
-    behaviours = [b for b in src["behaviours"] if b["slug"] in keep]
-    by_slug_lab = {(e["behaviour_id"], e["lab_id"]): e for e in src["coverage"]}
-    id_of = {b["slug"]: b["id"] for b in behaviours}
+    behaviours = display_behaviours(keep, registry, registry_path)
+    # curated per-lab rows, keyed (slug, lab) -- ids are per-set and would
+    # collide across sets, so the join uses the slug
+    rtc_id_to_slug = {b["id"]: b["slug"] for b in src["behaviours"]}
+    by_slug_lab = {(rtc_id_to_slug[e["behaviour_id"]], e["lab_id"]): e
+                   for e in src["coverage"] if e["behaviour_id"] in rtc_id_to_slug}
 
     out_behaviours = []
     for b in behaviours:
         cov = {}
-        for spec_name, lab in LAB.items():
-            src_entry = by_slug_lab.get((b["id"], lab), {})
+        for spec_name, lab in spec_coverage_key.items():
+            src_entry = by_slug_lab.get((b["slug"], lab), {})
             cits = []
             for (beh, loc), mv in votes.items():
-                slug_matches = (SLUGS.get(beh) == b["slug"]
+                slug_matches = (behaviour_slug(beh, registry) == b["slug"]
                                 or b["slug"] in SLUGS_EXTRA.get(beh, []))
                 if not slug_matches or spec_of[(beh, loc)] != spec_name:
                     continue
@@ -304,7 +380,7 @@ def main(argv=None):
                         if DISPLAY["panel"] == "frontier" else sorted(panel),
                "substitution": "opus (claude-opus-4-8) replaces fable on harm-to-third-parties x model-spec (fable output content-filtered, 3 attempts); kimi-k2 (Kimi-K2.6) replaces kimi on over-under-caution x model-spec (K3 exhausted a 65k output budget on reasoning without emitting verdicts, finish_reason length)",
                "judges_seen_in_data": seats,
-               "runDate": str(date.today()),
+               "runDate": run_date,
                "scoring": "per passage: sum over judges of core=2/related=1/neither=0; display thresholds are client-side URL params"},
            "behaviours": out_behaviours}
     n = sum(len(c["passages"]) for b in out_behaviours for c in b["coverage"].values())

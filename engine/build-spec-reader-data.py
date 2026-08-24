@@ -1,9 +1,25 @@
 #!/usr/bin/env python3
-"""Build the static payload used by the public spec reader."""
+"""Build the static payload used by the public spec reader.
+
+Documents come from the two bundled specs PLUS any user-registered specs:
+the spec-cite user manifest (specs/user/specs.json, gitignored, absent by
+default; SPEC_CITE_USER_SPECS=<file> overrides the location). With no user
+manifest the output is byte-identical to the bundled-only payload -- user
+specs only ever appear in a local rebuild, never in the committed site
+data. A user spec joins `documents` alongside the bundled ones, and every
+index behaviour carries an empty coverage record for it (the index has
+mapped nothing against a user spec; the empty record keeps the reader's
+coverage lookup total).
+
+  python3 build-spec-reader-data.py                          # bundled + registered user specs (if any)
+  python3 build-spec-reader-data.py --user-manifest=PATH     # read the user manifest from PATH
+  python3 build-spec-reader-data.py --out=PATH               # alternate output file (tests/iteration)
+"""
 
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 from coverage_payload import coverage_payload
@@ -11,6 +27,9 @@ from coverage_payload import coverage_payload
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "site" / "spec-reader" / "data" / "documents.json"
+
+sys.path.insert(0, str(ROOT / "engine" / "spec-cite"))
+import cite  # noqa: E402
 
 DOCUMENTS = [
     {
@@ -68,14 +87,73 @@ BEHAVIOURS = [
 ]
 
 
-def main() -> None:
+def user_documents():
+    """One entry per user-registered spec (cite.py user manifest), in name
+    order; empty when no manifest is present. Shape mirrors DOCUMENTS.
+
+    The id is the spec's manifest name: that is the join key the panel
+    payload (engine/panel/build_site_data.py) uses for a user spec's
+    coverage, and the ?spec= URL param the readers accept.
+    """
+    documents = []
+    for name in cite.user_specs():
+        version, path = cite.resolve_spec(name, None)  # loud if no default pinned
+        meta = cite.spec_meta(name, version)
+        document = {
+            "id": name,
+            "lab": "User",
+            "title": meta["title"],
+            "shortTitle": meta["title"],
+            "version": version,
+        }
+        if meta["sourceUrl"]:
+            document["sourceUrl"] = meta["sourceUrl"]
+        document["path"] = cite.REPO_ROOT / path
+        documents.append(document)
+    return documents
+
+
+def display_path(path):
+    """Repo-relative when possible, for generatedFrom."""
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
+def empty_coverage():
+    """Coverage record for a document the index has mapped nothing against
+    (a user spec). Same keys as coverage_payload(); depth 0 = absent."""
+    return {"verdict": None, "depth": 0, "note": "", "verifiedDate": "", "passages": []}
+
+
+def main(argv=None) -> None:
+    out = OUTPUT
+    manifest_override = None
+    for arg in (sys.argv[1:] if argv is None else argv):
+        if arg.startswith("--user-manifest="):
+            manifest_override = arg.split("=", 1)[1]
+        elif arg.startswith("--out="):
+            out = Path(arg.split("=", 1)[1])
+        else:
+            raise SystemExit(
+                f"unknown argument {arg!r} "
+                "(supported: --user-manifest=PATH, --out=PATH)"
+            )
+    if manifest_override is not None:
+        cite.load_user_manifest(manifest_override)
+    # no flag: cite imported the ambient manifest already (SPEC_CITE_USER_SPECS
+    # or specs/user/specs.json); absent manifest = bundled-only state
+
     coverage = json.loads((ROOT / "data" / "coverage.json").read_text())
     records = coverage["coverage"]
+
+    user_docs = user_documents()
 
     documents = [
         {key: value for key, value in document.items() if key != "path"}
         | {"markdown": document["path"].read_text()}
-        for document in DOCUMENTS
+        for document in DOCUMENTS + user_docs
     ]
 
     behaviours = []
@@ -100,21 +178,24 @@ def main() -> None:
             per_document[document["id"]] = coverage_payload(
                 matches[0], document["id"], behaviour["slug"]
             )
+        for document in user_docs:
+            per_document[document["id"]] = empty_coverage()
         behaviours.append(behaviour | {"coverage": per_document})
 
     payload = {
         "generatedFrom": [
             "specs/claude-constitution/20260120-constitution.md",
             "specs/openai-model-spec/model_spec.md",
-            "data/coverage.json",
-        ],
+        ]
+        + [display_path(document["path"]) for document in user_docs]
+        + ["data/coverage.json"],
         "behaviours": behaviours,
         "documents": documents,
     }
 
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
-    print(f"Wrote {OUTPUT.relative_to(ROOT)}")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
+    print(f"Wrote {out.relative_to(ROOT) if out.is_relative_to(ROOT) else out}")
 
 
 if __name__ == "__main__":

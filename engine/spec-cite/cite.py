@@ -26,7 +26,12 @@ User specs:
 
         {
           "<name>": {
-            "<YYYY-MM-DD>": {"path": "<repo-relative .md path>", "default": true}
+            "<YYYY-MM-DD>": {
+              "path": "<repo-relative .md path>",
+              "default": true,
+              "title": "<display title>",
+              "sourceUrl": "<url of the canonical source>"
+            }
           }
         }
 
@@ -38,6 +43,11 @@ User specs:
       per spec may carry it.
     - "path" resolves relative to the repo root (absolute paths also work),
       so the document itself can live anywhere, e.g. under specs/user/.
+    - "title" and "sourceUrl" are optional rendering metadata for surfaces
+      that display the spec (spec reader / panel UI); citation resolution
+      ignores them. "title" passes through as given; when absent,
+      spec_meta() derives it from the document's first heading.
+      "sourceUrl" passes through; absent means no source link.
     - SPEC_CITE_USER_SPECS=<file> overrides the manifest location; the test
       suite uses this to exercise the feature without touching specs/.
     A malformed manifest fails loudly; an absent manifest is the normal
@@ -68,10 +78,14 @@ VERSION_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 # Rebuilt by load_user_manifest(); never edit these by hand at runtime.
 SPECS = {}
 DEFAULT_VERSION = {}
+# Rendering metadata from the manifest, keyed (name, version): a subset of
+# {"title": str, "sourceUrl": str} carrying only the keys the entry gave.
+USER_SPEC_META = {}
 
 
 def load_user_manifest(manifest_path=None):
-    """Rebuild SPECS / DEFAULT_VERSION as bundled specs + user manifest.
+    """Rebuild SPECS / DEFAULT_VERSION / USER_SPEC_META as bundled specs +
+    user manifest.
 
     Idempotent: always restarts from the bundled registry, so calling it
     again after the manifest changed picks up the new state. An absent
@@ -80,9 +94,10 @@ def load_user_manifest(manifest_path=None):
     registry as it was. manifest_path overrides the location (as
     SPEC_CITE_USER_SPECS does for the whole process).
     """
-    global SPECS, DEFAULT_VERSION
+    global SPECS, DEFAULT_VERSION, USER_SPEC_META
     merged = dict(BUNDLED_SPECS)
     defaults = dict(BUNDLED_DEFAULT_VERSION)
+    meta = {}
     if manifest_path is None:
         manifest_path = os.environ.get(MANIFEST_ENV_VAR) or USER_MANIFEST_PATH
     path = Path(manifest_path)
@@ -122,11 +137,12 @@ def load_user_manifest(manifest_path=None):
                         f"user-spec manifest {path}: entry for "
                         f"'{name}@{version}' must be an object"
                     )
-                unknown = sorted(set(entry) - {"path", "default"})
+                unknown = sorted(set(entry) - {"path", "default", "title", "sourceUrl"})
                 if unknown:
                     sys.exit(
                         f"user-spec manifest {path}: unknown key(s) {unknown} "
-                        f"in '{name}@{version}' (allowed: path, default)"
+                        f"in '{name}@{version}' "
+                        "(allowed: path, default, title, sourceUrl)"
                     )
                 spec_path = entry.get("path")
                 if not isinstance(spec_path, str) or not spec_path:
@@ -140,7 +156,18 @@ def load_user_manifest(manifest_path=None):
                         f"user-spec manifest {path}: 'default' for "
                         f"'{name}@{version}' must be a boolean"
                     )
+                entry_meta = {}
+                for key in ("title", "sourceUrl"):
+                    if key in entry:
+                        value = entry[key]
+                        if not isinstance(value, str) or not value:
+                            sys.exit(
+                                f"user-spec manifest {path}: '{key}' for "
+                                f"'{name}@{version}' must be a non-empty string"
+                            )
+                        entry_meta[key] = value
                 merged[(name, version)] = spec_path
+                meta[(name, version)] = entry_meta
                 if default:
                     explicit_defaults.append(version)
             if len(explicit_defaults) > 1:
@@ -156,6 +183,7 @@ def load_user_manifest(manifest_path=None):
             # reports the choice instead of guessing
     SPECS = merged
     DEFAULT_VERSION = defaults
+    USER_SPEC_META = meta
 
 
 load_user_manifest()
@@ -326,7 +354,9 @@ def split_sentences(text):
     return sentences
 
 
-def load_spec(spec, version):
+def resolve_spec(spec, version):
+    """(version, path) for a registered spec, applying the default-version
+    rule. Loud failure shared by load_spec and spec_meta."""
     version = version or DEFAULT_VERSION.get(spec)
     path = SPECS.get((spec, version))
     if not path:
@@ -339,11 +369,59 @@ def load_spec(spec, version):
             )
         known = ", ".join(f"{s}@{v}" for s, v in sorted(SPECS))
         sys.exit(f"unknown spec '{spec}@{version}' (known: {known})")
+    return version, path
+
+
+def load_spec(spec, version):
+    version, path = resolve_spec(spec, version)
     try:
         lines = (REPO_ROOT / path).read_text(encoding="utf-8").splitlines()
     except OSError as e:
         sys.exit(f"cannot read spec document '{path}' for {spec}@{version}: {e}")
     return version, parse_sections(lines), lines
+
+
+def first_heading_title(path, spec, version):
+    """Derive a display title from the document's first heading. Used when a
+    user-spec manifest entry omits 'title'. Loud if there is no heading."""
+    try:
+        lines = (REPO_ROOT / path).read_text(encoding="utf-8").splitlines()
+    except OSError as e:
+        sys.exit(f"cannot read spec document '{path}' for {spec}@{version}: {e}")
+    sections = parse_sections(lines)
+    if not sections:
+        sys.exit(
+            f"user spec '{spec}@{version}' has no 'title' in its manifest "
+            f"entry and no heading in {path} to derive one from -- "
+            "add a 'title' to the entry"
+        )
+    return sections[0].title
+
+
+def spec_meta(spec, version=None):
+    """Rendering metadata for a spec version: {"title": str, "sourceUrl": str|None}.
+
+    'title' is the manifest value when present, else derived from the
+    document's first heading. 'sourceUrl' is the manifest value or None.
+    Used by surfaces that display a user spec (spec reader / panel UI);
+    citation resolution never reads it. version defaults per the manifest.
+    """
+    version, path = resolve_spec(spec, version)
+    entry = USER_SPEC_META.get((spec, version), {})
+    title = entry.get("title") or first_heading_title(path, spec, version)
+    return {"title": title, "sourceUrl": entry.get("sourceUrl")}
+
+
+def user_specs():
+    """The user-manifest specs only (never bundled): {name: [versions...]},
+    versions sorted. Lets a caller enumerate registered user specs, e.g. to
+    fold them into the spec reader's document list."""
+    out = {}
+    for name, ver in SPECS:
+        if name in BUNDLED_DEFAULT_VERSION:
+            continue
+        out.setdefault(name, []).append(ver)
+    return {name: sorted(vers) for name, vers in sorted(out.items())}
 
 
 def find_section(sections, ref):

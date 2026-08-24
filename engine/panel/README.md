@@ -15,7 +15,9 @@ environment or a gitignored `.env` in this directory.
   an empirical dense-vs-sparse comparison.
 - `select_strata.py` + `smoke-*.txt` -- stratified validation sample (pinned).
 - `run_rollout.py` -- the driver: full-dataset plan, dry-run by default, --go to spend.
-- `build_site_data.py` -- runlog -> site payload (see "Run outputs" below).
+- `build_site_data.py` -- runlog -> site payload; behaviour metadata is
+  registry-driven (see "Behaviour metadata is registry-driven" below) and run
+  outputs are timestamped (see "Run outputs" below).
 - `select_run.py` -- resolve/verify which payload the site page will load; the CLI
   half of run pinning (the other half is the page's `?data=` URL param).
 
@@ -59,6 +61,19 @@ or `..`), so `--out=` cannot write outside the data dir.
   `runlog*.jsonl` stays gitignored.
 - `verify_panel_provenance.py` -- proves the shipped payload rebuilds from that
   log; `test_verify_panel_provenance.py` is its test suite.
+
+## Behaviour metadata is registry-driven
+The displayed behaviours (sidebar names, definitions, categories, numeric ids)
+come from the behaviour registry `data/behaviours.json`, not from the payload's
+source runlog: the reader-test bench set in registry `numeric_id` order (the
+shipped order), then any `set:user` behaviours the run covers. A `set:user`
+runlog key is its registry slug (the clone/fork seam: a user behaviour's panel
+run flows straight into the page once it is registered in a local registry
+copy). A `--behaviours=` entry the registry does not carry fails the build
+loudly. Flags: `--registry=PATH` (default `data/behaviours.json`; tests and
+user forks point it elsewhere) and `--run-date=YYYY-MM-DD` (pins
+`provenance.runDate`, default today, so a rebuild can reproduce a committed
+payload byte-for-byte).
 
 ## The procedure
 The end-to-end stage-4 procedure (dry run, execution, failure substitutions,
