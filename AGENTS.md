@@ -48,8 +48,10 @@ python3 -m unittest tests.test_cite tests.test_cite_user_specs \
     tests.test_custom_spec_decoupling tests.test_behaviour_registry \
     tests.test_coverage_json tests.test_publish_check tests.test_sidecar
 python3 engine/test_validate_data.py && python3 engine/validate_data.py
+node engine/panel/test_appjs_tiers.js            # tier-band cuts (single-judge floor)
 node engine/panel/test_appjs_fallthrough.js
 node engine/verify-spec-reader.mjs && node engine/verify-reader-test.mjs  # needs Chrome
+node engine/verify-panel-features.mjs            # Tier-1 site features × bundled + user-extended (stages its own scratch site; needs Chrome + python3)
 ```
 
 ## Conventions
