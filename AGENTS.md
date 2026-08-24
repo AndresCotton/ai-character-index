@@ -30,56 +30,67 @@ Everything stays local — nothing pushes back.
 1. Register a user spec: create `specs/user/specs.json` (gitignored) pointing at
    your spec markdown; optional `title`/`sourceUrl` for display. See
    `engine/README.md` ("User specs") and `specs/CITATION.md`.
-2. Reader payload: `python3 engine/build-spec-reader-data.py --user-manifest=specs/user/specs.json`
-3. Behaviour: add a `set:user` entry to a local copy of `data/behaviours.json`.
-   The entry needs the registry's full shape -- `name`, `set: "user"`,
-   `numeric_id` (integer >= 1, per set: its display order and its payload `id`),
-   `group`, `definition`, `facets`. See `data/schema/behaviours.schema.json` for
-   the contract and `engine/stage_user_demo.py` for a complete worked entry; the
-   shipped registry carries no `set:user` rows to copy from. A missing field
-   fails the build.
-4. Judge it -- **this is the step that spends money.** Judging produces a
-   *runlog*, which step 5 turns into a payload; without it there is nothing to
-   build. Model tags live in `engine/panel/panel-config.json`; keys come from
-   the environment (`key_env` per provider, e.g. `ANTHROPIC_API_KEY`).
+2. Reader payload -- **run this from the repo root**:
+   `python3 engine/build-spec-reader-data.py --user-manifest=specs/user/specs.json`
+   The manifest path is resolved against your *current directory*, not the repo
+   root. From anywhere else it silently finds nothing, prints
+   `Wrote site/spec-reader/data/documents.json` and exits 0 having written a
+   bundled-only payload. Pass an absolute path if you are not at the root. Check
+   your spec is actually there before continuing:
+   `python3 -c "import json;print([d['id'] for d in json.load(open('site/spec-reader/data/documents.json'))['documents']])"`
+   Note this rewrites a **tracked** file with your spec's text inlined.
+3. Behaviour -- your behaviour has to be registered **twice, in two files with
+   different shapes**, because display and judging read different registries:
 
-   Your own behaviour against your own spec means `whole_doc.py`, one cell at a
-   time -- one (behaviour, spec, model tag) per call:
+   - `data/behaviours.json` (or a copy; step 5 takes `--registry=`) drives
+     *display*: `name`, `set: "user"`, `numeric_id` (integer >= 1, per set),
+     `group`, `definition`, `facets`. See
+     `data/schema/behaviours.schema.json` and the worked entry in
+     `engine/stage_user_demo.py`.
+   - `engine/panel/behaviours.json` drives *judging*: `label`, `title`,
+     `source`, `query` (the definition the judges are given), `boundary`.
+     `whole_doc.py` has no `--registry` flag, so it reads this file and only
+     this file; a slug missing here fails step 4 with
+     `unknown behaviour '<slug>'`.
+
+   **`engine/panel/behaviours.json` is tracked.** Revert it when you are done.
+4. Judge it -- **this is the step that spends money.** One
+   (behaviour, spec, model tag) per call; tags live in
+   `engine/panel/panel-config.json`; keys come from the environment
+   (`key_env` per provider, e.g. `ANTHROPIC_API_KEY`).
 
    ```sh
    python3 engine/panel/whole_doc.py <your-slug> <your-spec-id> haiku \
-     --runlog=my-run.jsonl
+     --runlog=/tmp/my-run.jsonl
    ```
 
-   Two things it does not do. It has **no dry-run** -- it calls the API the
-   moment you run it, so start with a single cell and read the cost before
-   looping. And its default runlog is `engine/panel/runlog-v3.jsonl`, the
-   committed shipped runlog, so **always pass `--runlog=`**; the file you name
-   is not gitignored, so keep it outside the repo or add it to `.gitignore`
-   yourself.
+   It has **no dry-run** -- it calls the API immediately, so run one cell and
+   read the cost before looping. One cell of a ~15 KB spec on `haiku` is well
+   under a cent (measured: 5,884 in / 383 out = $0.008). Always pass
+   `--runlog=`: the default is `engine/panel/runlog-v3.jsonl`, the committed
+   shipped runlog, and the file you name is **not** gitignored. It also appends
+   to `engine/panel/metrics.jsonl` (gitignored).
 
-   `run_rollout.py` is the driver for the *project's own* dataset, not for
-   yours: it is dry-run by default and prints a cost estimate, but it validates
-   `--behaviours=` against `engine/panel/behaviours.json` (the bundled panel set,
-   not `data/behaviours.json` and not your registry) and it judges
-   `config["specs"]` -- the two bundled mirrors. It has no `--registry` and no
-   `--spec` flag, so it cannot judge a `set:user` behaviour or a user spec. Use
-   it to see the shape of a plan and a cost estimate:
-
-   ```sh
-   python3 engine/panel/run_rollout.py --panel=cheap --behaviours=helpfulness \
-     --runlog=/tmp/plan.jsonl        # dry-run; --go would spend
-   ```
-
-5. Build the payload from your runlog:
+   `run_rollout.py` is the driver for the *project's own* dataset, not yours: it
+   validates `--behaviours=` against `engine/panel/behaviours.json` and judges
+   `config["specs"]`, the two bundled mirrors, with no `--spec` flag. Useful only
+   for a free dry-run cost estimate of a bundled behaviour.
+5. Build the payload. `--panel=` must name a panel in
+   `engine/panel/panel-config.json` whose seats match the judges in your runlog
+   -- a bare tag is a `KeyError`, unlike `whole_doc.py`, which accepts one. A
+   citation also needs `min(2, panel_size)` votes, so **one judge scored against
+   a multi-seat panel yields 0 citations, exit 0, and an empty page.** For a
+   single-judge run, add a single-seat panel (again, a tracked file to revert):
+   `"solo": ["haiku"]`.
 
    ```sh
-   python3 engine/panel/build_site_data.py --runlog=my-run.jsonl \
-     --rubric=v3w --panel=cheap --registry=<your behaviours.json> \
+   python3 engine/panel/build_site_data.py --runlog=/tmp/my-run.jsonl \
+     --rubric=v3w --panel=solo --registry=<your behaviours.json> \
      --behaviours=<your-slug>
    ```
 
-   See `engine/panel/README.md` ("Behaviour metadata is registry-driven").
+   It prints the citation count -- if that is 0, check your panel's seats
+   against the runlog's `model` values before looking anywhere else.
 6. View: `python3 -m http.server 8123 --directory site` →
    `http://localhost:8123/spec-reader/` and `http://localhost:8123/llm-panel-review/`
    (panel loads the manifest's latest run by default; pin with `?data=<name>`).
