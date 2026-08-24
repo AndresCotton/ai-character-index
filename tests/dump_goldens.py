@@ -103,17 +103,24 @@ def dump_find() -> str:
 
 def main() -> None:
     args = sys.argv[1:]
-    only = next((a for a in args if a != "--write"), None)
+    bless = "--bless" in args
+    only = next((a for a in args if a not in ("--write", "--bless")), None)
     if "--write" not in args or only not in (None, "corpus", "find"):
-        sys.exit("usage: dump_goldens.py --write [corpus|find]"
-                 "   (regenerates tests/golden/)")
+        sys.exit("usage: dump_goldens.py --write [corpus|find] [--bless]"
+                 "   (regenerates tests/golden/; --bless also accepts a changed"
+                 " corpus digest as the new baseline)")
     GOLDEN.mkdir(parents=True, exist_ok=True)
     if only in (None, "corpus"):
         # The corpus text is NOT committed (it was ~800 KB whose only job was to
         # make a failure readable). It is written here for local diffing and is
         # gitignored; what the suite checks is the digest manifest beside it.
         digest_path = GOLDEN / "corpus-sha256.json"
-        manifest = json.loads(digest_path.read_text(encoding="utf-8"))
+        try:
+            manifest = json.loads(digest_path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            manifest = {"goldens": {}}          # bootstrap: this is the sole writer
+        manifest.setdefault("goldens", {})
+        before = dict(manifest["goldens"])
         for spec in SPECS:
             target = GOLDEN / f"cite-corpus-{spec}.txt"
             body = dump_spec(spec)
@@ -125,8 +132,24 @@ def main() -> None:
                 "lines": body.count("\n"),
             }
             print(f"wrote {target.relative_to(ROOT)} (gitignored; for diffing)")
-        digest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-        print(f"wrote {digest_path.relative_to(ROOT)}")
+        changed = [n for n, v in manifest["goldens"].items()
+                   if before.get(n, {}).get("sha256") != v["sha256"]]
+        if not changed:
+            print(f"{digest_path.relative_to(ROOT)}: unchanged")
+        elif bless:
+            digest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+            print(f"wrote {digest_path.relative_to(ROOT)} -- accepted new digest for "
+                  + ", ".join(changed))
+        else:
+            # Do NOT accept. This command is step 1 of the recipe a failing test
+            # prints, so blessing here would bury the change the developer came to
+            # look at.
+            print(f"{digest_path.relative_to(ROOT)}: NOT updated -- the digest changed for "
+                  + ", ".join(changed)
+                  + "\n  Diff the regenerated text above against the old code first"
+                    " (see the failing test's message).\n"
+                    "  If the change is intentional: python3 tests/dump_goldens.py"
+                    " --write corpus --bless")
     if only in (None, "find"):
         target = GOLDEN / "cite-find.txt"
         target.write_text(dump_find(), encoding="utf-8")
