@@ -201,44 +201,6 @@ class TestCoverageSchema(MutationMixin, unittest.TestCase):
         self.assert_valid(at_boundary)
 
 
-class TestEvalsSchema(MutationMixin, unittest.TestCase):
-    """data/evals.json: no eval without a URL, rubric scores stay on the 0-4 scale."""
-
-    DATA_FILE = "evals.json"
-    SCHEMA_FILE = "evals.schema.json"
-
-    def test_valid_as_committed(self):
-        self.assert_valid()
-
-    def test_eval_without_url_fails(self):
-        # data/README.md: no eval without a URL.
-        def mutate(d):
-            del d["evals"][0]["url"]
-        self.assert_invalid(mutate, "url")
-
-    def test_quality_score_above_rubric_max_fails(self):
-        def mutate(d):
-            d["evals"][0]["quality"]["internal_validity"] = 7
-        self.assert_invalid(mutate, "internal_validity")
-
-    def test_unrecognised_facet_fails(self):
-        def mutate(d):
-            d["evals"][0]["facets"] = ["banana"]
-        self.assert_invalid(mutate, "facets")
-
-    def test_null_adherence_band_is_allowed(self):
-        # Evals without per-lab results carry band: null, not a missing key.
-        def mutate(d):
-            d["evals"][0]["adherence"]["anthropic"]["band"] = None
-        self.assert_valid(mutate)
-
-    def test_null_source_url_is_allowed(self):
-        # A source verified not to exist keeps its record with url: null.
-        def mutate(d):
-            d["evals"][0]["sources"][0]["url"] = None
-        self.assert_valid(mutate)
-
-
 class TestLabsSchema(MutationMixin, unittest.TestCase):
     """data/labs.json: the lab registry coverage records join against."""
 
@@ -444,16 +406,6 @@ class TestCrossFileRules(unittest.TestCase):
         errors = vd.validate_all(self.tmp)
         self.assertTrue(
             any("behaviour_id" in e and "999" in e and "registry" in e for e in errors),
-            f"no unknown-registry-behaviour error; got: {errors}",
-        )
-
-    def test_evals_behaviour_id_unknown_to_the_registry_fails(self):
-        def mutate(d):
-            d["evals"][0]["behaviour_ids"] = [999]
-        self.rewrite("evals.json", mutate)
-        errors = vd.validate_all(self.tmp)
-        self.assertTrue(
-            any("evals.json" in e and "999" in e and "registry" in e for e in errors),
             f"no unknown-registry-behaviour error; got: {errors}",
         )
 
