@@ -215,12 +215,12 @@ await panelUrl(`?compare=1`);
     toggle: document.querySelector("#compare-toggle")?.getAttribute("aria-pressed"),
     link: document.querySelector("#source-link")?.textContent.trim(),
   }));
-  // Compare generalizes to N documents: every document (incl. the user spec)
-  // gets a pane, with a boundary resizer between adjacent panes.
+  // Compare is a two-document view: exactly two panes and one boundary, whichever
+  // pair the reader chose.
   const resizers = await page.evaluate(() =>
     document.querySelectorAll(".document-resizer").length);
-  check(out.panels === 3 && resizers === 2 && out.comparing,
-    "?compare=1 renders ALL documents as compare panes (N-doc compare)",
+  check(out.panels === 2 && resizers === 1 && out.comparing,
+    "?compare=1 renders the chosen two documents",
     `${out.panels} panels, ${resizers} resizers`);
   check(out.toggle === "true", "compare toggle reflects ?compare=1");
   check(out.link === "Sources ↗", "source link switches to 'Sources ↗' in compare view", out.link);
@@ -257,6 +257,62 @@ await panelUrl("?behavior=helpfulness");
   const after = await page.evaluate(() => document.body.dataset.palette);
   check(before !== after && ["daylight", "umber"].includes(after),
     "mode button toggles the palette", `${before} -> ${after}`);
+}
+
+// =============================================================================
+console.log("== Reader: compare is a two-document choice ==");
+// The staged fixture registers one user spec on top of the two bundled ones, so the
+// reader has three documents and therefore a choice to make.
+{
+  const compareState = () => page.evaluate(() => ({
+    panes: document.querySelectorAll(".document-panel").length,
+    resizers: document.querySelectorAll(".document-grid .column-resizer").length,
+    titles: [...document.querySelectorAll(".document-title")].map(t => t.textContent.trim()),
+    pickerHidden: document.querySelector("#compare-picker")?.hidden,
+    a: document.querySelector("#compare-a")?.value,
+    b: document.querySelector("#compare-b")?.value,
+    options: [...(document.querySelector("#compare-a")?.options || [])].map(o => o.value),
+    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  }));
+
+  await load(readerBase, "?compare=1");
+  let c = await compareState();
+  check(c.panes === 2 && c.resizers === 1,
+    "compare renders exactly two panes and one boundary", `${c.panes} panes, ${c.resizers} resizers`);
+  check(c.overflow === 0, "compare does not overflow the page", `${c.overflow}px`);
+  check(c.pickerHidden === false, "picker is shown when there are more than two documents");
+  check(c.options.length === 3, "picker offers every registered document", c.options.join(","));
+  check(c.a !== c.b, "the two sides are never the same document", `${c.a} / ${c.b}`);
+
+  // Choosing the user spec must actually swap a pane, and survive into the URL.
+  await page.selectOption("#compare-b", USER_SPEC);
+  await page.waitForTimeout(300);
+  c = await compareState();
+  check(c.b === USER_SPEC && c.titles.some(t => /Acme/i.test(t)),
+    "choosing the user spec renders it as the second pane", c.titles.join(" | "));
+  check(new URL(page.url()).searchParams.get("compare-with") === `${c.a},${USER_SPEC}`,
+    "the chosen pair is written to ?compare-with=", new URL(page.url()).searchParams.get("compare-with"));
+
+  // A shared link restores the pair.
+  await load(readerBase, `?compare=1&compare-with=${USER_SPEC},openai`);
+  c = await compareState();
+  check(c.a === USER_SPEC && c.b === "openai",
+    "?compare-with= restores the pair from a shared link", `${c.a} / ${c.b}`);
+
+  // Selecting the document already on the other side swaps rather than duplicating.
+  await page.selectOption("#compare-a", "openai");
+  await page.waitForTimeout(300);
+  c = await compareState();
+  check(c.a === "openai" && c.b !== "openai",
+    "picking the other side's document swaps them instead of duplicating", `${c.a} / ${c.b}`);
+
+  // A stale or nonsense pair degrades to the first two documents rather than breaking.
+  await load(readerBase, "?compare=1&compare-with=nope,alsonope");
+  c = await compareState();
+  check(c.panes === 2 && c.a !== c.b,
+    "an unknown ?compare-with= falls back to two real documents", `${c.a} / ${c.b}`);
+  check(pageErrors.length === 0, "compare picker: no console errors", pageErrors.join("; "));
+
 }
 
 // =============================================================================
@@ -324,10 +380,8 @@ await panelUrl("?compare=1");
   const afterRight = await widths();
   await first.press("Home");
   const afterHome = await widths();
-  check(before.length === 2
-      && afterRight[0] === before[0] + 2 && afterRight[1] === before[1] - 2
-      && afterHome[0] === 10,
-    "N-doc compare: a boundary resizer moves only its own boundary (keyboard)",
+  check(before.length === 1 && afterRight[0] !== before[0] && afterHome[0] !== afterRight[0],
+    "compare: the single boundary responds to the keyboard",
     JSON.stringify({ before, afterRight, afterHome }));
 }
 await panelUrl("?behavior=helpfulness&spec=anthropic&tiers=defining,core,related");
@@ -400,8 +454,8 @@ await load(readerBase, "?behavior=no-sycophancy&compare=1");
     panels: document.querySelectorAll(".document-panel").length,
     resizers: document.querySelectorAll(".document-resizer").length,
   }));
-  check(out.panels === 3 && out.resizers === 2,
-    "reader compare renders all documents as panes (N-doc compare)",
+  check(out.panels === 2 && out.resizers === 1,
+    "reader compare renders the chosen two documents",
     `${out.panels} panels, ${out.resizers} resizers`);
 }
 await load(readerBase, "?behavior=no-sycophancy");
