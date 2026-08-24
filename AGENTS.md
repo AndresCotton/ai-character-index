@@ -41,22 +41,19 @@ Everything stays local — nothing pushes back.
    your spec is actually there before continuing:
    `python3 -c "import json;print([d['id'] for d in json.load(open('site/spec-reader/data/documents.json'))['documents']])"`
    Note this rewrites a **tracked** file with your spec's text inlined.
-3. Behaviour -- your behaviour has to be registered **twice, in two files with
-   different shapes**, because display and judging read different registries:
+3. Behaviour: add a `set:user` entry to a local copy of `data/behaviours.json`
+   -- keep the copy outside the repo. The entry needs the registry's full shape
+   -- `name`, `set: "user"`, `numeric_id` (integer >= 1, per set: its display
+   order and its payload `id`), `group`, `definition`, `facets`. See
+   `data/schema/behaviours.schema.json` for the contract and
+   `engine/stage_user_demo.py` for a complete worked entry; the shipped registry
+   carries no `set:user` rows to copy from. A missing field fails the build.
 
-   - `data/behaviours.json` (or a copy; step 5 takes `--registry=`) drives
-     *display*: `name`, `set: "user"`, `numeric_id` (integer >= 1, per set),
-     `group`, `definition`, `facets`. See
-     `data/schema/behaviours.schema.json` and the worked entry in
-     `engine/stage_user_demo.py`.
-   - `engine/panel/behaviours.json` drives *judging*: an object keyed by slug,
-     each entry `label`, `title`, `source`, `query` (the definition the judges
-     are given), `boundary`.
-     `whole_doc.py` has no `--registry` flag, so it reads this file and only
-     this file; a slug missing here fails step 4 with
-     `unknown behaviour '<slug>'`.
-
-   **`engine/panel/behaviours.json` is tracked.** Revert it when you are done.
+   You register it **once**. Both the judging step and the build step take
+   `--registry=`, and both accept this shape: `whole_doc.py` adapts a display
+   entry into a judge prompt (`definition` becomes the text the judges are
+   given, `facets` become clarifications). `engine/panel/behaviours.json` is the
+   project's own judging registry -- you do not need to touch it.
 4. Judge it -- **this is the step that spends money.** One
    (behaviour, spec, model tag) per call; tags live in
    `engine/panel/panel-config.json`; keys come from the environment
@@ -64,7 +61,7 @@ Everything stays local — nothing pushes back.
 
    ```sh
    python3 engine/panel/whole_doc.py <your-slug> <your-spec-id> haiku \
-     --runlog=/tmp/my-run.jsonl
+     --registry=<your behaviours.json> --runlog=/tmp/my-run.jsonl
    ```
 
    It has **no dry-run** -- it calls the API immediately, so run one cell and

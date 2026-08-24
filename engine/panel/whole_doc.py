@@ -6,7 +6,9 @@ its {independence} slot filled by the whole-doc clause (per Andres 07-29) instea
 the passage-level one; slot contract documented in harness.py. Rubric tag "v3w"
 (full output) / "v3s" (sparse). One call per (behaviour, spec, model).
 
-  python3 whole_doc.py <behaviour[,..]> <spec[,..]> <tag[,..]> [--runlog=path]
+  python3 whole_doc.py <behaviour[,..]> <spec[,..]> <tag[,..]> [--runlog=path] [--registry=path]
+--registry= accepts EITHER registry shape (this directory's behaviours.json,
+or a data/behaviours.json-shaped file), so a fork registers a behaviour once.
 """
 import importlib.util, json, sys, time
 from pathlib import Path
@@ -34,10 +36,14 @@ def judge_kwargs(tag, model, config):
 
 def main():
     global RUNLOG
+    registry_path = None
     for a in sys.argv:
         if a.startswith("--runlog="):
             RUNLOG = Path(a.split("=", 1)[1])
+        elif a.startswith("--registry="):
+            registry_path = a.split("=", 1)[1]
     config = h.load_config()
+    registry = h.load_registry(registry_path)
     panels = config.get("panels", {})
     behaviours, specs, tags = (sys.argv[1].split(","), sys.argv[2].split(","), sys.argv[3].split(","))
     tags = [m for t in tags for m in (panels.get(t) or [t])]
@@ -46,7 +52,7 @@ def main():
     h.RUNLOG = RUNLOG                      # resume must read the SAME file we append to
     done = h.done_keys(rubric)
     for behaviour in behaviours:
-        qblock = h.compose_query(behaviour, "v3")
+        qblock = h.compose_query(behaviour, "v3", registry)
         for spec in specs:
             ps = h.passages(spec)
             body = "\n".join(f"[{i+1}] (\u00a7 {sec}) {t}" for i, (_, sec, t) in enumerate(ps))

@@ -255,14 +255,53 @@ def passages(spec):
     return out
 
 
-def load_query(behaviour):
-    b = json.loads((HERE / "behaviours.json").read_text())
+DEFAULT_REGISTRY_PATH = HERE / "behaviours.json"
+
+
+def _panel_shape(slug, entry):
+    """One registry entry in PANEL shape (label/title/query/boundary/...).
+
+    Judging-shape entries pass through untouched. DISPLAY-shape entries
+    (data/behaviours.json: name/set/numeric_id/group/definition/facets) are
+    adapted -- name->title, definition->query, facets->clarifications, and no
+    boundary, which renders as FIELD_NONE, the value the v3 rubric documents as
+    "the user left it blank". That lets a fork register a behaviour ONCE, in the
+    schema'd display shape, and hand the same file to whole_doc.py and
+    build_site_data.py. Adaptation is per-entry, so a hybrid file works too."""
+    if "query" in entry:
+        return entry
+    if not entry.get("definition"):
+        sys.exit(f"behaviour {slug!r} carries no 'query' and no non-empty "
+                 "'definition' -- a judge prompt needs the behaviour's definition text")
+    return {"label": entry.get("name", slug),
+            "title": entry.get("name", slug),
+            "query": entry["definition"],
+            "clarifications": " ".join(entry.get("facets") or []) or None}
+
+
+def load_registry(path=None):
+    """{slug: panel-shape entry} from a behaviour registry, EITHER shape (see
+    _panel_shape). Default: the panel's own behaviours.json. Non-dict values
+    (file-level notes) are dropped, matching run_rollout.py's filter."""
+    raw = json.loads(Path(path or DEFAULT_REGISTRY_PATH).read_text())
+    return {slug: _panel_shape(slug, e) for slug, e in raw.items() if isinstance(e, dict)}
+
+
+def load_entry(behaviour, registry=None):
+    """The validated registry entry. `registry` injects an already-parsed dict
+    (load_registry) so a caller resolves the file ONCE per run."""
+    b = load_registry() if registry is None else registry
     if behaviour not in b:
-        sys.exit(f"unknown behaviour {behaviour!r} -- add it to behaviours.json (from behaviours-for-adria)")
-    return b[behaviour]["query"]
+        sys.exit(f"unknown behaviour {behaviour!r} -- add it to the behaviour registry "
+                 f"({DEFAULT_REGISTRY_PATH.name}), or pass --registry=<your behaviours.json>")
+    return b[behaviour]
 
 
-def compose_query(behaviour, rubric):
+def load_query(behaviour, registry=None):
+    return load_entry(behaviour, registry)["query"]
+
+
+def compose_query(behaviour, rubric, registry=None):
     """The behaviour block of the user message -- the variable slot the tool user fills.
 
     v3 contract (what we ask the user for, via a form): title and definition required,
@@ -271,8 +310,8 @@ def compose_query(behaviour, rubric):
     to label) / query (query_v2 override) / clarifications / boundary.
     v1 and v2 render byte-identically to the pre-refactor paths (frozen).
     """
-    query = load_query(behaviour)   # also validates the behaviour key
-    beh = json.loads((HERE / "behaviours.json").read_text())[behaviour]
+    beh = load_entry(behaviour, registry)   # also validates the behaviour key
+    query = beh["query"]
     if rubric == "v1":
         return f"Behaviour:\n{query}"
     if rubric == "v2":

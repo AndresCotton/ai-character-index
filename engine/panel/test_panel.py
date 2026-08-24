@@ -1029,6 +1029,38 @@ class TestMainSmoke(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("unknown panel", r.stderr + r.stdout)
 
+    def test_whole_doc_registry_flag_accepts_a_display_shape_registry(self):
+        # The fork seam. A user behaviour lives in data/behaviours.json shape
+        # (name/set/numeric_id/group/definition/facets). Judging reads a DIFFERENT
+        # file in a DIFFERENT shape (engine/panel/behaviours.json:
+        # label/title/query/boundary), so before --registry= a fork had to register
+        # the same behaviour twice, the second time in a TRACKED file.
+        #
+        # Arg-parse-level, like the panel-expansion test above: compose_query runs at
+        # whole_doc.py:49, seventeen lines before client_for at :60 and the API call
+        # at :66, so registry resolution is provable without a key. Under
+        # hermetic_env() the key check is unreachable-by-construction, so this cannot
+        # spend. Reaching "for provider" means the prompt composed.
+        reg = Path(tempfile.mkdtemp()) / "my-behaviours.json"
+        reg.write_text(json.dumps({"acme-transparency": {
+            "name": "Acme transparency", "set": "user", "numeric_id": 1,
+            "group": None, "definition": "The provider must disclose compute usage.",
+            "facets": []}}), encoding="utf-8")
+        self.addCleanup(lambda: shutil.rmtree(reg.parent, ignore_errors=True))
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            runlog = f.name
+        self.addCleanup(lambda: Path(runlog).unlink(missing_ok=True))
+        r = subprocess.run([sys.executable, str(HERE / "whole_doc.py"),
+                            "acme-transparency", "constitution", "haiku",
+                            f"--registry={reg}", f"--runlog={runlog}"],
+                           capture_output=True, text=True, env=hermetic_env(),
+                           timeout=120)
+        blob = r.stdout + r.stderr
+        self.assertNotIn("unknown behaviour", blob)   # the papercut
+        self.assertNotIn("Traceback", blob)
+        self.assertIn("for provider", blob)           # reached client_for; prompt composed
+        self.assertNotEqual(r.returncode, 0)
+
     def test_whole_doc_panel_name_expands_to_member_models(self):
         # whole_doc.py expands a panel NAME into its member tags before judging. A full
         # run needs API keys, so this is an arg-parse-level assertion: with every key
