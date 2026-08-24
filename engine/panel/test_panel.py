@@ -1058,6 +1058,29 @@ class TestMainSmoke(unittest.TestCase):
             h.compose_query(blank[0], "v3", registry)
         self.assertIn(blank[0], str(cm.exception))
 
+    def test_build_site_data_rejects_an_unknown_flag_without_building(self):
+        # --help (or any typo) was silently ignored and a FULL BUILD ran, writing a
+        # timestamped payload and overwriting manifest.json. Asking for help must
+        # not mutate the repo.
+        before = sorted(p.name for p in
+                        (HERE.parent.parent / "site" / "llm-panel-review" / "data").iterdir())
+        r = subprocess.run([sys.executable, str(HERE / "build_site_data.py"), "--help"],
+                           capture_output=True, text=True, timeout=120)
+        after = sorted(p.name for p in
+                       (HERE.parent.parent / "site" / "llm-panel-review" / "data").iterdir())
+        self.assertNotEqual(r.returncode, 0)
+        self.assertEqual(before, after, "--help wrote files")
+        self.assertNotIn("Traceback", r.stdout + r.stderr)
+        self.assertIn("--runlog=", r.stdout + r.stderr)   # names the real flags
+
+    def test_whole_doc_help_prints_usage_not_a_traceback(self):
+        r = subprocess.run([sys.executable, str(HERE / "whole_doc.py"), "--help"],
+                           capture_output=True, text=True, env=hermetic_env(), timeout=120)
+        blob = r.stdout + r.stderr
+        self.assertNotIn("Traceback", blob)
+        self.assertIn("whole_doc.py", blob)
+        self.assertIn("--registry=", blob)
+
     def test_bare_tag_is_accepted_as_a_one_seat_panel(self):
         # Step 5 of the fork pathway needed a single-judge panel, and --panel=haiku
         # was a KeyError -- so the docs told users to add "solo": ["haiku"] to

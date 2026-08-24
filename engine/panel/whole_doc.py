@@ -45,7 +45,11 @@ def main():
     config = h.load_config()
     registry = h.load_registry(registry_path)
     panels = config.get("panels", {})
-    behaviours, specs, tags = (sys.argv[1].split(","), sys.argv[2].split(","), sys.argv[3].split(","))
+    positional = [a for a in sys.argv[1:] if not a.startswith("--")]
+    if len(positional) < 3 or "--help" in sys.argv or "-h" in sys.argv:
+        sys.exit(__doc__.strip())
+    behaviours, specs, tags = (positional[0].split(","), positional[1].split(","),
+                               positional[2].split(","))
     tags = [m for t in tags for m in (panels.get(t) or [t])]
     sparse = "--sparse" in sys.argv
     rubric = "v3s" if sparse else "v3w"

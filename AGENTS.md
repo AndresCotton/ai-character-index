@@ -27,11 +27,12 @@ use other conventions can read the same files directly.
 
 Everything stays local — nothing pushes back.
 
-1. Register a user spec: create `specs/user/specs.json` (gitignored) pointing at
-   your spec markdown; optional `title`/`sourceUrl` for display sit *inside each
-   version*, beside `path`/`default` -- neither doc below shows them, so copy the
-   nesting from the worked manifest in `engine/stage_user_demo.py`. See
-   `engine/README.md` ("User specs") and `specs/CITATION.md`.
+1. Register a user spec: put your spec markdown in `specs/user/` (gitignored, so
+   it stays local) and create `specs/user/specs.json` pointing at it. Optional
+   `title`/`sourceUrl` for display sit *inside each version*, beside
+   `path`/`default` -- neither doc below shows them, so copy the nesting from the
+   worked manifest in `engine/stage_user_demo.py`. See `engine/README.md`
+   ("User specs") and `specs/CITATION.md`.
 2. Reader payload -- **run this from the repo root**:
    `python3 engine/build-spec-reader-data.py --user-manifest=specs/user/specs.json`
    The manifest path is resolved against your *current directory*, not the repo

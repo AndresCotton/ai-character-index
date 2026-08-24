@@ -315,6 +315,11 @@ def main(argv=None):
         elif a.startswith("--out="):            # alternate FILENAME in site data dir (iteration builds)
             out_name = a.split("=", 1)[1]
             check_out_name(out_name)            # loud error before any build work
+        else:
+            # Unknown args were ignored, so `--help` ran a full build and wrote a
+            # payload + manifest. Asking for help must not mutate the repo.
+            sys.exit(f"unknown argument {a!r} -- valid: --runlog= --rubric= --panel= "
+                     "--behaviours= --registry= --run-date= --out=")
     panel = resolve_panel(config, DISPLAY["panel"])
     registry = json.loads(registry_path.read_text())
     votes = collections.defaultdict(dict)
