@@ -39,8 +39,8 @@ BEHAVIOURS = [
         "slug": "no-sycophancy",
         "name": "No sycophancy",
         "definition": (
-            "The model should not shift its factual claims or assessments "
-            "to please the user."
+            "The model should not shift its factual claims or assessments to "
+            "please the user."
         ),
         "category": "Honesty & epistemics",
     },
@@ -82,14 +82,23 @@ def main() -> None:
     for behaviour in BEHAVIOURS:
         per_document = {}
         for document in DOCUMENTS:
-            record = next(
+            matches = [
                 item
                 for item in records
                 if item["behaviour_id"] == behaviour["id"]
                 and item["lab_id"] == document["id"]
-            )
+            ]
+            if len(matches) != 1:
+                # Same contract as engine/build-reader-test-data.py: a missing
+                # record used to surface as a bare StopIteration traceback and
+                # a duplicate silently took the first match -- both now fail
+                # loudly, naming the behaviour and document.
+                raise SystemExit(
+                    f"behaviour {behaviour['id']} ({behaviour['slug']}): expected exactly one "
+                    f"{document['id']} coverage record, found {len(matches)}"
+                )
             per_document[document["id"]] = coverage_payload(
-                record, document["id"], behaviour["slug"]
+                matches[0], document["id"], behaviour["slug"]
             )
         behaviours.append(behaviour | {"coverage": per_document})
 

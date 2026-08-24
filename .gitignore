@@ -21,3 +21,6 @@ ckpts/
 # Private -- not for the public repo
 research/sources/Founding an AI Charter organisation.pdf
 outreach/
+
+# Builder smoke-test scratch (engine/test_build_reader_test_data.py)
+.builder-repro-scratch/

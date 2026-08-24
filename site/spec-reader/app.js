@@ -4,7 +4,7 @@ const GROUPS = [
     behaviours: [
       [1, "No sycophancy"],
       [2, "Calibration"],
-      [3, "Honesty about one’s own actions"],
+      [3, "Honesty about one's own actions"],
     ],
   },
   {
