@@ -734,6 +734,26 @@ class TestAppJSResolution(unittest.TestCase):
                          "app.js payloadName drifted from build_site_data._payload_name: "
                          + ", ".join(f"{n!r}: js={g} py={p}"
                                      for n, g, p in zip(names, got, expected) if g != p))
+
+
+class TestAppJSTiers(unittest.TestCase):
+    """The tier-band cuts in app.js (tierBand) pin the display contract the
+    decoupling's cheap-run pathway depends on: multi-judge cells keep the
+    consensus floor, and a single-judge cell renders the sole judge's verdict
+    instead of hiding it under that floor. Skips (not fails) without `node`."""
+
+    HARNESS = HERE / "test_appjs_tiers.js"
+
+    def setUp(self):
+        if shutil.which("node") is None:
+            self.skipTest("node is not available")
+
+    def test_tier_bands_in_appjs(self):
+        out = subprocess.run(["node", str(self.HARNESS)],
+                             capture_output=True, text=True, timeout=120)
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+
+
 class TestImportSideEffects(unittest.TestCase):
     """Config must be lazy: importing any panel module in a FRESH interpreter reads
     no PANEL config/data file (guards the monkeypatch-to-inject debt the decoupling
