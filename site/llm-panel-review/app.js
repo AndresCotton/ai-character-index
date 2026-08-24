@@ -1922,6 +1922,15 @@ function applyPanelThreshold(payload) {
  * maxVerdict is 2 on the classic rubric and 3 once any judge awards a "defining", so
  * one payload can carry 6-scale and 9-scale cells at once (behaviours-v5.json does).
  * These take the largest, which is what a score cut written into a URL meant. */
+/* Bands a legacy ?threshold=<score> link should select. Named and standalone so
+ * engine/panel/test_appjs_tiers.js can extract it verbatim -- a test that copies
+ * this arithmetic instead would keep passing after the real code regressed. */
+function legacyThresholdBands(t, judges, scale) {
+  const defCut = judges > 0 ? Math.min(2 * judges + 1, scale || 2 * judges + 1) : 7;
+  const coreCut = judges > 0 ? 2 * judges : 6;
+  return t >= defCut ? ["defining"] : t >= coreCut ? ["defining", "core"] : TIERS;
+}
+
 function judgesPerCell() {
   const counts = (state.rawBehaviours || []).flatMap(b =>
     Object.values(b.coverage || {}).flatMap(cov =>
@@ -1952,12 +1961,8 @@ function initialBands() {
     // count and the cell scale -- 7/6 were those values for a 3-judge 3-point cell,
     // frozen. A 4-point cell (v5+) tops out at 9 and a 2-judge cell at 4, so the same
     // ?threshold= meant different bands on different data. Derive them instead.
-    const t = Number(initialParams.get("threshold"));
-    const j = judgesPerCell();
-    const scale = maxCellScore();
-    const defCut = j > 0 ? Math.min(2 * j + 1, scale || 2 * j + 1) : 7;
-    const coreCut = j > 0 ? 2 * j : 6;
-    return new Set(t >= defCut ? ["defining"] : t >= coreCut ? ["defining", "core"] : TIERS);
+    return new Set(legacyThresholdBands(
+      Number(initialParams.get("threshold")), judgesPerCell(), maxCellScore()));
   }
   return new Set(DEFAULT_BANDS);
 }

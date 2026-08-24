@@ -63,21 +63,20 @@ checkScale([cell([{ a: 2, b: 2 }])], 2, 4, "2-judge classic cell is 4-scale");
 checkScale([cell([{ a: 2, b: 2, c: 2 }]), cell([{ a: 3, b: 3, c: 3 }])],
            3, 9, "mixed payload takes the largest scale");
 
-/* The legacy ?threshold= cuts, which were frozen at the 3-judge 3-point values. */
-function legacyBands(t, judges, scale) {
-  const defCut = judges > 0 ? Math.min(2 * judges + 1, scale || 2 * judges + 1) : 7;
-  const coreCut = judges > 0 ? 2 * judges : 6;
-  return t >= defCut ? "defining" : t >= coreCut ? "defining+core" : "all";
-}
+/* The legacy ?threshold= cuts. Extracted from app.js, NOT reimplemented here: an
+ * earlier version of this block copied the arithmetic and kept passing after the
+ * real code was regressed back to the frozen constants. */
+eval(extractFn("function legacyThresholdBands(t, judges, scale) {"));
+
 function checkLegacy(t, judges, scale, expected, label) {
-  const seen = legacyBands(t, judges, scale);
+  const seen = legacyThresholdBands(t, judges, scale).join("+");
   const ok = seen === expected;
   if (!ok) failures += 1;
-  console.log(`${ok ? "PASS" : "FAIL"}  ${label}: ?threshold=${t} at j=${judges}/scale=${scale} -> ${seen}`);
+  console.log(`${ok ? "PASS" : "FAIL"}  ${label}: ?threshold=${t} at j=${judges}/scale=${scale} -> ${seen} (expected ${expected})`);
 }
 checkLegacy(7, 3, 9, "defining", "9-scale: 7 is the defining cut");
 checkLegacy(6, 3, 9, "defining+core", "9-scale: 6 is the core cut");
-checkLegacy(6, 3, 6, "defining", "6-scale: 6 IS defining (the old code said defining+core)");
+checkLegacy(6, 3, 6, "defining", "6-scale: 6 IS defining (the frozen constants said defining+core)");
 checkLegacy(5, 2, 4, "defining", "2-judge 4-scale: 5 clamps to the defining cut");
 checkLegacy(4, 2, 4, "defining", "2-judge: defCut clamps to maxCell=4");
 
