@@ -12,7 +12,7 @@ signed gate records in `research/sweeps/02-calibration/` and
 
 ## How to run it
 
-Open Claude Code in this repo and say:
+Open this repo in an agent that reads these skill files (Claude Code, Qwen Code, or any agent you point at `.claude/skills/` — the files are plain markdown and agent-neutral; see root `AGENTS.md`) and say:
 
 ```
 do the spec coverage for behaviour N
