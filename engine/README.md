@@ -45,7 +45,7 @@ Known decoupling debt: the publisher hardcodes its lab list (`LABS`: anthropic a
 
 ## panel/ (works today)
 
-The LLM panel judging pipeline: whole-spec judging calls, verdict parsing, the rollout driver, and the `site/llm-panel-review/` payload builder. See [`panel/README.md`](panel/README.md) for mechanics and reproduction; `python3 engine/panel/test_panel.py` runs its 27 offline unit tests.
+The LLM panel judging pipeline: whole-spec judging calls, verdict parsing, the rollout driver, and the `site/llm-panel-review/` payload builder. See [`panel/README.md`](panel/README.md) for mechanics and reproduction; `python3 engine/panel/test_panel.py` runs its 72 offline tests (pure logic: no network, no keys, sub-second). The canonical runlog that produced the shipped panel payload is committed data (`engine/panel/runlog-v3.jsonl`, documented in [`panel/runlog-v3.md`](panel/runlog-v3.md)); `python3 engine/panel/verify_panel_provenance.py` proves the shipped payload rebuilds from it byte-identically (one documented allowance: the builder's build-date stamp).
 
 ## generate_behaviour_constants.py (works today)
 

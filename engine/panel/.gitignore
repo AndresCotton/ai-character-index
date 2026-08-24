@@ -2,6 +2,9 @@ __pycache__/
 *.pyc
 .env
 runlog*.jsonl
+# EXCEPT the canonical shipped runlog -- committed data, verified by
+# verify_panel_provenance.py (see runlog-v3.md)
+!runlog-v3.jsonl
 metrics*.jsonl
 batches.json
 batch-input-*.jsonl

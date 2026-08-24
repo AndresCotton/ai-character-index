@@ -8,6 +8,8 @@ import contextlib
 import importlib.util
 import io
 import json
+import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -26,6 +28,7 @@ h = load("harness")
 rr = load("run_rollout")
 wd = load("whole_doc")
 bs = load("build_site_data")
+sr = load("select_run")
 
 
 class TestParseVerdicts(unittest.TestCase):
@@ -229,6 +232,484 @@ class TestCitationQuote(unittest.TestCase):
         q, ex = bs.citation_quote("An ordinary paragraph.")
         self.assertEqual(q, "An ordinary paragraph.")
         self.assertFalse(ex)
+
+
+class TestRunTimestamp(unittest.TestCase):
+    """Run filenames must be URL-safe and sort lexicographically == chronologically."""
+
+    def test_shape_is_hyphen_separated(self):
+        from datetime import datetime
+        self.assertEqual(bs.run_timestamp(datetime(2026, 8, 18, 9, 5, 3)),
+                         "2026-08-18T09-05-03")
+
+    def test_lexicographic_order_is_chronological_across_year_boundary(self):
+        from datetime import datetime, timedelta
+        stamps = [bs.run_timestamp(datetime(2026, 12, 31, 23, 59, 58) + timedelta(seconds=i))
+                  for i in range(5)]
+        self.assertEqual(stamps, sorted(stamps))
+        self.assertNotIn(":", "".join(stamps))   # colons would break URL params
+
+    def test_same_second_suffix_still_sorts_chronologically(self):
+        from datetime import datetime, timedelta
+        dt = datetime(2026, 8, 18, 17, 26, 20)
+        self.assertEqual(bs.run_timestamp(dt, 2), "2026-08-18T17-26-20-02")
+        stamps = [bs.run_timestamp(dt), bs.run_timestamp(dt, 2), bs.run_timestamp(dt, 3),
+                  bs.run_timestamp(dt + timedelta(seconds=1))]
+        self.assertEqual(stamps, sorted(stamps))
+
+
+class TestNextRunName(unittest.TestCase):
+    """A same-second rebuild must never overwrite a run -- it takes a -02/-03/... suffix (zero-padded)."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp(prefix="panel-names-"))
+        self.addCleanup(lambda: shutil.rmtree(self.dir, ignore_errors=True))
+        from datetime import datetime
+        self.dt = datetime(2026, 8, 18, 17, 26, 20)
+
+    def test_bare_name_when_the_second_is_free(self):
+        self.assertEqual(bs.next_run_name(self.dir, self.dt),
+                         ("behaviours-2026-08-18T17-26-20.json", "2026-08-18T17-26-20"))
+
+    def test_sequence_suffix_until_unique(self):
+        (self.dir / "behaviours-2026-08-18T17-26-20.json").write_text("{}")
+        self.assertEqual(bs.next_run_name(self.dir, self.dt),
+                         ("behaviours-2026-08-18T17-26-20-02.json", "2026-08-18T17-26-20-02"))
+        (self.dir / "behaviours-2026-08-18T17-26-20-02.json").write_text("{}")
+        self.assertEqual(bs.next_run_name(self.dir, self.dt),
+                         ("behaviours-2026-08-18T17-26-20-03.json", "2026-08-18T17-26-20-03"))
+
+
+class TestManifestUpdate(unittest.TestCase):
+    """The manifest is the run ledger: newest first, one entry per filename."""
+
+    def entry(self, ts, **extra):
+        return {"filename": f"behaviours-{ts}.json", "timestamp": ts, **extra}
+
+    def test_runs_listed_newest_first_regardless_of_insert_order(self):
+        m = {"latest": None, "runs": []}
+        m = bs.update_manifest(m, self.entry("2026-08-18T10-00-00"))
+        m = bs.update_manifest(m, self.entry("2026-08-18T12-00-00"))
+        m = bs.update_manifest(m, self.entry("2026-08-18T11-00-00"))
+        self.assertEqual([r["timestamp"] for r in m["runs"]],
+                         ["2026-08-18T12-00-00", "2026-08-18T11-00-00",
+                          "2026-08-18T10-00-00"])
+        self.assertEqual(m["latest"], "behaviours-2026-08-18T12-00-00.json")
+
+    def test_same_filename_replaces_not_duplicates(self):
+        m = bs.update_manifest({"latest": None, "runs": []},
+                               self.entry("2026-08-18T10-00-00", citations=3))
+        m = bs.update_manifest(m, self.entry("2026-08-18T10-00-00", citations=7))
+        self.assertEqual(len(m["runs"]), 1)
+        self.assertEqual(m["runs"][0]["citations"], 7)
+
+    def test_late_older_insert_does_not_steal_latest(self):
+        m = bs.update_manifest({"latest": None, "runs": []},
+                               self.entry("2026-08-18T12-00-00"))
+        m = bs.update_manifest(m, self.entry("2026-08-18T09-00-00"))
+        self.assertEqual(m["latest"], "behaviours-2026-08-18T12-00-00.json")
+
+
+class TestReadManifest(unittest.TestCase):
+    """A missing, unreadable, or non-dict manifest is always the empty manifest --
+    a corrupt ledger must degrade the builder/CLI exactly the way the page's
+    fetch/parse fallthrough degrades the page, never crash on .get()."""
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp(prefix="panel-manifest-"))
+        self.addCleanup(lambda: shutil.rmtree(self.dir, ignore_errors=True))
+        self.path = self.dir / "manifest.json"
+
+    def test_missing_manifest_is_the_empty_default(self):
+        self.assertEqual(bs.read_manifest(self.path), {"latest": None, "runs": []})
+
+    def test_non_dict_manifest_json_is_the_empty_default(self):
+        # JSON null/array/string/number all parse fine but are not a ledger
+        for odd in ("null", "[]", '["behaviours.json"]', '"manifest.json"', "42"):
+            self.path.write_text(odd)
+            self.assertEqual(bs.read_manifest(self.path), {"latest": None, "runs": []},
+                             f"manifest content {odd!r}")
+
+    def test_dict_manifest_passes_through_untouched(self):
+        doc = {"latest": "behaviours-x.json", "runs": [{"filename": "behaviours-x.json"}]}
+        self.path.write_text(json.dumps(doc))
+        self.assertEqual(bs.read_manifest(self.path), doc)
+
+    def test_corrupt_runs_shape_degrades_to_a_list_of_dicts(self):
+        # A half-written or hand-edited ledger must degrade, never traceback the
+        # builder (which runs AFTER the run file is written) or select_run.
+        for odd_runs in (None, "behaviours-x.json", 42, {"filename": "x"}):
+            self.path.write_text(json.dumps({"latest": "x.json", "runs": odd_runs}))
+            got = bs.read_manifest(self.path)
+            self.assertEqual(got["runs"], [], f"runs={odd_runs!r}")
+            self.assertEqual(got["latest"], "x.json")
+        # Non-dict entries inside an otherwise-valid list are filtered out.
+        self.path.write_text(json.dumps(
+            {"latest": "a.json", "runs": ["junk", 3, None, {"filename": "a.json"}]}))
+        self.assertEqual(bs.read_manifest(self.path)["runs"], [{"filename": "a.json"}])
+
+
+class ResolveFixture(unittest.TestCase):
+    """Shared temp-dir fixture: shipped fallback + two timestamped runs + a manifest."""
+
+    OLD = "behaviours-2026-08-18T10-00-00.json"
+    NEW = "behaviours-2026-08-18T12-00-00.json"
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp(prefix="panel-data-"))
+        self.addCleanup(lambda: shutil.rmtree(self.dir, ignore_errors=True))
+        self.write("behaviours.json", {"behaviours": []})
+        self.write(self.OLD, {"behaviours": ["a"]})
+        self.write(self.NEW, {"behaviours": ["a", "b"]})
+        self.manifest = {"latest": self.NEW, "runs": [
+            {"filename": self.NEW, "timestamp": "2026-08-18T12-00-00"},
+            {"filename": self.OLD, "timestamp": "2026-08-18T10-00-00"}]}
+        self.write("manifest.json", self.manifest)
+
+    def write(self, name, obj):
+        (self.dir / name).write_text(json.dumps(obj))
+
+
+class TestResolveDataName(ResolveFixture):
+    """The fallback chain app.js implements: pin -> manifest latest -> shipped."""
+
+    def test_pin_wins_over_latest(self):
+        self.assertEqual(bs.resolve_data_name(self.dir, pin=self.OLD, manifest=self.manifest),
+                         (self.OLD, "pin"))
+
+    def test_pin_accepts_name_without_json_suffix(self):
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, pin=self.OLD[:-5], manifest=self.manifest),
+            (self.OLD, "pin"))
+
+    def test_missing_pin_falls_through_to_latest(self):
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, pin="behaviours-nope", manifest=self.manifest),
+            (self.NEW, "latest"))
+
+    def test_pin_with_path_characters_is_ignored(self):
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, pin="../escape", manifest=self.manifest),
+            (self.NEW, "latest"))
+
+    def test_pin_of_manifest_is_rejected_not_loaded(self):
+        # ?data=manifest.json (with or without the suffix) must never resolve the run
+        # ledger as a payload -- it falls through the pin tier to the next source.
+        for bad in ("manifest", "manifest.json"):
+            self.assertEqual(
+                bs.resolve_data_name(self.dir, pin=bad, manifest=self.manifest),
+                (self.NEW, "latest"), f"pin={bad!r}")
+
+    def test_manifest_latest_pointing_at_itself_falls_back(self):
+        # a self-referential manifest ("latest": "manifest.json") must not load the ledger
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, manifest={"latest": "manifest.json"}),
+            ("behaviours.json", "fallback"))
+
+    def test_pin_target_must_be_a_behaviours_payload(self):
+        # pin/latest targets are behaviours*.json payloads only -- a same-dir file with
+        # another name is refused even when it exists and parses
+        (self.dir / "other.json").write_text("{}")
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, pin="other", manifest=self.manifest),
+            (self.NEW, "latest"))
+
+    def test_unparseable_pin_falls_through(self):
+        (self.dir / "behaviours-broken.json").write_text("{not json")
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, pin="behaviours-broken", manifest=self.manifest),
+            (self.NEW, "latest"))
+
+    def test_no_manifest_falls_back_to_shipped(self):
+        self.assertEqual(bs.resolve_data_name(self.dir, manifest=None),
+                         ("behaviours.json", "fallback"))
+
+    def test_manifest_latest_missing_falls_back_to_shipped(self):
+        self.assertEqual(
+            bs.resolve_data_name(self.dir, manifest={"latest": "behaviours-gone.json"}),
+            ("behaviours.json", "fallback"))
+
+    def test_non_string_latest_falls_back_to_shipped(self):
+        # mirrors app.js's `typeof latest === "string"` guard: a malformed manifest
+        # must reach the shipped data, not crash the regex match
+        for bad in (123, ["behaviours.json"], {"latest": "x"}, True):
+            self.assertEqual(bs.resolve_data_name(self.dir, manifest={"latest": bad}),
+                             ("behaviours.json", "fallback"), f"latest={bad!r}")
+
+    def test_empty_directory_resolves_nothing(self):
+        empty = Path(tempfile.mkdtemp(prefix="panel-empty-"))
+        self.addCleanup(lambda: shutil.rmtree(empty, ignore_errors=True))
+        self.assertEqual(bs.resolve_data_name(empty), (None, None))
+
+
+class TestSelectRun(ResolveFixture):
+    """The CLI pin path resolves/verifies exactly what the URL param would load."""
+
+    def run_cli(self, *args):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = sr.main(["--data-dir", str(self.dir), *args])
+        return code, out.getvalue(), err.getvalue()
+
+    def test_pin_resolves_and_reports_the_url_param(self):
+        code, out, _ = self.run_cli("--pin", self.OLD[:-5])
+        self.assertEqual(code, 0)
+        self.assertIn(self.OLD, out)
+        self.assertIn(f"?data={self.OLD[:-5]}", out)
+
+    def test_pin_equals_form_and_json_suffix_both_work(self):
+        self.assertEqual(self.run_cli(f"--pin={self.OLD}")[0], 0)
+        self.assertEqual(self.run_cli("--pin", self.OLD)[0], 0)
+
+    def test_unknown_pin_fails_and_names_what_the_page_would_load(self):
+        code, _, err = self.run_cli("--pin", "behaviours-nope")
+        self.assertEqual(code, 1)
+        self.assertIn(self.NEW, err)   # the page would fall through to the latest run
+
+    def test_latest_resolves_the_manifest_newest(self):
+        code, out, _ = self.run_cli("--latest")
+        self.assertEqual(code, 0)
+        self.assertIn(self.NEW, out)
+
+    def test_latest_without_manifest_fails(self):
+        (self.dir / "manifest.json").unlink()
+        code, _, err = self.run_cli("--latest")
+        self.assertEqual(code, 1)
+        self.assertIn("no manifest", err)
+
+    def test_default_reports_what_the_page_loads(self):
+        code, out, _ = self.run_cli()
+        self.assertEqual(code, 0)
+        self.assertIn(self.NEW, out)
+        self.assertIn("(source: latest)", out)
+
+    def test_default_on_fresh_clone_reports_fallback(self):
+        (self.dir / "manifest.json").unlink()
+        code, out, _ = self.run_cli()
+        self.assertEqual(code, 0)
+        self.assertIn("behaviours.json (source: fallback)", out)
+
+
+class TestBuildMain(unittest.TestCase):
+    """Integration: build_site_data.main() end-to-end on a synthetic runlog -- the
+    timestamped run file + manifest row, same-second collisions, and the --out= side
+    road (explicit file, manifest untouched, unsafe names rejected)."""
+
+    TS = "2026-08-18T17-26-20"
+    LOC = "constitution@2026-01-20 > Overview > Claude and the mission of Anthropic > ¶1"
+
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp(prefix="panel-build-"))
+        self.addCleanup(lambda: shutil.rmtree(self.dir, ignore_errors=True))
+        self._data_dir, self._datetime = bs.DATA_DIR, bs.datetime
+        bs.DATA_DIR = self.dir
+        self.addCleanup(lambda: setattr(bs, "DATA_DIR", self._data_dir))
+        # three frontier judges on one helpfulness passage: score 5, 3 votes -> kept
+        rows = [{"behaviour": "helpfulness", "spec": "constitution", "model": m,
+                 "locator": self.LOC, "rubric": "v3w", "parsed": True, "verdict": v}
+                for m, v in (("sol", 2), ("fable", 2), ("kimi", 1))]
+        self.runlog = self.dir / "synth-runlog.jsonl"
+        self.runlog.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+
+    def freeze(self):
+        from datetime import datetime
+        fixed = datetime(2026, 8, 18, 17, 26, 20)   # == self.TS
+        bs.datetime = type("FrozenDT", (), {"now": staticmethod(lambda: fixed)})
+        self.addCleanup(lambda: setattr(bs, "datetime", self._datetime))
+
+    def build(self, *extra):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            bs.main([f"--runlog={self.runlog}", *extra])
+        return out.getvalue()
+
+    def test_timestamped_build_writes_run_file_and_manifest_row(self):
+        self.freeze()
+        self.build()
+        name = f"behaviours-{self.TS}.json"
+        payload = json.loads((self.dir / name).read_text())
+        n = sum(len(c["passages"]) for b in payload["behaviours"]
+                for c in b["coverage"].values())
+        self.assertEqual(n, 1)
+        manifest = json.loads((self.dir / "manifest.json").read_text())
+        self.assertEqual(manifest["latest"], name)
+        self.assertEqual(len(manifest["runs"]), 1)
+        row = manifest["runs"][0]
+        self.assertEqual(row["filename"], name)
+        self.assertEqual(row["timestamp"], self.TS)
+        self.assertEqual(row["rubric"], "v3w")
+        self.assertEqual(row["panel"], "frontier")
+        self.assertEqual(row["judges"], ["fable", "kimi", "sol"])
+        self.assertEqual(row["runlog"], self.runlog.name)
+        self.assertEqual(row["citations"], 1)
+
+    def test_same_second_double_build_keeps_both_runs(self):
+        self.freeze()
+        self.build()
+        self.build()
+        first, second = f"behaviours-{self.TS}.json", f"behaviours-{self.TS}-02.json"
+        self.assertTrue((self.dir / first).exists())
+        self.assertTrue((self.dir / second).exists())
+        manifest = json.loads((self.dir / "manifest.json").read_text())
+        self.assertEqual([r["filename"] for r in manifest["runs"]], [second, first])
+        self.assertEqual(manifest["latest"], second)
+
+    def test_out_writes_named_file_and_leaves_manifest_alone(self):
+        self.build("--out=explicit.json")
+        json.loads((self.dir / "explicit.json").read_text())
+        self.assertFalse((self.dir / "manifest.json").exists())
+        self.assertFalse(any(self.dir.glob("behaviours-*.json")))
+
+    def test_out_rejects_unsafe_names(self):
+        for bad in ("../evil.json", "sub/dir.json", "..", "bad name!.json"):
+            with self.assertRaises(SystemExit) as cm:
+                self.build(f"--out={bad}")
+            self.assertIn(repr(bad), str(cm.exception.code))
+        # nothing was written anywhere: the data dir still holds only the runlog
+        self.assertEqual([p.name for p in self.dir.iterdir()], ["synth-runlog.jsonl"])
+        self.assertFalse((self.dir.parent / "evil.json").exists())
+
+    def test_out_rejects_manifest_name(self):
+        # a build must never clobber the manifest/ledger, even via --out=
+        with self.assertRaises(SystemExit) as cm:
+            self.build("--out=manifest.json")
+        self.assertIn("manifest.json", str(cm.exception.code))
+        self.assertIn("ledger", str(cm.exception.code))
+        # rejection fires before any build work: runlog still the only file
+        self.assertEqual([p.name for p in self.dir.iterdir()], ["synth-runlog.jsonl"])
+
+    def test_out_rejects_manifest_name_case_insensitively(self):
+        # case-insensitive filesystems (APFS) would let Manifest.JSON clobber
+        # manifest.json too -- the guard must fold case
+        for bad in ("Manifest.JSON", "MANIFEST.JSON"):
+            with self.assertRaises(SystemExit) as cm:
+                self.build(f"--out={bad}")
+            self.assertIn("ledger", str(cm.exception.code), bad)
+        self.assertEqual([p.name for p in self.dir.iterdir()], ["synth-runlog.jsonl"])
+
+    def test_build_recovers_from_non_dict_manifest(self):
+        # a corrupt manifest (parses, but not a dict) must not crash the build --
+        # it degrades to the empty ledger and is rewritten with the new run
+        self.freeze()
+        (self.dir / "manifest.json").write_text("null")
+        self.build()
+        manifest = json.loads((self.dir / "manifest.json").read_text())
+        self.assertEqual(manifest["latest"], f"behaviours-{self.TS}.json")
+        self.assertEqual(len(manifest["runs"]), 1)
+
+
+
+class TestPR32ReviewFixes(unittest.TestCase):
+    """Pins for the PR-level review findings."""
+
+    def test_sequence_suffix_pads_past_nine(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("bsd_under_test",
+            Path(__file__).resolve().parents[0] / "build_site_data.py")
+        bsd = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bsd)
+        from datetime import datetime
+        dt = datetime(2026, 8, 18, 17, 26, 20)
+        names = [bsd.run_timestamp(dt, seq=s) for s in (0, 2, 9, 10, 11)]
+        self.assertEqual(names, [
+            "2026-08-18T17-26-20",
+            "2026-08-18T17-26-20-02",
+            "2026-08-18T17-26-20-09",
+            "2026-08-18T17-26-20-10",
+            "2026-08-18T17-26-20-11",
+        ])
+        # lexical order stays chronological across the padding boundary
+        self.assertEqual(sorted(names), names)
+
+    def test_run_date_tripwire_fails_on_drift(self):
+        import importlib.util, tempfile, json, shutil
+        here = Path(__file__).resolve().parents[0]
+        spec = importlib.util.spec_from_file_location("vpp_under_test",
+            here / "verify_panel_provenance.py")
+        v = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(v)
+        with tempfile.TemporaryDirectory() as tmp:
+            payload = Path(tmp) / "behaviours.json"
+            doc = {"provenance": {"runDate": "2026-08-18"}, "behaviours": []}
+            payload.write_text(json.dumps(doc))
+            import io, contextlib
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = v.verify(runlog=v.DEFAULT_RUNLOG, payload=payload, verbose=True)
+        self.assertEqual(rc, 1)
+        self.assertIn("differs from the", buf.getvalue())
+
+
+class TestSafeNameAscii(unittest.TestCase):
+    """SAFE_NAME must mirror app.js's DATA_NAME exactly: JavaScript's \\w is ASCII
+    [A-Za-z0-9_], while Python's \\w is Unicode by default -- re.ASCII reins it in
+    so a non-ASCII name the page would reject can never pass the Python side."""
+
+    def test_non_ascii_payload_names_rejected(self):
+        for bad in ("behaviours-название.json", "behaviours-ünïcode", "日本語.json"):
+            self.assertFalse(bs._payload_name(bad), bad)
+
+    def test_non_ascii_out_names_rejected(self):
+        for bad in ("behaviours-übersicht.json", "панель.json"):
+            with self.assertRaises(SystemExit):
+                bs.check_out_name(bad)
+
+    def test_ascii_names_still_admitted(self):
+        self.assertTrue(bs.SAFE_NAME.match("behaviours-2026-08-18T10-00-00.json"))
+        self.assertTrue(bs.SAFE_NAME.match("explicit_v2.json"))
+        self.assertTrue(bs._payload_name("behaviours-v4a"))
+
+
+class TestAppJSResolution(unittest.TestCase):
+    """site/llm-panel-review/app.js is the other half of the resolution chain
+    select_run.py / build_site_data.py implement. These guard it without a browser:
+    the three-tier fetch fallthrough drives the REAL app.js loadBehaviours in Node
+    against a stubbed loadJSON, and the name-validation check compares the REAL
+    app.js payloadName() against _payload_name() live. Both skip (not fail) when the
+    `node` binary is absent -- the panel Python suite itself has no JS dependency."""
+
+    APP_JS = HERE.parent.parent / "site" / "llm-panel-review" / "app.js"
+    HARNESS = HERE / "test_appjs_fallthrough.js"
+
+    def setUp(self):
+        if shutil.which("node") is None:
+            self.skipTest("node is not available")
+
+    def test_three_tier_fallthrough_in_appjs(self):
+        # pin -> manifest latest -> shipped default, incl. manifest-exclusion; the
+        # assertions live in the Node harness so they run standalone too.
+        out = subprocess.run(["node", str(self.HARNESS)],
+                             capture_output=True, text=True, timeout=120)
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("three-tier fallthrough: PASS", out.stdout)
+
+    def test_payload_name_parity_python_vs_js(self):
+        names = ["manifest", "manifest.json", "behaviours", "behaviours.json",
+                 "behaviours-2026-08-18T10-00-00.json", "behaviours-v4a",
+                 "other.json", "explicit", "../x", "sub/dir.json", "",
+                 None, 123, ["behaviours.json"], "MANIFEST.JSON",
+                 "behaviours-ünïcode.json", "название.json"]
+        expected = [bs._payload_name(n) for n in names]
+        script = (
+            'const fs=require("fs");'
+            'const lines=fs.readFileSync(process.argv[1],"utf8").split("\\n");'
+            'const start=lines.findIndex(l=>l.startsWith("function payloadName(name)"));'
+            'let end=-1;for(let i=start+1;i<lines.length;i++){if(lines[i].trim()==="}"){end=i;break;}}'
+            'const dn=lines.find(l=>l.startsWith("const DATA_NAME"));'
+            'if(start<0||end<0||!dn){console.error("payloadName/DATA_NAME not found");process.exit(2);}'
+            'const names=JSON.parse(process.argv[2]);'
+            'const code=dn+"\\n"+lines.slice(start,end+1).join("\\n")+'
+            '"+\\nconsole.log(JSON.stringify(names.map(n=>payloadName(n))));";'
+            'eval(code);'
+        )
+        out = subprocess.run(["node", "-e", script, str(self.APP_JS), json.dumps(names)],
+                             capture_output=True, text=True, timeout=60)
+        self.assertEqual(out.returncode, 0, out.stderr)
+        got = json.loads(out.stdout)
+        self.assertEqual(got, expected,
+                         "app.js payloadName drifted from build_site_data._payload_name: "
+                         + ", ".join(f"{n!r}: js={g} py={p}"
+                                     for n, g, p in zip(names, got, expected) if g != p))
 
 
 if __name__ == "__main__":

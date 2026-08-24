@@ -12,7 +12,7 @@ Everything that keeps the index alive: resolves spec citations, runs LLM panel j
 |---|---|
 | `spec-cite/cite.py` | Locator resolver/verifier (`outline`/`show`/`resolve`/`find`). Grammar defined by `specs/CITATION.md`; spec registry hardcoded (`SPECS` dict). Stdlib-only; CLI **and** imported library. No tests. |
 | `spec-watch/pull-latest.sh` | Pulls upstream OpenAI/Anthropic specs into `specs/` via `gh`. Manual today; no version pinning or diff detection. Known issue: the dated upstream HTML release archives exceed the contents API's 1 MB inline limit and are fetched as 0-byte files. |
-| `panel/` | LLM panel pipeline: `harness.py` (library: config, frozen rubrics v1/v2/v3, prompt builders, verdict parsing, resume), `whole_doc.py` (one API call per behaviour×spec×model), `run_rollout.py` (grid driver, dry-run default), `build_site_data.py` (runlog → site payload; parameterized via `--runlog=`/`--rubric=`/`--panel=`/`--behaviours=`/`--out=` for iteration builds), `select_strata.py` (validation sampler), `test_panel.py` (27 offline unit tests), `panel-config.json`, `behaviours.json`. |
+| `panel/` | LLM panel pipeline: `harness.py` (library: config, frozen rubrics v1/v2/v3, prompt builders, verdict parsing, resume), `whole_doc.py` (one API call per behaviour×spec×model), `run_rollout.py` (grid driver, dry-run default), `build_site_data.py` (runlog → site payload; parameterized via `--runlog=`/`--rubric=`/`--panel=`/`--behaviours=`/`--out=` for iteration builds; with no `--out=`, a run writes timestamped `behaviours-<ts>.json` + `data/manifest.json`, latest-by-default), `select_strata.py` (validation sampler), `select_run.py` (pin → manifest-latest → shipped-fallback resolution, same order as the page), `verify_panel_provenance.py` (proves the shipped payload rebuilds byte-identically from the committed runlog), `test_panel.py` (72 offline tests), `test_verify_panel_provenance.py`, `panel-config.json`, `behaviours.json`, `runlog-v3.jsonl` (canonical runlog, documented in `runlog-v3.md`). |
 | `publish-coverage.py` | Parses a stage-4 artifact (`research/sweeps/NN-slug/4-spec-coverage.md`) via regexes and publishes records into `data/coverage.json`, re-verifying every quote through `cite.py resolve` (subprocess). |
 | `build-spec-reader-data.py` | `data/coverage.json` + spec markdown → `site/spec-reader/data/documents.json`. Hardcoded `BEHAVIOURS` list (ids 1–3 only). |
 | `build-reader-test-data.py` | `data/reader-test-coverage.json` → `site/spec-reader-test/data/behaviours.json`. Contains a near-verbatim duplicate of `coverage_payload()` from the script above (identical modulo a `document_id`→`lab_id` parameter rename). |
@@ -22,7 +22,7 @@ Everything that keeps the index alive: resolves spec citations, runs LLM panel j
 ## Relationships
 
 - `cite.py` is the shared foundation: imported by `panel/harness.py` (via a `sys.path` insertion) and invoked as a subprocess by `publish-coverage.py`.
-- The panel chain: `run_rollout.py` drives `whole_doc.py` → `runlog-v3.jsonl` (the shipped runlog is an UNTRACKED FILE in a local working copy of `experiment/panel-judges`, committed to no branch; committing it is an open closeout item) → `build_site_data.py` → `site/llm-panel-review/data/behaviours.json`. The builder also reads `data/reader-test-coverage.json` for behaviour names/slugs.
+- The panel chain: `run_rollout.py` drives `whole_doc.py` → `runlog-v3.jsonl` (the canonical log behind the shipped payload is committed here, documented in `runlog-v3.md`; other runlogs stay uncommitted) → `build_site_data.py` → `site/llm-panel-review/data/behaviours.json`. The builder also reads `data/reader-test-coverage.json` for behaviour names/slugs.
 - The curated chain: sweep stage-4 markdown → `publish-coverage.py` → `data/coverage.json` → `build-spec-reader-data.py` → `site/spec-reader/data/documents.json`.
 - `spec-watch` overwrites `specs/`, which `cite.py` and `build-spec-reader-data.py` consume (the test-bench builder reads only `data/reader-test-coverage.json`).
 
@@ -36,7 +36,7 @@ graph LR
   cite --> harness["panel/harness.py"]
   rollout["panel/run_rollout.py"] --> wholedoc["panel/whole_doc.py"]
   harness --> wholedoc
-  wholedoc --> runlog["runlog-v3.jsonl (untracked local file)"]
+  wholedoc --> runlog["runlog-v3.jsonl (committed canonical log; see runlog-v3.md)"]
   runlog --> bsd["panel/build_site_data.py"]
   bsd --> panelpayload["site/llm-panel-review/data/behaviours.json"]
   sweep4["research/sweeps/NN/4-spec-coverage.md"] --> publish["publish-coverage.py"]
