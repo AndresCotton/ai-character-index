@@ -46,8 +46,9 @@ Everything stays local — nothing pushes back.
    in `local/` -- a gitignored directory for a fork's own working files, which is
    also where your runlogs should go. (Your spec and its manifest already live in
    the gitignored `specs/user/`.) The entry needs the registry's full shape
-   -- `name`, `set: "user"`, `numeric_id` (integer >= 1, per set; it sets
-   display order -- the payload renumbers 1..N), `group`, `definition`, `facets`. See
+   -- `name`, `set: "user"`, `numeric_id` (integer >= 1, unique within your
+   set; it orders the sidebar -- the payload renumbers 1..N, so it is not
+   the id you see), `group`, `definition`, `facets`. See
    `data/schema/behaviours.schema.json` for the contract and
    `engine/stage_user_demo.py` for a complete worked entry; the shipped registry
    carries no `set:user` rows to copy from. A missing field fails the build.
@@ -73,6 +74,12 @@ Everything stays local — nothing pushes back.
    `--runlog=`: the default is `engine/panel/runlog-v3.jsonl`, the committed
    shipped runlog. Put yours in `local/`, which is gitignored. It also appends
    to `engine/panel/metrics.jsonl` (gitignored).
+
+   To rehearse steps 2-6 without spending, `python3 engine/stage_user_demo.py
+   --out=DIR` stages a complete clone/fork site -- a synthetic user spec, a
+   `set:user` behaviour and a small runlog -- into a scratch directory, leaving
+   this repo untouched. Useful for seeing what the flow produces before paying
+   for a real run.
 
    `run_rollout.py` is the driver for the *project's own* dataset, not yours: it
    validates `--behaviours=` against `engine/panel/behaviours.json` and judges

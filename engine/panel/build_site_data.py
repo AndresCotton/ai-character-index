@@ -44,6 +44,7 @@ import collections
 import importlib.util
 import json
 import re
+import subprocess
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -199,6 +200,20 @@ def check_out_name(name):
     if not SAFE_NAME.match(name) or ".." in name or name.startswith("."):
         sys.exit(f"error: --out={name!r} is not a safe name for the site data dir -- "
                  "use a plain filename (word chars, dots, hyphens; no paths or ..)")
+    # The data dir also holds committed calibration payloads (behaviours-v5.json and
+    # friends). They match the gitignore pattern for run outputs, so git would not
+    # flag an overwrite -- only this check stands between --out= and a tracked file.
+    # behaviours.json is exempt: rebuilding the shipped fallback is a documented use.
+    if name != FALLBACK_NAME:
+        try:
+            tracked = subprocess.run(
+                ["git", "ls-files", "--error-unmatch", str(DATA_DIR / name)],
+                cwd=ROOT, capture_output=True, timeout=10).returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            tracked = False          # no git, or no repo: fall through
+        if tracked:
+            sys.exit(f"error: --out={name!r} is tracked in git -- a build must not "
+                     "overwrite a committed payload; pick another name")
 
 
 def _shown(path):
@@ -453,7 +468,11 @@ def main(argv=None):
     summary = f"{len(out_behaviours)} behaviours, {n} citations " \
               f"(threshold {DISPLAY['threshold']}, solid {DISPLAY['solid_threshold']})"
     if n == 0:
-        summary += zero_citation_reason(rubric, runlog_rubrics, runlog_models, panel)
+        # Kept nothing. Do not write, do not touch the manifest, do not report
+        # success: a promoted empty run renders as a blank bench with the reason
+        # only in terminal scrollback.
+        sys.exit("error: " + summary.strip()
+                 + zero_citation_reason(rubric, runlog_rubrics, runlog_models, panel))
     payload = json.dumps(out, indent=1, ensure_ascii=False)
     if out_name:
         # Explicit destination: iteration builds, or --out=behaviours.json to rebuild

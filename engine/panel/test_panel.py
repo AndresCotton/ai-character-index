@@ -1081,6 +1081,34 @@ class TestMainSmoke(unittest.TestCase):
         self.assertIn("whole_doc.py", blob)
         self.assertIn("--registry=", blob)
 
+    def test_zero_citation_build_exits_nonzero_and_does_not_promote(self):
+        # A build that keeps nothing is a failed build. It used to exit 0, write a
+        # payload, and become manifest.json's `latest` -- so the page went blank and
+        # the tool said it succeeded, with the explanation only in scrollback.
+        with tempfile.TemporaryDirectory() as d:
+            runlog = Path(d) / "r.jsonl"
+            runlog.write_text(json.dumps({"behaviour": "helpfulness", "spec": "constitution",
+                                          "model": "fable", "locator": "x", "verdict": 2,
+                                          "rubric": "v9", "parsed": True}) + "\n",
+                              encoding="utf-8")
+            r = subprocess.run([sys.executable, str(HERE / "build_site_data.py"),
+                                f"--runlog={runlog}", "--rubric=v3w", "--panel=fable",
+                                "--behaviours=helpfulness", "--out=zero-probe.json"],
+                               capture_output=True, text=True, timeout=180)
+        blob = r.stdout + r.stderr
+        self.assertNotEqual(r.returncode, 0, "a zero-citation build must not report success")
+        self.assertIn("0 citations", blob)
+        self.assertIn("rubric", blob)          # and must say why
+
+    def test_out_name_refuses_a_tracked_payload(self):
+        # --out=behaviours-v5.json would have silently overwritten a committed
+        # calibration payload; only the manifest was guarded.
+        with self.assertRaises(SystemExit) as cm:
+            bs.check_out_name("behaviours-v5.json")
+        self.assertIn("tracked", str(cm.exception))
+        bs.check_out_name("my-scratch.json")   # untracked names still fine
+        bs.check_out_name("behaviours.json")   # the documented fallback rebuild
+
     def test_unknown_panel_name_exits_instead_of_building_empty(self):
         # B1: `.get(name) or [name]` turned a typo'd panel into a one-seat panel
         # named after the typo -- exit 0, empty payload, promoted to manifest latest.
