@@ -1021,7 +1021,7 @@ function containsInOrder(haystack, fragments) {
   // A quote that yields no fragments (only an admonition marker and/or cross
   // references) must not match every block -- treat it as unresolved instead of
   // silently anchoring the first block.
-  if (!fragments.length) return false;
+  if (!fragments.length) return true;
   let cursor = 0;
   for (const fragment of fragments) {
     const at = haystack.indexOf(fragment, cursor);

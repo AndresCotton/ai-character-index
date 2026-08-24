@@ -63,6 +63,11 @@ checkScale([cell([{ a: 2, b: 2 }])], 2, 4, "2-judge classic cell is 4-scale");
 checkScale([cell([{ a: 2, b: 2, c: 2 }]), cell([{ a: 3, b: 3, c: 3 }])],
            3, 9, "mixed payload takes the largest scale");
 
+// TIERS is load-bearing for strongestBand (it must be strongest-first) and also drives
+// ?tiers= serialisation and the legacy ?tier= mapping, so it is pinned here explicitly.
+// `const` inside eval stays block-scoped, so it is re-declared as `var` to reach here.
+eval(lines.filter(l => l.startsWith("const TIERS =")).join("\n").replace(/^const /, "var "));
+
 /* The legacy ?threshold= cuts. Extracted from app.js, NOT reimplemented here: an
  * earlier version of this block copied the arithmetic and kept passing after the
  * real code was regressed back to the frozen constants. */
@@ -79,6 +84,13 @@ checkLegacy(6, 3, 9, "defining+core", "9-scale: 6 is the core cut");
 checkLegacy(6, 3, 6, "defining", "6-scale: 6 IS defining (the frozen constants said defining+core)");
 checkLegacy(5, 2, 4, "defining", "2-judge 4-scale: 5 clamps to the defining cut");
 checkLegacy(4, 2, 4, "defining", "2-judge: defCut clamps to maxCell=4");
+
+/* The core cut, pinned away from j=3. Every case above has either judges=3 -- where
+ * 2j IS the frozen 6, so a regression is invisible -- or a clamped defCut that makes
+ * the core branch unreachable. These two are the only checks that fail if coreCut is
+ * frozen back to 6, in both directions: 4 judges wants a HIGHER cut, 2 judges lower. */
+checkLegacy(7, 4, 12, "defining+core+related", "4-judge: 7 is below the core cut of 8");
+checkLegacy(4, 2, 6, "defining+core", "2-judge 6-scale: 4 IS the core cut");
 
 function check(score, judges, maxCell, related, expected, label) {
   const seen = tierBand(score, judges, maxCell, related);
@@ -121,10 +133,6 @@ check(1, 2, 4, 1, null, "2j lone related still hidden (floor applies)");
  * live -- a wrong answer here either hides a working control or leaves an inert
  * one on screen. Must agree with tierBand: a band is reachable exactly when some
  * score in 0..maxCell lands in it. */
-// TIERS is load-bearing for strongestBand (it must be strongest-first) and also drives
-// ?tiers= serialisation and the legacy ?tier= mapping, so it is pinned here explicitly.
-// `const` inside eval stays block-scoped, so it is re-declared as `var` to reach here.
-eval(lines.filter(l => l.startsWith("const TIERS =")).join("\n").replace(/^const /, "var "));
 eval(extractFn("function strongestBand(bands) {"));
 eval(extractFn("function bandLabel(band) {"));
 eval(extractFn("function achievableScores(judges, maxCell, related) {"));
