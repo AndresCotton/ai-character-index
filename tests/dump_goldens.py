@@ -23,6 +23,8 @@ When to regenerate (and when not to): see tests/README.md.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -107,10 +109,24 @@ def main() -> None:
                  "   (regenerates tests/golden/)")
     GOLDEN.mkdir(parents=True, exist_ok=True)
     if only in (None, "corpus"):
+        # The corpus text is NOT committed (it was ~800 KB whose only job was to
+        # make a failure readable). It is written here for local diffing and is
+        # gitignored; what the suite checks is the digest manifest beside it.
+        digest_path = GOLDEN / "corpus-sha256.json"
+        manifest = json.loads(digest_path.read_text(encoding="utf-8"))
         for spec in SPECS:
             target = GOLDEN / f"cite-corpus-{spec}.txt"
-            target.write_text(dump_spec(spec), encoding="utf-8")
-            print(f"wrote {target.relative_to(ROOT)}")
+            body = dump_spec(spec)
+            target.write_text(body, encoding="utf-8")
+            raw = body.encode("utf-8")
+            manifest["goldens"][target.name] = {
+                "sha256": hashlib.sha256(raw).hexdigest(),
+                "bytes": len(raw),
+                "lines": body.count("\n"),
+            }
+            print(f"wrote {target.relative_to(ROOT)} (gitignored; for diffing)")
+        digest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+        print(f"wrote {digest_path.relative_to(ROOT)}")
     if only in (None, "find"):
         target = GOLDEN / "cite-find.txt"
         target.write_text(dump_find(), encoding="utf-8")

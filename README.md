@@ -1,6 +1,6 @@
 # AI Character Index
 
-A public, evidence-based index of **AI character**, anchored in model specs. It maps *important behaviours* → *model-spec coverage* → *strength of public evaluation evidence*, side by side across frontier labs, to make gaps legible: routing technical effort toward neglected areas and holding labs accountable to their own declared targets.
+A public index of **AI character**, anchored in model specs. It maps *important behaviours* → *model-spec coverage*, side by side across frontier labs, to make gaps legible: routing technical effort toward neglected areas and holding labs accountable to their own declared targets.
 
 In the spirit of AI Lab Watch, with a neutral, METR-like framing. By Andrés Cotton.
 

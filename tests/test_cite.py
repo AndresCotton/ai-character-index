@@ -18,6 +18,7 @@ match_normalize folding, the property `find` and the term sweep depend on.
 """
 
 import difflib
+import hashlib
 import json
 import sys
 import unittest
@@ -54,10 +55,43 @@ class GoldenSnapshotTest(unittest.TestCase):
         )
 
     def test_corpus_snapshot_is_unchanged(self):
+        """The corpus dumps are pinned by digest, not by committed text.
+
+        They were ~800 KB of checked-in output whose only job was to make a
+        failure readable. The dump is byte-deterministic from the pinned spec
+        copies -- `dump_goldens.py --write corpus` reproduces them exactly --
+        so the readable diff is still one command away, and the repository no
+        longer carries the text to get it. cite-find.txt stays committed as
+        text: it is small, and its diffs are the interpretable ones.
+        """
+        digests = json.loads(
+            (dump.GOLDEN / "corpus-sha256.json").read_text(encoding="utf-8")
+        )["goldens"]
         for spec in dump.SPECS:
             with self.subTest(spec=spec):
-                self.assert_golden(
-                    f"cite-corpus-{spec}.txt", dump.dump_spec(spec), "corpus"
+                name = f"cite-corpus-{spec}.txt"
+                self.assertIn(name, digests, f"{name} missing from corpus-sha256.json")
+                current = dump.dump_spec(spec)
+                actual = hashlib.sha256(current.encode("utf-8")).hexdigest()
+                if actual == digests[name]["sha256"]:
+                    continue
+                self.fail(
+                    f"cite.py corpus snapshot changed for {spec}.\n"
+                    f"  expected sha256 {digests[name]['sha256']}\n"
+                    f"  actual   sha256 {actual}\n"
+                    f"  expected {digests[name]['bytes']} bytes, "
+                    f"got {len(current.encode('utf-8'))}\n"
+                    "To see WHAT changed: the dump is deterministic from the\n"
+                    "pinned spec copies, so the old output is reproducible from\n"
+                    "the old code. Regenerate on each side and diff them:\n"
+                    "  python3 tests/dump_goldens.py --write corpus\n"
+                    "  cp tests/golden/cite-corpus-*.txt /tmp/new/\n"
+                    "  git stash && python3 tests/dump_goldens.py --write corpus\n"
+                    "  diff -u tests/golden/cite-corpus-constitution.txt "
+                    "/tmp/new/cite-corpus-constitution.txt; git stash pop\n"
+                    "If the change is intentional, update the digest in "
+                    "tests/golden/corpus-sha256.json (dump_goldens.py --write "
+                    "corpus rewrites it)."
                 )
 
     def test_find_snapshot_is_unchanged(self):
