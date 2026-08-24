@@ -66,7 +66,7 @@ text and nothing else, so work there cannot alter what the index publishes.
 
 ## data validation (works today)
 
-Every file in [`data/`](../data/) is validated against the JSON Schemas in [`data/schema/`](../data/schema/), plus the cross-file rules from [`data/README.md`](../data/README.md): no **published** coverage verdict without a citation (the reader-test bench models an absence finding as a record with empty citations), no eval without a URL, no coverage record pointing at a lab that `labs.json` doesn't define, no coverage record or `evals.json` reference to a behaviour id the registry's index set doesn't define, and no unknown behaviour IDs in `reader-test-coverage.json` (checked against its own behaviours list).
+Every file in [`data/`](../data/) is validated against the JSON Schemas in [`data/schema/`](../data/schema/), plus the cross-file rules from [`data/README.md`](../data/README.md): no **published** coverage verdict without a citation (the reader-test bench models an absence finding as a record with empty citations), no coverage record pointing at a lab that `labs.json` doesn't define, no coverage record reference to a behaviour id the registry's index set doesn't define, and no unknown behaviour IDs in `reader-test-coverage.json` (checked against its own behaviours list).
 
 ```sh
 python3 engine/validate_data.py          # uses jsonschema when installed, stdlib fallback otherwise
@@ -75,4 +75,4 @@ python3 engine/test_validate_data.py     # the gate's own tests: committed data 
 
 ## notion-sync/ (Phase 3)
 
-Will pull the Notion databases (Evals by Behaviour; later Behaviours and Coverage) via the official Notion API, normalize into [`data/`](../data/), and open a PR when anything changed. Merging that PR is the push-to-production step -- no unreviewed change ever reaches the site.
+An empty placeholder today (`.gitkeep` only; nothing syncs yet). When built, it will pull the Notion databases behind the in-scope data files -- per PLAN.md §3, the Coverage DB feeding `data/coverage.json` -- via the official Notion API, normalize into [`data/`](../data/), and open a PR when anything changed. Merging that PR is the push-to-production step -- no unreviewed change ever reaches the site. The evals track (the "Evals by Behaviour" database) is not a sync target: eval-discovery is out of scope per the owner ruling (deliverable = model spec reader only).
