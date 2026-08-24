@@ -316,6 +316,50 @@ console.log("== Reader: compare is a two-document choice ==");
 }
 
 // =============================================================================
+console.log("== Local mode: a run of your own is marked and reachable ==");
+// The staged site registers a user specification, so every surface is showing local
+// data and should say so -- and the panel, which nothing otherwise links to, has to be
+// reachable from the surfaces a reader actually lands on.
+{
+  for (const [name, url] of [["panel", panelBase], ["reader", readerBase]]) {
+    await load(url, "");
+    const out = await page.evaluate(() => ({
+      marked: document.body.dataset.localData === "true",
+      badge: (document.querySelector("#local-data-note")?.textContent || "").trim(),
+      badgeVisible: !!document.querySelector("#local-data-note")?.offsetParent,
+      panelLink: !!document.querySelector('nav a[href*="llm-panel-review"]'),
+      noteInNav: !!document.querySelector('nav #local-data-note'),
+      panelLinkText: (document.querySelector('nav a[href*="llm-panel-review"]')?.textContent || "").trim(),
+      panelNavCount: [...document.querySelectorAll("nav a")]
+        .filter(a => /llm-panel-review|Local analysis/.test(a.getAttribute("href") + a.textContent)
+                     || a.getAttribute("aria-current") === "page").length,
+    }));
+    check(out.marked, `${name}: local data is marked on the document`);
+    check(out.badgeVisible && /local/i.test(out.badge),
+      `${name}: a visible note says the data is local`, out.badge);
+    // A status marker is not a destination. Inside <nav> it reads as a link to
+    // anything traversing the list, screen readers included.
+    check(!out.noteInNav, `${name}: the marker is not inside the navigation list`);
+    // The panel's own nav marks itself with href="./", so "reachable" is only a
+    // question on the surfaces a reader lands on instead.
+    if (name !== "panel") {
+      check(out.panelLink, `${name}: the panel is reachable from the nav`);
+      // The link has to name the page it lands on. The page is still called "LLM
+      // panel review"; a second name for it would break that contract.
+      check(out.panelLinkText === "LLM panel review",
+        `${name}: the link names the page it lands on`, out.panelLinkText);
+    }
+    // ...and on the panel the risk is the opposite one: a second link, under another
+    // name, to the page you are already on.
+    if (name === "panel") {
+      check(out.panelNavCount === 1,
+        "panel: no duplicate nav entry for the page you are on", `${out.panelNavCount} entries`);
+    }
+  }
+  check(pageErrors.length === 0, "local mode: no console errors", pageErrors.join("; "));
+}
+
+// =============================================================================
 console.log("== Reader: user-extended documents ==");
 await load(readerBase, "");
 {

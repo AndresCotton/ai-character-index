@@ -185,6 +185,24 @@ if (linkIssues.length) {
   }
 }
 
+// The repo's own site carries no user specification, so nothing about it is local:
+// no marker, and the panel stays unlinked exactly as it is today.
+{
+  await page.goto(base, { waitUntil: "networkidle" });
+  await page.waitForTimeout(500);
+  const bundled = await page.evaluate(() => ({
+    marked: document.body.dataset.localData === "true",
+    badge: !!document.querySelector("#local-data-note")?.offsetParent,
+    panelLink: !!document.querySelector('nav a[href*="llm-panel-review"]'),
+  }));
+  if (!bundled.marked && !bundled.badge && !bundled.panelLink) {
+    console.log("PASS  bundled-only site is not marked local and does not link the panel");
+  } else {
+    failures += 1;
+    console.log(`FAIL  bundled-only site changed: ${JSON.stringify(bundled)}`);
+  }
+}
+
 if (consoleErrors.length) {
   failures += 1;
   console.log("console errors:", consoleErrors);
