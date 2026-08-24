@@ -752,6 +752,10 @@ class TestAppJSTiers(unittest.TestCase):
         out = subprocess.run(["node", str(self.HARNESS)],
                              capture_output=True, text=True, timeout=120)
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        # Exit status alone cannot tell "every cut holds" from "the harness
+        # stopped asserting"; a mutation audit found the latter is a real way
+        # for this suite to go quietly green.
+        self.assertIn("72 checks, 0 failures", out.stdout, out.stdout)
 
 
 class TestAppJSQuotes(unittest.TestCase):
@@ -773,6 +777,27 @@ class TestAppJSQuotes(unittest.TestCase):
                              capture_output=True, text=True, timeout=120)
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
         self.assertIn("17 checks, 0 failures", out.stdout, out.stdout)
+
+
+class TestAppJSWiring(unittest.TestCase):
+    """The panel scoring pipeline in app.js -- applyPanelThreshold and
+    initialBands -- end to end: a payload in, bands out. The tiers harness pins
+    the pure cut functions; these pin the code that calls them. A mutation audit
+    showed the difference matters: collapsing the per-cell scale to the classic
+    2, and disconnecting the legacy-threshold fix entirely, both left every
+    other harness green. Skips (not fails) without `node`."""
+
+    HARNESS = HERE / "test_appjs_wiring.js"
+
+    def setUp(self):
+        if shutil.which("node") is None:
+            self.skipTest("node is not available")
+
+    def test_scoring_pipeline_in_appjs(self):
+        out = subprocess.run(["node", str(self.HARNESS)],
+                             capture_output=True, text=True, timeout=120)
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("23 checks, 0 failures", out.stdout, out.stdout)
 
 
 class TestRunlogPathResolution(unittest.TestCase):

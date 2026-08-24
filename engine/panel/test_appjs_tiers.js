@@ -42,6 +42,7 @@ eval(extractFn("function maxCellScore() {"));
 var state = {};
 
 let failures = 0;
+let checks = 0;
 
 /* Scale detection: one payload can carry cells at different scales, because
  * maxVerdict is per-cell (2 on the classic rubric, 3 once a judge awards a
@@ -50,6 +51,7 @@ function checkScale(behaviours, expectedJudges, expectedScale, label) {
   state.rawBehaviours = behaviours;
   const j = judgesPerCell(), s = maxCellScore();
   const ok = j === expectedJudges && s === expectedScale;
+  checks += 1;
   if (!ok) failures += 1;
   console.log(`${ok ? "PASS" : "FAIL"}  ${label}: judges ${j} (want ${expectedJudges}), ` +
               `scale ${s} (want ${expectedScale})`);
@@ -76,6 +78,7 @@ eval(extractFn("function legacyThresholdBands(t, judges, scale) {"));
 function checkLegacy(t, judges, scale, expected, label) {
   const seen = legacyThresholdBands(t, judges, scale).join("+");
   const ok = seen === expected;
+  checks += 1;
   if (!ok) failures += 1;
   console.log(`${ok ? "PASS" : "FAIL"}  ${label}: ?threshold=${t} at j=${judges}/scale=${scale} -> ${seen} (expected ${expected})`);
 }
@@ -95,6 +98,7 @@ checkLegacy(4, 2, 6, "defining+core", "2-judge 6-scale: 4 IS the core cut");
 function check(score, judges, maxCell, related, expected, label) {
   const seen = tierBand(score, judges, maxCell, related);
   const ok = seen === expected;
+  checks += 1;
   if (!ok) failures += 1;
   console.log(`${ok ? "PASS" : "FAIL"}  ${label}: score ${score}, j=${judges}, ` +
     `maxCell ${maxCell}, related ${related} -> ${seen} (expected ${expected})`);
@@ -141,6 +145,7 @@ eval(extractFn("function bandReachable(judges, maxCell, related) {"));
 function checkReach(judges, maxCell, related, expected, label) {
   const seen = bandReachable(judges, maxCell, related);
   const ok = TIERS_ORDER.every(t => seen[t] === expected[t]);
+  checks += 1;
   if (!ok) failures += 1;
   console.log(`${ok ? "PASS" : "FAIL"}  ${label}: j=${judges}, maxCell ${maxCell}, ` +
     `related ${related} -> ${JSON.stringify(seen)} (expected ${JSON.stringify(expected)})`);
@@ -177,6 +182,7 @@ for (const [judges, maxCell] of [[1, 2], [2, 4], [3, 6], [4, 8], [1, 3], [3, 9]]
       if (b) landed[b] = true;
     }
     const ok = TIERS_ORDER.every(t => reach[t] === landed[t]);
+    checks += 1;
     if (!ok) failures += 1;
     console.log(`${ok ? "PASS" : "FAIL"}  reachability matches tierBand over achievable ` +
       `scores (j=${judges}, maxCell=${maxCell}, related=${related})`);
@@ -186,6 +192,7 @@ for (const [judges, maxCell] of [[1, 2], [2, 4], [3, 6], [4, 8], [1, 3], [3, 9]]
 /* strongestBand / bandLabel: the vocabulary the rail and the export print. */
 function checkEq(actual, expected, label) {
   const ok = JSON.stringify(actual) === JSON.stringify(expected);
+  checks += 1;
   if (!ok) failures += 1;
   console.log(`${ok ? "PASS" : "FAIL"}  ${label}: ${JSON.stringify(actual)} (expected ${JSON.stringify(expected)})`);
 }
@@ -206,4 +213,7 @@ checkEq(bandLabel("related"), "Related", "bandLabel capitalises related");
 checkEq(bandLabel(null), "Scored", "an unbanded passage falls back to a neutral word");
 checkEq(bandLabel(""), "Scored", "an empty data-band falls back too");
 
+/* The driver asserts this line. Exit status alone cannot distinguish "every cut
+ * holds" from "the harness stopped asserting and fell off the end". */
+console.log(`\n${checks} checks, ${failures} failures`);
 process.exit(failures ? 1 : 0);
