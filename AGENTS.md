@@ -40,26 +40,37 @@ Everything stays local — nothing pushes back.
    fails the build.
 4. Judge it -- **this is the step that spends money.** Judging produces a
    *runlog*, which step 5 turns into a payload; without it there is nothing to
-   build. Model tags and panels are defined in `engine/panel/panel-config.json`
-   (`cheap` = gpt-mini/haiku/qwen-small is the inexpensive panel; `frontier` is
-   the shipped one). Provider keys come from the environment -- `key_env` per
-   provider in that file, e.g. `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`.
+   build. Model tags live in `engine/panel/panel-config.json`; keys come from
+   the environment (`key_env` per provider, e.g. `ANTHROPIC_API_KEY`).
+
+   Your own behaviour against your own spec means `whole_doc.py`, one cell at a
+   time -- one (behaviour, spec, model tag) per call:
 
    ```sh
-   # plan first: dry-run by default, prints the call plan and a cost estimate
-   python3 engine/panel/run_rollout.py --panel=cheap --runlog=my-run.jsonl \
-     --behaviours=<your-slug>
-   # then spend:
-   python3 engine/panel/run_rollout.py --go --panel=cheap --runlog=my-run.jsonl \
-     --behaviours=<your-slug>
+   python3 engine/panel/whole_doc.py <your-slug> <your-spec-id> haiku \
+     --runlog=my-run.jsonl
    ```
 
-   `run_rollout.py` is resume-safe: rerunning after a failure executes only the
-   missing cells. To judge one cell directly use
-   `python3 engine/panel/whole_doc.py <behaviour> <spec> <tag> --runlog=my-run.jsonl`
-   -- note it has **no dry-run**, it calls the API immediately, and **always pass
-   `--runlog=`**: its default is `engine/panel/runlog-v3.jsonl`, the committed
-   shipped runlog.
+   Two things it does not do. It has **no dry-run** -- it calls the API the
+   moment you run it, so start with a single cell and read the cost before
+   looping. And its default runlog is `engine/panel/runlog-v3.jsonl`, the
+   committed shipped runlog, so **always pass `--runlog=`**; the file you name
+   is not gitignored, so keep it outside the repo or add it to `.gitignore`
+   yourself.
+
+   `run_rollout.py` is the driver for the *project's own* dataset, not for
+   yours: it is dry-run by default and prints a cost estimate, but it validates
+   `--behaviours=` against `engine/panel/behaviours.json` (the bundled panel set,
+   not `data/behaviours.json` and not your registry) and it judges
+   `config["specs"]` -- the two bundled mirrors. It has no `--registry` and no
+   `--spec` flag, so it cannot judge a `set:user` behaviour or a user spec. Use
+   it to see the shape of a plan and a cost estimate:
+
+   ```sh
+   python3 engine/panel/run_rollout.py --panel=cheap --behaviours=helpfulness \
+     --runlog=/tmp/plan.jsonl        # dry-run; --go would spend
+   ```
+
 5. Build the payload from your runlog:
 
    ```sh
@@ -116,10 +127,16 @@ node engine/verify-panel-features.mjs            # Tier-1 site features × bundl
 
 - Data changes land via reviewed PRs against `data/`; the site is committed
   static output (no build step), deployed on merges that touch `site/**`.
-- Local-only artifacts are gitignored and must never be pushed: `specs/user/`,
-  panel runlogs (`runlog-e2e*.jsonl` etc.), timestamped payloads + `manifest.json`,
-  builder smoke scratch. The committed `runlog-v3.jsonl` and `behaviours.json`
-  fallback are the exceptions, and they are provenance-verified.
+- Local-only artifacts must never be pushed: `specs/user/`, your runlogs,
+  timestamped payloads + `manifest.json`, builder smoke scratch. Only some of
+  these are gitignored -- `specs/user/`, `site/llm-panel-review/data/manifest.json`
+  and the timestamped `behaviours-*.json` payloads are. **Runlogs are not**: a
+  runlog you write lands as a committable untracked file, so keep it outside the
+  repo or ignore it yourself. `site/spec-reader/data/documents.json` is tracked
+  and is rewritten in place by `build-spec-reader-data.py --user-manifest=`, with
+  your spec's text inlined -- check it before committing. The committed
+  `runlog-v3.jsonl` and `behaviours.json` fallback are deliberate, and
+  provenance-verified.
 - Behaviour identity is registry-driven: edit `data/behaviours.json`, then run
   `engine/generate_behaviour_constants.py` (its `--check` and
   `tests/test_behaviour_registry.py` fail loudly on drift).
