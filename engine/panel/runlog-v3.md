@@ -1,8 +1,17 @@
-# runlog-v3.jsonl — canonical verdict log for the shipped panel payload
+# runlog-v3.jsonl — verdict log for the v3-era shipped panel payload
 
-`runlog-v3.jsonl` (next to this note) is the committed, canonical run log that
-produced the published panel numbers in
-`site/llm-panel-review/data/behaviours.json`. It is committed data, not a
+`runlog-v3.jsonl` (next to this note) is the committed run log that produced
+the v3-era published panel numbers. **Superseded as the shipped default on
+2026-08-24**: `site/llm-panel-review/data/behaviours.json` now builds from
+`runlog-v5.jsonl` (see `runlog-v5.md`). This log stays committed and frozen --
+the v3 payload remains reproducible from it:
+
+```sh
+python3 engine/panel/build_site_data.py --runlog=engine/panel/runlog-v3.jsonl \
+    --rubric=v3w --panel=frontier --run-date=2026-07-30 --out=<scratch>.json
+```
+
+It is committed data, not a
 runtime artifact: every other `runlog*.jsonl` in this directory stays gitignored.
 
 > [EDIT 2026-08-21 (PR #46): the `behaviour` keys were re-keyed from the
@@ -52,7 +61,8 @@ when it rebuilds.
 
 ## Which payload it reproduces
 
-`site/llm-panel-review/data/behaviours.json` — 3 behaviours, 1,336 citations,
+The v3-era shipped payload (the `behaviours.json` default until 2026-08-24;
+rebuild it with the command above) — 3 behaviours, 1,336 citations,
 rubric `v3w`, panel config `frontier`, `provenance.runDate` 2026-07-30.
 Rebuilding from this log reproduces the shipped file byte-identically, with one
 documented exception: the builder stamps `provenance.runDate` with
@@ -64,8 +74,12 @@ by the 2026-07-30 integration run named in `test_panel.py`'s docstring.
 
 ## How to run the check
 
+The verifier's defaults now point at the v5 pairing; check the v3 pairing
+explicitly (the payload rebuilt from this log via the command above):
+
 ```sh
-python3 engine/panel/verify_panel_provenance.py
+python3 engine/panel/verify_panel_provenance.py --payload=<scratch>.json \
+    --runlog=engine/panel/runlog-v3.jsonl --rubric=v3w --panel=frontier
 ```
 
 Rebuilds the payload from this log into a scratch directory, deep-compares it

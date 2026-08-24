@@ -252,7 +252,7 @@
       "fable",
       "deepseek"
     ],
-    "_frontier_fast_note": "calibration-loop panel (2026-08-17): deepseek replaces kimi as third seat -- K3 spends 8-18 min and 25-57k reasoning tokens per whole-doc call; V3.2 is frontier-class, open-weights, and fast. Seat confirmed by a 4-way audition on the v5 rubric (runlog-v5.jsonl, 5 cells each): V3.2 4/4 named-core hits at 28-86s/call with the sparsest positives; glm (GLM-5.2) 3/4 at 43-153s = designated substitute; deepseek-v4 (V4-Pro-0813) 4/4 but 93-1132s/call and 2-4x looser; qwen38-max 2 length-overflow parse failures. Production frontier/frontier_primary unchanged until the shipped data is regenerated.",
+    "_frontier_fast_note": "calibration-loop panel (2026-08-17): deepseek replaces kimi as third seat -- K3 spends 8-18 min and 25-57k reasoning tokens per whole-doc call; V3.2 is frontier-class, open-weights, and fast. Seat confirmed by a 4-way audition on the v5 rubric (runlog-v5.jsonl, 5 cells each): V3.2 4/4 named-core hits at 28-86s/call with the sparsest positives; glm (GLM-5.2) 3/4 at 43-153s = designated substitute; deepseek-v4 (V4-Pro-0813) 4/4 but 93-1132s/call and 2-4x looser; qwen38-max 2 length-overflow parse failures. The shipped payload was regenerated from this panel's v5 full bench (engine/panel/runlog-v5.jsonl) on 2026-08-24: frontier_fast x v5 is the production display configuration; frontier/frontier_primary remain the K3-seated panels for v3-family runs.",
     "_comment": "frontier = every tag whose rows the site builder may admit (primaries AND substitutes). frontier_primary = the judges the run driver executes; substitutes (opus, kimi-k2) are run manually per Skill 4 when a primary fails.",
     "itest": [
       "qwen-big"
@@ -269,14 +269,23 @@
     "_comment": "Behaviours shown in site/llm-panel-review (build_site_data.py: `behaviours` = sidebar list, `panel` = which config panel's runlog rows are admitted). Thresholds: build_site_data.py reads BOTH values below, but neither controls what the page renders. `threshold` (3) appears only in build_site_data.py's closing summary print. `solid_threshold` (5) is baked into every citation as `adjacent: score < solid_threshold`, but applyPanelThreshold() in site/llm-panel-review/app.js recomputes each citation's score from its baked `verdicts` on load (and on every tier toggle), then OVERWRITES `adjacent` from its own per-cell bands (j judges: defining >= min(2j+1, maxCell), core >= 2j, related >= j+1, weaker scores never rendered; defaults show defining+core, so on the shipped 3-judge cells only score >= 6 renders until the related tier is toggled on). Anchors in app.js, by name rather than line number -- the line numbers that used to be here went stale by 400+ lines and were silently wrong: the band math is `defCut`/`band` inside tierBand(), the `adjacent` overwrite is the assignment to `p.adjacent` in applyPanelThreshold(), the defining+core default is DEFAULT_BANDS, and applyPanelThreshold runs at load via initialize() and on every toggle via toggleBand(). The baked flag is therefore vestigial -- every citation this builder emits carries verdicts, so the reader recomputes it every time -- and it would even disagree with the client at score 5 (baked says solid, client says related). Legacy URL params in app.js: ?threshold= only maps to tier bands once at load, through legacyThresholdBands(), whose cuts are DERIVED from the payload's judge count and cell scale (>= min(2j+1, scale) defining only, >= 2j defining+core, else all tiers) -- they were frozen at 7/6 until PR #66, which made them wrong on any cell that was not 3-judge 3-point, ?solid= is no longer read (only stripped from the URL), and the config values 3/5 play no client-side role.",
     "behaviours": [
       "helpfulness",
+      "harmlessness-to-the-user",
       "harm-avoidance-to-third-parties",
-      "avoiding-over-and-under-caution"
+      "proportionate-risk-mitigation",
+      "how-to-approach-tradeoffs",
+      "avoiding-over-and-under-caution",
+      "objectivity-on-contested-questions",
+      "user-autonomy",
+      "animal-welfare-impacts",
+      "general-welfare-impacts-strict"
     ],
     "_generated_note": "Curated panel-review display list (registry reader-test slugs), hand-maintained; engine/panel/build_site_data.py validates every entry against data/behaviours.json, so a renamed or unknown slug fails the build.",
-    "panel": "frontier",
+    "panel": "frontier_fast",
+    "rubric": "v5",
+    "_rubric_note": "The rubric the SHIPPED payload builds from (v5: 0-3 per judge, 9-point cells on the 3-judge panel). Top-level `rubric` (v3w) stays what whole_doc.py's v3 prompts stamp; the two diverge until a v5 prompt port lands. build_site_data.py prefers this key.",
     "threshold": 3,
     "solid_threshold": 5,
-    "_activation_note": "The two general-guidelines slugs (animal-welfare-impacts, general-welfare-impacts-strict) join this list when the full rollout data lands; until then the dual-slug mapping in build_site_data.py is inert by design."
+    "_activation_note": "The full-bench v5 rollout landed (runlog-v5.jsonl, 2026-08-17): all ten reader-test slugs are listed and the dual-slug mapping in build_site_data.py (animal-welfare-impacts feeds general-welfare-impacts-strict) is active."
   },
   "_opus_note": "opus substitutes for fable on harm-avoidance-to-third-parties x model-spec only (fable output content-filtered there, 3 attempts); opus rows exist for no other cell."
 }

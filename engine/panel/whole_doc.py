@@ -22,6 +22,10 @@ h = importlib.util.module_from_spec(sp); sp.loader.exec_module(h)
 SYSTEM_W = h.render_system_v3(h.INDEPENDENCE_WHOLE_DOC, h.OUTPUT_FORMAT_FULL)
 SYSTEM_S = h.render_system_v3(h.INDEPENDENCE_WHOLE_DOC, h.OUTPUT_FORMAT_SPARSE)
 RUNLOG = HERE / "runlog-v3.jsonl"   # override with --runlog=; resume and append use the SAME file
+# NOTE: this executor renders the v3 prompts and stamps rubric v3w/v3s, so its rows
+# belong in the v3-family log above. The SHIPPED payload builds from runlog-v5.jsonl
+# (rubric v5, produced by the calibration-loop whole-doc runs of 2026-08-17); flip
+# this default only together with a v5 prompt port.
 
 def judge_kwargs(tag, model, config):
     """Pure: per-model API params (provider quirks + config output caps)."""

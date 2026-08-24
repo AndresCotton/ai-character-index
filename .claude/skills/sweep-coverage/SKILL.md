@@ -45,10 +45,11 @@ pinned to `spec@version`.
    `SLUGS` in `build_site_data.py` and to `display.behaviours` in
    `panel-config.json` -- without both, the run produces data the site never shows.
 2. Dry-run first -- prints the exact call plan, what resume skips, and the cost
-   estimate, and sends nothing. The canonical run log is
-   `engine/panel/runlog-v3.jsonl` (the driver, `whole_doc.py`, and the builder all
-   default to it; the committed history is documented in
-   `engine/panel/runlog-v3.md`):
+   estimate, and sends nothing. The v3-family run log is
+   `engine/panel/runlog-v3.jsonl` (the driver and `whole_doc.py` default to it;
+   its committed history is documented in `engine/panel/runlog-v3.md`; the
+   SHIPPED payload builds from `engine/panel/runlog-v5.jsonl`, the builder's
+   default -- see `runlog-v5.md`):
    `python3 engine/panel/run_rollout.py --behaviours=<key>`
 3. Execute with `--go`. Interrupting is safe: the run log is append-only and rerun
    skips completed cells. Never hold verdicts only in memory.

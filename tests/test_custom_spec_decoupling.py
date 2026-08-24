@@ -418,7 +418,7 @@ class PanelByteIdentityTest(unittest.TestCase):
         # both general-guidelines rows) as well as all ten reader-test slugs
         self._assert_rebuild_identical(
             "behaviours-v5.json",
-            "experiments/panel-calibration/runlog-v5.jsonl",
+            "engine/panel/runlog-v5.jsonl",
             rubric="v5", panel="frontier_fast",
             behaviours="helpfulness,harmlessness-to-the-user,harm-avoidance-to-third-parties,"
                        "proportionate-risk-mitigation,how-to-approach-tradeoffs,"
