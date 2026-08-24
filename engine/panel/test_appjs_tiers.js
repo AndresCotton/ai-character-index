@@ -37,7 +37,50 @@ function extractFn(header) {
 
 eval(extractFn("function tierBand(score, judges, maxCell, related) {"));
 
+eval(extractFn("function judgesPerCell() {"));
+eval(extractFn("function maxCellScore() {"));
+var state = {};
+
 let failures = 0;
+
+/* Scale detection: one payload can carry cells at different scales, because
+ * maxVerdict is per-cell (2 on the classic rubric, 3 once a judge awards a
+ * "defining"). behaviours-v5.json really does mix 6 and 9. */
+function checkScale(behaviours, expectedJudges, expectedScale, label) {
+  state.rawBehaviours = behaviours;
+  const j = judgesPerCell(), s = maxCellScore();
+  const ok = j === expectedJudges && s === expectedScale;
+  if (!ok) failures += 1;
+  console.log(`${ok ? "PASS" : "FAIL"}  ${label}: judges ${j} (want ${expectedJudges}), ` +
+              `scale ${s} (want ${expectedScale})`);
+}
+
+const cell = verdicts => ({ coverage: { anthropic: { passages: verdicts.map(v => ({ verdicts: v })) } } });
+checkScale([], 0, 0, "no data yet -- helpers return 0, legacy cuts fall back");
+checkScale([cell([{ a: 2, b: 2, c: 2 }])], 3, 6, "3-judge classic cell is 6-scale");
+checkScale([cell([{ a: 3, b: 2, c: 1 }])], 3, 9, "a single defining verdict makes the cell 9-scale");
+checkScale([cell([{ a: 2, b: 2 }])], 2, 4, "2-judge classic cell is 4-scale");
+checkScale([cell([{ a: 2, b: 2, c: 2 }]), cell([{ a: 3, b: 3, c: 3 }])],
+           3, 9, "mixed payload takes the largest scale");
+
+/* The legacy ?threshold= cuts, which were frozen at the 3-judge 3-point values. */
+function legacyBands(t, judges, scale) {
+  const defCut = judges > 0 ? Math.min(2 * judges + 1, scale || 2 * judges + 1) : 7;
+  const coreCut = judges > 0 ? 2 * judges : 6;
+  return t >= defCut ? "defining" : t >= coreCut ? "defining+core" : "all";
+}
+function checkLegacy(t, judges, scale, expected, label) {
+  const seen = legacyBands(t, judges, scale);
+  const ok = seen === expected;
+  if (!ok) failures += 1;
+  console.log(`${ok ? "PASS" : "FAIL"}  ${label}: ?threshold=${t} at j=${judges}/scale=${scale} -> ${seen}`);
+}
+checkLegacy(7, 3, 9, "defining", "9-scale: 7 is the defining cut");
+checkLegacy(6, 3, 9, "defining+core", "9-scale: 6 is the core cut");
+checkLegacy(6, 3, 6, "defining", "6-scale: 6 IS defining (the old code said defining+core)");
+checkLegacy(5, 2, 4, "defining", "2-judge 4-scale: 5 clamps to the defining cut");
+checkLegacy(4, 2, 4, "defining", "2-judge: defCut clamps to maxCell=4");
+
 function check(score, judges, maxCell, related, expected, label) {
   const seen = tierBand(score, judges, maxCell, related);
   const ok = seen === expected;

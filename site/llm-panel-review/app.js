@@ -1918,6 +1918,28 @@ function applyPanelThreshold(payload) {
 
 /* Initial tier selection: ?tiers= list, else legacy single-position params mapped to
  * the bands they showed (?tier= gauge links; ?threshold= score links), else defaults. */
+/* Judge count and cell scale, read from the loaded payload. Both vary per cell --
+ * maxVerdict is 2 on the classic rubric and 3 once any judge awards a "defining", so
+ * one payload can carry 6-scale and 9-scale cells at once (behaviours-v5.json does).
+ * These take the largest, which is what a score cut written into a URL meant. */
+function judgesPerCell() {
+  const counts = (state.rawBehaviours || []).flatMap(b =>
+    Object.values(b.coverage || {}).flatMap(cov =>
+      (cov.passages || []).map(p => Object.keys(p.verdicts || {}).length)));
+  return counts.length ? Math.max(...counts) : 0;
+}
+
+function maxCellScore() {
+  const scales = (state.rawBehaviours || []).flatMap(b =>
+    Object.values(b.coverage || {}).map(cov => {
+      const ps = cov.passages || [];
+      if (!ps.length) return 0;
+      const maxVerdict = Math.max(2, ...ps.flatMap(p => Object.values(p.verdicts || {})));
+      return maxVerdict * Math.max(0, ...ps.map(p => Object.keys(p.verdicts || {}).length));
+    }));
+  return scales.length ? Math.max(...scales) : 0;
+}
+
 function initialBands() {
   const listed = (initialParams.get("tiers") || "")
     .split(",").map(part => (part.trim() === "adjacent" ? "related" : part.trim()))
@@ -1925,9 +1947,17 @@ function initialBands() {
   if (listed.length || initialParams.get("tiers") === "none") return new Set(listed);
   const tier = initialParams.get("tier") === "adjacent" ? "related" : initialParams.get("tier");
   if (TIERS.includes(tier)) return new Set(TIERS.slice(0, TIERS.indexOf(tier) + 1));
-  if (initialParams.has("threshold")) {   // legacy score cuts are 2j+1 / 2j / j+1
+  if (initialParams.has("threshold")) {
+    // Legacy score links. The cuts are 2j+1 / 2j / j+1, so they depend on the judge
+    // count and the cell scale -- 7/6 were those values for a 3-judge 3-point cell,
+    // frozen. A 4-point cell (v5+) tops out at 9 and a 2-judge cell at 4, so the same
+    // ?threshold= meant different bands on different data. Derive them instead.
     const t = Number(initialParams.get("threshold"));
-    return new Set(t >= 7 ? ["defining"] : t >= 6 ? ["defining", "core"] : TIERS);
+    const j = judgesPerCell();
+    const scale = maxCellScore();
+    const defCut = j > 0 ? Math.min(2 * j + 1, scale || 2 * j + 1) : 7;
+    const coreCut = j > 0 ? 2 * j : 6;
+    return new Set(t >= defCut ? ["defining"] : t >= coreCut ? ["defining", "core"] : TIERS);
   }
   return new Set(DEFAULT_BANDS);
 }
