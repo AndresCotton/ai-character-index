@@ -36,20 +36,24 @@ function extractFn(header) {
 const consts = lines.filter(l =>
   l.startsWith("const MANIFEST_URL") ||
   l.startsWith("const FALLBACK_DATA_URL") ||
+  l.startsWith("const FALLBACK_DATA_NAME") ||
   l.startsWith("const DATA_NAME")).join("\n");
 
-let runner;
+let runner, readSource;
 eval(consts + "\n" +
   "let fetchMap = {};\n" +
+  "const state = {};\n" +
   "let location;\n" +   // browser global, injected per-scenario below
   "async function loadJSON(url) {\n" +
   "  if (url in fetchMap) return fetchMap[url];\n" +
   "  throw new Error(\"HTTP 404 for \" + url);\n" +
   "}\n" +
+  extractFn("function dataName(name)") + "\n" +
   extractFn("function dataUrl(name)") + "\n" +
   extractFn("function payloadName(name)") + "\n" +
   extractFn("async function loadBehaviours()") + "\n" +
-  "runner = async (search, map) => { fetchMap = map; location = { search }; return loadBehaviours(); };");
+  "runner = async (search, map) => { fetchMap = map; location = { search }; state.payloadSource = undefined; return loadBehaviours(); };\n" +
+  "readSource = () => state.payloadSource;");
 
 const PIN = { behaviours: ["PIN"] };
 const LATEST = { behaviours: ["LATEST"] };
@@ -63,6 +67,10 @@ function check(label, actual, expected) {
   else { failures++; console.log(`FAIL  ${label}: got ${got}, expected ${want}`); }
 }
 
+/* payloadSource with undefined keys dropped, so a served pin and a fallen-through one
+   are compared on the same shape. */
+const source = () => JSON.parse(JSON.stringify(readSource() ?? null));
+
 const realWarn = console.warn; console.warn = () => {};   // silence expected fall-through warnings
 
 (async () => {
@@ -73,6 +81,9 @@ const realWarn = console.warn; console.warn = () => {};   // silence expected fa
     "./data/behaviours-latest.json": LATEST,
     "./data/behaviours.json": FALLBACK });
   check("tier 1: pin resolves", r.behaviours, ["PIN"]);
+  // The sidebar run block reads payloadSource; a served pin reports no `requested`,
+  // because there is nothing the viewer asked for and did not get.
+  check("tier 1: source recorded", source(), { origin: "pin", name: "behaviours-pin.json" });
 
   // Tier 2: a stale/absent pin falls through to the manifest's latest run.
   r = await runner("?data=behaviours-missing", {
@@ -80,11 +91,17 @@ const realWarn = console.warn; console.warn = () => {};   // silence expected fa
     "./data/behaviours-latest.json": LATEST,
     "./data/behaviours.json": FALLBACK });
   check("tier 2: manifest latest", r.behaviours, ["LATEST"]);
+  check("tier 2: fall-through names what was asked for", source(),
+    { origin: "latest", name: "behaviours-latest.json",
+      requested: { name: "behaviours-missing", refused: false } });
 
   // Tier 3: stale pin + no manifest (fresh clone) falls through to the shipped default.
   r = await runner("?data=behaviours-missing", {
     "./data/behaviours.json": FALLBACK });
   check("tier 3: shipped default", r.behaviours, ["FALLBACK"]);
+  check("tier 3: fall-through to shipped names what was asked for", source(),
+    { origin: "fallback", name: "behaviours.json",
+      requested: { name: "behaviours-missing", refused: false } });
 
   // Manifest exclusion: ?data=manifest.json must never load the run ledger -- the pin
   // tier refuses it and the chain falls through to the next source (latest here).
@@ -92,6 +109,14 @@ const realWarn = console.warn; console.warn = () => {};   // silence expected fa
     "./data/manifest.json": { latest: "behaviours-latest" },
     "./data/behaviours-latest.json": LATEST,
     "./data/behaviours.json": FALLBACK });
+  check("refused pin is recorded as refused, not merely unavailable", (await (async () => {
+    await runner("?data=manifest.json", {
+      "./data/manifest.json": { latest: "behaviours-latest" },
+      "./data/behaviours-latest.json": LATEST,
+      "./data/behaviours.json": FALLBACK });
+    return source().requested;
+  })()), { name: "manifest.json", refused: true });
+
   check("pin=manifest.json falls through, ledger not loaded", r.behaviours, ["LATEST"]);
 
   // A self-referential manifest ("latest": "manifest.json") must not load the ledger.
