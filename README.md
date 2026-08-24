@@ -10,14 +10,14 @@ In the spirit of AI Lab Watch, with a neutral, METR-like framing. By Andrés Cot
 
 Data changes land through reviewed pull requests against `data/` and `research/` -- merging the PR is the "push to production" act. The public site is static output committed under `site/`, deployed to Cloudflare Pages on merges that touch it; there is no build step. `engine/spec-watch/pull-latest.sh` refreshes the mirrored lab specs (run manually; automatic re-verification of coverage claims after a spec change is planned but not built). System map: [SYSTEM.md](SYSTEM.md); the original design: [PLAN.md §1](PLAN.md).
 
-Evidence enters through **behaviour sweeps**: a staged pipeline with a human sign-off gate between every stage, run one behaviour at a time. Coverage results reach the public reader after Gate 4 via the `spec-coverage-pass` route (behaviours 2–3 were published this way); the full six-stage sweep reserves the later gates for the eval, Notion, and prototype surfaces. How to run one: [.claude/skills/README.md](.claude/skills/README.md).
+Spec coverage enters through **coverage sweeps**: a staged pipeline with a human sign-off gate between every stage, run one behaviour at a time. The `spec-coverage-pass` route runs stages 4–5 on a per-behaviour branch (behaviours 2–3 were published this way); results reach the public reader when the branch merges after the stage-6 audit signs Gate 6. How to run one: [.claude/skills/README.md](.claude/skills/README.md).
 
 ## Repo map
 
 | Folder | What it holds |
 |---|---|
 | [`research/`](research/) | The intellectual core: the [canonical behaviour list](research/core-behaviour-list.md) (mirrored from Notion; the repo copy lags at rows 11–13), sweep records in [`sweeps/`](research/sweeps/), superseded drafts in `archive/` |
-| [`.claude/skills/`](.claude/skills/) | The behaviour-sweep pipeline: versioned procedure files, one per stage, each ending at a human gate -- [how to run a sweep](.claude/skills/README.md) |
+| [`.claude/skills/`](.claude/skills/) | The coverage-sweep pipeline: versioned procedure files, one per stage, each ending at a human gate -- [how to run a sweep](.claude/skills/README.md) |
 | [`specs/`](specs/) | Local mirrors of the specs the index scores against (Claude constitution, OpenAI Model Spec) |
 | [`methodology/`](methodology/) | Depth rubric (anchors every published depth score), the editable site methodology copy, method-exploration write-ups |
 | [`behaviours-for-adria/`](behaviours-for-adria/) | External reviewer's ten-behaviour stage-4 set — feeds the reader test bench and three rows of the panel surface |
