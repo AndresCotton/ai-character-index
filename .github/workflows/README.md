@@ -1,7 +1,24 @@
 # CI/CD workflows
 
-Per PLAN.md §5. Only `deploy.yml` exists so far; the others (`ci.yml`,
-`notion-sync.yml`, `spec-watch.yml`) are still to come.
+Per PLAN.md §5. `ci.yml` (PR-time verification) and `deploy.yml` (site
+publish) exist; `notion-sync.yml` and `spec-watch.yml` are still to come.
+
+## `ci.yml` -- verify on every PR
+
+Runs on every pull request and on pushes to `main`, with no paths filter (a
+filtered required check would silently skip PRs outside its paths and block
+merging). Two jobs:
+
+- **offline** — the full no-network battery: panel + provenance suites, the
+  `tests/` suite (cite goldens, sidecar/publish checks, decoupling pins),
+  the data gate, builder byte-identity rebuilds, `publish-coverage.py --check`
+  for every published behaviour, the registry drift gate, and the node
+  app.js resolution harnesses. Stdlib python + node only; nothing to install.
+- **browser** — the three Playwright walkers (spec reader, reader-test bench,
+  panel feature harness × bundled + user-extended data) against an installed
+  Chrome.
+
+No secrets are needed; `contents: read` is the only permission.
 
 ## `deploy.yml` -- publish the site on merge to main
 
