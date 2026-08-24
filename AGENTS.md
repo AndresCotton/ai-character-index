@@ -46,8 +46,8 @@ Everything stays local — nothing pushes back.
    in `local/` -- a gitignored directory for a fork's own working files, which is
    also where your runlogs should go. (Your spec and its manifest already live in
    the gitignored `specs/user/`.) The entry needs the registry's full shape
-   -- `name`, `set: "user"`, `numeric_id` (integer >= 1, per set: its display
-   order and its payload `id`), `group`, `definition`, `facets`. See
+   -- `name`, `set: "user"`, `numeric_id` (integer >= 1, per set; it sets
+   display order -- the payload renumbers 1..N), `group`, `definition`, `facets`. See
    `data/schema/behaviours.schema.json` for the contract and
    `engine/stage_user_demo.py` for a complete worked entry; the shipped registry
    carries no `set:user` rows to copy from. A missing field fails the build.
@@ -71,8 +71,7 @@ Everything stays local — nothing pushes back.
    read the cost before looping. One cell of a ~15 KB spec on `haiku` is well
    under a cent (measured: 5,884 in / 383 out = $0.008). Always pass
    `--runlog=`: the default is `engine/panel/runlog-v3.jsonl`, the committed
-   shipped runlog. A runlog under `local/` is gitignored; one written anywhere
-   else is not. It also appends
+   shipped runlog. Put yours in `local/`, which is gitignored. It also appends
    to `engine/panel/metrics.jsonl` (gitignored).
 
    `run_rollout.py` is the driver for the *project's own* dataset, not yours: it
@@ -152,9 +151,11 @@ node engine/verify-panel-features.mjs            # Tier-1 site features × bundl
 - Local-only artifacts must never be pushed. Gitignored: `specs/user/` (your
   spec and its manifest), `local/` (your registry copies, runlogs and scratch),
   `site/llm-panel-review/data/manifest.json` and the timestamped
-  `behaviours-*.json` payloads, `engine/panel/metrics.jsonl`. A runlog or
-  registry written **outside** `local/` is not ignored and lands as a
-  committable file. One thing no ignore rule covers:
+  `behaviours-*.json` payloads, `engine/panel/metrics.jsonl`. A registry or runlog written **outside** `local/` may not be
+  ignored -- check with `git status` before committing. Two more the panel
+  writes: `engine/panel/metrics.jsonl` (ignored) and, on a parse failure,
+  `engine/panel/wholedoc-FAILED-*.txt` carrying raw model output (**not**
+  ignored). One thing no ignore rule covers:
   `site/spec-reader/data/documents.json` is **tracked**, and
   `build-spec-reader-data.py --user-manifest=` rewrites it in place with your
   spec's text inlined -- it is build output the site serves, so it cannot be

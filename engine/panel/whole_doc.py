@@ -45,7 +45,15 @@ def main():
     config = h.load_config()
     registry = h.load_registry(registry_path)
     panels = config.get("panels", {})
-    positional = [a for a in sys.argv[1:] if not a.startswith("--")]
+    for a in sys.argv[1:]:
+        if a.startswith("-") and a not in ("--sparse", "--help", "-h") \
+                and not a.startswith(("--runlog=", "--registry=")):
+            # A space-form flag was silently dropped and its value eaten as a
+            # positional, so --registry /path judged the SHIPPED definition and
+            # billed for it. Reject rather than guess.
+            sys.exit(f"unknown argument {a!r} -- valid: --runlog=PATH --registry=PATH "
+                     "--sparse (use = , not a space)")
+    positional = [a for a in sys.argv[1:] if not a.startswith("-")]
     if len(positional) < 3 or "--help" in sys.argv or "-h" in sys.argv:
         sys.exit(__doc__.strip())
     behaviours, specs, tags = (positional[0].split(","), positional[1].split(","),

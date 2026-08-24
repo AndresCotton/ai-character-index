@@ -211,12 +211,38 @@ def _shown(path):
 
 
 def resolve_panel(config, name):
-    """Panel seats for a --panel= value. A configured panel name, or a bare model
-    tag treated as a one-seat panel -- whole_doc.py has always accepted a bare tag
-    (panels.get(t) or [t]); without this the builder raised KeyError on the same
-    input, and a single-judge fork run had to add a panel to the tracked
-    panel-config.json just to build."""
-    return set(config["panels"].get(name) or [name])
+    """Panel seats for a --panel= value: a configured panel name, or a bare model
+    tag treated as a one-seat panel (whole_doc.py has always accepted a bare tag).
+
+    Validated, not permissive. `.get(name) or [name]` would turn a typo into a
+    one-seat panel named after the typo -- exit 0, an empty payload, and that
+    payload promoted to manifest.json's `latest`. Unknown input fails here for
+    the same reason an unknown flag does. Guards mirror run_rollout.py's:
+    panels.json also holds prose `_note` strings, and a panel could be empty."""
+    panels = config["panels"]
+    if name in panels and isinstance(panels[name], list) and panels[name]:
+        return set(panels[name])
+    if name in config.get("models", {}):
+        return {name}
+    sys.exit(f"unknown panel/model {name!r} -- panels: "
+             f"{[k for k in panels if not k.startswith('_')]}; "
+             f"models: {sorted(config.get('models', {}))}")
+
+
+def zero_citation_reason(rubric, runlog_rubrics, runlog_models, panel):
+    """Why a build produced nothing. The rubric filter runs before the panel
+    filter, so a rubric mismatch used to be reported as a panel mismatch --
+    with perfectly overlapping judges and advice to change the one flag that
+    was already correct."""
+    if rubric not in runlog_rubrics:
+        return (f"\n  0 citations. No rows carry rubric={rubric!r}; the runlog holds "
+                f"{sorted(runlog_rubrics)}. Pass --rubric=<one of those>.")
+    overlap = runlog_models & panel
+    return (f"\n  0 citations. Runlog judges: {sorted(runlog_models) or 'none'}; "
+            f"panel seats: {sorted(panel)}. A citation needs {min(2, len(panel))} "
+            f"vote(s) from seats in the panel"
+            + ("" if overlap else " -- these do not overlap; "
+               "pass --panel=<one of the runlog's tags>.") )
 
 
 def unknown_slug_message(unknown_keys, registry_path):
@@ -324,12 +350,14 @@ def main(argv=None):
     registry = json.loads(registry_path.read_text())
     votes = collections.defaultdict(dict)
     runlog_models = set()
+    runlog_rubrics = set()
     spec_of = {}
     runlog_keys = set()
     for line in runlog.read_text().splitlines():
         d = json.loads(line)
         runlog_keys.add(d["behaviour"])
         runlog_models.add(d["model"])   # pre-filter, so a zero can name them
+        runlog_rubrics.add(d.get("rubric", "v1"))
         if d.get("rubric", "v1") != rubric or not d.get("parsed", True) or d["model"] not in panel:
             continue
         votes[(d["behaviour"], d["locator"])][d["model"]] = d.get("verdict", 0)
@@ -425,14 +453,7 @@ def main(argv=None):
     summary = f"{len(out_behaviours)} behaviours, {n} citations " \
               f"(threshold {DISPLAY['threshold']}, solid {DISPLAY['solid_threshold']})"
     if n == 0:
-        # Silent zero is the trap: a runlog judged by fewer seats than the panel
-        # has loses every row to keeps_citation's min(2, panel_size) floor, and the
-        # build still exits 0 with an empty page.
-        seen = sorted(runlog_models)
-        summary += (f"\n  0 citations. Runlog judges: {seen or 'none'}; panel seats: "
-                    f"{sorted(panel)}. A citation needs {min(2, len(panel))} vote(s) "
-                    f"from seats in the panel -- if those two lists barely overlap, "
-                    f"pass --panel=<one of the runlog's tags> instead.")
+        summary += zero_citation_reason(rubric, runlog_rubrics, runlog_models, panel)
     payload = json.dumps(out, indent=1, ensure_ascii=False)
     if out_name:
         # Explicit destination: iteration builds, or --out=behaviours.json to rebuild

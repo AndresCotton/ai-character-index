@@ -1081,13 +1081,64 @@ class TestMainSmoke(unittest.TestCase):
         self.assertIn("whole_doc.py", blob)
         self.assertIn("--registry=", blob)
 
+    def test_unknown_panel_name_exits_instead_of_building_empty(self):
+        # B1: `.get(name) or [name]` turned a typo'd panel into a one-seat panel
+        # named after the typo -- exit 0, empty payload, promoted to manifest latest.
+        # Same class of bad input as an unknown flag, which this file already rejects.
+        cfg = {"panels": {"cheap": ["gpt-mini"], "_note": "prose", "empty": []},
+               "models": {"gpt-mini": {}, "haiku": {}}}
+        self.assertEqual(bs.resolve_panel(cfg, "cheap"), {"gpt-mini"})
+        self.assertEqual(bs.resolve_panel(cfg, "haiku"), {"haiku"})   # bare tag still works
+        for bad in ("frontierr", "_note", "empty"):
+            with self.subTest(bad=bad), self.assertRaises(SystemExit) as cm:
+                bs.resolve_panel(cfg, bad)
+            self.assertIn(bad, str(cm.exception))
+
+    def test_zero_citations_names_a_rubric_mismatch_as_such(self):
+        # N2: runlog_models is collected before the rubric filter, so a v5 runlog
+        # built with --rubric=v3w reported perfectly overlapping judges and advised
+        # changing --panel, the one thing that was already right.
+        msg = bs.zero_citation_reason(rubric="v3w", runlog_rubrics={"v5"},
+                                      runlog_models={"sol"}, panel={"sol"})
+        self.assertIn("rubric", msg)
+        self.assertIn("v5", msg)
+        self.assertNotIn("--panel=", msg)
+        msg2 = bs.zero_citation_reason(rubric="v3w", runlog_rubrics={"v3w"},
+                                       runlog_models={"haiku"}, panel={"gpt-mini"})
+        self.assertIn("--panel=", msg2)
+
+    def test_whole_doc_rejects_space_form_flags(self):
+        # N3: `--registry /path` (space) was silently dropped and the SHIPPED
+        # registry used instead -- on the step that spends money.
+        r = subprocess.run([sys.executable, str(HERE / "whole_doc.py"),
+                            "helpfulness", "constitution", "haiku",
+                            "--registry", "/tmp/whatever.json"],
+                           capture_output=True, text=True, env=hermetic_env(), timeout=120)
+        blob = r.stdout + r.stderr
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("--registry=", blob)      # tells you the = form
+        self.assertNotIn("for provider", blob)  # must NOT have reached the API step
+
+    def test_unknown_slug_error_names_the_registry_you_passed(self):
+        # N4: it named the default registry and told you to pass --registry= when
+        # you already had.
+        reg = Path(tempfile.mkdtemp()) / "mine.json"
+        reg.write_text(json.dumps({"real": {"name": "R", "set": "user", "numeric_id": 1,
+                                            "group": None, "definition": "d",
+                                            "facets": []}}), encoding="utf-8")
+        self.addCleanup(lambda: shutil.rmtree(reg.parent, ignore_errors=True))
+        with self.assertRaises(SystemExit) as cm:
+            h.load_entry("typo", h.load_registry(str(reg)))
+        self.assertIn("mine.json", str(cm.exception))
+
     def test_bare_tag_is_accepted_as_a_one_seat_panel(self):
         # Step 5 of the fork pathway needed a single-judge panel, and --panel=haiku
         # was a KeyError -- so the docs told users to add "solo": ["haiku"] to
         # engine/panel/panel-config.json, a TRACKED file. whole_doc.py already
         # accepts a bare tag (panels.get(t) or [t]); the builder now matches, which
         # removes the last tracked-file edit from the fork path.
-        cfg = {"panels": {"cheap": ["gpt-mini", "haiku"]}}
+        cfg = {"panels": {"cheap": ["gpt-mini", "haiku"]},
+               "models": {"gpt-mini": {}, "haiku": {}}}
         self.assertEqual(bs.resolve_panel(cfg, "cheap"), {"gpt-mini", "haiku"})
         self.assertEqual(bs.resolve_panel(cfg, "haiku"), {"haiku"})
 

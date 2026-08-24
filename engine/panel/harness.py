@@ -256,6 +256,7 @@ def passages(spec):
 
 
 DEFAULT_REGISTRY_PATH = HERE / "behaviours.json"
+REGISTRY_SOURCE = {}   # id(parsed dict) -> path it came from, for error messages
 
 
 def _panel_shape(slug, entry):
@@ -296,7 +297,9 @@ def load_registry(path=None):
         sys.exit(f"behaviour registry not found: {src}")
     except json.JSONDecodeError as e:
         sys.exit(f"behaviour registry {src} is not valid JSON: {e}")
-    return {slug: e for slug, e in raw.items() if isinstance(e, dict)}
+    kept = {slug: e for slug, e in raw.items() if isinstance(e, dict)}
+    REGISTRY_SOURCE[id(kept)] = str(src)
+    return kept
 
 
 def load_entry(behaviour, registry=None):
@@ -304,8 +307,8 @@ def load_entry(behaviour, registry=None):
     already-parsed dict (load_registry) so a caller resolves the file ONCE."""
     b = load_registry() if registry is None else registry
     if behaviour not in b:
-        sys.exit(f"unknown behaviour {behaviour!r} -- add it to the behaviour registry "
-                 f"({DEFAULT_REGISTRY_PATH.name}), or pass --registry=<your behaviours.json>")
+        src = REGISTRY_SOURCE.get(id(b), str(DEFAULT_REGISTRY_PATH))
+        sys.exit(f"unknown behaviour {behaviour!r} -- not in {src}")
     return _panel_shape(behaviour, b[behaviour])
 
 
