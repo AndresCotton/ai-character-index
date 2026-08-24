@@ -8,13 +8,17 @@ Usage:
 Uses the `jsonschema` package when it is installed; otherwise falls back to a
 built-in stdlib validator covering the keyword subset data/schema/ uses
 ($ref within the same document, type, enum, required, properties,
-additionalProperties, items, minItems, minLength, minimum, maximum, pattern).
+additionalProperties, propertyNames, items, minItems, minLength, minimum, maximum, pattern).
 Neither path needs a dependency installed, and exit code is non-zero on any
 failure, so this can gate CI as-is.
 
 Beyond the per-file schemas, this encodes the cross-file rules from
 data/README.md that a single-file schema cannot express:
   - every coverage record's lab_id must exist in data/labs.json;
+  - every coverage record's behaviour_id must exist in the behaviour registry
+    (data/behaviours.json, index set);
+  - every behaviour id referenced by data/evals.json must exist in the
+    behaviour registry (index set);
   - every reader-test coverage record's behaviour_id must exist in that
     file's own behaviours list (no unknown behaviour IDs).
 """
@@ -31,6 +35,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # (data file, its schema) -- every *.json in data/ must appear here.
 CHECKS = (
+    ("behaviours.json", "behaviours.schema.json"),
     ("coverage.json", "coverage.schema.json"),
     ("labs.json", "labs.schema.json"),
     ("evals.json", "evals.schema.json"),
@@ -112,6 +117,63 @@ def _resolve_ref(ref: str, root_schema: dict) -> dict:
     return node
 
 
+# Validation keywords the fallback implements (the subset data/schema/ uses).
+_SUPPORTED_KEYWORDS = {
+    "type", "enum", "required", "properties", "additionalProperties",
+    "propertyNames", "items", "minItems", "minLength", "minimum", "maximum",
+    "pattern", "$ref",
+}
+
+# Annotation/meta keywords with no validation semantics (draft 2020-12);
+# safe for the fallback to ignore.
+_ANNOTATION_KEYWORDS = {
+    "$schema", "$id", "$defs", "$comment", "title", "description",
+    "default", "examples", "deprecated", "readOnly", "writeOnly",
+}
+
+
+def _check_supported_keywords(schema, location, errors) -> None:
+    """Fail loudly on any validation keyword the fallback does not implement.
+
+    Scans the whole schema document (not just the parts one instance reaches),
+    so a future edit that leans on e.g. oneOf, format or uniqueItems breaks
+    the gate here instead of silently validating less than the jsonschema
+    backend does.
+    """
+    if not isinstance(schema, dict):
+        return
+    for key in schema:
+        if key not in _SUPPORTED_KEYWORDS and key not in _ANNOTATION_KEYWORDS:
+            errors.append(
+                f"schema at {location}: unsupported keyword {key!r} -- the built-in "
+                f"validator implements only: {', '.join(sorted(_SUPPORTED_KEYWORDS))}; "
+                f"extend the fallback or install jsonschema"
+            )
+    properties = schema.get("properties")
+    if isinstance(properties, dict):
+        for name, sub in properties.items():
+            _check_supported_keywords(sub, f"{location}.properties.{name}", errors)
+    items = schema.get("items")
+    if isinstance(items, dict):
+        _check_supported_keywords(items, f"{location}.items", errors)
+    elif isinstance(items, list):
+        errors.append(
+            f"schema at {location}.items: list-valued items (tuple validation) "
+            f"is not implemented by the built-in validator -- extend the "
+            f"fallback or install jsonschema"
+        )
+    additional = schema.get("additionalProperties")
+    if isinstance(additional, dict):
+        _check_supported_keywords(additional, f"{location}.additionalProperties", errors)
+    prop_names = schema.get("propertyNames")
+    if isinstance(prop_names, dict):
+        _check_supported_keywords(prop_names, f"{location}.propertyNames", errors)
+    defs = schema.get("$defs")
+    if isinstance(defs, dict):
+        for name, sub in defs.items():
+            _check_supported_keywords(sub, f"{location}.$defs.{name}", errors)
+
+
 def _validate_node(instance, schema, root_schema, path, errors) -> None:
     if "$ref" in schema:
         schema = _resolve_ref(schema["$ref"], root_schema)
@@ -143,6 +205,10 @@ def _validate_node(instance, schema, root_schema, path, errors) -> None:
             errors.append(f"{path}: {instance} is greater than maximum {schema['maximum']}")
 
     if isinstance(instance, dict):
+        prop_names = schema.get("propertyNames")
+        if isinstance(prop_names, dict):
+            for key in instance:
+                _validate_node(key, prop_names, root_schema, f"{path}.<propertyNames:{key}>", errors)
         for key in schema.get("required", []):
             if key not in instance:
                 errors.append(f"{path}: missing required key '{key}'")
@@ -166,6 +232,9 @@ def _validate_node(instance, schema, root_schema, path, errors) -> None:
 
 def _validate_with_stdlib(instance, schema) -> list:
     errors = []
+    _check_supported_keywords(schema, "$", errors)
+    if errors:
+        return errors  # the schema itself is broken for this backend
     _validate_node(instance, schema, schema, "$", errors)
     return errors
 
@@ -210,6 +279,11 @@ def _cross_file_checks(files: dict) -> list:
         for lab in labs.get("labs", [])
         if isinstance(lab, dict)
     } if isinstance(labs, dict) else set()
+    if not lab_ids:
+        # Without a usable registry the membership checks below cannot run.
+        # Say so loudly: a broken registry must not masquerade as a passing
+        # gate just because nothing got checked against it.
+        errors.append("cross-file lab_id checks skipped: labs.json missing or empty")
 
     def check_lab_ids(file_name, records):
         for index, record in enumerate(records or []):
@@ -226,6 +300,43 @@ def _cross_file_checks(files: dict) -> list:
     if isinstance(coverage, dict):
         check_lab_ids("coverage.json", coverage.get("coverage"))
 
+    registry = files.get("behaviours.json")
+    index_ids = {
+        entry.get("numeric_id")
+        for entry in registry.values()
+        if isinstance(entry, dict) and entry.get("set") == "index"
+    } if isinstance(registry, dict) else set()
+
+    if not index_ids:
+        errors.append(
+            "behaviour registry checks skipped: behaviours.json missing or "
+            "has no index-set entries"
+        )
+
+    if index_ids and isinstance(coverage, dict):
+        for index, record in enumerate(coverage.get("coverage") or []):
+            if not isinstance(record, dict):
+                continue
+            behaviour_id = record.get("behaviour_id")
+            if behaviour_id is not None and behaviour_id not in index_ids:
+                errors.append(
+                    f"coverage.json: coverage[{index}]: behaviour_id {behaviour_id!r} "
+                    f"is not an index-set id in the behaviour registry (data/behaviours.json)"
+                )
+
+    evals = files.get("evals.json")
+    if index_ids and isinstance(evals, dict):
+        for section in ("evals", "rejected"):
+            for index, record in enumerate(evals.get(section) or []):
+                if not isinstance(record, dict):
+                    continue
+                for behaviour_id in record.get("behaviour_ids") or []:
+                    if behaviour_id not in index_ids:
+                        errors.append(
+                            f"evals.json: {section}[{index}]: behaviour id {behaviour_id!r} "
+                            f"is not an index-set id in the behaviour registry (data/behaviours.json)"
+                        )
+
     reader_test = files.get("reader-test-coverage.json")
     if isinstance(reader_test, dict):
         records = reader_test.get("coverage")
@@ -235,6 +346,14 @@ def _cross_file_checks(files: dict) -> list:
             for behaviour in reader_test.get("behaviours", [])
             if isinstance(behaviour, dict)
         }
+        if not behaviour_ids:
+            # Same rule as labs.json above: with no behaviours list there is
+            # nothing to check behaviour_id against, and that must fail the
+            # gate instead of silently skipping the membership check.
+            errors.append(
+                "cross-file behaviour_id checks skipped: "
+                "reader-test-coverage.json behaviours missing or empty"
+            )
         for index, record in enumerate(records or []):
             if not isinstance(record, dict):
                 continue

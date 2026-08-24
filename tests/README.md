@@ -38,6 +38,15 @@ One test file per subject under test:
   old-format artifact the publish gate cannot parse. Resolution is
   in-process (one spec load per spec), so this stays near-instant as
   behaviours accumulate.
+- `test_behaviour_registry.py` -- the drift gate for behaviour identity:
+  `data/behaviours.json` is the source of truth, and the derived constants
+  (`GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in
+  `engine/build-spec-reader-data.py`, the panel slug lists) must equal
+  `engine/generate_behaviour_constants.py`'s rendering of it. Also pins the
+  registry against the published ledgers it mirrors (`data/coverage.json`
+  names, `data/reader-test-coverage.json` behaviours) and proves the gate
+  has teeth by mutating scratch copies (--check must fail). After an
+  intentional registry change, run the generator and commit both sides.
 
 To run one class during a tight edit loop (the goldens take ~20s; the unit
 tests are instant):

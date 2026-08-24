@@ -1,4 +1,8 @@
-"""Gate test: every citation in data/coverage.json re-resolves byte-for-byte.
+"""Gate test: every citation in the published ledgers re-resolves byte-for-byte.
+
+Covers both data/coverage.json (the published reader) and
+data/reader-test-coverage.json (the reader-test bench), whose citations cite
+the same specs through the same locator format.
 
 The publish --check gate (test_publish_check.py) only covers behaviours with a
 staged artifact (research/sweeps/*/4-spec-coverage.md). Behaviour 1 predates
@@ -22,6 +26,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 COVERAGE = ROOT / "data" / "coverage.json"
+READER_TEST_COVERAGE = ROOT / "data" / "reader-test-coverage.json"
 
 sys.path.insert(0, str(ROOT / "engine" / "spec-cite"))
 import cite  # noqa: E402
@@ -49,6 +54,38 @@ class CoverageJsonResolutionTest(unittest.TestCase):
     def test_every_published_quote_re_resolves(self):
         data = json.loads(COVERAGE.read_text(encoding="utf-8"))
         self.assertTrue(data["coverage"], "coverage.json is empty")
+        specs_cache = {}
+        for record in data["coverage"]:
+            for citation in record["citations"]:
+                locator = citation["locator"]
+                with self.subTest(locator=locator):
+                    try:
+                        resolved = resolve_in_process(specs_cache, locator)
+                    except SystemExit as e:
+                        self.fail(f"locator failed to resolve: {e}")
+                    expected = (
+                        resolved.splitlines()[0]
+                        if citation.get("example_block")
+                        else resolved
+                    )
+                    self.assertEqual(
+                        citation["quote"], expected,
+                        f"behaviour {record['behaviour_id']} "
+                        f"({record['lab_id']}): stored quote does not match "
+                        f"resolver output",
+                    )
+
+
+class ReaderTestCoverageJsonResolutionTest(unittest.TestCase):
+    """The bench's ledger gets the same net, one in-process resolution per citation."""
+
+    def test_every_published_quote_re_resolves(self):
+        data = json.loads(READER_TEST_COVERAGE.read_text(encoding="utf-8"))
+        self.assertTrue(data["coverage"], "reader-test-coverage.json is empty")
+        # The PR description pins this count: the net must cover every quote.
+        self.assertEqual(
+            sum(len(record["citations"]) for record in data["coverage"]), 294,
+        )
         specs_cache = {}
         for record in data["coverage"]:
             for citation in record["citations"]:
