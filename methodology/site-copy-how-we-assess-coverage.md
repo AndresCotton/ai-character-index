@@ -22,13 +22,17 @@ The ground truth is the latest published version of each specification,
 mirrored into the repository from the labs' own sources -- currently
 `constitution@2026-01-20` and `model-spec@2025-12-18`.
 
-Relevant passages are found by systematic search. A term list is fixed before
-searching and published in full: the behaviour's own words, synonyms and
+Relevant passages are found by an LLM panel: three frontier judges -- one from
+OpenAI's line, one from Anthropic's line, and a third-party judge -- score
+every passage of both mirrors against the behaviour, whole-spec at a time.
+
+The coverage published so far predates the panel and was found by a fixed term
+list, published in full: the behaviour's own words, synonyms and
 antonym-phrasings, and each spec's register for the same idea -- 48 terms for
-§ 3, with short ambiguous terms word-bounded. Every term is run over both
-mirrors and every result is recorded, empty results included, so the published
+§ 3, with short ambiguous terms word-bounded. Every term was run over both
+mirrors and every result recorded, empty results included, so the published
 table shows everywhere the search looked. The whole section enclosing each hit
-is then read, because a spec often states the actual rule a paragraph away
+was then read, because a spec often states the actual rule a paragraph away
 from the word that matched.
 
 Every passage that bears on the behaviour is then extracted as an exact,
