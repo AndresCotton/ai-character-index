@@ -28,7 +28,9 @@ use other conventions can read the same files directly.
 Everything stays local — nothing pushes back.
 
 1. Register a user spec: create `specs/user/specs.json` (gitignored) pointing at
-   your spec markdown; optional `title`/`sourceUrl` for display. See
+   your spec markdown; optional `title`/`sourceUrl` for display sit *inside each
+   version*, beside `path`/`default` -- neither doc below shows them, so copy the
+   nesting from the worked manifest in `engine/stage_user_demo.py`. See
    `engine/README.md` ("User specs") and `specs/CITATION.md`.
 2. Reader payload -- **run this from the repo root**:
    `python3 engine/build-spec-reader-data.py --user-manifest=specs/user/specs.json`
@@ -47,8 +49,9 @@ Everything stays local — nothing pushes back.
      `group`, `definition`, `facets`. See
      `data/schema/behaviours.schema.json` and the worked entry in
      `engine/stage_user_demo.py`.
-   - `engine/panel/behaviours.json` drives *judging*: `label`, `title`,
-     `source`, `query` (the definition the judges are given), `boundary`.
+   - `engine/panel/behaviours.json` drives *judging*: an object keyed by slug,
+     each entry `label`, `title`, `source`, `query` (the definition the judges
+     are given), `boundary`.
      `whole_doc.py` has no `--registry` flag, so it reads this file and only
      this file; a slug missing here fails step 4 with
      `unknown behaviour '<slug>'`.
@@ -80,7 +83,8 @@ Everything stays local — nothing pushes back.
    -- a bare tag is a `KeyError`, unlike `whole_doc.py`, which accepts one. A
    citation also needs `min(2, panel_size)` votes, so **one judge scored against
    a multi-seat panel yields 0 citations, exit 0, and an empty page.** For a
-   single-judge run, add a single-seat panel (again, a tracked file to revert):
+   single-judge run, add a single-seat panel under the top-level `panels` object
+   in `engine/panel/panel-config.json` (again, a tracked file to revert):
    `"solo": ["haiku"]`.
 
    ```sh
@@ -90,10 +94,16 @@ Everything stays local — nothing pushes back.
    ```
 
    It prints the citation count -- if that is 0, check your panel's seats
-   against the runlog's `model` values before looking anywhere else.
+   against the runlog's `model` values before looking anywhere else. The
+   `(threshold 3, solid 5)` it also prints is builder-side and does not gate what
+   renders: a single-judge run renders its 2s as defining and its 1s as related.
 6. View: `python3 -m http.server 8123 --directory site` →
    `http://localhost:8123/spec-reader/` and `http://localhost:8123/llm-panel-review/`
    (panel loads the manifest's latest run by default; pin with `?data=<name>`).
+   **Check the port is free first** (`lsof -i:8123`) and use any free port
+   otherwise -- if another clone of this repo is already serving `site/` there,
+   the URL returns 200 and renders *its* payload with nothing on the page saying
+   so.
 
 ### Where your run lands, and where it does not
 
