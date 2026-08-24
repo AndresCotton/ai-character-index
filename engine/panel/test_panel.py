@@ -1036,21 +1036,43 @@ class TestMainSmoke(unittest.TestCase):
         # load time made the documented instruction produce a registry that
         # always failed -- with an error naming a slug the user never mentioned.
         # Adaptation must be lazy: only the requested behaviour is adapted.
+        # The fixture is a COPY OF THE REAL data/behaviours.json plus one user row --
+        # exactly what AGENTS.md step 3 tells a fork to build. A synthetic fixture
+        # would route around the ten shipped blank-definition rows that caused the
+        # regression this guards.
+        shipped = json.loads((HERE.parent.parent / "data" / "behaviours.json")
+                             .read_text(encoding="utf-8"))
+        blank = [s for s, e in shipped.items() if not (e.get("definition") or "").strip()]
+        self.assertTrue(blank, "fixture assumes the shipped registry has blank-definition rows")
+        shipped["acme-disclosure"] = {"name": "Acme disclosure", "set": "user",
+                                      "numeric_id": 1, "group": None,
+                                      "definition": "Disclose compute usage.", "facets": []}
         reg = Path(tempfile.mkdtemp()) / "copied-registry.json"
-        reg.write_text(json.dumps({
-            "unpublished-row": {"name": "Unpublished", "set": "index", "numeric_id": 4,
-                                "group": None, "definition": "", "facets": []},
-            "acme-disclosure": {"name": "Acme disclosure", "set": "user", "numeric_id": 1,
-                                "group": None, "definition": "Disclose compute usage.",
-                                "facets": []}}), encoding="utf-8")
+        reg.write_text(json.dumps(shipped), encoding="utf-8")
         self.addCleanup(lambda: shutil.rmtree(reg.parent, ignore_errors=True))
         registry = h.load_registry(str(reg))          # must not raise
         block = h.compose_query("acme-disclosure", "v3", registry)
         self.assertIn("Disclose compute usage.", block)
         # asking for the blank one is still a loud, named failure
         with self.assertRaises(SystemExit) as cm:
-            h.compose_query("unpublished-row", "v3", registry)
-        self.assertIn("unpublished-row", str(cm.exception))
+            h.compose_query(blank[0], "v3", registry)
+        self.assertIn(blank[0], str(cm.exception))
+
+    def test_missing_registry_file_exits_cleanly(self):
+        # A typo'd --registry= on the money step must not be a raw traceback.
+        with self.assertRaises(SystemExit) as cm:
+            h.load_registry(str(Path(tempfile.mkdtemp()) / "does-not-exist.json"))
+        self.assertIn("does-not-exist.json", str(cm.exception))
+
+    def test_whitespace_only_definition_is_rejected(self):
+        reg = Path(tempfile.mkdtemp()) / "ws.json"
+        reg.write_text(json.dumps({"ws": {"name": "WS", "set": "user", "numeric_id": 1,
+                                          "group": None, "definition": "   ",
+                                          "facets": []}}), encoding="utf-8")
+        self.addCleanup(lambda: shutil.rmtree(reg.parent, ignore_errors=True))
+        with self.assertRaises(SystemExit) as cm:
+            h.compose_query("ws", "v3", h.load_registry(str(reg)))
+        self.assertIn("ws", str(cm.exception))
 
     def test_whole_doc_registry_flag_accepts_a_display_shape_registry(self):
         # The fork seam. A user behaviour lives in data/behaviours.json shape
@@ -1059,9 +1081,9 @@ class TestMainSmoke(unittest.TestCase):
         # label/title/query/boundary), so before --registry= a fork had to register
         # the same behaviour twice, the second time in a TRACKED file.
         #
-        # Arg-parse-level, like the panel-expansion test above: compose_query runs at
-        # whole_doc.py:49, seventeen lines before client_for at :60 and the API call
-        # at :66, so registry resolution is provable without a key. Under
+        # Arg-parse-level, like the panel-expansion test above: compose_query runs
+        # well before client_for and the API call in whole_doc.py's main loop, so
+        # registry resolution is provable without a key. Under
         # hermetic_env() the key check is unreachable-by-construction, so this cannot
         # spend. Reaching "for provider" means the prompt composed.
         reg = Path(tempfile.mkdtemp()) / "my-behaviours.json"

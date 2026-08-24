@@ -270,7 +270,7 @@ def _panel_shape(slug, entry):
     build_site_data.py. Adaptation is per-entry, so a hybrid file works too."""
     if "query" in entry:
         return entry
-    if not entry.get("definition"):
+    if not (entry.get("definition") or "").strip():
         sys.exit(f"behaviour {slug!r} carries no 'query' and no non-empty "
                  "'definition' -- a judge prompt needs the behaviour's definition text")
     return {"label": entry.get("name", slug),
@@ -289,7 +289,13 @@ def load_registry(path=None):
     ten of the shipped rows are unpublished index behaviours with an empty
     definition. Adapting eagerly made the documented instruction produce a
     registry that always failed, naming a slug the user never mentioned."""
-    raw = json.loads(Path(path or DEFAULT_REGISTRY_PATH).read_text())
+    src = Path(path or DEFAULT_REGISTRY_PATH)
+    try:
+        raw = json.loads(src.read_text())
+    except FileNotFoundError:
+        sys.exit(f"behaviour registry not found: {src}")
+    except json.JSONDecodeError as e:
+        sys.exit(f"behaviour registry {src} is not valid JSON: {e}")
     return {slug: e for slug, e in raw.items() if isinstance(e, dict)}
 
 
