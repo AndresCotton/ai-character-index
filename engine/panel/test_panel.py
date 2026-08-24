@@ -1029,6 +1029,29 @@ class TestMainSmoke(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("unknown panel", r.stderr + r.stdout)
 
+    def test_registry_with_blank_definitions_resolves_the_slug_you_asked_for(self):
+        # AGENTS.md step 3 says to add your entry to "a local copy of
+        # data/behaviours.json". Ten of the 23 shipped rows carry an empty
+        # definition (unpublished index behaviours), so adapting EVERY entry at
+        # load time made the documented instruction produce a registry that
+        # always failed -- with an error naming a slug the user never mentioned.
+        # Adaptation must be lazy: only the requested behaviour is adapted.
+        reg = Path(tempfile.mkdtemp()) / "copied-registry.json"
+        reg.write_text(json.dumps({
+            "unpublished-row": {"name": "Unpublished", "set": "index", "numeric_id": 4,
+                                "group": None, "definition": "", "facets": []},
+            "acme-disclosure": {"name": "Acme disclosure", "set": "user", "numeric_id": 1,
+                                "group": None, "definition": "Disclose compute usage.",
+                                "facets": []}}), encoding="utf-8")
+        self.addCleanup(lambda: shutil.rmtree(reg.parent, ignore_errors=True))
+        registry = h.load_registry(str(reg))          # must not raise
+        block = h.compose_query("acme-disclosure", "v3", registry)
+        self.assertIn("Disclose compute usage.", block)
+        # asking for the blank one is still a loud, named failure
+        with self.assertRaises(SystemExit) as cm:
+            h.compose_query("unpublished-row", "v3", registry)
+        self.assertIn("unpublished-row", str(cm.exception))
+
     def test_whole_doc_registry_flag_accepts_a_display_shape_registry(self):
         # The fork seam. A user behaviour lives in data/behaviours.json shape
         # (name/set/numeric_id/group/definition/facets). Judging reads a DIFFERENT

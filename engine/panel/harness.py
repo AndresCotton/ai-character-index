@@ -280,21 +280,27 @@ def _panel_shape(slug, entry):
 
 
 def load_registry(path=None):
-    """{slug: panel-shape entry} from a behaviour registry, EITHER shape (see
-    _panel_shape). Default: the panel's own behaviours.json. Non-dict values
-    (file-level notes) are dropped, matching run_rollout.py's filter."""
+    """{slug: raw entry} from a behaviour registry, EITHER shape. Default: the
+    panel's own behaviours.json. Non-dict values (file-level notes) are dropped,
+    matching run_rollout.py's filter.
+
+    Entries are NOT adapted here -- load_entry adapts the one you ask for. That
+    is deliberate: a fork is told to copy data/behaviours.json and add a row, and
+    ten of the shipped rows are unpublished index behaviours with an empty
+    definition. Adapting eagerly made the documented instruction produce a
+    registry that always failed, naming a slug the user never mentioned."""
     raw = json.loads(Path(path or DEFAULT_REGISTRY_PATH).read_text())
-    return {slug: _panel_shape(slug, e) for slug, e in raw.items() if isinstance(e, dict)}
+    return {slug: e for slug, e in raw.items() if isinstance(e, dict)}
 
 
 def load_entry(behaviour, registry=None):
-    """The validated registry entry. `registry` injects an already-parsed dict
-    (load_registry) so a caller resolves the file ONCE per run."""
+    """The requested registry entry, in panel shape. `registry` injects an
+    already-parsed dict (load_registry) so a caller resolves the file ONCE."""
     b = load_registry() if registry is None else registry
     if behaviour not in b:
         sys.exit(f"unknown behaviour {behaviour!r} -- add it to the behaviour registry "
                  f"({DEFAULT_REGISTRY_PATH.name}), or pass --registry=<your behaviours.json>")
-    return b[behaviour]
+    return _panel_shape(behaviour, b[behaviour])
 
 
 def load_query(behaviour, registry=None):
