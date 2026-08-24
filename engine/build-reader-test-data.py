@@ -45,9 +45,9 @@ def main() -> None:
         {record["lab_id"] for record in records} - set(LAB_IDS)
     )
     if unknown_lab_ids:
-        # A record whose lab is not in this builder's list used to be silently
-        # dropped from the payload -- silent data loss for whoever forks the
-        # reader. Fail loudly and name the offending lab_id(s) instead.
+        # A record whose lab is not in this builder's list fails loudly,
+        # naming the lab_id(s) -- silently dropping it would be data loss
+        # for whoever forks the reader.
         raise SystemExit(
             f"coverage record(s) with lab_id(s) {unknown_lab_ids} not in this "
             f"builder's lab list {LAB_IDS}"

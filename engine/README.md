@@ -2,7 +2,7 @@
 
 The automation that keeps the index alive. Design in [PLAN.md §1.2](../PLAN.md).
 
-## spec-watch/ (works today)
+## spec-watch/
 
 `pull-latest.sh` pulls the latest published specs from the labs' GitHub repos into [`specs/`](../specs/). Run manually for now:
 
@@ -12,7 +12,7 @@ The automation that keeps the index alive. Design in [PLAN.md §1.2](../PLAN.md)
 
 Requires an authenticated `gh` CLI. Known issue: the OpenAI upstream `docs/` release archives (dated HTML snapshots, 1.7-2.6 MB each) exceed the GitHub contents API's 1 MB inline limit, so the script's fetch of them yields 0-byte files; the empty artifacts have been removed from the repo and fixing the fetch is an open closeout-list item. In Phase 3 this becomes a weekly GitHub Action that opens a PR when a spec changed, plus an issue listing which behaviours cite the changed sections and need re-verification.
 
-## spec-cite/ (works today)
+## spec-cite/
 
 `cite.py` resolves and verifies the precise spec citations defined in [`specs/CITATION.md`](../specs/CITATION.md) (`spec@version › section › ¶paragraph › sentence`). Every quote stored anywhere in the project (Notion Spec Coverage DB, sweep write-ups, `data/coverage.json`) must be the output of `resolve` for a pinned locator:
 
@@ -39,7 +39,7 @@ No CI re-resolves locators today (the only workflow is `.github/workflows/deploy
 
 Every command then accepts the registered names alongside the bundled specs — `cite.py outline my-spec`, `cite.py resolve "my-spec@2026-08-18 > Some Section > ¶2 s1"`, etc. Paths resolve relative to the repo root (absolute paths also work); versions are ISO dates, as in locators. The `"default"` flag is optional when a spec has exactly one version, and at most one version per spec may carry it (two or more fail loudly at manifest load). A multi-version spec with no default still loads — the error is deferred until the spec is actually loaded without an `@version` pin, when `cite.py` exits listing the `my-spec@<version>` choices. Bundled names (`constitution`, `model-spec`) cannot be redefined — a manifest that tries, or that is malformed, fails loudly at load; an absent manifest is the normal bundled-only state. Blast radius of that loud failure: the panel pipeline imports `cite` at module-import time (via `harness.py`), so a malformed local manifest fails EVERY panel CLI and both panel test suites at startup — fix or delete the manifest (or point `SPEC_CITE_USER_SPECS` elsewhere) to recover; the bundled-spec tools fail the same way for the same reason. `SPEC_CITE_USER_SPECS=<file>` overrides the manifest location (how the test suite exercises this without touching `specs/`). This is a private citation workflow: the index's published coverage still cites only the bundled mirrors.
 
-## publish-coverage.py (works today)
+## publish-coverage.py
 
 Publishes one behaviour's gate-approved stage-4 artifact into `data/coverage.json`, re-resolving every stored quote through `cite.py` first. Two artifact forms; the sidecar wins when both exist in the sweep directory:
 
@@ -57,11 +57,11 @@ Behaviour 1 is a special case: `research/sweeps/01-no-sycophancy/` never had a s
 
 Known decoupling debt: the publisher hardcodes its lab list (`LABS`: anthropic and openai, plus their markdown section headings) instead of reading `data/labs.json`, so a lab added there does not extend the publisher until `LABS` changes to match.
 
-## panel/ (works today)
+## panel/
 
 The LLM panel judging pipeline: whole-spec judging calls, verdict parsing, the rollout driver, and the `site/llm-panel-review/` payload builder. Config is read lazily (`panel-config.json` at use time, injectable for tests) and the whole-doc prompts compose from the v3 rubric through named slots, so neither needs monkeypatching. See [`panel/README.md`](panel/README.md) for mechanics and reproduction; `python3 engine/panel/test_panel.py` runs its offline tests (no network, no keys). The canonical runlog that produced the shipped panel payload is committed data (`engine/panel/runlog-v3.jsonl`, documented in [`panel/runlog-v3.md`](panel/runlog-v3.md)); `python3 engine/panel/verify_panel_provenance.py` proves the shipped payload rebuilds from it byte-identically (one documented allowance: the builder's build-date stamp).
 
-## generate_behaviour_constants.py (works today)
+## generate_behaviour_constants.py
 
 [`data/behaviours.json`](../data/README.md) is the single behaviour registry (every behaviour in every set, keyed by slug). The derived copies of that identity regenerate from it -- never edit them by hand:
 
@@ -72,7 +72,7 @@ python3 engine/generate_behaviour_constants.py --check   # exit 1 with a diff on
 
 Rewritten constants: `GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in `build-spec-reader-data.py`, the key order and `title` fields of `panel/behaviours.json`, and `display.behaviours` in `panel/panel-config.json`. Only the constant blocks are touched; surrounding bytes are preserved. The panel<->registry mapping and the panel display list live in the generator (panel-pipeline metadata, deliberately not in the registry schema); both are validated against the registry, so a renamed slug fails loudly. `tests/test_behaviour_registry.py` is the drift gate.
 
-## site builders and checks (work today)
+## site builders and checks
 
 The reader surfaces render from generated payloads, never from hand-edited JSON:
 
@@ -87,7 +87,7 @@ The reader test bench ([`site/spec-reader-test/`](../site/spec-reader-test/)) is
 tab carrying an external reviewer's behaviour set. It shares the published reader's spec
 text and nothing else, so work there cannot alter what the index publishes.
 
-## data validation (works today)
+## data validation
 
 Every file in [`data/`](../data/) is validated against the JSON Schemas in [`data/schema/`](../data/schema/), plus the cross-file rules from [`data/README.md`](../data/README.md): no **published** coverage verdict without a citation (the reader-test bench models an absence finding as a record with empty citations), no coverage record pointing at a lab that `labs.json` doesn't define, no coverage record reference to a behaviour id the registry's index set doesn't define, and no unknown behaviour IDs in `reader-test-coverage.json` (checked against its own behaviours list).
 

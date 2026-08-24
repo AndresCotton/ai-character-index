@@ -1,3 +1,5 @@
+// GENERATED from data/behaviours.json by engine/generate_behaviour_constants.py
+// -- edit the registry, then regenerate; do not hand-edit this block.
 const GROUPS = [
   {
     name: "Honesty & epistemics",
