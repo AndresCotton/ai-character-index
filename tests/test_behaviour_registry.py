@@ -236,6 +236,17 @@ class ScratchTreeTestCase(unittest.TestCase):
 class TestDriftIsCaught(ScratchTreeTestCase):
     """Mutate a copy, expect --check to fail: the gate must have teeth."""
 
+    def test_unregistered_judge_prompt_key_fails_loudly(self):
+        # The judge-prompt file's keys are registry slugs; a prompt for an
+        # unregistered behaviour must fail the generator naming the key.
+        path = self.tmp / "engine" / "panel" / "behaviours.json"
+        data = json.loads(path.read_text(encoding="utf-8"))
+        data["never-registered"] = {"title": "x", "query": "y"}
+        path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        result = self.run_check()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("never-registered", result.stdout + result.stderr)
+
     def test_renaming_a_registry_behaviour_fails(self):
         def mutate(registry):
             registry["no-sycophancy"]["name"] = "Anti-sycophancy"

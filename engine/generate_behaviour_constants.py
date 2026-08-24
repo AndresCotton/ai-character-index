@@ -18,11 +18,11 @@ derived constants that must stay in lockstep with it:
   3. titles               engine/panel/behaviours.json
                           The judge prompts stay curated here; their keys are
                           registry slugs (the panel runlogs are keyed by the
-                          same slugs), committed key order is preserved, and
-                          any entry's `title` field is rewritten from the
-                          registry name. A key the registry does not carry
-                          (e.g. a staged prompt for a behaviour not yet in any
-                          set) keeps its committed title.
+                          same slugs) and every key must be one -- a judge
+                          prompt for an unregistered behaviour fails the
+                          generator. Committed key order is preserved, and any
+                          entry's `title` field is rewritten from the registry
+                          name.
 
 display.behaviours in engine/panel/panel-config.json is curated configuration,
 not generated: the builder validates every entry against the registry, so a
@@ -233,14 +233,21 @@ def render_behaviours_py(registry: dict, covered: set) -> str:
 
 def render_panel_behaviours(root: Path, registry: dict) -> str:
     """engine/panel/behaviours.json with `title` fields refreshed from the
-    registry; keys are registry slugs, committed key order is preserved, and
-    every other byte of the curated entries is untouched."""
+    registry; keys are registry slugs (every key must be one -- a judge
+    prompt for an unregistered behaviour fails here), committed key order is
+    preserved, and every other byte of the curated entries is untouched."""
     path = root / "engine" / "panel" / "behaviours.json"
     committed = json.loads(path.read_text(encoding="utf-8"))
+    unknown = [slug for slug in committed if slug not in registry]
+    if unknown:
+        sys.exit(
+            f"engine/panel/behaviours.json carries key(s) {unknown} that are "
+            "not registry slugs (data/behaviours.json) -- every judge prompt "
+            "must belong to a registered behaviour"
+        )
     for slug, entry in committed.items():
-        reg_entry = registry.get(slug)
-        if reg_entry is not None and "title" in entry:
-            entry["title"] = reg_entry["name"]
+        if "title" in entry:
+            entry["title"] = registry[slug]["name"]
     return json.dumps(committed, indent=2, ensure_ascii=False)
 
 
@@ -306,7 +313,7 @@ def main(argv=None) -> int:
                   "run `python3 engine/generate_behaviour_constants.py` and commit the result",
                   file=sys.stderr)
             return 1
-        print("OK: GROUPS, BEHAVIOURS, and the panel slug lists match data/behaviours.json")
+        print("OK: GROUPS, BEHAVIOURS, and the panel judge-prompt titles match data/behaviours.json")
         return 0
     return 0
 
