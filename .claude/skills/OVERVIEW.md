@@ -4,7 +4,7 @@
 
 ## Purpose
 
-The agent-executable playbook for the coverage workflow (scope ruling 2026-08-19: the evidence-discovery stages 1–3, the `behaviour-sweep` orchestrator, and `exclusion-criteria.md` were deleted): stage 4 (LLM-panel spec coverage), stage 5 (publish, coverage-only), stage 6 (verify, coverage-only), plus the one-behaviour campaign wrapper. Each stage ends at a human sign-off gate. These files are the primary LLM-facing interface to the repo — an agent asked to "run coverage for behaviour N" starts at `README.md` and follows these files. They are plain markdown and agent-neutral: any agent that reads them can follow them (the `.claude/skills/` path is a Claude Code / Qwen Code convention; see root `AGENTS.md` for pointers).
+The agent-executable playbook for the coverage workflow — the primary LLM-facing interface to the repo. Scope ruling 2026-08-19: the evidence-discovery stages 1–3, the `behaviour-sweep` orchestrator, and `exclusion-criteria.md` were deleted, leaving the coverage-only procedure as the only workflow here. How to run a sweep — invocation, the stage and gate tables, where artifacts land — lives in `README.md`; this file maps the layer instead.
 
 ## Contents
 
