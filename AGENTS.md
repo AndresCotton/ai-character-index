@@ -78,18 +78,18 @@ Everything stays local — nothing pushes back.
    validates `--behaviours=` against `engine/panel/behaviours.json` and judges
    `config["specs"]`, the two bundled mirrors, with no `--spec` flag. Useful only
    for a free dry-run cost estimate of a bundled behaviour.
-5. Build the payload. `--panel=` must name a panel in
-   `engine/panel/panel-config.json` whose seats match the judges in your runlog
-   -- a bare tag is a `KeyError`, unlike `whole_doc.py`, which accepts one. A
-   citation also needs `min(2, panel_size)` votes, so **one judge scored against
-   a multi-seat panel yields 0 citations, exit 0, and an empty page.** For a
-   single-judge run, add a single-seat panel under the top-level `panels` object
-   in `engine/panel/panel-config.json` (again, a tracked file to revert):
-   `"solo": ["haiku"]`.
+5. Build the payload. `--panel=` takes either a panel name from
+   `engine/panel/panel-config.json` or a bare model tag, which is treated as a
+   one-seat panel -- so a single-judge run is just `--panel=haiku`. Its seats
+   must match the judges in your runlog: a citation needs `min(2, panel_size)`
+   votes, so scoring one judge against a multi-seat panel yields 0 citations.
+   The builder says so when that happens, naming your runlog's tags and the
+   panel's seats. Every behaviour key in the runlog must also be a registry
+   slug, not just the one you pass to `--behaviours=`.
 
    ```sh
    python3 engine/panel/build_site_data.py --runlog=/tmp/my-run.jsonl \
-     --rubric=v3w --panel=solo --registry=local/my-behaviours.json \
+     --rubric=v3w --panel=haiku --registry=local/my-behaviours.json \
      --behaviours=<your-slug>
    ```
 

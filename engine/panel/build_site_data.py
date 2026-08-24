@@ -210,6 +210,21 @@ def _shown(path):
         return path
 
 
+def resolve_panel(config, name):
+    """Panel seats for a --panel= value. A configured panel name, or a bare model
+    tag treated as a one-seat panel -- whole_doc.py has always accepted a bare tag
+    (panels.get(t) or [t]); without this the builder raised KeyError on the same
+    input, and a single-judge fork run had to add a panel to the tracked
+    panel-config.json just to build."""
+    return set(config["panels"].get(name) or [name])
+
+
+def unknown_slug_message(unknown_keys, registry_path):
+    """Names the registry the caller actually passed, not a fixed path."""
+    return (f"runlog behaviour key(s) {unknown_keys} are not registry slugs "
+            f"({registry_path}) -- every runlog key must be a slug")
+
+
 def keeps_citation(score, n_votes, panel_size):
     """Pure: stray-vote guard -- scales to panel size so a 1-judge panel is legal."""
     return score >= 1 and n_votes >= min(2, panel_size)
@@ -300,24 +315,23 @@ def main(argv=None):
         elif a.startswith("--out="):            # alternate FILENAME in site data dir (iteration builds)
             out_name = a.split("=", 1)[1]
             check_out_name(out_name)            # loud error before any build work
-    panel = set(config["panels"][DISPLAY["panel"]])
+    panel = resolve_panel(config, DISPLAY["panel"])
     registry = json.loads(registry_path.read_text())
     votes = collections.defaultdict(dict)
+    runlog_models = set()
     spec_of = {}
     runlog_keys = set()
     for line in runlog.read_text().splitlines():
         d = json.loads(line)
         runlog_keys.add(d["behaviour"])
+        runlog_models.add(d["model"])   # pre-filter, so a zero can name them
         if d.get("rubric", "v1") != rubric or not d.get("parsed", True) or d["model"] not in panel:
             continue
         votes[(d["behaviour"], d["locator"])][d["model"]] = d.get("verdict", 0)
         spec_of[(d["behaviour"], d["locator"])] = d["spec"]
     unknown_keys = sorted(runlog_keys - set(registry))
     if unknown_keys:
-        sys.exit(
-            f"runlog behaviour key(s) {unknown_keys} are not registry slugs "
-            f"(data/behaviours.json) -- every runlog key must be a slug"
-        )
+        sys.exit(unknown_slug_message(unknown_keys, registry_path))
 
     # passage text for every spec the payload covers: the bundled specs, plus
     # any user spec referenced by the runlog (its passages resolve through
@@ -405,6 +419,15 @@ def main(argv=None):
     n = sum(len(c["passages"]) for b in out_behaviours for c in b["coverage"].values())
     summary = f"{len(out_behaviours)} behaviours, {n} citations " \
               f"(threshold {DISPLAY['threshold']}, solid {DISPLAY['solid_threshold']})"
+    if n == 0:
+        # Silent zero is the trap: a runlog judged by fewer seats than the panel
+        # has loses every row to keeps_citation's min(2, panel_size) floor, and the
+        # build still exits 0 with an empty page.
+        seen = sorted(runlog_models)
+        summary += (f"\n  0 citations. Runlog judges: {seen or 'none'}; panel seats: "
+                    f"{sorted(panel)}. A citation needs {min(2, len(panel))} vote(s) "
+                    f"from seats in the panel -- if those two lists barely overlap, "
+                    f"pass --panel=<one of the runlog's tags> instead.")
     payload = json.dumps(out, indent=1, ensure_ascii=False)
     if out_name:
         # Explicit destination: iteration builds, or --out=behaviours.json to rebuild

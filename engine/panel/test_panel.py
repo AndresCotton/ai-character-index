@@ -1058,6 +1058,22 @@ class TestMainSmoke(unittest.TestCase):
             h.compose_query(blank[0], "v3", registry)
         self.assertIn(blank[0], str(cm.exception))
 
+    def test_bare_tag_is_accepted_as_a_one_seat_panel(self):
+        # Step 5 of the fork pathway needed a single-judge panel, and --panel=haiku
+        # was a KeyError -- so the docs told users to add "solo": ["haiku"] to
+        # engine/panel/panel-config.json, a TRACKED file. whole_doc.py already
+        # accepts a bare tag (panels.get(t) or [t]); the builder now matches, which
+        # removes the last tracked-file edit from the fork path.
+        cfg = {"panels": {"cheap": ["gpt-mini", "haiku"]}}
+        self.assertEqual(bs.resolve_panel(cfg, "cheap"), {"gpt-mini", "haiku"})
+        self.assertEqual(bs.resolve_panel(cfg, "haiku"), {"haiku"})
+
+    def test_unknown_runlog_slug_names_the_registry_you_passed(self):
+        # The error said "data/behaviours.json" even when --registry= pointed
+        # elsewhere, sending the reader to a file they never used.
+        self.assertIn("my-registry.json",
+                      bs.unknown_slug_message(["ghost"], "local/my-registry.json"))
+
     def test_missing_registry_file_exits_cleanly(self):
         # A typo'd --registry= on the money step must not be a raw traceback.
         with self.assertRaises(SystemExit) as cm:
