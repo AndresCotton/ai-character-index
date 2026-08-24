@@ -51,17 +51,17 @@ need it, but §1 and §2 give the context.
 **Out of scope (owner ruling) -- the evidence / evals track:**
 
 - Finding pre-existing evals, judging paper quality, scoring the rubric,
-  extracting lab adherence numbers. That is `Skills 1-3`
-  (`1-sweep-discover`, `2-sweep-curate`, `3-sweep-score`). The
-  staged-pipeline artifacts of that track (the stage 1-3 sweep files and
-  `data/evals.json`) have been deleted under the owner's scope ruling --
-  the deliverable is the model-spec reader only. (One pre-staged sweep
+  extracting lab adherence numbers. That was `Skills 1-3`
+  (`1-sweep-discover`, `2-sweep-curate`, `3-sweep-score`), deleted along
+  with the staged-pipeline artifacts of that track (the stage 1-3 sweep
+  files and `data/evals.json`) under the owner's scope ruling -- the
+  deliverable is the model-spec reader only. (One pre-staged sweep
   write-up, `research/sweeps/01-no-sycophancy.md`, survives pending a
   separate owner ruling.) **You can ignore all of it.**
 
-The two tracks are deliberately independent: Stage 4 runs in parallel with
-Stages 1-3 and shares none of their data. So you can work on the whole coverage
-pipeline without ever touching an eval.
+The two tracks are deliberately independent: the coverage pipeline shares none
+of the evals track's data. So you can work on the whole coverage pipeline
+without ever touching an eval.
 
 **The goal of the initial collaboration** is a cleaner, better-structured, and --
 above all -- **reproducible and well-documented** spec-coverage process: the same
@@ -100,6 +100,13 @@ This is the heart of the job. Each step names the file(s) it touches.
         ▼
  (6) PRESENT + VERIFY       site/spec-reader/  (index.html, app.js, styles.css)
                             engine/verify-spec-reader.mjs  (headless render check)
+        │  Gate 5: human sign-off  →  gates.md
+        ▼
+ (7) STAGE-6 AUDIT          .claude/skills/6-sweep-verify/SKILL.md  (fresh context)
+        │                   writes research/sweeps/NN-<slug>/verify.md
+        │  Gate 6: human sign-off  →  gates.md
+        ▼
+ MERGE                      PR merges only after Gate 6 (the merge deploys the site)
 ```
 
 ### Step by step
@@ -144,12 +151,24 @@ This is the heart of the job. Each step names the file(s) it touches.
    `documents.json`: it shows each spec with the behaviour's passages anchored in
    place. `engine/verify-spec-reader.mjs` drives it headlessly and asserts that
    every behaviour × spec view anchors exactly its published passage count with
-   no console errors. This is the closest thing to an end-to-end test.
+   no console errors. This is the closest thing to an end-to-end test. This is
+   the last step of stage 5 (publish the coverage data + the reader payload).
+   Stage 5 stops at **Gate 5**: a human sign-off in `gates.md`. Nothing has
+   deployed publicly at this point -- the site deploys only when the branch
+   merges.
+7. **Stage-6 audit, then merge.** A fresh-context audit
+   (`.claude/skills/6-sweep-verify/SKILL.md`) re-verifies the branch -- the
+   committed repo contents and a local render of `site/` -- and writes
+   `verify.md`. It stops at **Gate 6**. The branch PR merges only after Gate 6
+   is signed -- that merge is what deploys the site.
 
-The **campaign wrapper** that runs steps 1-6 for one behaviour, with a git
-commit at each step on a per-behaviour branch merged by PR, is the
+The **campaign wrapper** that runs steps 1-7 for one behaviour, with a git
+commit at each step on a per-behaviour branch, is the
 `spec-coverage-pass` skill (`.claude/skills/spec-coverage-pass/SKILL.md`). Read
-it to see the exact ordering, commit messages, and verification commands.
+it to see the exact ordering, commit messages, and verification commands. It
+stops at **Gate 5** after the reader is verified (nothing has deployed publicly
+yet); a fresh-context **stage-6 audit** then signs **Gate 6**, and the PR merges
+only after Gate 6 -- that merge is what deploys the site.
 
 ### The panel in detail (step 2)
 
@@ -188,7 +207,7 @@ the supplied definitions.
 | **Reader verifier** | `engine/verify-spec-reader.mjs` | headless render check (needs Chrome) |
 | **Mirror refresher** | `engine/spec-watch/pull-latest.sh` | pulls latest published specs into `specs/` |
 | **Public methodology copy** | `methodology/site-copy-how-we-assess-coverage.md`, `site/methodology.html` | plain-language description of the method |
-| **Fixed IDs / locations** | `.claude/skills/behaviour-sweep/references/locations.md` | canonical table of paths + Notion IDs |
+| **Fixed locations** | `.claude/skills/references/locations.md` | canonical table of repo paths + spec versions |
 
 ---
 
@@ -305,11 +324,12 @@ The first item is the headline objective of this collaboration; the rest are
 secondary observations.
 
 - **No validation CI.** `.github/workflows/` holds only `deploy.yml` (deploys
-  `site/**` to Cloudflare Pages), and `data/schema/` holds no schemas -- yet
-  `PLAN.md` describes CI that validates `data/*.json` against schemas and
-  re-resolves every locator in `coverage.json` on each PR. Today that
-  re-resolution only happens when someone runs `publish-coverage.py --check`
-  by hand. Wiring this up would make the "coverage claims stay true" guarantee
+  `site/**` to Cloudflare Pages). The schemas now exist (`data/schema/`) and
+  `engine/validate_data.py` is a locally runnable gate -- but no workflow runs
+  it yet, and `PLAN.md` describes CI that validates `data/*.json` against
+  schemas and re-resolves every locator in `coverage.json` on each PR. Today
+  that re-resolution only happens when someone runs `publish-coverage.py
+  --check` by hand. Wiring this up would make the "coverage claims stay true" guarantee
   real rather than aspirational.
 - **Behaviour metadata is duplicated in at least six places** that must be kept
   in sync by hand: `research/core-behaviour-list.md` (prose), the `BEHAVIOURS`
