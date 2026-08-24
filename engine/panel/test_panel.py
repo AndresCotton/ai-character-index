@@ -1029,6 +1029,201 @@ class TestMainSmoke(unittest.TestCase):
         self.assertNotEqual(r.returncode, 0)
         self.assertIn("unknown panel", r.stderr + r.stdout)
 
+    def test_registry_with_blank_definitions_resolves_the_slug_you_asked_for(self):
+        # AGENTS.md step 3 says to add your entry to "a local copy of
+        # data/behaviours.json". Ten of the 23 shipped rows carry an empty
+        # definition (unpublished index behaviours), so adapting EVERY entry at
+        # load time made the documented instruction produce a registry that
+        # always failed -- with an error naming a slug the user never mentioned.
+        # Adaptation must be lazy: only the requested behaviour is adapted.
+        # The fixture is a COPY OF THE REAL data/behaviours.json plus one user row --
+        # exactly what AGENTS.md step 3 tells a fork to build. A synthetic fixture
+        # would route around the ten shipped blank-definition rows that caused the
+        # regression this guards.
+        shipped = json.loads((HERE.parent.parent / "data" / "behaviours.json")
+                             .read_text(encoding="utf-8"))
+        blank = [s for s, e in shipped.items() if not (e.get("definition") or "").strip()]
+        self.assertTrue(blank, "fixture assumes the shipped registry has blank-definition rows")
+        shipped["acme-disclosure"] = {"name": "Acme disclosure", "set": "user",
+                                      "numeric_id": 1, "group": None,
+                                      "definition": "Disclose compute usage.", "facets": []}
+        reg = Path(tempfile.mkdtemp()) / "copied-registry.json"
+        reg.write_text(json.dumps(shipped), encoding="utf-8")
+        self.addCleanup(lambda: shutil.rmtree(reg.parent, ignore_errors=True))
+        registry = h.load_registry(str(reg))          # must not raise
+        block = h.compose_query("acme-disclosure", "v3", registry)
+        self.assertIn("Disclose compute usage.", block)
+        # asking for the blank one is still a loud, named failure
+        with self.assertRaises(SystemExit) as cm:
+            h.compose_query(blank[0], "v3", registry)
+        self.assertIn(blank[0], str(cm.exception))
+
+    def test_build_site_data_rejects_an_unknown_flag_without_building(self):
+        # --help (or any typo) was silently ignored and a FULL BUILD ran, writing a
+        # timestamped payload and overwriting manifest.json. Asking for help must
+        # not mutate the repo.
+        before = sorted(p.name for p in
+                        (HERE.parent.parent / "site" / "llm-panel-review" / "data").iterdir())
+        r = subprocess.run([sys.executable, str(HERE / "build_site_data.py"), "--help"],
+                           capture_output=True, text=True, timeout=120)
+        after = sorted(p.name for p in
+                       (HERE.parent.parent / "site" / "llm-panel-review" / "data").iterdir())
+        self.assertNotEqual(r.returncode, 0)
+        self.assertEqual(before, after, "--help wrote files")
+        self.assertNotIn("Traceback", r.stdout + r.stderr)
+        self.assertIn("--runlog=", r.stdout + r.stderr)   # names the real flags
+
+    def test_whole_doc_help_prints_usage_not_a_traceback(self):
+        r = subprocess.run([sys.executable, str(HERE / "whole_doc.py"), "--help"],
+                           capture_output=True, text=True, env=hermetic_env(), timeout=120)
+        blob = r.stdout + r.stderr
+        self.assertNotIn("Traceback", blob)
+        self.assertIn("whole_doc.py", blob)
+        self.assertIn("--registry=", blob)
+
+    def test_zero_citation_build_exits_nonzero_and_does_not_promote(self):
+        # A build that keeps nothing is a failed build. It used to exit 0, write a
+        # payload, and become manifest.json's `latest` -- so the page went blank and
+        # the tool said it succeeded, with the explanation only in scrollback.
+        with tempfile.TemporaryDirectory() as d:
+            runlog = Path(d) / "r.jsonl"
+            runlog.write_text(json.dumps({"behaviour": "helpfulness", "spec": "constitution",
+                                          "model": "fable", "locator": "x", "verdict": 2,
+                                          "rubric": "v9", "parsed": True}) + "\n",
+                              encoding="utf-8")
+            r = subprocess.run([sys.executable, str(HERE / "build_site_data.py"),
+                                f"--runlog={runlog}", "--rubric=v3w", "--panel=fable",
+                                "--behaviours=helpfulness", "--out=zero-probe.json"],
+                               capture_output=True, text=True, timeout=180)
+        blob = r.stdout + r.stderr
+        self.assertNotEqual(r.returncode, 0, "a zero-citation build must not report success")
+        self.assertIn("0 citations", blob)
+        self.assertIn("rubric", blob)          # and must say why
+
+    def test_out_name_refuses_a_tracked_payload(self):
+        # --out=behaviours-v5.json would have silently overwritten a committed
+        # calibration payload; only the manifest was guarded.
+        with self.assertRaises(SystemExit) as cm:
+            bs.check_out_name("behaviours-v5.json")
+        self.assertIn("tracked", str(cm.exception))
+        bs.check_out_name("my-scratch.json")   # untracked names still fine
+        bs.check_out_name("behaviours.json")   # the documented fallback rebuild
+
+    def test_unknown_panel_name_exits_instead_of_building_empty(self):
+        # B1: `.get(name) or [name]` turned a typo'd panel into a one-seat panel
+        # named after the typo -- exit 0, empty payload, promoted to manifest latest.
+        # Same class of bad input as an unknown flag, which this file already rejects.
+        cfg = {"panels": {"cheap": ["gpt-mini"], "_note": "prose", "empty": []},
+               "models": {"gpt-mini": {}, "haiku": {}}}
+        self.assertEqual(bs.resolve_panel(cfg, "cheap"), {"gpt-mini"})
+        self.assertEqual(bs.resolve_panel(cfg, "haiku"), {"haiku"})   # bare tag still works
+        for bad in ("frontierr", "_note", "empty"):
+            with self.subTest(bad=bad), self.assertRaises(SystemExit) as cm:
+                bs.resolve_panel(cfg, bad)
+            self.assertIn(bad, str(cm.exception))
+
+    def test_zero_citations_names_a_rubric_mismatch_as_such(self):
+        # N2: runlog_models is collected before the rubric filter, so a v5 runlog
+        # built with --rubric=v3w reported perfectly overlapping judges and advised
+        # changing --panel, the one thing that was already right.
+        msg = bs.zero_citation_reason(rubric="v3w", runlog_rubrics={"v5"},
+                                      runlog_models={"sol"}, panel={"sol"})
+        self.assertIn("rubric", msg)
+        self.assertIn("v5", msg)
+        self.assertNotIn("--panel=", msg)
+        msg2 = bs.zero_citation_reason(rubric="v3w", runlog_rubrics={"v3w"},
+                                       runlog_models={"haiku"}, panel={"gpt-mini"})
+        self.assertIn("--panel=", msg2)
+
+    def test_whole_doc_rejects_space_form_flags(self):
+        # N3: `--registry /path` (space) was silently dropped and the SHIPPED
+        # registry used instead -- on the step that spends money.
+        r = subprocess.run([sys.executable, str(HERE / "whole_doc.py"),
+                            "helpfulness", "constitution", "haiku",
+                            "--registry", "/tmp/whatever.json"],
+                           capture_output=True, text=True, env=hermetic_env(), timeout=120)
+        blob = r.stdout + r.stderr
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("--registry=", blob)      # tells you the = form
+        self.assertNotIn("for provider", blob)  # must NOT have reached the API step
+
+    def test_unknown_slug_error_names_the_registry_you_passed(self):
+        # N4: it named the default registry and told you to pass --registry= when
+        # you already had.
+        reg = Path(tempfile.mkdtemp()) / "mine.json"
+        reg.write_text(json.dumps({"real": {"name": "R", "set": "user", "numeric_id": 1,
+                                            "group": None, "definition": "d",
+                                            "facets": []}}), encoding="utf-8")
+        self.addCleanup(lambda: shutil.rmtree(reg.parent, ignore_errors=True))
+        with self.assertRaises(SystemExit) as cm:
+            h.load_entry("typo", h.load_registry(str(reg)))
+        self.assertIn("mine.json", str(cm.exception))
+
+    def test_bare_tag_is_accepted_as_a_one_seat_panel(self):
+        # Step 5 of the fork pathway needed a single-judge panel, and --panel=haiku
+        # was a KeyError -- so the docs told users to add "solo": ["haiku"] to
+        # engine/panel/panel-config.json, a TRACKED file. whole_doc.py already
+        # accepts a bare tag (panels.get(t) or [t]); the builder now matches, which
+        # removes the last tracked-file edit from the fork path.
+        cfg = {"panels": {"cheap": ["gpt-mini", "haiku"]},
+               "models": {"gpt-mini": {}, "haiku": {}}}
+        self.assertEqual(bs.resolve_panel(cfg, "cheap"), {"gpt-mini", "haiku"})
+        self.assertEqual(bs.resolve_panel(cfg, "haiku"), {"haiku"})
+
+    def test_unknown_runlog_slug_names_the_registry_you_passed(self):
+        # The error said "data/behaviours.json" even when --registry= pointed
+        # elsewhere, sending the reader to a file they never used.
+        self.assertIn("my-registry.json",
+                      bs.unknown_slug_message(["ghost"], "local/my-registry.json"))
+
+    def test_missing_registry_file_exits_cleanly(self):
+        # A typo'd --registry= on the money step must not be a raw traceback.
+        with self.assertRaises(SystemExit) as cm:
+            h.load_registry(str(Path(tempfile.mkdtemp()) / "does-not-exist.json"))
+        self.assertIn("does-not-exist.json", str(cm.exception))
+
+    def test_whitespace_only_definition_is_rejected(self):
+        reg = Path(tempfile.mkdtemp()) / "ws.json"
+        reg.write_text(json.dumps({"ws": {"name": "WS", "set": "user", "numeric_id": 1,
+                                          "group": None, "definition": "   ",
+                                          "facets": []}}), encoding="utf-8")
+        self.addCleanup(lambda: shutil.rmtree(reg.parent, ignore_errors=True))
+        with self.assertRaises(SystemExit) as cm:
+            h.compose_query("ws", "v3", h.load_registry(str(reg)))
+        self.assertIn("ws", str(cm.exception))
+
+    def test_whole_doc_registry_flag_accepts_a_display_shape_registry(self):
+        # The fork seam. A user behaviour lives in data/behaviours.json shape
+        # (name/set/numeric_id/group/definition/facets). Judging reads a DIFFERENT
+        # file in a DIFFERENT shape (engine/panel/behaviours.json:
+        # label/title/query/boundary), so before --registry= a fork had to register
+        # the same behaviour twice, the second time in a TRACKED file.
+        #
+        # Arg-parse-level, like the panel-expansion test above: compose_query runs
+        # well before client_for and the API call in whole_doc.py's main loop, so
+        # registry resolution is provable without a key. Under
+        # hermetic_env() the key check is unreachable-by-construction, so this cannot
+        # spend. Reaching "for provider" means the prompt composed.
+        reg = Path(tempfile.mkdtemp()) / "my-behaviours.json"
+        reg.write_text(json.dumps({"acme-transparency": {
+            "name": "Acme transparency", "set": "user", "numeric_id": 1,
+            "group": None, "definition": "The provider must disclose compute usage.",
+            "facets": []}}), encoding="utf-8")
+        self.addCleanup(lambda: shutil.rmtree(reg.parent, ignore_errors=True))
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            runlog = f.name
+        self.addCleanup(lambda: Path(runlog).unlink(missing_ok=True))
+        r = subprocess.run([sys.executable, str(HERE / "whole_doc.py"),
+                            "acme-transparency", "constitution", "haiku",
+                            f"--registry={reg}", f"--runlog={runlog}"],
+                           capture_output=True, text=True, env=hermetic_env(),
+                           timeout=120)
+        blob = r.stdout + r.stderr
+        self.assertNotIn("unknown behaviour", blob)   # the papercut
+        self.assertNotIn("Traceback", blob)
+        self.assertIn("for provider", blob)           # reached client_for; prompt composed
+        self.assertNotEqual(r.returncode, 0)
+
     def test_whole_doc_panel_name_expands_to_member_models(self):
         # whole_doc.py expands a panel NAME into its member tags before judging. A full
         # run needs API keys, so this is an arg-parse-level assertion: with every key

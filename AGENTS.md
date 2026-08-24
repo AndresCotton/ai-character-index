@@ -27,11 +27,12 @@ use other conventions can read the same files directly.
 
 Everything stays local — nothing pushes back.
 
-1. Register a user spec: create `specs/user/specs.json` (gitignored) pointing at
-   your spec markdown; optional `title`/`sourceUrl` for display sit *inside each
-   version*, beside `path`/`default` -- neither doc below shows them, so copy the
-   nesting from the worked manifest in `engine/stage_user_demo.py`. See
-   `engine/README.md` ("User specs") and `specs/CITATION.md`.
+1. Register a user spec: put your spec markdown in `specs/user/` (gitignored, so
+   it stays local) and create `specs/user/specs.json` pointing at it. Optional
+   `title`/`sourceUrl` for display sit *inside each version*, beside
+   `path`/`default` -- neither doc below shows them, so copy the nesting from the
+   worked manifest in `engine/stage_user_demo.py`. See `engine/README.md`
+   ("User specs") and `specs/CITATION.md`.
 2. Reader payload -- **run this from the repo root**:
    `python3 engine/build-spec-reader-data.py --user-manifest=specs/user/specs.json`
    The manifest path is resolved against your *current directory*, not the repo
@@ -41,22 +42,22 @@ Everything stays local — nothing pushes back.
    your spec is actually there before continuing:
    `python3 -c "import json;print([d['id'] for d in json.load(open('site/spec-reader/data/documents.json'))['documents']])"`
    Note this rewrites a **tracked** file with your spec's text inlined.
-3. Behaviour -- your behaviour has to be registered **twice, in two files with
-   different shapes**, because display and judging read different registries:
+3. Behaviour: add a `set:user` entry to a copy of `data/behaviours.json`. Put it
+   in `local/` -- a gitignored directory for a fork's own working files, which is
+   also where your runlogs should go. (Your spec and its manifest already live in
+   the gitignored `specs/user/`.) The entry needs the registry's full shape
+   -- `name`, `set: "user"`, `numeric_id` (integer >= 1, unique within your
+   set; it orders the sidebar -- the payload renumbers 1..N, so it is not
+   the id you see), `group`, `definition`, `facets`. See
+   `data/schema/behaviours.schema.json` for the contract and
+   `engine/stage_user_demo.py` for a complete worked entry; the shipped registry
+   carries no `set:user` rows to copy from. A missing field fails the build.
 
-   - `data/behaviours.json` (or a copy; step 5 takes `--registry=`) drives
-     *display*: `name`, `set: "user"`, `numeric_id` (integer >= 1, per set),
-     `group`, `definition`, `facets`. See
-     `data/schema/behaviours.schema.json` and the worked entry in
-     `engine/stage_user_demo.py`.
-   - `engine/panel/behaviours.json` drives *judging*: an object keyed by slug,
-     each entry `label`, `title`, `source`, `query` (the definition the judges
-     are given), `boundary`.
-     `whole_doc.py` has no `--registry` flag, so it reads this file and only
-     this file; a slug missing here fails step 4 with
-     `unknown behaviour '<slug>'`.
-
-   **`engine/panel/behaviours.json` is tracked.** Revert it when you are done.
+   You register it **once**. Both the judging step and the build step take
+   `--registry=`, and both accept this shape: `whole_doc.py` adapts a display
+   entry into a judge prompt (`definition` becomes the text the judges are
+   given, `facets` become clarifications). `engine/panel/behaviours.json` is the
+   project's own judging registry -- you do not need to touch it.
 4. Judge it -- **this is the step that spends money.** One
    (behaviour, spec, model tag) per call; tags live in
    `engine/panel/panel-config.json`; keys come from the environment
@@ -64,32 +65,38 @@ Everything stays local — nothing pushes back.
 
    ```sh
    python3 engine/panel/whole_doc.py <your-slug> <your-spec-id> haiku \
-     --runlog=/tmp/my-run.jsonl
+     --registry=local/my-behaviours.json --runlog=local/my-run.jsonl
    ```
 
    It has **no dry-run** -- it calls the API immediately, so run one cell and
    read the cost before looping. One cell of a ~15 KB spec on `haiku` is well
    under a cent (measured: 5,884 in / 383 out = $0.008). Always pass
    `--runlog=`: the default is `engine/panel/runlog-v3.jsonl`, the committed
-   shipped runlog, and the file you name is **not** gitignored. It also appends
+   shipped runlog. Put yours in `local/`, which is gitignored. It also appends
    to `engine/panel/metrics.jsonl` (gitignored).
+
+   To rehearse steps 2-6 without spending, `python3 engine/stage_user_demo.py
+   --out=DIR` stages a complete clone/fork site -- a synthetic user spec, a
+   `set:user` behaviour and a small runlog -- into a scratch directory, leaving
+   this repo untouched. Useful for seeing what the flow produces before paying
+   for a real run.
 
    `run_rollout.py` is the driver for the *project's own* dataset, not yours: it
    validates `--behaviours=` against `engine/panel/behaviours.json` and judges
    `config["specs"]`, the two bundled mirrors, with no `--spec` flag. Useful only
    for a free dry-run cost estimate of a bundled behaviour.
-5. Build the payload. `--panel=` must name a panel in
-   `engine/panel/panel-config.json` whose seats match the judges in your runlog
-   -- a bare tag is a `KeyError`, unlike `whole_doc.py`, which accepts one. A
-   citation also needs `min(2, panel_size)` votes, so **one judge scored against
-   a multi-seat panel yields 0 citations, exit 0, and an empty page.** For a
-   single-judge run, add a single-seat panel under the top-level `panels` object
-   in `engine/panel/panel-config.json` (again, a tracked file to revert):
-   `"solo": ["haiku"]`.
+5. Build the payload. `--panel=` takes either a panel name from
+   `engine/panel/panel-config.json` or a bare model tag, which is treated as a
+   one-seat panel -- so a single-judge run is just `--panel=haiku`. Its seats
+   must match the judges in your runlog: a citation needs `min(2, panel_size)`
+   votes, so scoring one judge against a multi-seat panel yields 0 citations.
+   The builder says so when that happens, naming your runlog's tags and the
+   panel's seats. Every behaviour key in the runlog must also be a registry
+   slug, not just the one you pass to `--behaviours=`.
 
    ```sh
-   python3 engine/panel/build_site_data.py --runlog=/tmp/my-run.jsonl \
-     --rubric=v3w --panel=solo --registry=<your behaviours.json> \
+   python3 engine/panel/build_site_data.py --runlog=local/my-run.jsonl \
+     --rubric=v3w --panel=haiku --registry=local/my-behaviours.json \
      --behaviours=<your-slug>
    ```
 
@@ -148,16 +155,19 @@ node engine/verify-panel-features.mjs            # Tier-1 site features × bundl
 
 - Data changes land via reviewed PRs against `data/`; the site is committed
   static output (no build step), deployed on merges that touch `site/**`.
-- Local-only artifacts must never be pushed: `specs/user/`, your runlogs,
-  timestamped payloads + `manifest.json`, builder smoke scratch. Only some of
-  these are gitignored -- `specs/user/`, `site/llm-panel-review/data/manifest.json`
-  and the timestamped `behaviours-*.json` payloads are. **Runlogs are not**: a
-  runlog you write lands as a committable untracked file, so keep it outside the
-  repo or ignore it yourself. `site/spec-reader/data/documents.json` is tracked
-  and is rewritten in place by `build-spec-reader-data.py --user-manifest=`, with
-  your spec's text inlined -- check it before committing. The committed
-  `runlog-v3.jsonl` and `behaviours.json` fallback are deliberate, and
-  provenance-verified.
+- Local-only artifacts must never be pushed. Gitignored: `specs/user/` (your
+  spec and its manifest), `local/` (your registry copies, runlogs and scratch),
+  `site/llm-panel-review/data/manifest.json` and the timestamped
+  `behaviours-*.json` payloads, `engine/panel/metrics.jsonl`. A registry or runlog written **outside** `local/` may not be
+  ignored -- check with `git status` before committing. Two more the panel
+  writes: `engine/panel/metrics.jsonl` (ignored) and, on a parse failure,
+  `engine/panel/wholedoc-FAILED-*.txt` carrying raw model output (**not**
+  ignored). One thing no ignore rule covers:
+  `site/spec-reader/data/documents.json` is **tracked**, and
+  `build-spec-reader-data.py --user-manifest=` rewrites it in place with your
+  spec's text inlined -- it is build output the site serves, so it cannot be
+  ignored; check it before committing. The committed `runlog-v3.jsonl` and
+  `behaviours.json` fallback are deliberate, and provenance-verified.
 - Behaviour identity is registry-driven: edit `data/behaviours.json`, then run
   `engine/generate_behaviour_constants.py` (its `--check` and
   `tests/test_behaviour_registry.py` fail loudly on drift).

@@ -1,0 +1,15 @@
+{
+  "_comment": "Digests of the cite.py corpus dumps, which are no longer committed as text (~800 KB whose only job was to make a failure readable). The dump is byte-deterministic from the pinned spec copies, so the old output is reproducible from the old code: to see what a digest change means, regenerate on both sides (dump_goldens.py --write corpus, once on your branch and once with the change stashed) and diff the two. The regenerated text is gitignored. cite-find.txt stays committed as text: it is small, and its diffs are the readable ones.",
+  "goldens": {
+    "cite-corpus-constitution.txt": {
+      "sha256": "59fe3694f01bd1cd1bf584c2ac84bbb05207f52f435f00e4d35f0f537c22df94",
+      "bytes": 386973,
+      "lines": 3017
+    },
+    "cite-corpus-model-spec.txt": {
+      "sha256": "1d1dfb7548198e23165c4bb537e79d3c806e94dcbe9b7461b9f19cc47dec6824",
+      "bytes": 413417,
+      "lines": 7029
+    }
+  }
+}
