@@ -38,3 +38,10 @@ outreach/
 # Builder smoke-test scratch (engine/test_build_reader_test_data.py,
 # engine/test_builders_reproduce_payloads.py)
 .builder-repro-scratch/
+
+# A fork's own working files: behaviour registry copies, runlogs, scratch payloads.
+# AGENTS.md's clone/fork pathway points here. specs/user/ already covers the spec
+# and its manifest; this covers everything else a fork produces that is not the
+# project's own data. Runlogs cannot be matched by extension -- engine/panel/
+# runlog-v3.jsonl is committed on purpose -- so they need a home instead.
+local/

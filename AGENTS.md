@@ -41,8 +41,10 @@ Everything stays local — nothing pushes back.
    your spec is actually there before continuing:
    `python3 -c "import json;print([d['id'] for d in json.load(open('site/spec-reader/data/documents.json'))['documents']])"`
    Note this rewrites a **tracked** file with your spec's text inlined.
-3. Behaviour: add a `set:user` entry to a local copy of `data/behaviours.json`
-   -- keep the copy outside the repo. The entry needs the registry's full shape
+3. Behaviour: add a `set:user` entry to a copy of `data/behaviours.json`. Put it
+   in `local/` -- a gitignored directory for a fork's own working files, which is
+   also where your runlogs should go. (Your spec and its manifest already live in
+   the gitignored `specs/user/`.) The entry needs the registry's full shape
    -- `name`, `set: "user"`, `numeric_id` (integer >= 1, per set: its display
    order and its payload `id`), `group`, `definition`, `facets`. See
    `data/schema/behaviours.schema.json` for the contract and
@@ -61,14 +63,15 @@ Everything stays local — nothing pushes back.
 
    ```sh
    python3 engine/panel/whole_doc.py <your-slug> <your-spec-id> haiku \
-     --registry=<your behaviours.json> --runlog=/tmp/my-run.jsonl
+     --registry=local/my-behaviours.json --runlog=local/my-run.jsonl
    ```
 
    It has **no dry-run** -- it calls the API immediately, so run one cell and
    read the cost before looping. One cell of a ~15 KB spec on `haiku` is well
    under a cent (measured: 5,884 in / 383 out = $0.008). Always pass
    `--runlog=`: the default is `engine/panel/runlog-v3.jsonl`, the committed
-   shipped runlog, and the file you name is **not** gitignored. It also appends
+   shipped runlog. A runlog under `local/` is gitignored; one written anywhere
+   else is not. It also appends
    to `engine/panel/metrics.jsonl` (gitignored).
 
    `run_rollout.py` is the driver for the *project's own* dataset, not yours: it
@@ -86,7 +89,7 @@ Everything stays local — nothing pushes back.
 
    ```sh
    python3 engine/panel/build_site_data.py --runlog=/tmp/my-run.jsonl \
-     --rubric=v3w --panel=solo --registry=<your behaviours.json> \
+     --rubric=v3w --panel=solo --registry=local/my-behaviours.json \
      --behaviours=<your-slug>
    ```
 
@@ -145,16 +148,17 @@ node engine/verify-panel-features.mjs            # Tier-1 site features × bundl
 
 - Data changes land via reviewed PRs against `data/`; the site is committed
   static output (no build step), deployed on merges that touch `site/**`.
-- Local-only artifacts must never be pushed: `specs/user/`, your runlogs,
-  timestamped payloads + `manifest.json`, builder smoke scratch. Only some of
-  these are gitignored -- `specs/user/`, `site/llm-panel-review/data/manifest.json`
-  and the timestamped `behaviours-*.json` payloads are. **Runlogs are not**: a
-  runlog you write lands as a committable untracked file, so keep it outside the
-  repo or ignore it yourself. `site/spec-reader/data/documents.json` is tracked
-  and is rewritten in place by `build-spec-reader-data.py --user-manifest=`, with
-  your spec's text inlined -- check it before committing. The committed
-  `runlog-v3.jsonl` and `behaviours.json` fallback are deliberate, and
-  provenance-verified.
+- Local-only artifacts must never be pushed. Gitignored: `specs/user/` (your
+  spec and its manifest), `local/` (your registry copies, runlogs and scratch),
+  `site/llm-panel-review/data/manifest.json` and the timestamped
+  `behaviours-*.json` payloads, `engine/panel/metrics.jsonl`. A runlog or
+  registry written **outside** `local/` is not ignored and lands as a
+  committable file. One thing no ignore rule covers:
+  `site/spec-reader/data/documents.json` is **tracked**, and
+  `build-spec-reader-data.py --user-manifest=` rewrites it in place with your
+  spec's text inlined -- it is build output the site serves, so it cannot be
+  ignored; check it before committing. The committed `runlog-v3.jsonl` and
+  `behaviours.json` fallback are deliberate, and provenance-verified.
 - Behaviour identity is registry-driven: edit `data/behaviours.json`, then run
   `engine/generate_behaviour_constants.py` (its `--check` and
   `tests/test_behaviour_registry.py` fail loudly on drift).
