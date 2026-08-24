@@ -1,6 +1,6 @@
 # site/ — five static surfaces, no build step, data via committed JSON payloads
 
-> As-is snapshot of origin/main @ 72e2e6b (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
+> Current-state doc: describes what exists now, not what should exist. Brought current with the Phase-2 stack (#28–#41).
 
 ## Purpose
 
@@ -12,7 +12,7 @@ The public presentation layer: renders engine-generated JSON payloads into stati
 |---|---|
 | `index.html` | Core-page **prototype**: all data is inline JS (`const B = {...}`, `const GROUPS = [...]`); only behaviour 1 carries real sweep data, the rest are labeled illustrative placeholders. Embeds `spec-reader/` in an iframe modal. Hand-maintained copy of `design/prototypes/core-page.html`; the two have diverged. |
 | `methodology.html` | Static prose page. Describes coverage assessment as systematic term-list search; the operative procedure is the LLM panel. |
-| `spec-reader/` | The published reader. Fetches `data/documents.json` (built by `engine/build-spec-reader-data.py`; currently behaviours 1–3). `app.js` `GROUPS` hardcodes 13 behaviours in 4 categories while the payload carries 3. |
+| `spec-reader/` | The published reader. Fetches `data/documents.json` (built by `engine/build-spec-reader-data.py`; currently behaviours 1–3). `app.js` `GROUPS` is registry-derived (the 13 index behaviours in 4 categories) while the payload carries only the 3 covered behaviours — expected sequencing, not drift. |
 | `spec-reader-test/` | External reviewer's bench (deliberate fork of the reader UI). Fetches the shared `../spec-reader/data/documents.json` plus its own `data/behaviours.json` (built by `engine/build-reader-test-data.py` from `data/reader-test-coverage.json`, transcribed from `behaviours-for-adria/`). Self-describing README. |
 | `llm-panel-review/` | Panel-judged reader: raw per-judge verdicts per passage, scores recomputed client-side (`?threshold=`/`?solid=`/`?related=`). Fetches shared `documents.json` + own `data/behaviours.json` (built by `engine/panel/build_site_data.py`); `?data=<name>` loads a sibling payload instead (`data/` also holds the calibration variants v3w-fresh / v4a / v4a-ds / v5 / v5-1 side by side). 3 behaviours × 3 judges. **Not linked from any nav.** |
 | `README.md` | Layer status; lists all five tabs, with `llm-panel-review/` noted as deployed-but-unlinked. |
@@ -21,7 +21,7 @@ The public presentation layer: renders engine-generated JSON payloads into stati
 
 - All dynamic content arrives as committed JSON under each app's `data/`; the deploy's `paths: site/**` filter works precisely because payloads live inside `site/`.
 - Producer map: `engine/build-spec-reader-data.py` → spec-reader payload; `engine/build-reader-test-data.py` → test-bench payload; `engine/panel/build_site_data.py` → panel payload.
-- `engine/verify-spec-reader.mjs` / `verify-reader-test.mjs` are the only tests of these surfaces (repo-wide, `engine/panel/test_panel.py` covers the panel pipeline): they boot Chrome against these pages and assert every passage anchors; they hardcode the DOM selectors used here.
+- `engine/verify-spec-reader.mjs` / `verify-reader-test.mjs` / `verify-panel-features.mjs` are the E2E tests of these surfaces (repo-wide, `engine/panel/test_panel.py` covers the panel pipeline): they boot Chrome against these pages and assert every passage anchors, and `verify-panel-features.mjs` additionally exercises the panel's URL/DOM-state features and the reader's user-data path; they hardcode the DOM selectors used here.
 - `index.html` is connected to **no** pipeline — its inline data is hand-maintained.
 
 ## Dependency map
@@ -44,7 +44,6 @@ graph LR
 
 - Five surfaces, one orphan: `llm-panel-review/` is built, documented in its own README, deployed, and listed in `site/README.md` — but unreachable from every navigation.
 - `index.html` carries hand-maintained inline prototype data (`data/README.md` carves this exception out explicitly); `site/README.md` documents the divergence from the prototype and warns against re-copying it without reconciling.
-- Broken anchors: spec-reader's nav points at `../#methodology` and `../#about`; `index.html` has neither anchor. Sibling apps link `../methodology.html` instead.
 - `methodology.html` describes the term-list method while the operative procedure is the LLM panel; nothing tells readers which method produced which published records (behaviours 1–3: term-list; panel-scored records live in `llm-panel-review/`).
-- Behaviour metadata drift: `spec-reader/app.js` hardcodes 13 behaviours while its payload ships 3.
+- `spec-reader/app.js`'s `GROUPS` enumerates the registry's 13 index behaviours while its payload ships only the 3 covered behaviours — expected sequencing, not drift (the nav anchors it points to, `../#methodology` and `../#about`, now resolve; the verifier fails on any unresolved same-site link/fragment).
 - The verifiers' DOM-selector coupling means a markup refactor silently invalidates the only E2E checks.

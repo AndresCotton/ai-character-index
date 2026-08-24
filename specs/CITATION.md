@@ -103,9 +103,10 @@ the exact span, `resolve` the locator, and store the resolver's output as the qu
 - Notion DB **Spec Coverage by Behaviour**: each row's page body lists every excerpt
   as locator + verbatim quote.
 - Sweep records (`research/sweeps/*.md`) and the "Behaviours to track" page.
-- `data/coverage.json` (Phase 1): each coverage entry stores `locator` + `quote`, and
-  CI re-resolves locators against `specs/` so a spec update that moves text fails
-  loudly instead of silently.
+- `data/coverage.json` (Phase 1): each coverage entry stores `locator` + `quote`.
+  Locators are re-resolved against `specs/` by `engine/publish-coverage.py` at
+  publish time (or on demand with `--check`), so a spec update that moves text
+  fails loudly instead of silently. No CI workflow runs this re-resolution yet.
 
 New spec versions: add the mirrored file, register it in `BUNDLED_SPECS` in `cite.py`, and
 re-resolve stored locators; block numbers are stable only within a pinned version.
