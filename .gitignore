@@ -45,3 +45,7 @@ outreach/
 # project's own data. Runlogs cannot be matched by extension -- engine/panel/
 # runlog-v3.jsonl is committed on purpose -- so they need a home instead.
 local/
+
+# Golden corpus dumps: pinned by digest in tests/golden/corpus-sha256.json, not by
+# committed text. dump_goldens.py --write corpus regenerates them locally for diffing.
+tests/golden/cite-corpus-*.txt
