@@ -1916,12 +1916,6 @@ function applyPanelThreshold(payload) {
   return payload;
 }
 
-/* Initial tier selection: ?tiers= list, else legacy single-position params mapped to
- * the bands they showed (?tier= gauge links; ?threshold= score links), else defaults. */
-/* Judge count and cell scale, read from the loaded payload. Both vary per cell --
- * maxVerdict is 2 on the classic rubric and 3 once any judge awards a "defining", so
- * one payload can carry 6-scale and 9-scale cells at once (behaviours-v5.json does).
- * These take the largest, which is what a score cut written into a URL meant. */
 /* Bands a legacy ?threshold=<score> link should select. Named and standalone so
  * engine/panel/test_appjs_tiers.js can extract it verbatim -- a test that copies
  * this arithmetic instead would keep passing after the real code regressed. */
@@ -1931,6 +1925,10 @@ function legacyThresholdBands(t, judges, scale) {
   return t >= defCut ? ["defining"] : t >= coreCut ? ["defining", "core"] : TIERS;
 }
 
+/* Judge count and cell scale, read from the loaded payload. Both vary per cell --
+ * maxVerdict is 2 on the classic rubric and 3 once any judge awards a "defining", so
+ * one payload can carry 6-scale and 9-scale cells at once (behaviours-v5.json does).
+ * These take the largest, which is what a score cut written into a URL meant. */
 function judgesPerCell() {
   const counts = (state.rawBehaviours || []).flatMap(b =>
     Object.values(b.coverage || {}).flatMap(cov =>
@@ -1949,6 +1947,8 @@ function maxCellScore() {
   return scales.length ? Math.max(...scales) : 0;
 }
 
+/* Initial tier selection: ?tiers= list, else legacy single-position params mapped to
+ * the bands they showed (?tier= gauge links; ?threshold= score links), else defaults. */
 function initialBands() {
   const listed = (initialParams.get("tiers") || "")
     .split(",").map(part => (part.trim() === "adjacent" ? "related" : part.trim()))
