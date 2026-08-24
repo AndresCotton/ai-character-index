@@ -74,4 +74,57 @@ check(2, 1, 2, 0, "defining",    "1j ?related=0 still shows core votes (unanimou
 // The multi-judge floor never uses the single-judge rule.
 check(1, 2, 4, 1, null, "2j lone related still hidden (floor applies)");
 
+/* bandReachable: which tiers a cell can put a passage in at all. The header
+ * disables a tier nothing can reach, so these cuts decide whether a toggle is
+ * live -- a wrong answer here either hides a working control or leaves an inert
+ * one on screen. Must agree with tierBand: a band is reachable exactly when some
+ * score in 0..maxCell lands in it. */
+eval(extractFn("function achievableScores(judges, maxCell, related) {"));
+eval(extractFn("function bandReachable(judges, maxCell, related) {"));
+
+function checkReach(judges, maxCell, related, expected, label) {
+  const seen = bandReachable(judges, maxCell, related);
+  const ok = TIERS_ORDER.every(t => seen[t] === expected[t]);
+  if (!ok) failures += 1;
+  console.log(`${ok ? "PASS" : "FAIL"}  ${label}: j=${judges}, maxCell ${maxCell}, ` +
+    `related ${related} -> ${JSON.stringify(seen)} (expected ${JSON.stringify(expected)})`);
+}
+const TIERS_ORDER = ["defining", "core", "related"];
+
+// 3-point rubric (v3w): maxCell is always 2j, so defCut clamps onto coreCut and
+// core is unreachable at EVERY judge count -- including the shipped 3-judge data.
+checkReach(1, 2, 1, { defining: true, core: false, related: true }, "1j 3-point: core unreachable");
+checkReach(2, 4, 1, { defining: true, core: false, related: true }, "2j 3-point: core unreachable");
+checkReach(3, 6, 1, { defining: true, core: false, related: true }, "3j 3-point: core unreachable (shipped data)");
+// 4-point rubric (v5+): defCut sits above coreCut, so all three bands are live.
+checkReach(1, 3, 1, { defining: true, core: true, related: true }, "1j 4-point: all three live");
+checkReach(3, 9, 1, { defining: true, core: true, related: true }, "3j 4-point: all three live");
+
+/* A fractional ?related= weight makes the achievable set sparse, so a cut can sit in a
+ * gap between two reachable scores. Deriving reachability from the cuts alone reported
+ * the related band as live here; no passage can score into it. */
+checkReach(2, 4, 0.5, { defining: true, core: false, related: false },
+  "2j 3-point, ?related=0.5: related cut falls in a gap (achievable: 0,.5,1,2,2.5,4)");
+checkReach(3, 6, 0.5, { defining: true, core: false, related: true },
+  "3j 3-point, ?related=0.5: related still reachable (the gap is judge-count specific)");
+checkReach(1, 2, 0, { defining: true, core: false, related: false },
+  "1j ?related=0: a zeroed related vote scores 0, so the band cannot fill");
+
+/* Cross-check over the scores a cell can ACTUALLY produce, for every shape above plus
+ * fractional weights -- an integer-only sweep cannot see a cut sitting in a gap. */
+for (const [judges, maxCell] of [[1, 2], [2, 4], [3, 6], [4, 8], [1, 3], [3, 9]]) {
+  for (const related of [1, 0.5, 0.25, 0]) {
+    const reach = bandReachable(judges, maxCell, related);
+    const landed = { defining: false, core: false, related: false };
+    for (const s of achievableScores(judges, maxCell, related)) {
+      const b = tierBand(s, judges, maxCell, related);
+      if (b) landed[b] = true;
+    }
+    const ok = TIERS_ORDER.every(t => reach[t] === landed[t]);
+    if (!ok) failures += 1;
+    console.log(`${ok ? "PASS" : "FAIL"}  reachability matches tierBand over achievable ` +
+      `scores (j=${judges}, maxCell=${maxCell}, related=${related})`);
+  }
+}
+
 process.exit(failures ? 1 : 0);
