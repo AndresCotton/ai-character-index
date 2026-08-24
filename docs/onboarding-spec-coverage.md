@@ -331,12 +331,11 @@ secondary observations.
   that re-resolution only happens when someone runs `publish-coverage.py
   --check` by hand. Wiring this up would make the "coverage claims stay true" guarantee
   real rather than aspirational.
-- **Behaviour metadata is duplicated in at least six places** that must be kept
+- **Behaviour metadata is duplicated in at least five places** that must be kept
   in sync by hand: `research/core-behaviour-list.md` (prose), the `BEHAVIOURS`
   list in `engine/build-spec-reader-data.py`, the `GROUPS` list in
-  `site/spec-reader/app.js`, `engine/panel/behaviours.json`,
-  `panel-config.json` `display.behaviours`, and the `submit-eval.yml` issue
-  dropdown. Two data files additionally reuse `behaviour_id` across disjoint
+  `site/spec-reader/app.js`, `engine/panel/behaviours.json`, and
+  `panel-config.json` `display.behaviours`. Two data files additionally reuse `behaviour_id` across disjoint
   numbering spaces (`coverage.json` vs `reader-test-coverage.json`). A single
   source these derive from is an obvious
   cleanup.

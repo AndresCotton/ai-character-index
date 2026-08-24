@@ -52,7 +52,7 @@ graph TB
 | `behaviours-for-adria/` | Independent reviewer-batch stage-4 set (test bench, plus 3 rows feeding the panel surface) | [behaviours-for-adria/OVERVIEW.md](behaviours-for-adria/OVERVIEW.md) |
 | `methodology/` | Depth rubric, public site copy, method-exploration findings | [methodology/OVERVIEW.md](methodology/OVERVIEW.md) |
 | `site/` | Five static surfaces, no build step | [site/OVERVIEW.md](site/OVERVIEW.md) |
-| `.github/` | One deploy workflow + two public intake forms | [.github/OVERVIEW.md](.github/OVERVIEW.md) |
+| `.github/` | One deploy workflow + a contact-only issue channel | [.github/OVERVIEW.md](.github/OVERVIEW.md) |
 | `docs/` | One onboarding document bridging both repo eras | [docs/OVERVIEW.md](docs/OVERVIEW.md) |
 | `design/`, `vision/` | Settled-design log (Jul 2026) and the originating brief | [design/OVERVIEW.md](design/OVERVIEW.md), [vision/OVERVIEW.md](vision/OVERVIEW.md) |
 | root files | PLAN.md, README.md, pnpm-for-wrangler setup | [ROOT.md](ROOT.md) |

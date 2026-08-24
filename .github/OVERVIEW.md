@@ -1,24 +1,22 @@
-# .github — one production deploy workflow + two public intake forms
+# .github — one production deploy workflow + a contact-only issue channel
 
 > As-is snapshot of origin/main @ 72e2e6b (2026-08-18); the documentation set itself is added by this PR. Describes what exists now, not what should exist.
 
 ## Purpose
-`.github/` holds the repo's only CI/CD automation — a Cloudflare Pages deploy fired by merges to `main` — plus the two GitHub issue forms that are the project's public inbound channels (eval submissions, appeals).
+`.github/` holds the repo's only CI/CD automation — a Cloudflare Pages deploy fired by merges to `main` — plus the repo's single contribution channel: `ISSUE_TEMPLATE/config.yml` (the "Contact Andrés directly" mailto link and blank issues). The eval-submission and appeal intake forms are out of scope for the model-spec-reader deliverable and do not exist here.
 
 ## Contents
 | Path | What it is |
 |---|---|
 | `workflows/deploy.yml` | The only workflow. Deploys committed `site/` to Cloudflare Pages project `ai-character-index` on pushes to `main` filtered to `site/**`, plus `workflow_dispatch` |
 | `workflows/README.md` | Operator docs: required secrets setup; states `ci.yml` / `notion-sync.yml` / `spec-watch.yml` are "still to come" |
-| `ISSUE_TEMPLATE/submit-eval.yml` | Issue form (label `eval-submission`): eval name/URL/org, 12-behaviour dropdown, rigor rationale |
-| `ISSUE_TEMPLATE/appeal.yml` | Issue form (label `appeal`): where (page/cell), what's wrong, evidence |
-| `ISSUE_TEMPLATE/config.yml` | Blank issues enabled; mailto contact link (andrescotton@gmail.com) |
+| `ISSUE_TEMPLATE/config.yml` | Blank issues enabled; mailto contact link (andrescotton@gmail.com) — the single contribution channel, linked from `README.md` "Contributing" |
 
 ## Relationships
 - `deploy.yml` triggers: `push` to `main` (paths: `site/**`, `.github/workflows/deploy.yml`) and manual `workflow_dispatch`. Concurrency group `deploy-production` with `cancel-in-progress: false`; `permissions: contents: read`; job environment `production`. Steps: checkout → `pnpm/action-setup@v4` → `actions/setup-node@v4` (Node 22, pnpm cache) → `cloudflare/wrangler-action@v3` (wrangler pinned 4.110.0) running `pages deploy site --project-name ai-character-index --branch main`. Secrets consumed: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 - The deploy has no build step: `site/` is committed static output, and the paths filter watches `site/**` only, so `data/**` or `engine/**` changes trigger nothing until they are baked into `site/`.
 - Its local twin is `pnpm deploy:site` from root `package.json`, documented in `workflows/README.md` as the interactive-`wrangler login` route to the same project.
-- The issue forms implement PLAN.md §1.3's inbound channels and are named (not hyperlinked) in `README.md`'s "Contributing" section; GitHub surfaces them through the Issues form picker. `submit-eval.yml`'s behaviour dropdown mirrors `research/core-behaviour-list.md`.
+- `ISSUE_TEMPLATE/config.yml` is the single contribution channel (contact link + blank issues); `README.md`'s "Contributing" section names it (not hyperlinked) — GitHub surfaces it on the Issues page. PLAN.md §1.3's richer inbound channels (eval submission, appeals) are out of scope for the deliverable.
 
 ## Dependency map
 ```mermaid
@@ -27,8 +25,7 @@ graph LR
   WD[workflow_dispatch] --> DW
   DW -->|secrets CLOUDFLARE_API_TOKEN / ACCOUNT_ID| CF[Cloudflare Pages: ai-character-index]
   DW -->|deploys committed dir| SITE[site/]
-  SE[submit-eval.yml] -->|label eval-submission| GH[GitHub Issues]
-  AP[appeal.yml] -->|label appeal| GH
+  CFGL[config.yml] -->|contact link + blank issues| GH[GitHub Issues]
 ```
 
 ## As-is observations
