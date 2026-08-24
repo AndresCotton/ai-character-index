@@ -89,7 +89,7 @@ Everything stays local — nothing pushes back.
    slug, not just the one you pass to `--behaviours=`.
 
    ```sh
-   python3 engine/panel/build_site_data.py --runlog=/tmp/my-run.jsonl \
+   python3 engine/panel/build_site_data.py --runlog=local/my-run.jsonl \
      --rubric=v3w --panel=haiku --registry=local/my-behaviours.json \
      --behaviours=<your-slug>
    ```
