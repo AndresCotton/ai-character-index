@@ -31,15 +31,45 @@ Everything stays local — nothing pushes back.
    your spec markdown; optional `title`/`sourceUrl` for display. See
    `engine/README.md` ("User specs") and `specs/CITATION.md`.
 2. Reader payload: `python3 engine/build-spec-reader-data.py --user-manifest=specs/user/specs.json`
-3. Panel: add a `set:user` behaviour to a local copy of `data/behaviours.json`
-   and build with `--registry=`; see `engine/panel/README.md`
-   ("Behaviour metadata is registry-driven"). The entry needs the registry's full
-   shape -- `name`, `set: "user"`, `numeric_id` (integer >= 1, per set: its display
-   order and its payload `id`), `group`, `definition`, `facets`. See
-   `data/schema/behaviours.schema.json` for the contract and
-   `engine/stage_user_demo.py` for a complete worked entry; the shipped registry
-   carries no `set:user` rows to copy from. A missing field fails the build.
-4. View: `python3 -m http.server 8123 --directory site` →
+3. Behaviour: add a `set:user` entry to a local copy of `data/behaviours.json`.
+   The entry needs the registry's full shape -- `name`, `set: "user"`,
+   `numeric_id` (integer >= 1, per set: its display order and its payload `id`),
+   `group`, `definition`, `facets`. See `data/schema/behaviours.schema.json` for
+   the contract and `engine/stage_user_demo.py` for a complete worked entry; the
+   shipped registry carries no `set:user` rows to copy from. A missing field
+   fails the build.
+4. Judge it -- **this is the step that spends money.** Judging produces a
+   *runlog*, which step 5 turns into a payload; without it there is nothing to
+   build. Model tags and panels are defined in `engine/panel/panel-config.json`
+   (`cheap` = gpt-mini/haiku/qwen-small is the inexpensive panel; `frontier` is
+   the shipped one). Provider keys come from the environment -- `key_env` per
+   provider in that file, e.g. `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`.
+
+   ```sh
+   # plan first: dry-run by default, prints the call plan and a cost estimate
+   python3 engine/panel/run_rollout.py --panel=cheap --runlog=my-run.jsonl \
+     --behaviours=<your-slug>
+   # then spend:
+   python3 engine/panel/run_rollout.py --go --panel=cheap --runlog=my-run.jsonl \
+     --behaviours=<your-slug>
+   ```
+
+   `run_rollout.py` is resume-safe: rerunning after a failure executes only the
+   missing cells. To judge one cell directly use
+   `python3 engine/panel/whole_doc.py <behaviour> <spec> <tag> --runlog=my-run.jsonl`
+   -- note it has **no dry-run**, it calls the API immediately, and **always pass
+   `--runlog=`**: its default is `engine/panel/runlog-v3.jsonl`, the committed
+   shipped runlog.
+5. Build the payload from your runlog:
+
+   ```sh
+   python3 engine/panel/build_site_data.py --runlog=my-run.jsonl \
+     --rubric=v3w --panel=cheap --registry=<your behaviours.json> \
+     --behaviours=<your-slug>
+   ```
+
+   See `engine/panel/README.md` ("Behaviour metadata is registry-driven").
+6. View: `python3 -m http.server 8123 --directory site` →
    `http://localhost:8123/spec-reader/` and `http://localhost:8123/llm-panel-review/`
    (panel loads the manifest's latest run by default; pin with `?data=<name>`).
 
