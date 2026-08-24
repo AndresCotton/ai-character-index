@@ -34,6 +34,18 @@ Two artifact forms; the sidecar wins when both exist:
   - a "## Verdict and depth" table with one row per spec:
         | Claude constitution (...) | <verdict> | <0-4> | <rationale> |
 
+   The markdown path applies two deliberate, documented normalizations on the
+   way in (the sidecar path publishes verbatim, so these never touch sidecar
+   records). The repo rule is verbatim fidelity / nothing silently elided; these
+   two are the named exceptions on the legacy markdown path, and both are
+   load-bearing for byte-identity with the already-published ledger, so they must
+   not be "fixed":
+  - locator separator: the layout writes " > " between locator parts, stored as
+    " › " (the ledger's separator) -- see parse_citations;
+  - verdict rationale: a rationale cell of the form "Note: <text>" is stored as a
+    standalone sentence, i.e. the "Note:" prefix is dropped and the first letter
+    capitalized -- see parse_verdict_table.
+
 Both artifact paths gate their records against data/schema/coverage.schema.json
 before quote verification: whichever artifact produced the records, they must
 match the real coverage schema before anything is written or checked, and a
@@ -105,6 +117,9 @@ def parse_citations(part: str) -> list[dict]:
     for match in ENTRY_RE.finditer(part):
         flags = match.group("flags")
         citation = {
+            # Intentional normalization (documented in the module docstring): the
+            # markdown layout's " > " separator is stored as the ledger's " › ".
+            # Load-bearing for byte-identity with the published ledger.
             "locator": match.group("locator").replace(" > ", " › "),
             "quote": match.group("quote").strip(),
             "role": match.group("role").strip().rstrip("."),
@@ -130,6 +145,10 @@ def parse_verdict_table(text: str, source: str) -> dict[str, dict]:
         if not lab:
             continue
         rationale = cells[3].replace("`", "")
+        # Intentional normalization (documented in the module docstring): a
+        # "Note: <text>" rationale is stored as a standalone sentence -- the prefix
+        # is dropped and the first letter capitalized. Load-bearing for byte-identity
+        # with the published ledger; do not "fix".
         rationale = re.sub(r"\bNote: (\w)", lambda m: m.group(1).upper(), rationale)
         try:
             depth = int(cells[2])

@@ -10,6 +10,7 @@ Run:  python3 engine/test_builders_fail_loud.py
 """
 import importlib.util
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -22,6 +23,8 @@ ROOT = HERE.parent
 # The builders do `from coverage_payload import coverage_payload`; make sure
 # engine/ is importable regardless of the invoking cwd.
 sys.path.insert(0, str(HERE))
+sys.path.insert(0, str(HERE / "spec-cite"))
+import cite  # noqa: E402
 
 
 def load(name):
@@ -39,11 +42,30 @@ class TestSpecReaderBuilderFailsLoud(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         (self.tmp / "data").mkdir()
         shutil.copy(ROOT / "data" / "coverage.json", self.tmp / "data" / "coverage.json")
+        # Pin the user-spec manifest at a path that cannot exist and reset cite's
+        # registry, so an ambient SPEC_CITE_USER_SPECS (or specs/user/specs.json)
+        # can never leak a user spec into the byte-identity rebuild below. Mirrors
+        # tests/test_custom_spec_decoupling.py's isolation.
+        self._saved_manifest = os.environ.get(cite.MANIFEST_ENV_VAR)
+        os.environ[cite.MANIFEST_ENV_VAR] = "/nonexistent/specs.json"
+        cite.load_user_manifest()
+        # Clean argv too: build-spec-reader-data.main() reads sys.argv when
+        # called bare, so ambient unittest flags must not reach the builder.
+        self._saved_argv = sys.argv
+        sys.argv = [str(HERE / "build-spec-reader-data.py")]
         self.mod = load("build-spec-reader-data")
         # Redirect the data read + output; DOCUMENTS' spec paths were bound to
         # the real repo at module load and stay valid.
         self.mod.ROOT = self.tmp
         self.mod.OUTPUT = self.tmp / "documents.json"
+
+    def tearDown(self):
+        sys.argv = self._saved_argv
+        if self._saved_manifest is None:
+            os.environ.pop(cite.MANIFEST_ENV_VAR, None)
+        else:
+            os.environ[cite.MANIFEST_ENV_VAR] = self._saved_manifest
+        cite.load_user_manifest()
 
     def rewrite_coverage(self, mutate):
         path = self.tmp / "data" / "coverage.json"

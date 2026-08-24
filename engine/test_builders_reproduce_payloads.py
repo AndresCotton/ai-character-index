@@ -9,11 +9,16 @@ the result against the committed file.
 """
 
 import importlib.util
+import os
 import shutil
+import sys
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+sys.path.insert(0, str(ROOT / "engine" / "spec-cite"))
+import cite  # noqa: E402
 
 
 def _load_module(name, path):
@@ -24,6 +29,24 @@ def _load_module(name, path):
 
 
 class TestBuildersReproduceCommittedPayloads(unittest.TestCase):
+    def setUp(self):
+        # The builders run in-process, so pin the user-spec manifest at a path that
+        # cannot exist and reset cite's registry: a developer's ambient
+        # SPEC_CITE_USER_SPECS (or specs/user/specs.json) must never leak a user spec
+        # into a byte-identity rebuild. Mirrors the isolation in
+        # tests/test_custom_spec_decoupling.py and engine/panel/test_panel.py's
+        # hermetic_env().
+        self._saved_manifest = os.environ.get(cite.MANIFEST_ENV_VAR)
+        os.environ[cite.MANIFEST_ENV_VAR] = "/nonexistent/specs.json"
+        cite.load_user_manifest()
+
+    def tearDown(self):
+        if self._saved_manifest is None:
+            os.environ.pop(cite.MANIFEST_ENV_VAR, None)
+        else:
+            os.environ[cite.MANIFEST_ENV_VAR] = self._saved_manifest
+        cite.load_user_manifest()
+
     def _assert_reproduces(self, builder_path, module_name, committed):
         if not committed.exists():
             self.skipTest(f"{committed} not present")
@@ -35,7 +58,14 @@ class TestBuildersReproduceCommittedPayloads(unittest.TestCase):
         scratch.mkdir(exist_ok=True)
         self.addCleanup(shutil.rmtree, scratch, ignore_errors=True)
         mod.OUTPUT = scratch / committed.name
-        mod.main()
+        # Run with a clean argv too: build-spec-reader-data.main() reads sys.argv
+        # when called bare, so ambient unittest flags must not reach the builder.
+        saved_argv = sys.argv
+        sys.argv = [str(builder_path)]
+        try:
+            mod.main()
+        finally:
+            sys.argv = saved_argv
         self.assertEqual(
             mod.OUTPUT.read_bytes(),
             committed_bytes,

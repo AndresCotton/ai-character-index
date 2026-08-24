@@ -48,5 +48,5 @@ model-spec@2025-12-18 > #do_not_lie > ¶6  [example/code block]
 
 $ cite.py find constitution "this-is-not-in-the-spec-at-all"
 
-not found (note: matching is whitespace- and quote-style-insensitive)
+find: no passage in constitution@2026-01-20 matches 'this-is-not-in-the-spec-at-all' (note: matching is whitespace- and quote-style-insensitive)
 [exit 1]

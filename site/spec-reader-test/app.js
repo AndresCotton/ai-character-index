@@ -889,6 +889,10 @@ function passageFragments(quote) {
 }
 
 function containsInOrder(haystack, fragments) {
+  // A quote that yields no fragments (only an admonition marker and/or cross
+  // references) must not match every block -- treat it as unresolved instead of
+  // silently anchoring the first block.
+  if (!fragments.length) return false;
   let cursor = 0;
   for (const fragment of fragments) {
     const at = haystack.indexOf(fragment, cursor);
@@ -1537,6 +1541,9 @@ document.addEventListener("keydown", event => {
     window.parent.postMessage({ type: "aci-spec-reader-close" }, location.origin);
     return;
   }
+  // Browser/OS shortcuts keep their keys: Ctrl/Cmd/Alt + a letter must not move the
+  // passage cursor (e.g. Ctrl+J opens the browser's downloads).
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
   if (event.key === "j") focusPassage(state.passageIndex + 1);
   if (event.key === "k") focusPassage(state.passageIndex - 1);
 });
