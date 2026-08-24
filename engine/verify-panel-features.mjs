@@ -167,6 +167,24 @@ await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`
 await panelUrl(`?behavior=${USER}&spec=no-such-spec`);
 check(pageErrors.length === 0, "unknown ?spec= degrades to the default document without errors",
   pageErrors.join("; "));
+// Panel spec switcher is generated from documents.json (C12): the user spec
+// gets a button, and clicking it selects the spec.
+await panelUrl(`?behavior=${USER}`);
+{
+  const options = await page.evaluate(() =>
+    [...document.querySelectorAll(".spec-option")].map(o => o.dataset.spec));
+  check(options.includes(USER_SPEC),
+    "panel spec options are generated from documents.json (user spec included)",
+    options.join(","));
+}
+await page.click(`.spec-option[data-spec="${USER_SPEC}"]`);
+await page.waitForTimeout(250);
+{
+  const href = await page.evaluate(() =>
+    document.querySelector("#source-link")?.getAttribute("href") || "");
+  check(href === "https://acme.example.com/spec",
+    "clicking the generated panel spec option selects the user spec", href);
+}
 await panelUrl(`?compare=1`);
 {
   const out = await page.evaluate(() => ({
@@ -218,23 +236,32 @@ await panelUrl("?behavior=helpfulness");
 
 // =============================================================================
 console.log("== Reader: user-extended documents ==");
-await load(readerBase, `?spec=${USER_SPEC}`);
+await load(readerBase, "");
+{
+  const options = await page.evaluate(() =>
+    [...document.querySelectorAll(".spec-option")].map(o => o.dataset.spec));
+  check(options.join(",") === `anthropic,openai,${USER_SPEC}`,
+    "reader spec options are generated from documents.json, incl. the user spec (C12)",
+    options.join(","));
+}
+// Selecting the user spec VIA ITS GENERATED BUTTON renders it.
+await page.click(`.spec-option[data-spec="${USER_SPEC}"]`);
+await page.waitForTimeout(250);
 {
   const out = await page.evaluate(() => ({
     body: document.querySelector("#document-reader")?.textContent || "",
     passages: document.querySelectorAll("[data-passage-id]").length,
-    options: [...document.querySelectorAll(".spec-option")].map(o => o.dataset.spec),
   }));
-  // Pins CURRENT behaviour (C12): the reader's spec options are hardcoded in
-  // index.html to the two bundled specs; a user spec is reachable only via
-  // ?spec= (checked next). If the options ever become documents.json-driven,
-  // this tripwire fires and the check should flip to expecting the user spec.
-  check(out.options.join(",") === "anthropic,openai",
-    "reader spec options enumerate the bundled specs (user spec is URL-only today)",
-    out.options.join(","));
-  check(out.body.includes("disclose compute usage"), "user spec body renders in the reader");
+  check(out.body.includes("disclose compute usage"),
+    "clicking the generated user-spec option renders the user doc");
   check(out.passages === 0, "user spec view shows 0 published passages (graceful empty state)");
   check(pageErrors.length === 0, "reader user-spec view: no console errors", pageErrors.join("; "));
+}
+await page.click('.spec-option[data-spec="anthropic"]');
+await page.waitForTimeout(250);
+{
+  const n = await page.evaluate(() => document.querySelectorAll("[data-passage-id]").length);
+  check(n > 0, "clicking a bundled spec option returns to its coverage", `${n} passages`);
 }
 {
   // Bundled regression: a published view still anchors exactly its passages.

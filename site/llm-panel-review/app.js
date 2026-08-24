@@ -132,6 +132,7 @@ const elements = {
   selectAllBehaviours: document.querySelector("#select-all-behaviours"),
   sidebarResizer: document.querySelector("#sidebar-resizer"),
   sourceLink: document.querySelector("#source-link"),
+  specSwitcher: document.querySelector(".spec-switcher"),
   template: document.querySelector("#document-template"),
 };
 
@@ -1549,18 +1550,6 @@ function focusPassage(index, shouldScroll = true) {
   updatePassageCount();
 }
 
-document.querySelectorAll(".spec-option").forEach(option => {
-  option.addEventListener("click", () => {
-    state.selectedSpec = option.dataset.spec;
-    if (state.comparing) {
-      state.comparing = false;
-      elements.compareToggle.setAttribute("aria-pressed", "false");
-    }
-    syncURL();
-    rebuildReader();
-  });
-});
-
 elements.selectAllBehaviours.addEventListener("click", () => {
   setSelection(benchBehaviours().map(behaviour => behaviour.slug));
 });
@@ -1689,6 +1678,34 @@ async function loadJSON(url) {
   return response.json();
 }
 
+/* Spec options follow documents.json rather than a hardcoded pair (C12), so a
+ * user-registered spec gets its own switcher button the moment it is folded in. */
+function renderSpecOptions() {
+  const options = state.payload.documents.map(doc => {
+    const option = document.createElement("button");
+    option.className = "spec-option";
+    option.dataset.spec = doc.id;
+    option.type = "button";
+    const name = document.createElement("span");
+    name.textContent = doc.lab;
+    const detail = document.createElement("small");
+    const version = (doc.version || "").replaceAll("-", ".");
+    detail.textContent = version ? `${doc.title} · ${version}` : doc.title;
+    option.append(name, detail);
+    option.addEventListener("click", () => {
+      state.selectedSpec = doc.id;
+      if (state.comparing) {
+        state.comparing = false;
+        elements.compareToggle.setAttribute("aria-pressed", "false");
+      }
+      syncURL();
+      rebuildReader();
+    });
+    return option;
+  });
+  elements.specSwitcher.replaceChildren(...options);
+}
+
 async function initialize() {
   renderBehaviourList();
   try {
@@ -1702,6 +1719,7 @@ async function initialize() {
       documents: documents.documents,
       behaviours: applyPanelThreshold({ behaviours: structuredClone(state.rawBehaviours) }).behaviours,
     };
+    renderSpecOptions();
     const bench = state.payload.behaviours;
     state.documentFocus = { anthropic: bench.length > 0, openai: bench.length > 0 };
     const params = initialParams;
