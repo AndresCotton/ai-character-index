@@ -109,7 +109,7 @@ await panelUrl("");
 {
   const sb = await sidebar();
   check(sb.includes("Behaviours under test"),
-    "group header present (B2: user behaviour shares the bundled group spelling)",
+    "group header present (user behaviour shares the bundled group spelling)",
     sb.replace(/\s+/g, " ").slice(0, 100));
   check(sb.includes("Helpfulness"), "bundled behaviour present in the user-extended payload");
 }
@@ -139,7 +139,7 @@ await acmeAll("");                       // default bands: defining + core
 await acmeAll("&tiers=defining,core,related");
 {
   const n = await cards();
-  check(n === 2, "all bands on: the single judge's related vote is reachable (B1)", `${n} cards`);
+  check(n === 2, "all bands on: the single judge's related vote is reachable", `${n} cards`);
   const role = await page.evaluate(() =>
     [...document.querySelectorAll(".passage")].some(p => /score 2\/2/.test(p.textContent)));
   check(role, "passage card carries the recomputed score text (score 2/2)");
@@ -167,7 +167,7 @@ await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`
 await panelUrl(`?behavior=${USER}&spec=no-such-spec`);
 check(pageErrors.length === 0, "unknown ?spec= degrades to the default document without errors",
   pageErrors.join("; "));
-// Panel spec switcher is generated from documents.json (C12): the user spec
+// Panel spec switcher is generated from documents.json: the user spec
 // gets a button, and clicking it selects the spec.
 await panelUrl(`?behavior=${USER}`);
 {
@@ -193,10 +193,13 @@ await panelUrl(`?compare=1`);
     toggle: document.querySelector("#compare-toggle")?.getAttribute("aria-pressed"),
     link: document.querySelector("#source-link")?.textContent.trim(),
   }));
-  // Pins CURRENT behaviour (C7): compare is a two-pane view of the first two
-  // documents; the 3rd (user) document is not reachable here by design today.
-  check(out.panels === 2 && out.comparing, "?compare=1 renders the two-pane compare view",
-    `${out.panels} panels`);
+  // Compare generalizes to N documents: every document (incl. the user spec)
+  // gets a pane, with a boundary resizer between adjacent panes.
+  const resizers = await page.evaluate(() =>
+    document.querySelectorAll(".document-resizer").length);
+  check(out.panels === 3 && resizers === 2 && out.comparing,
+    "?compare=1 renders ALL documents as compare panes (N-doc compare)",
+    `${out.panels} panels, ${resizers} resizers`);
   check(out.toggle === "true", "compare toggle reflects ?compare=1");
   check(out.link === "Sources ↗", "source link switches to 'Sources ↗' in compare view", out.link);
 }
@@ -241,7 +244,7 @@ await load(readerBase, "");
   const options = await page.evaluate(() =>
     [...document.querySelectorAll(".spec-option")].map(o => o.dataset.spec));
   check(options.join(",") === `anthropic,openai,${USER_SPEC}`,
-    "reader spec options are generated from documents.json, incl. the user spec (C12)",
+    "reader spec options are generated from documents.json, incl. the user spec",
     options.join(","));
 }
 // Selecting the user spec VIA ITS GENERATED BUTTON renders it.
@@ -290,18 +293,20 @@ await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`
 }
 await panelUrl("?compare=1");
 {
-  const split = () => page.evaluate(() =>
-    parseFloat(document.querySelector("#document-reader").style.getPropertyValue("--compare-first")));
-  const resizer = page.locator(".document-resizer");
-  const before = await split();
-  await resizer.press("ArrowRight");
-  const afterRight = await split();
-  await resizer.press("ArrowLeft");
-  await resizer.press("ArrowLeft");
-  const afterLeft = await split();
-  check(afterRight > before && afterLeft < afterRight,
-    "compare resizer: ArrowRight/ArrowLeft move the split",
-    `${before} -> ${afterRight} -> ${afterLeft}`);
+  const widths = () => page.evaluate(() =>
+    [...document.querySelectorAll(".document-resizer")].map(r =>
+      Number(r.getAttribute("aria-valuenow"))));
+  const before = await widths();
+  const first = page.locator(".document-resizer").first();
+  await first.press("ArrowRight");
+  const afterRight = await widths();
+  await first.press("Home");
+  const afterHome = await widths();
+  check(before.length === 2
+      && afterRight[0] === before[0] + 2 && afterRight[1] === before[1] - 2
+      && afterHome[0] === 10,
+    "N-doc compare: a boundary resizer moves only its own boundary (keyboard)",
+    JSON.stringify({ before, afterRight, afterHome }));
 }
 await panelUrl("?behavior=helpfulness&spec=anthropic&tiers=defining,core,related");
 {
@@ -366,6 +371,16 @@ await page.waitForTimeout(250);
   }));
   check(out.pressed === "true" && out.comparing,
     "reader compare toggle switches to the compare view");
+}
+await load(readerBase, "?behavior=no-sycophancy&compare=1");
+{
+  const out = await page.evaluate(() => ({
+    panels: document.querySelectorAll(".document-panel").length,
+    resizers: document.querySelectorAll(".document-resizer").length,
+  }));
+  check(out.panels === 3 && out.resizers === 2,
+    "reader compare renders all documents as panes (N-doc compare)",
+    `${out.panels} panels, ${out.resizers} resizers`);
 }
 await load(readerBase, "?behavior=no-sycophancy");
 {
