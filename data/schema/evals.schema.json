@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "data/evals.json",
+  "description": "The eval sweep for the index's behaviours: one record per included eval with rubric quality scores and per-lab adherence bands, plus the rejected-candidate ledger. Rubric: 0-4 per dimension; adherence bands 0 (failing) to 4 (meets target), null when a lab has no per-lab result (research/sweeps/01-no-sycophancy.md).",
+  "type": "object",
+  "required": ["rubric_version", "sweep_date", "assessment", "evals", "rejected"],
+  "additionalProperties": false,
+  "properties": {
+    "rubric_version": { "type": "string", "minLength": 1 },
+    "sweep_date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "assessment": {
+      "type": "object",
+      "required": ["produced_by", "human_reviewed", "method", "detail_pages"],
+      "additionalProperties": false,
+      "properties": {
+        "produced_by": { "type": "string", "minLength": 1 },
+        "human_reviewed": { "type": "boolean" },
+        "method": { "type": "string", "minLength": 1 },
+        "detail_pages": { "type": "string", "minLength": 1 }
+      }
+    },
+    "evals": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/eval" }
+    },
+    "rejected": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/rejectedEval" }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "required": ["label", "url", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "url": {
+          "type": ["string", "null"],
+          "description": "null when the source was verified not to exist or not released."
+        },
+        "status": { "type": "string", "minLength": 1 }
+      }
+    },
+    "qualityScores": {
+      "type": "object",
+      "required": ["internal_validity", "external_validity", "reproducibility"],
+      "additionalProperties": false,
+      "properties": {
+        "internal_validity": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "external_validity": { "type": "integer", "minimum": 0, "maximum": 4 },
+        "reproducibility": { "type": "integer", "minimum": 0, "maximum": 4 }
+      }
+    },
+    "qualityConfidence": {
+      "type": "object",
+      "required": ["internal_validity", "external_validity", "reproducibility"],
+      "additionalProperties": false,
+      "properties": {
+        "internal_validity": { "type": "string", "minLength": 1 },
+        "external_validity": { "type": "string", "minLength": 1 },
+        "reproducibility": { "type": "string", "minLength": 1 }
+      }
+    },
+    "adherenceEntry": {
+      "type": "object",
+      "required": ["band", "provenance"],
+      "additionalProperties": false,
+      "properties": {
+        "band": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 4,
+          "description": "0-4 adherence band, or null when the lab has no per-lab result."
+        },
+        "provenance": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Where the band came from: paper, model, date."
+        }
+      }
+    },
+    "eval": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "url",
+        "org",
+        "notion_page",
+        "sources",
+        "behaviour_ids",
+        "facets",
+        "quality",
+        "quality_confidence",
+        "adherence",
+        "featured",
+        "notes"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "No eval without a URL (data/README.md)."
+        },
+        "org": { "type": "string", "minLength": 1 },
+        "notion_page": { "type": "string", "minLength": 1 },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/source" }
+        },
+        "behaviour_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "facets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]+(-adjacent)?$",
+            "description": "Rubric facet id such as 1.2, optionally suffixed -adjacent."
+          }
+        },
+        "quality": { "$ref": "#/$defs/qualityScores" },
+        "quality_confidence": { "$ref": "#/$defs/qualityConfidence" },
+        "adherence": {
+          "type": "object",
+          "required": ["anthropic", "openai"],
+          "properties": {
+            "anthropic": { "$ref": "#/$defs/adherenceEntry" },
+            "openai": { "$ref": "#/$defs/adherenceEntry" }
+          },
+          "description": "One entry per launch lab; additional labs may be added as keys. Note: extra lab keys beyond anthropic/openai are currently NOT validated against adherenceEntry (the object is open); add a property entry when a third lab lands."
+        },
+        "featured": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    },
+    "rejectedEval": {
+      "type": "object",
+      "required": ["name", "url", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "minLength": 1 },
+        "data_url": { "type": "string", "minLength": 1 },
+        "code_url": { "type": "string", "minLength": 1 },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -15,6 +15,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from coverage_payload import coverage_payload
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "data" / "reader-test-coverage.json"
@@ -26,26 +28,6 @@ EMPTY_NOTE = (
     "Behaviour set under test on the reader-test bench. Empty until the reviewer's "
     "behaviours are published. Spec text comes from ../../spec-reader/data/documents.json."
 )
-
-
-def coverage_payload(record: dict, lab_id: str, slug: str) -> dict:
-    return {
-        "verdict": record["verdict"],
-        "depth": record["depth_0_4"],
-        "note": record["depth_note"],
-        "verifiedDate": record["verified_date"],
-        "passages": [
-            {
-                "id": f"{lab_id}-{slug}-{index + 1}",
-                "locator": citation["locator"],
-                "quote": citation["quote"],
-                "role": citation["role"],
-                "adjacent": citation.get("adjacent", False),
-                "exampleBlock": citation.get("example_block", False),
-            }
-            for index, citation in enumerate(record["citations"])
-        ],
-    }
 
 
 def main() -> None:

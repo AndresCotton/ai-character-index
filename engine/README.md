@@ -45,13 +45,22 @@ The reader surfaces render from generated payloads, never from hand-edited JSON:
 ```sh
 python3 engine/build-spec-reader-data.py   # data/coverage.json + specs/ -> site/spec-reader/data/documents.json
 python3 engine/build-reader-test-data.py   # data/reader-test-coverage.json -> site/spec-reader-test/data/behaviours.json
-node engine/verify-spec-reader.mjs         # every behaviour x spec view of the published reader (needs Chrome)
+node engine/verify-spec-reader.mjs         # every behaviour x spec view of the published reader + nav presence + full link/fragment crawl (needs Chrome)
 node engine/verify-reader-test.mjs         # the same for the reader test bench (needs Chrome)
 ```
 
 The reader test bench ([`site/spec-reader-test/`](../site/spec-reader-test/)) is a separate
 tab carrying an external reviewer's behaviour set. It shares the published reader's spec
 text and nothing else, so work there cannot alter what the index publishes.
+
+## data validation (works today)
+
+Every file in [`data/`](../data/) is validated against the JSON Schemas in [`data/schema/`](../data/schema/), plus the cross-file rules from [`data/README.md`](../data/README.md): no **published** coverage verdict without a citation (the reader-test bench models an absence finding as a record with empty citations), no eval without a URL, no coverage record pointing at a lab that `labs.json` doesn't define, and no unknown behaviour IDs in `reader-test-coverage.json` (checked against its own behaviours list). Behaviour IDs in `coverage.json` and `evals.json` are unchecked until a canonical behaviours registry (`behaviours.json`, planned in PLAN.md §2) exists.
+
+```sh
+python3 engine/validate_data.py          # uses jsonschema when installed, stdlib fallback otherwise
+python3 engine/test_validate_data.py     # the gate's own tests: committed data passes, mutations fail
+```
 
 ## notion-sync/ (Phase 3)
 
