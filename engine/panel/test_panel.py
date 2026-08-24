@@ -754,6 +754,27 @@ class TestAppJSTiers(unittest.TestCase):
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
 
 
+class TestAppJSQuotes(unittest.TestCase):
+    """The quote-anchoring guard in app.js (containsInOrder): a quote that
+    normalizes to zero fragments must be treated as unresolved, because an
+    in-order scan over an empty fragment list succeeds vacuously against every
+    block. This shipped with no coverage once and the inverted line reached
+    main, so the harness's own check count is asserted here -- a harness that
+    stopped asserting would otherwise still exit 0. Skips without `node`."""
+
+    HARNESS = HERE / "test_appjs_quotes.js"
+
+    def setUp(self):
+        if shutil.which("node") is None:
+            self.skipTest("node is not available")
+
+    def test_quote_anchoring_in_appjs(self):
+        out = subprocess.run(["node", str(self.HARNESS)],
+                             capture_output=True, text=True, timeout=120)
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("17 checks, 0 failures", out.stdout, out.stdout)
+
+
 class TestRunlogPathResolution(unittest.TestCase):
     """--runlog= must reach the spawned whole_doc.py cells as an absolute
     path: cells run with cwd=engine/panel, so a caller-relative path would
