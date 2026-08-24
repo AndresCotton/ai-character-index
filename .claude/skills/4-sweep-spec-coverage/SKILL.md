@@ -48,8 +48,8 @@ pinned to `spec@version`.
 2. Dry-run first -- prints the exact call plan, what resume skips, and the cost
    estimate, and sends nothing. The canonical run log is
    `engine/panel/runlog-v3.jsonl` (the driver, `whole_doc.py`, and the builder all
-   default to it; the shipped history lives on the `experiment/panel-judges`
-   branch):
+   default to it; the shipped history exists only as an untracked file in a
+   local working copy of `experiment/panel-judges`, committed to no branch):
    `python3 engine/panel/run_rollout.py --behaviours=<key>`
 3. Execute with `--go`. Interrupting is safe: the run log is append-only and rerun
    skips completed cells. Never hold verdicts only in memory.

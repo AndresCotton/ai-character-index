@@ -5,7 +5,7 @@
 > ai-character-index.pages.dev/methodology). Edit this file freely and ask for it
 > to be synced; the HTML is the published source. If an edit changes the rubric's
 > substance (anchors, boundary tests, rules), it should also land in
-> `research/spec-coverage-depth-rubric.md`, the rubric's canonical source.
+> `methodology/spec-coverage-depth-rubric.md`, the rubric's canonical source.
 
 Coverage answers one question, per behaviour and per lab: **what does the lab's
 own specification declare about this behaviour, and in what depth?** 

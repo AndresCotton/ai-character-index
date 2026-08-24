@@ -26,7 +26,7 @@ The index maps, for each frontier lab, three strata per behaviour:
   actually measured in the wild (papers, their quality, etc.).
 
 **You work on the first one.** The public copy that states the coverage question
-in plain language is `research/site-copy-how-we-assess-coverage.md` -- read it
+in plain language is `methodology/site-copy-how-we-assess-coverage.md` -- read it
 once; it is the human-facing summary of everything below.
 
 The wider system design (Notion → git → static site) is in `PLAN.md`. You rarely
@@ -101,8 +101,8 @@ This is the heart of the job. Each step names the file(s) it touches.
 
 ### Step by step
 
-1. **Input -- the behaviour.** The canonical list of behaviours (currently 13,
-   grouped into 4 categories) lives in `research/core-behaviour-list.md`: each
+1. **Input -- the behaviour.** The canonical list of behaviours (currently 12,
+   grouped into 5 categories) lives in `research/core-behaviour-list.md`: each
    has an id, name, definition, and facets. That prose is the sole input to a
    coverage pass. (It is mirrored from a Notion page, but for your purposes the
    markdown file is the source.)
@@ -184,7 +184,7 @@ the supplied definitions.
 | **Spec reader (front-end)** | `site/spec-reader/{index.html,app.js,styles.css}` | the public passage-anchored reader |
 | **Reader verifier** | `engine/verify-spec-reader.mjs` | headless render check (needs Chrome) |
 | **Mirror refresher** | `engine/spec-watch/pull-latest.sh` | pulls latest published specs into `specs/` |
-| **Public methodology copy** | `research/site-copy-how-we-assess-coverage.md`, `site/methodology.html` | plain-language description of the method |
+| **Public methodology copy** | `methodology/site-copy-how-we-assess-coverage.md`, `site/methodology.html` | plain-language description of the method |
 | **Fixed IDs / locations** | `.claude/skills/behaviour-sweep/references/locations.md` | canonical table of paths + Notion IDs |
 
 ---
@@ -301,16 +301,21 @@ Notion sync is Phase 3 and not built.
 The first item is the headline objective of this collaboration; the rest are
 secondary observations.
 
-- **CI is empty.** `.github/workflows/` has no workflows, and `data/schema/`
-  holds no schemas -- yet `PLAN.md`, `README.md`, and `data/README.md` all
-  describe CI that validates `data/*.json` against schemas and re-resolves every
-  locator in `coverage.json` on each PR. Today that re-resolution only happens
-  when someone runs `publish-coverage.py --check` by hand. Wiring this up would
-  make the "coverage claims stay true" guarantee real rather than aspirational.
-- **Behaviour metadata is duplicated in three places** that must be kept in sync
-  by hand: `research/core-behaviour-list.md` (prose), the `BEHAVIOURS` list in
-  `engine/build-spec-reader-data.py`, and the `GROUPS` list in
-  `site/spec-reader/app.js`. A single source these derive from is an obvious
+- **No validation CI.** `.github/workflows/` holds only `deploy.yml` (deploys
+  `site/**` to Cloudflare Pages), and `data/schema/` holds no schemas -- yet
+  `PLAN.md` describes CI that validates `data/*.json` against schemas and
+  re-resolves every locator in `coverage.json` on each PR. Today that
+  re-resolution only happens when someone runs `publish-coverage.py --check`
+  by hand. Wiring this up would make the "coverage claims stay true" guarantee
+  real rather than aspirational.
+- **Behaviour metadata is duplicated in at least six places** that must be kept
+  in sync by hand: `research/core-behaviour-list.md` (prose), the `BEHAVIOURS`
+  list in `engine/build-spec-reader-data.py`, the `GROUPS` list in
+  `site/spec-reader/app.js`, `engine/panel/behaviours.json`,
+  `panel-config.json` `display.behaviours`, and the `submit-eval.yml` issue
+  dropdown. Two data files additionally reuse `behaviour_id` across disjoint
+  numbering spaces (`coverage.json` vs `reader-test-coverage.json`). A single
+  source these derive from is an obvious
   cleanup.
 - **The artifact is both prose and a parser input.** `publish-coverage.py` scrapes
   a human-written markdown file with regexes (§5b). It works, but the coupling is
@@ -345,7 +350,7 @@ file at least as legible as you found it.
 
 ## 9. Suggested reading order (first day)
 
-1. `research/site-copy-how-we-assess-coverage.md` -- what coverage *is*, in plain
+1. `methodology/site-copy-how-we-assess-coverage.md` -- what coverage *is*, in plain
    language, with a fully worked example (No sycophancy).
 2. `specs/CITATION.md` -- the locator grammar. Then play with
    `engine/spec-cite/cite.py` (`outline`, `show`, `resolve`, `find`) against both
