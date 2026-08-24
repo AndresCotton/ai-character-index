@@ -26,9 +26,15 @@ ckpts/
 .claude/launch.json
 .claude/worktrees/
 
+# User-registered specs for engine/spec-cite/cite.py: the manifest
+# (specs/user/specs.json) and any spec documents stored under it are
+# user-generated and stay local (see engine/README.md, "User specs")
+specs/user/
+
 # Private -- not for the public repo
 research/sources/Founding an AI Charter organisation.pdf
 outreach/
 
-# Builder smoke-test scratch (engine/test_build_reader_test_data.py)
+# Builder smoke-test scratch (engine/test_build_reader_test_data.py,
+# engine/test_builders_reproduce_payloads.py)
 .builder-repro-scratch/

@@ -5,7 +5,11 @@ and the append-only/resumable run-log conventions.
 Not a CLI. The executors are whole_doc.py (production, whole-document mode) and
 run_rollout.py (the driver). Frozen rubric texts (v1 binary, v2 ternary+scope) are
 kept verbatim because run-log rows and data provenance hashes key on them; v3 is
-current (see compose_query).
+current (see compose_query; the v3 variants compose through render_system_v3).
+
+Config is LAZY: nothing here reads panel-config.json (or any file) at import time.
+load_config() parses it at use time, and the functions that need config accept an
+already-parsed dict so callers/tests can inject one without monkeypatching.
 
 Design rules every executor honors:
   * ONE uniform prompt per rubric for EVERY judge, reached through each provider
@@ -30,9 +34,37 @@ SPECS = ("constitution", "model-spec")
 
 # Providers/models/panels come from panel-config.json (credentials are env-var NAMES there,
 # never values). The old hardcoded tables are gone; edit the config, not this file.
-CONFIG = json.loads((HERE / "panel-config.json").read_text())
-PROVIDERS = {name: (p["base_url"], p["key_env"]) for name, p in CONFIG["providers"].items()}
-PANELS = CONFIG.get("panels", {})
+# Loaded lazily at USE time -- importing this module reads no PANEL config so it
+# can be injected (pass a parsed dict, or load_config() an alternate path).
+# Note: this module imports cite.py, which reads specs/user/specs.json at import
+# time WHEN THAT MANIFEST EXISTS (absent = bundled-only state, no read).
+DEFAULT_CONFIG_PATH = HERE / "panel-config.json"
+
+
+def load_config(path=None):
+    """Parse panel-config.json (or an explicit override `path`) and return the dict."""
+    return json.loads(Path(path or DEFAULT_CONFIG_PATH).read_text())
+
+
+def providers(config):
+    """{name: (base_url, key_env)} from a loaded config."""
+    return {name: (p["base_url"], p["key_env"]) for name, p in config["providers"].items()}
+
+
+def __getattr__(name):
+    """PEP 562 lazy module globals. Pre-refactor callers (see
+    experiments/panel-calibration/run_variant.py) read harness.CONFIG /
+    harness.PROVIDERS / harness.PANELS as module attributes; resolve them on first
+    access so the import itself touches no files. New code should call load_config()
+    and pass the dict explicitly instead."""
+    if name in ("CONFIG", "PROVIDERS", "PANELS"):
+        config = load_config()
+        value = {"CONFIG": config,
+                 "PROVIDERS": providers(config),
+                 "PANELS": config.get("panels", {})}[name]
+        globals()[name] = value
+        return value
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 # v1: binary rubric (frozen -- the calibrated baseline; do not edit)
 SYSTEM_V1 = ("You decide whether each spec passage is RELEVANT to a target behaviour. "
@@ -75,7 +107,37 @@ SYSTEM = ("You grade how each spec passage relates to a target behaviour, on a 3
 # Changes over v2: states WHY (the verdicts become a coverage report, so absence of
 # findings is a valid result), names the input fields and how to use each, adds the
 # partial-governance and Scope-exclusion rules, and demands independent per-passage grading.
-SYSTEM_V3 = (
+#
+# COMPOSITION CONTRACT (the one place these slots are documented). The v3 rubric is
+# a template with three named placeholders; render_system_v3() fills them:
+#
+#   {independence}  -- how the judge treats passage context. Passage-level judging
+#                      uses INDEPENDENCE_PASSAGE; whole-document judging (whole_doc.py,
+#                      rubric tags v3w/v3s) uses INDEPENDENCE_WHOLE_DOC instead.
+#   {output_format} -- the verdict-list shape: OUTPUT_FORMAT_FULL (one line per
+#                      passage) or OUTPUT_FORMAT_SPARSE (positives only; every
+#                      omitted passage is recorded as 0).
+#   {reason}        -- an optional trailing reasoning instruction. Every shipped
+#                      caller renders with reason="" (empty), so whole_doc.py's
+#                      SYSTEM_W/SYSTEM_S are FULLY RENDERED: no {reason} placeholder
+#                      remains, and a later .format(reason=...) on them silently does
+#                      nothing (no injection happens).
+#
+# The slot values below are the exact sentences the pre-refactor whole_doc.py
+# substituted via str.replace; test_frozen_prompts.json pins the composed results
+# byte-for-byte against that prior behaviour.
+INDEPENDENCE_PASSAGE = ("Grade every passage independently, on its own text (the § section path is "
+                        "context only), on a 3-point scale. ")
+INDEPENDENCE_WHOLE_DOC = ("You are given the ENTIRE document, split into numbered passages in reading order; "
+                          "use the full document and its structure as context when grading each passage, on a "
+                          "3-point scale. ")
+OUTPUT_FORMAT_FULL = ("For each passage, output one line: the passage number, a colon, then 2, 1, or 0. "
+                      "One line per passage, in order.")
+OUTPUT_FORMAT_SPARSE = ("Output ONLY the passages that score 2 or 1, one line each: the passage number, a "
+                        "colon, then the score, in document order. Do NOT list passages that score 0 -- "
+                        "every passage you omit is recorded as 0. Output no other text.")
+
+SYSTEM_V3_TEMPLATE = (
     "You are auditing how thoroughly an AI alignment document -- a model constitution or a "
     "model spec -- covers one target behaviour. These documents are long and address a "
     "behaviour in scattered places, so it is hard to tell whether the behaviour is "
@@ -89,8 +151,7 @@ SYSTEM_V3 = (
     "NOT this one. An optional field reading 'none provided' only means the user left it "
     "blank -- infer nothing from that; when Scope is not provided, judge against the "
     "Definition alone. "
-    "Grade every passage independently, on its own text (the § section path is context "
-    "only), on a 3-point scale. "
+    "{independence}"
     "2 = CORE: the passage directly governs the SPECIFIC behaviour described -- it states, "
     "requires, or constrains that exact behaviour, such that you would cite it when "
     "assembling the document's coverage of the behaviour. A passage that does so in only "
@@ -114,8 +175,20 @@ SYSTEM_V3 = (
     "Example -- behaviour 'do not endorse false claims': a passage requiring the model "
     "to correct a user's factual mistake = 2; a passage on how confident assessments "
     "should be phrased = 1; a passage about being generally trustworthy = 0. "
-    "For each passage, output one line: the passage number, a colon, then 2, 1, or 0. "
-    "One line per passage, in order.{reason}")
+    "{output_format}{reason}")
+
+
+def render_system_v3(independence, output_format, reason=""):
+    """Compose a v3-family system prompt by filling the template's three documented
+    slots (contract in the comment above SYSTEM_V3_TEMPLATE). Returns the final
+    message text."""
+    return SYSTEM_V3_TEMPLATE.format(
+        independence=independence, output_format=output_format, reason=reason)
+
+
+# The passage-level v3 rubric, kept with its trailing {reason} slot literal for the
+# legacy .format(reason=...) callers; frozen for provenance (see the module docstring).
+SYSTEM_V3 = render_system_v3(INDEPENDENCE_PASSAGE, OUTPUT_FORMAT_FULL, reason="{reason}")
 
 SYSTEMS = {"v1": SYSTEM_V1, "v2": SYSTEM, "v3": SYSTEM_V3}
 
@@ -130,27 +203,38 @@ BEHAVIOUR_TEMPLATE_V3 = ("Behaviour: {title}\n"
 
 
 def env(name):
+    """Credential lookup: the process environment first, then a gitignored .env next
+    to the harness. PANEL_DOTENV overrides that .env path -- test_panel.py pins it at
+    a nonexistent file so its smoke subprocesses stay hermetic (never read a
+    developer's real keys) even on a machine that uses the pipeline."""
     v = os.environ.get(name)
-    if not v and (HERE / ".env").exists():
-        for line in (HERE / ".env").read_text().splitlines():
+    dotenv = Path(os.environ.get("PANEL_DOTENV", str(HERE / ".env")))
+    if not v and dotenv.exists():
+        for line in dotenv.read_text().splitlines():
             if line.strip().startswith(name + "="):
                 v = line.split("=", 1)[1].strip().strip("\"'")
     return v
 
 
-def resolve(tag):
+def resolve(tag, config=None):
     """(provider, model_id): the native route from panel-config, falling back to that model's
-    `openrouter` mirror when its own key is missing and we hold an OpenRouter one."""
-    m = CONFIG["models"][tag]
-    keyname, mirror = PROVIDERS[m["provider"]][1], m.get("openrouter")
-    if not env(keyname) and mirror and env(PROVIDERS["openrouter"][1]):
+    `openrouter` mirror when its own key is missing and we hold an OpenRouter one.
+    `config` injects a parsed config dict; the default loads panel-config.json."""
+    if config is None:
+        config = load_config()
+    provs = providers(config)
+    m = config["models"][tag]
+    keyname, mirror = provs[m["provider"]][1], m.get("openrouter")
+    if not env(keyname) and mirror and env(provs["openrouter"][1]):
         print(f"note: no {keyname} -- routing {tag} via openrouter", file=sys.stderr)
         return "openrouter", mirror["id"]
     return m["provider"], m["id"]
 
 
-def client_for(provider):
-    base, keyname = PROVIDERS[provider]
+def client_for(provider, config=None):
+    if config is None:
+        config = load_config()
+    base, keyname = providers(config)[provider]
     key = env(keyname)
     if not key:
         sys.exit(f"no {keyname} in env/.env for provider {provider}")

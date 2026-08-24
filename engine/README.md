@@ -25,6 +25,20 @@ python3 engine/spec-cite/cite.py find model-spec "some remembered phrase"   # te
 
 No CI re-resolves locators today (the only workflow is `.github/workflows/deploy.yml`). Re-resolution happens when `engine/publish-coverage.py` runs — it verifies every quote through `cite.py` before writing `data/coverage.json` — and a PR-time locator check is on the closeout list. Combined with spec-watch, that is what keeps coverage claims verifiable over time.
 
+### User specs (bring your own document)
+
+`cite.py` also resolves locators into your own spec document, without editing the tool: drop a manifest at `specs/user/specs.json` (gitignored — the manifest and any documents stored with it stay local and unpushed):
+
+```json
+{
+  "my-spec": {
+    "2026-08-18": {"path": "specs/user/my-spec.md", "default": true}
+  }
+}
+```
+
+Every command then accepts the registered names alongside the bundled specs — `cite.py outline my-spec`, `cite.py resolve "my-spec@2026-08-18 > Some Section > ¶2 s1"`, etc. Paths resolve relative to the repo root (absolute paths also work); versions are ISO dates, as in locators. The `"default"` flag is optional when a spec has exactly one version, and at most one version per spec may carry it (two or more fail loudly at manifest load). A multi-version spec with no default still loads — the error is deferred until the spec is actually loaded without an `@version` pin, when `cite.py` exits listing the `my-spec@<version>` choices. Bundled names (`constitution`, `model-spec`) cannot be redefined — a manifest that tries, or that is malformed, fails loudly at load; an absent manifest is the normal bundled-only state. Blast radius of that loud failure: the panel pipeline imports `cite` at module-import time (via `harness.py`), so a malformed local manifest fails EVERY panel CLI and both panel test suites at startup — fix or delete the manifest (or point `SPEC_CITE_USER_SPECS` elsewhere) to recover; the bundled-spec tools fail the same way for the same reason. `SPEC_CITE_USER_SPECS=<file>` overrides the manifest location (how the test suite exercises this without touching `specs/`). This is a private citation workflow: the index's published coverage still cites only the bundled mirrors.
+
 ## publish-coverage.py (works today)
 
 Publishes one behaviour's gate-approved stage-4 artifact into `data/coverage.json`, re-resolving every stored quote through `cite.py` first. Two artifact forms; the sidecar wins when both exist in the sweep directory:
@@ -45,7 +59,7 @@ Known decoupling debt: the publisher hardcodes its lab list (`LABS`: anthropic a
 
 ## panel/ (works today)
 
-The LLM panel judging pipeline: whole-spec judging calls, verdict parsing, the rollout driver, and the `site/llm-panel-review/` payload builder. See [`panel/README.md`](panel/README.md) for mechanics and reproduction; `python3 engine/panel/test_panel.py` runs its 72 offline tests (pure logic: no network, no keys, sub-second). The canonical runlog that produced the shipped panel payload is committed data (`engine/panel/runlog-v3.jsonl`, documented in [`panel/runlog-v3.md`](panel/runlog-v3.md)); `python3 engine/panel/verify_panel_provenance.py` proves the shipped payload rebuilds from it byte-identically (one documented allowance: the builder's build-date stamp).
+The LLM panel judging pipeline: whole-spec judging calls, verdict parsing, the rollout driver, and the `site/llm-panel-review/` payload builder. Config is read lazily (`panel-config.json` at use time, injectable for tests) and the whole-doc prompts compose from the v3 rubric through named slots, so neither needs monkeypatching. See [`panel/README.md`](panel/README.md) for mechanics and reproduction; `python3 engine/panel/test_panel.py` runs its offline tests (no network, no keys). The canonical runlog that produced the shipped panel payload is committed data (`engine/panel/runlog-v3.jsonl`, documented in [`panel/runlog-v3.md`](panel/runlog-v3.md)); `python3 engine/panel/verify_panel_provenance.py` proves the shipped payload rebuilds from it byte-identically (one documented allowance: the builder's build-date stamp).
 
 ## generate_behaviour_constants.py (works today)
 

@@ -8,8 +8,11 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
+import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -22,6 +25,27 @@ def load(name):
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
+
+
+def hermetic_env():
+    """Subprocess environment for EVERY probe and CLI smoke run in this file; by
+    construction no subprocess started with it can reach a provider:
+
+    - credential-shaped vars are scrubbed (every key_env name in panel-config.json
+      ends in API_KEY; TOKEN/SECRET swept for good measure), so a developer's real
+      keys never enter the subprocess;
+    - PANEL_DOTENV is pinned at a path that cannot exist, so harness.env() never
+      falls back to a developer's engine/panel/.env either;
+    - SPEC_CITE_USER_SPECS is pinned at a nonexistent manifest, so a developer's
+      local user-spec manifest never changes the registry under test.
+
+    The subprocesses therefore hit the dry-run / arg-parse / missing-key paths --
+    never an API call."""
+    env = {k: v for k, v in os.environ.items()
+           if not re.search(r"API_?KEY|API_TOKEN|SECRET|PASSWORD", k, re.I)}
+    env["PANEL_DOTENV"] = str(HERE / "no-such-dotenv")
+    env["SPEC_CITE_USER_SPECS"] = str(HERE / "no-such-user-manifest.json")
+    return env
 
 
 h = load("harness")
@@ -710,6 +734,269 @@ class TestAppJSResolution(unittest.TestCase):
                          "app.js payloadName drifted from build_site_data._payload_name: "
                          + ", ".join(f"{n!r}: js={g} py={p}"
                                      for n, g, p in zip(names, got, expected) if g != p))
+class TestImportSideEffects(unittest.TestCase):
+    """Config must be lazy: importing any panel module in a FRESH interpreter reads
+    no PANEL config/data file (guards the monkeypatch-to-inject debt the decoupling
+    removed). The probe intercepts builtins.open, io.open, and Path.open. Scope note:
+    cite.py (imported by harness) reads specs/user/specs.json at import time WHEN
+    that manifest exists; it is absent in the repo's committed state."""
+
+    PROBE = r'''
+import builtins, importlib.util, io, json, sys
+from pathlib import Path
+HERE = Path(sys.argv[1])
+opened = []
+_real_open = builtins.open
+def rec_open(file, *a, **k):
+    opened.append(str(file))
+    return _real_open(file, *a, **k)
+builtins.open = rec_open
+io.open = rec_open
+_real_path_open = Path.open
+def rec_path_open(self, *a, **k):
+    opened.append(str(self))
+    return _real_path_open(self, *a, **k)
+Path.open = rec_path_open
+for name in ("harness", "whole_doc", "run_rollout", "build_site_data", "select_strata"):
+    sp = importlib.util.spec_from_file_location(name, HERE / (name + ".py"))
+    m = importlib.util.module_from_spec(sp)
+    sp.loader.exec_module(m)
+bad = [p for p in opened if p.endswith((".json", ".jsonl", ".txt", ".env", ".md"))]
+print(json.dumps({"bad": bad, "opened": opened}))
+'''
+
+    def test_import_reads_no_config_or_data_file(self):
+        # Hermetic: hermetic_env() pins SPEC_CITE_USER_SPECS at a path that cannot
+        # exist, so a developer who uses the user-spec feature locally still passes
+        # the probe (it must see the repo's committed bundled-only state, not their
+        # manifest). Keys are scrubbed too, though imports never call providers.
+        r = subprocess.run([sys.executable, "-B", "-c", self.PROBE, str(HERE)],
+                           capture_output=True, text=True, env=hermetic_env())
+        self.assertEqual(r.returncode, 0, r.stderr)
+        data = json.loads(r.stdout.strip().splitlines()[-1])
+        self.assertEqual(data["bad"], [],
+                         f"import-time file reads: {sorted(set(data['bad']))}")
+
+    def test_module_level_load_here_read_nothing(self):
+        # The h/rr/wd/bs objects at the top of THIS file were exec'd at test import;
+        # none of them should have cached a config (it is resolved at use time now).
+        for mod in (h, rr, wd, bs):
+            self.assertNotIn("CONFIG", vars(mod),
+                             f"{Path(mod.__file__).name} cached CONFIG at import")
+
+
+class TestPromptIdentity(unittest.TestCase):
+    """The explicit render_system_v3 composition must be BYTE-IDENTICAL to the old
+    str.replace+assert outputs. Expected strings were captured from pre-refactor
+    behaviour into test_frozen_prompts.json before the refactor landed."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.fx = json.loads((HERE / "test_frozen_prompts.json").read_text())
+
+    def test_frozen_rubrics_unchanged(self):
+        self.assertEqual(h.SYSTEM_V1, self.fx["v1_raw"])
+        self.assertEqual(h.SYSTEM, self.fx["v2_raw"])
+        self.assertEqual(h.SYSTEM_V3, self.fx["v3_raw"])
+
+    def test_whole_doc_prompts_byte_identical(self):
+        # old code sent SYSTEM_W.format(reason="") / SYSTEM_S.format(reason="");
+        # the new constants are already rendered, so they must equal those strings
+        self.assertEqual(wd.SYSTEM_W, self.fx["w_sent"])
+        self.assertEqual(wd.SYSTEM_S, self.fx["s_sent"])
+
+    def test_render_reproduces_frozen_v3_from_slots(self):
+        rebuilt = h.render_system_v3(h.INDEPENDENCE_PASSAGE, h.OUTPUT_FORMAT_FULL,
+                                     reason="{reason}")
+        self.assertEqual(rebuilt, self.fx["v3_raw"])
+
+    def test_systems_table_and_behaviour_template(self):
+        self.assertEqual(sorted(h.SYSTEMS), self.fx["systems_keys"])
+        self.assertEqual(h.BEHAVIOUR_TEMPLATE_V3, self.fx["behaviour_template_v3"])
+
+
+class TestLazyConfig(unittest.TestCase):
+    """load_config is the single injection point; default path resolves relative to
+    the module and an override path / parsed dict is honored without monkeypatching."""
+
+    def test_default_loads_shipped_config(self):
+        cfg = h.load_config()
+        self.assertIn("models", cfg)
+        self.assertIn("frontier_primary", cfg["panels"])
+
+    def test_override_path_is_honored(self):
+        custom = {"providers": {}, "models": {}, "panels": {"p": ["m"]}}
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+            json.dump(custom, f)
+        self.addCleanup(lambda: Path(f.name).unlink(missing_ok=True))
+        self.assertEqual(h.load_config(f.name)["panels"], {"p": ["m"]})
+
+    def test_resolve_uses_injected_config_not_default(self):
+        injected = {"providers": {"acme": {"base_url": None, "key_env": "ACME_KEY"}},
+                    "models": {"solo": {"provider": "acme", "id": "acme/solo-v9"}}}
+        real_env = h.env
+        h.env = lambda name: None          # no keys anywhere -> native route, no fallback
+        self.addCleanup(lambda: setattr(h, "env", real_env))
+        self.assertEqual(h.resolve("solo", injected), ("acme", "acme/solo-v9"))
+
+
+class TestLazyConfigShim(unittest.TestCase):
+    """PEP 562 compatibility, probed in a FRESH interpreter: pre-refactor callers (see
+    experiments/panel-calibration/run_variant.py) read harness.CONFIG / harness.PANELS /
+    harness.PROVIDERS as module attributes. The lazy-config refactor must keep those
+    resolving through the module __getattr__ shim and stay consistent with load_config().
+    Run in a subprocess so the cached attributes never pollute the in-process module
+    (TestImportSideEffects asserts nothing is cached at import here)."""
+
+    PROBE = r'''
+import importlib.util, json, sys
+from pathlib import Path
+HERE = Path(sys.argv[1])
+sp = importlib.util.spec_from_file_location("harness", HERE / "harness.py")
+h = importlib.util.module_from_spec(sp)
+sp.loader.exec_module(h)
+cfg = h.load_config()
+out = {
+    "config_cached": h.CONFIG is h.CONFIG,
+    "config_equals_load_config": h.CONFIG == cfg,
+    "panels_equal": h.PANELS == cfg.get("panels", {}),
+    "providers_equal": h.PROVIDERS == h.providers(cfg),
+    "cached_in_module_dict": all(k in vars(h) for k in ("CONFIG", "PANELS", "PROVIDERS")),
+}
+try:
+    h.NO_SUCH_ATTRIBUTE
+    out["unknown_raises_attributeerror"] = False
+except AttributeError:
+    out["unknown_raises_attributeerror"] = True
+print(json.dumps(out))
+'''
+
+    def test_config_panels_providers_resolve_through_shim(self):
+        # hermetic_env() pins SPEC_CITE_USER_SPECS (and scrubs keys) exactly as the
+        # import probe does, so the shim is exercised in the same hermetic state.
+        r = subprocess.run([sys.executable, "-B", "-c", self.PROBE, str(HERE)],
+                           capture_output=True, text=True, env=hermetic_env())
+        self.assertEqual(r.returncode, 0, r.stderr)
+        d = json.loads(r.stdout.strip().splitlines()[-1])
+        for key in ("config_cached", "config_equals_load_config", "panels_equal",
+                    "providers_equal", "cached_in_module_dict",
+                    "unknown_raises_attributeerror"):
+            self.assertTrue(d[key], f"shim probe failed on {key}: {d}")
+
+
+class TestMainSmoke(unittest.TestCase):
+    """CLI entry-point arg handling, run as real subprocesses. No network, and no
+    way to spend money even on a developer machine with live keys: every
+    subprocess runs under hermetic_env() (credential env vars scrubbed, the
+    harness's .env fallback pinned at a nonexistent path, user-spec manifest
+    pinned absent), the rollout driver is dry-run by default and gets a runlog
+    path that cannot exist (so it can never resume against a developer's real
+    runlog-v3.jsonl), and the builder is pointed at a runlog that cannot exist."""
+
+    def missing_runlog(self):
+        """A runlog path in a fresh empty tempdir: cannot exist, so the subprocess
+        can never read (or resume from) a developer's real runlog-v3.jsonl."""
+        d = tempfile.mkdtemp(prefix="panel-smoke-")
+        self.addCleanup(shutil.rmtree, d, ignore_errors=True)
+        return str(Path(d) / "runlog.jsonl")
+
+    def test_run_rollout_dry_run_prints_plan_and_exits_zero(self):
+        r = subprocess.run([sys.executable, str(HERE / "run_rollout.py"),
+                            "--behaviours=helpfulness",
+                            f"--runlog={self.missing_runlog()}"],
+                           capture_output=True, text=True, env=hermetic_env())
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("whole_doc.py helpfulness", r.stdout)
+        self.assertIn("DRY RUN", r.stdout)
+
+    def test_build_site_data_hoisted_config_load_fails_at_runlog_read(self):
+        # The hoisted load_config() must succeed before arg parsing; a missing
+        # --runlog= then fails at the runlog read (naming the path), not as an
+        # import-time crash.
+        missing = str(HERE / "no-such-runlog.jsonl")
+        r = subprocess.run([sys.executable, str(HERE / "build_site_data.py"),
+                            f"--runlog={missing}"],
+                           capture_output=True, text=True, env=hermetic_env())
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn(missing, r.stderr)
+
+    def test_run_rollout_panel_override_changes_the_plan(self):
+        # --panel= swaps the executed seat list. itest is a single cheap judge, so the
+        # override must plan ONLY qwen-big cells -- never the default frontier seats.
+        r = subprocess.run([sys.executable, str(HERE / "run_rollout.py"),
+                            "--behaviours=helpfulness", "--panel=itest",
+                            f"--runlog={self.missing_runlog()}"],
+                           capture_output=True, text=True, env=hermetic_env())
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("whole_doc.py helpfulness constitution qwen-big", r.stdout)
+        self.assertIn("whole_doc.py helpfulness model-spec qwen-big", r.stdout)
+        self.assertNotIn("whole_doc.py helpfulness constitution sol", r.stdout)
+        self.assertIn("DRY RUN", r.stdout)
+
+    def test_run_rollout_unknown_panel_override_rejected(self):
+        r = subprocess.run([sys.executable, str(HERE / "run_rollout.py"),
+                            "--behaviours=helpfulness", "--panel=no-such-panel",
+                            f"--runlog={self.missing_runlog()}"],
+                           capture_output=True, text=True, env=hermetic_env())
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("unknown panel", r.stderr + r.stdout)
+
+    def test_whole_doc_panel_name_expands_to_member_models(self):
+        # whole_doc.py expands a panel NAME into its member tags before judging. A full
+        # run needs API keys, so this is an arg-parse-level assertion: with every key
+        # removed AND the harness's .env fallback pinned absent (hermetic_env -- the
+        # pre-fix hole: a developer's engine/panel/.env could still supply real keys
+        # and turn this test into a spend-money API call), passing the panel NAME
+        # 'frontier' must expand to a real member and fail at that member's missing
+        # provider key -- NOT KeyError on 'frontier' (which would mean it was treated
+        # as a model tag, i.e. no expansion).
+        with tempfile.NamedTemporaryFile(suffix=".jsonl", delete=False) as f:
+            runlog = f.name
+        self.addCleanup(lambda: Path(runlog).unlink(missing_ok=True))
+        r = subprocess.run([sys.executable, str(HERE / "whole_doc.py"),
+                            "helpfulness", "constitution", "frontier",
+                            f"--runlog={runlog}"],
+                           capture_output=True, text=True, env=hermetic_env(),
+                           timeout=120)
+        self.assertNotEqual(r.returncode, 0)
+        blob = r.stdout + r.stderr
+        self.assertIn("for provider", blob)      # reached an expanded member's key check
+        self.assertNotIn("KeyError", blob)       # 'frontier' was not treated as a model
+        self.assertNotIn("Traceback", blob)
+
+    def test_complete_hint_names_admission_panel_not_execution_panel(self):
+        # The COMPLETE hint tells the user how to REBUILD the site payload, and
+        # build_site_data.py admits runlog rows by the ADMISSION panel
+        # (config["display"]["panel"] = frontier: primaries AND substitutes), NOT the
+        # execution panel this driver ran. Bank every cell so --go reaches the COMPLETE
+        # branch with an empty plan (no API calls), then read the hint's --panel value.
+        cfg = h.load_config()
+        rubric = cfg["rubric"]
+        exec_panel = cfg["panels"]["frontier_primary"]   # the --panel= override below
+        admission = cfg["display"]["panel"]              # what the hint must name
+        self.assertEqual(set(exec_panel) | {"opus", "kimi-k2"},
+                         set(cfg["panels"][admission]))  # premise: admission adds subs
+        first_loc = {s: h.passages(s)[0][0] for s in cfg["specs"]}
+        rows = [{"behaviour": "helpfulness", "spec": s, "model": m,
+                 "locator": first_loc[s], "rubric": rubric}
+                for s in cfg["specs"] for m in exec_panel]
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
+            for row in rows:
+                f.write(json.dumps(row) + "\n")
+            runlog = f.name
+        self.addCleanup(lambda: Path(runlog).unlink(missing_ok=True))
+        # --go with a fully banked runlog plans zero cells, so nothing is sent;
+        # hermetic_env() is belt-and-braces: even a resume-logic regression could
+        # not reach a provider with keys scrubbed and the .env fallback pinned.
+        r = subprocess.run([sys.executable, str(HERE / "run_rollout.py"), "--go",
+                            "--behaviours=helpfulness", "--panel=frontier_primary",
+                            f"--runlog={runlog}"],
+                           capture_output=True, text=True, env=hermetic_env())
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("COMPLETE", r.stdout)
+        m_panel = re.search(r"--panel=(\S+)", r.stdout)
+        self.assertIsNotNone(m_panel, r.stdout)
+        self.assertEqual(m_panel.group(1), admission)    # frontier, not frontier_primary
 
 
 if __name__ == "__main__":
