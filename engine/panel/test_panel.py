@@ -929,6 +929,49 @@ print(json.dumps(out))
             self.assertTrue(d[key], f"shim probe failed on {key}: {d}")
 
 
+class TestSubstitutionNote(unittest.TestCase):
+    """provenance.substitution is a curated fact about one panel, not a constant.
+
+    It records WHY a provider failed on a cell -- no runlog carries that -- so it
+    cannot be derived. It used to be a string literal, which stamped the shipped
+    frontier run's opus/kimi-k2 substitutions onto every payload the builder emitted,
+    including runs those judges never touched."""
+
+    def _notes(self):
+        src = (HERE / "build_site_data.py").read_text()
+        ns = {}
+        start = src.index("SUBSTITUTION_NOTES = {")
+        end = src.index("}", start) + 1
+        exec(src[start:end], ns)
+        return ns["SUBSTITUTION_NOTES"]
+
+    def test_only_the_panel_it_describes_carries_a_note(self):
+        notes = self._notes()
+        self.assertIn("frontier", notes)
+        self.assertIn("opus", notes["frontier"])
+        for panel in ("frontier_primary", "frontier_fast", "itest", "cheap"):
+            self.assertIsNone(notes.get(panel),
+                              f"{panel} must not inherit another panel's substitution note")
+
+    def test_committed_payloads_claim_no_substitution_they_did_not_have(self):
+        """A payload may only carry the note when its panel is the one it describes."""
+        notes = self._notes()
+        data = HERE.parent.parent / "site" / "llm-panel-review" / "data"
+        for path in sorted(data.glob("behaviours*.json")):
+            payload = json.loads(path.read_text())
+            prov = payload.get("provenance") or {}
+            if "substitution" not in prov:
+                continue
+            panel = prov.get("panel_config")
+            self.assertEqual(prov["substitution"], notes.get(panel),
+                             f"{path.name} carries a substitution note for panel {panel!r}")
+            seen = set(prov.get("judges_seen_in_data") or [])
+            named = {tag for tag in ("opus", "kimi-k2") if tag in prov["substitution"]}
+            self.assertTrue(named <= seen or not named,
+                            f"{path.name} names substitutes {sorted(named - seen)} "
+                            f"that never judged it")
+
+
 class TestMainSmoke(unittest.TestCase):
     """CLI entry-point arg handling, run as real subprocesses. No network, and no
     way to spend money even on a developer machine with live keys: every
