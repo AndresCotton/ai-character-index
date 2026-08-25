@@ -283,7 +283,7 @@
     "panel": "frontier_fast",
     "rubric": "v5",
     "_rubric_note": "The rubric the SHIPPED payload builds from (v5: 0-3 per judge, 9-point cells on the 3-judge panel). Matches top-level `rubric` since the v5 prompt port: whole_doc.py stamps v5 by default (legacy v3 prompts behind --rubric=). build_site_data.py prefers this key.",
-    "threshold": 3,
+    "threshold": 1,
     "solid_threshold": 5,
     "_activation_note": "The full-bench v5 rollout landed (runlog-v5.jsonl, 2026-08-17): all ten reader-test slugs are listed and the dual-slug mapping in build_site_data.py (animal-welfare-impacts feeds general-welfare-impacts-strict) is active."
   },
