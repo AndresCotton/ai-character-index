@@ -103,6 +103,23 @@ check(pageErrors.length === 0 && (await sidebar()).includes("Acme transparency")
   "?data=manifest.json is refused as a pin and degrades to manifest latest (no error)",
   pageErrors.join("; "));
 
+// The panel surface loads the reader bench payload (a legal behaviours* pin)
+// and runs applyPanelThreshold's full path against the 9-scale + ragged shapes.
+await panelUrl("?data=behaviours-v5-reader&behavior=helpfulness&spec=anthropic"
+  + "&tiers=defining,core,related");
+await page.waitForTimeout(400);
+{
+  const anchors = await page.evaluate(
+    () => document.querySelectorAll("[data-passage-id]").length);
+  const role = await page.evaluate(
+    () => document.querySelector(".passage-reason-role")?.textContent ?? "");
+  check(anchors === 29, "panel loads the bench payload (29 helpfulness/anthropic passages)",
+    `${anchors} anchors`);
+  check(/score \d+\/9/.test(role), "panel rewrites role fractions to the 9-scale", role.slice(0, 40));
+  check(pageErrors.length === 0, "bench payload on panel: no console errors",
+    pageErrors.join("; "));
+}
+
 // =============================================================================
 console.log("== Panel: sidebar + behaviour selection ==");
 await panelUrl("");

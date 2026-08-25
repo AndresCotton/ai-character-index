@@ -172,6 +172,20 @@ if (behaviours.length === 0) {
         { passages, behaviour: behaviour.name },
         `${behaviour.slug} · ${document.id}`,
       );
+      // Tint/role agreement, continuously: every Related-tinted passage must
+      // carry the "Related ·" role prefix and every solid passage must not.
+      const tint = await page.evaluate(() => {
+        const ps = [...document.querySelectorAll("[data-passage-id]")];
+        let bad = 0;
+        for (const el of ps) {
+          const adj = el.classList.contains("adjacent");
+          const role = el.querySelector(".passage-reason-role")?.textContent ?? "";
+          if (adj !== role.includes("Related \u00b7")) bad++;
+        }
+        return { n: ps.length, bad };
+      });
+      report(tint.bad === 0, `${behaviour.slug} · ${document.id} · tint/role agreement`,
+        `${tint.n} passages`);
     }
     await expectView(
       `${base}?behavior=${behaviour.slug}&compare=1`,

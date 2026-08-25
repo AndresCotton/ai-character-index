@@ -448,6 +448,21 @@ def main(argv=None):
     # curated per-lab cell rows, keyed (slug, lab)
     by_slug_lab = {(e["slug"], e["lab_id"]): e for e in src["cells"]}
 
+    # every bundled reader-test behaviour x lab needs a curation cell (user-set
+    # behaviours carry no curated verdict by design and are exempt)
+    missing_cells = sorted(
+        (b["slug"], lab)
+        for b in behaviours
+        for lab in LAB.values()
+        if registry.get(b["slug"], {}).get("set") == "reader-test"
+        and (b["slug"], lab) not in by_slug_lab
+    )
+    if missing_cells:
+        sys.exit(
+            f"panel-cell-curation.json is missing cells for displayed behaviours: "
+            f"{missing_cells} -- every reader-test behaviour x lab needs a cell"
+        )
+
     out_behaviours = []
     for b in behaviours:
         cov = {}
