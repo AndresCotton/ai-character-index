@@ -41,6 +41,7 @@ CHECKS = (
     ("coverage.json", "coverage.schema.json"),
     ("labs.json", "labs.schema.json"),
     ("reader-test-coverage.json", "reader-test-coverage.schema.json"),
+    ("panel-cell-curation.json", "panel-cell-curation.schema.json"),
 )
 
 

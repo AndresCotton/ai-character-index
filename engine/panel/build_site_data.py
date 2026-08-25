@@ -5,21 +5,25 @@ Implements the MVP display rules from panel-config.json `display`:
   - only the listed behaviours appear in the sidebar;
   - each passage gets score = sum of each panel model's verdict
     (defining=3, core=2, related=1, unrelated=0);
-  - a passage is emitted as a citation when score >= 1 AND it carries at least
-    min(2, panel-size) votes (keeps_citation drops a lone stray vote on a
-    multi-judge panel); the page re-filters at render time via tier bands;
+  - a passage is emitted as a citation when score >= display.threshold AND it
+    carries at least min(2, panel-size) votes (keeps_citation drops a lone
+    stray vote on a multi-judge panel); the page re-filters at render time
+    via tier bands. display.threshold defaults to 1 (keep everything scored);
+    --threshold= overrides it for derived payloads (e.g. a pre-filtered
+    reader shape cut at the panel's band boundary);
+  - the citation `adjacent` flag is score < display.solid_threshold
+    (--solid-threshold= overrides it for derived payloads);
   - the citation `role` (shown when the reader clicks "?") lists each model's decision.
 
 Behaviour identity (name/definition/category) comes from the behaviour
 registry (data/behaviours.json), the source of truth for behaviour identity.
-For the bundled reader-test set the registry matches
-data/reader-test-coverage.json field-for-field (pinned by
-tests/test_behaviour_registry.py), so sourcing from the registry is
-byte-identical for the shipped data; the registry additionally lets set:user
-behaviours (the clone/fork seam) flow into the payload -- display them with
---behaviours=<slug>, judge them under their slug as the runlog behaviour key.
-reader-test-coverage.json still supplies the curated per-lab
-verdict/depth/verifiedDate rows, carried through untouched.
+For the bundled reader-test set the registry matches the shipped bench data
+field-for-field (pinned by tests/test_behaviour_registry.py), so sourcing from
+the registry is byte-identical for the shipped data; the registry additionally
+lets set:user behaviours (the clone/fork seam) flow into the payload --
+display them with --behaviours=<slug>, judge them under their slug as the
+runlog behaviour key. data/panel-cell-curation.json supplies the curated
+per-lab verdict/depth/verifiedDate cell rows, carried through untouched.
 
   python3 build_site_data.py --runlog=<runlog> --rubric=v5 --panel=frontier_fast
   (the shipped data: --runlog=runlog-v5.jsonl committed in engine/panel/, rubric v5,
@@ -40,6 +44,10 @@ outside the data dir.
   --registry=PATH      read the behaviour registry from PATH (default data/behaviours.json)
   --run-date=YYYY-MM-DD  pin provenance.runDate (default: today) so a rebuild can
                          reproduce a committed payload byte-for-byte.
+  --threshold=N        override display.threshold for this build (score cut for
+                       keeps_citation; committed config untouched)
+  --solid-threshold=N  override display.solid_threshold for this build (the
+                       adjacent flag cut; committed config untouched)
 """
 import collections
 import importlib.util
@@ -267,9 +275,10 @@ def unknown_slug_message(unknown_keys, registry_path):
             f"({registry_path}) -- every runlog key must be a slug")
 
 
-def keeps_citation(score, n_votes, panel_size):
-    """Pure: stray-vote guard -- scales to panel size so a 1-judge panel is legal."""
-    return score >= 1 and n_votes >= min(2, panel_size)
+def keeps_citation(score, n_votes, panel_size, threshold=1):
+    """Pure: stray-vote guard -- scales to panel size so a 1-judge panel is legal.
+    The score cut honours display.threshold (default 1: keep everything scored)."""
+    return score >= threshold and n_votes >= min(2, panel_size)
 
 
 def clean_quote(text):
@@ -360,11 +369,16 @@ def main(argv=None):
         elif a.startswith("--out="):            # alternate FILENAME in site data dir (iteration builds)
             out_name = a.split("=", 1)[1]
             check_out_name(out_name)            # loud error before any build work
+        elif a.startswith("--threshold="):      # score cut override (derived payloads; config untouched)
+            DISPLAY["threshold"] = int(a.split("=", 1)[1])
+        elif a.startswith("--solid-threshold="):   # adjacent-flag cut override (config untouched)
+            DISPLAY["solid_threshold"] = int(a.split("=", 1)[1])
         else:
             # Unknown args were ignored, so `--help` ran a full build and wrote a
             # payload + manifest. Asking for help must not mutate the repo.
             sys.exit(f"unknown argument {a!r} -- valid: --runlog= --rubric= --panel= "
-                     "--behaviours= --registry= --run-date= --out=")
+                     "--behaviours= --registry= --run-date= --out= "
+                     "--threshold= --solid-threshold=")
     panel = resolve_panel(config, DISPLAY["panel"])
     registry = json.loads(registry_path.read_text())
     votes = collections.defaultdict(dict)
@@ -400,14 +414,11 @@ def main(argv=None):
         for loc, sec, t in h.passages(s):
             text[loc] = t
 
-    src = json.loads((ROOT / "data" / "reader-test-coverage.json").read_text())
+    src = json.loads((ROOT / "data" / "panel-cell-curation.json").read_text())
     keep = DISPLAY["behaviours"]
     behaviours = display_behaviours(keep, registry, registry_path)
-    # curated per-lab rows, keyed (slug, lab) -- ids are per-set and would
-    # collide across sets, so the join uses the slug
-    rtc_id_to_slug = {b["id"]: b["slug"] for b in src["behaviours"]}
-    by_slug_lab = {(rtc_id_to_slug[e["behaviour_id"]], e["lab_id"]): e
-                   for e in src["coverage"] if e["behaviour_id"] in rtc_id_to_slug}
+    # curated per-lab cell rows, keyed (slug, lab)
+    by_slug_lab = {(e["slug"], e["lab_id"]): e for e in src["cells"]}
 
     out_behaviours = []
     for b in behaviours:
@@ -425,7 +436,7 @@ def main(argv=None):
                 if "kimi" in mv and "kimi-k2" in mv:
                     mv = {m: v for m, v in mv.items() if m != "kimi-k2"}   # k2.6 is kimi's stand-in; k3 wins when present
                 score = sum(mv.values())
-                if not keeps_citation(score, len(mv), len(panel)):   # emit all scored; page re-filters by tier bands
+                if not keeps_citation(score, len(mv), len(panel), DISPLAY["threshold"]):   # emit all scored; page re-filters by tier bands
                     continue
                 SYM = {3: "\u2713\u2713", 2: "\u2713", 1: "~", 0: "\u2717"}   # defining = doubled core tick, no star
                 WORD = {3: "defining", 2: "core", 1: "related", 0: "not relevant"}

@@ -101,12 +101,12 @@ def runlog_facts(runlog, rubric):
 def rebuild(runlog, rubric, panel, scratch_root):
     """Run build_site_data.main() with its ROOT rebound to scratch_root and the
     scratch `--runlog`; returns the rebuilt payload path. Reads from the repo
-    (panel-config.json, spec texts; data/reader-test-coverage.json and the
+    (panel-config.json, spec texts; data/panel-cell-curation.json and the
     data/behaviours.json registry are byte-copied into scratch because main()
     resolves both through ROOT); writes only to scratch."""
     (scratch_root / "data").mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(ROOT / "data" / "reader-test-coverage.json",
-                    scratch_root / "data" / "reader-test-coverage.json")
+    shutil.copyfile(ROOT / "data" / "panel-cell-curation.json",
+                    scratch_root / "data" / "panel-cell-curation.json")
     shutil.copyfile(ROOT / "data" / "behaviours.json",
                     scratch_root / "data" / "behaviours.json")
     (scratch_root / "site" / "llm-panel-review" / "data").mkdir(parents=True, exist_ok=True)
@@ -117,8 +117,13 @@ def rebuild(runlog, rubric, panel, scratch_root):
     saved_argv = sys.argv
     # --out= pins the rebuild to the canonical filename: without it the
     # builder emits a timestamped run file (and touches the manifest).
+    # --threshold=1 pins the legacy effective cut: the shipped payload predates
+    # display.threshold being honoured (the builder hardcoded score >= 1; the
+    # committed config carries a stale 6-point-era 3), so a byte-identity
+    # rebuild must pin the semantics the file was actually built with.
     sys.argv = ["build_site_data.py", f"--runlog={runlog}",
                 f"--rubric={rubric}", f"--panel={panel}",
+                "--threshold=1",
                 "--out=behaviours.json"]
     try:
         bs.main()
