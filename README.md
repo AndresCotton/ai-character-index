@@ -44,6 +44,8 @@ Open the copy and paste in one **`OPENROUTER_API_KEY`** -- that is the whole set
 
 ## Add a new behaviour
 
+**Prefer to delegate?** Everything from here on can be done by a coding agent: open one in the clone (Claude Code or similar) and say "register a behaviour about X and run the panel against both specs". The repo ships agent instructions ([`AGENTS.md`](AGENTS.md)) carrying these same steps and their gotchas. What follows is the by-hand path.
+
 One command registers a behaviour and prints exactly what to run next:
 
 ```sh
@@ -68,7 +70,7 @@ Under the hood a behaviour is one JSON entry in the registry, `data/behaviours.j
 }
 ```
 
-The registrar refuses an existing slug and picks the next free `numeric_id`; `--scope` additionally writes the judge-prompt entry in `engine/panel/behaviours.json`, the one field the registry shape cannot carry. You can equally write these entries by hand following the shipped ones -- or ask a coding agent to: the repo carries agent context (`AGENTS.md`), so telling an agent in this clone to "register a behaviour about X and run the panel" follows exactly these steps.
+That is all the registrar does: write this entry, numbered for you (plus, with `--scope`, a matching judge-prompt entry in `engine/panel/behaviours.json`). Editing the file by hand works just as well -- the shipped entries are the template.
 
 ### Run the panel
 
@@ -111,7 +113,9 @@ Each judge scores each passage on a small relevance scale; a passage's score is 
 
 ## Selecting passages for downstream work
 
-The passages you saw in the reader live in the payload the build just wrote: `site/llm-panel-review/data/behaviours-<timestamp>.json` (the shipped bench is `behaviours.json` next to it). It is plain JSON -- each behaviour carries a coverage record per document, and each record's `passages` array is the extraction target: `locator`, the verbatim `quote`, the per-judge `verdicts`, and the summed `score`. Pull out what you selected with a few lines:
+The simplest way: in the panel reader, tick the behaviours you care about, set the tier toggles, and click **"↓ Download passages"** in the sidebar. You get a Markdown file with each ticked behaviour's definition and exactly the passages shown under your current selection, across the specs on the page -- ready to hand to your eval tooling (a Petri scenario's target passages, say) or a doc.
+
+Need it machine-readable instead? The same data is plain JSON in the payload the build wrote: `site/llm-panel-review/data/behaviours-<timestamp>.json` (the shipped bench is `behaviours.json` next to it). Each behaviour carries a coverage record per document, and each record's `passages` array holds the `locator`, the verbatim `quote`, the per-judge `verdicts`, and the summed `score`:
 
 ```sh
 python3 - <<'EOF'
@@ -125,7 +129,7 @@ for b in payload["behaviours"]:
 EOF
 ```
 
-Swap the `print` for whatever your next step needs -- locator + quote pairs are exactly what an automated adherence eval (a Petri scenario, say) takes as its target passages.
+Swap the `print` for whatever your next step needs.
 
 What makes the selection durable is the **locator**: every citation follows the grammar in [`specs/CITATION.md`](specs/CITATION.md):
 
