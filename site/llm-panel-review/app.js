@@ -1524,12 +1524,13 @@ function updateTierToggles(panel, doc) {
  * had no way to know the judge count that sets the tier cuts they are toggling.
  * It doubles as the fall-through signal: when a ?data= pin cannot be served the page
  * still renders (by design), and this is where it says so. */
-/* The judge count that MATTERS is the per-cell one: applyPanelThreshold derives every
- * tier cut from `Math.max(1, ...)` over a CELL's passages, so that per-cell maximum is
- * the number explaining the bands -- not the count on any individual passage. A
- * passage missing one judge's verdict does not lower its cell's cut, so flattening
- * per-passage counts would report a cut that no cell uses. Reported as a range only
- * when cells genuinely differ from each other.
+/* The judge count that MATTERS is the per-PASSAGE one: applyPanelThreshold bands each
+ * passage on its own verdict count, so that is the number explaining its tier. This
+ * comment used to argue the opposite -- that the cell's maximum was the number to
+ * report, because a passage missing a verdict did not lower its cell's cut. That was
+ * accurate then and it was the bug: a 2-judge passage in a 3-judge cell was measured
+ * against a cut it could not reach. Reported as a range only when passages genuinely
+ * differ from each other.
  *
  * It is also not the length of judges_seen_in_data: the shipped payload lists five
  * judges across the run while each cell was scored by three, because two of the five
@@ -1538,16 +1539,15 @@ function judgesPerCellLabel() {
   const perCell = [];
   (state.rawBehaviours || []).forEach(behaviour => {
     Object.values(behaviour.coverage || {}).forEach(cov => {
-      const counts = (cov.passages || [])
+      (cov.passages || [])
         .filter(p => p.verdicts)
-        .map(p => Object.values(p.verdicts).length);
-      if (counts.length) perCell.push(Math.max(1, ...counts));   // mirrors applyPanelThreshold
+        .forEach(p => perCell.push(Math.max(1, Object.values(p.verdicts).length)));   // mirrors applyPanelThreshold
     });
   });
   if (!perCell.length) return null;
   const lo = Math.min(...perCell), hi = Math.max(...perCell);
   const n = lo === hi ? `${lo}` : `${lo}\u2013${hi}`;
-  return `${n} judge${hi === 1 ? "" : "s"} per cell`;
+  return `${n} judge${hi === 1 ? "" : "s"} per passage`;
 }
 
 function renderRunProvenance() {
@@ -1881,7 +1881,14 @@ function applyPanelThreshold(payload) {
       // cells the defining cut clamps to unanimous core, whose passages then count as
       // defining and the core band sits empty.
       const judges = Math.max(1, ...cov.passages.map(p => p.verdicts ? Object.values(p.verdicts).length : 0));
-      const band = score => tierBand(score, judges, maxCell, related);
+      /* Cuts follow the passage, not the cell. `judges` above is the cell's LARGEST
+       * verdict count, but a passage scored by fewer judges tops out lower -- and
+       * compared against the cell's cut it can be structurally incapable of reaching
+       * the band it earned. Three passages in behaviours-v4a-ds.json scored a
+       * unanimous 4/4 and rendered as "Related · (score 4/4)": no verdict combination
+       * could have done better. Each passage is banded on its own scale instead. */
+      const passageJudges = p => Math.max(1, Object.keys(p.verdicts || {}).length);
+      const band = p => tierBand(p.score, passageJudges(p), p.maxScore || maxCell, related);
       const shownBands = state.bands ?? new Set(DEFAULT_BANDS);
       const before = cov.passages.length;
       // Per-band tallies and reachability, taken BEFORE the toggle filter so the
@@ -1890,13 +1897,13 @@ function applyPanelThreshold(payload) {
       cov.bandReachable = bandReachable(judges, maxCell, related);
       cov.passages.forEach(p => {
         if (p.score === undefined) return;
-        const b = band(p.score);
+        const b = band(p);
         if (b) cov.bandCounts[b] += 1;
       });
       let subTier = 0;   // below every tier -- never rendered, so never "toggled off"
       cov.passages = cov.passages.filter(p => {
         if (p.score === undefined) return true;
-        const b = band(p.score);
+        const b = band(p);
         if (b === null) { subTier += 1; return false; }
         return shownBands.has(b);
       });
@@ -1905,7 +1912,7 @@ function applyPanelThreshold(payload) {
         if (p.score === undefined) return;
         // The band is what the passage IS; `adjacent` is one question about it, kept
         // because the tint and gutter styling key off it.
-        p.band = band(p.score);
+        p.band = band(p);
         p.adjacent = p.band === "related";
         // the baked role text carries the build-time score; rewrite it with the recomputed one
         const shown = Number.isInteger(p.score) ? p.score : p.score.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
