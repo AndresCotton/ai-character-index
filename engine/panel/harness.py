@@ -28,7 +28,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "spec-cite"))   # engine/panel -> engine/spec-cite
 import cite  # noqa: E402
 
-RUNLOG = HERE / "runlog.jsonl"
+RUNLOG = HERE / "runlog-user.jsonl"   # gitignored; the executors share this default
 METRICS = HERE / "metrics.jsonl"   # per-call latency + token usage (for cost/time reporting)
 
 # Providers/models/panels come from panel-config.json (credentials are env-var NAMES there,
