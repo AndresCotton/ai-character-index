@@ -62,6 +62,9 @@ jobs:
         run: |
           node engine/panel/test_appjs_fallthrough.js
           node engine/panel/test_appjs_tiers.js
+          node engine/panel/test_appjs_quotes.js
+          node engine/panel/test_appjs_wiring.js
+          node engine/panel/test_reader_v5_labels.js
 
   browser:
     runs-on: ubuntu-latest
