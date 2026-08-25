@@ -32,10 +32,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 # (data file, its schema) -- every *.json in data/ must appear here.
-# Schemas for artifacts outside data/ live in data/schema/ too but NOT in this
-# tuple: spec-coverage-sidecar.schema.json validates the coverage sidecar
-# research/sweeps/NN-<slug>/spec-coverage.json and is enforced at publish
-# time by engine/publish-coverage.py, not by this gate.
 CHECKS = (
     ("behaviours.json", "behaviours.schema.json"),
     ("coverage.json", "coverage.schema.json"),
