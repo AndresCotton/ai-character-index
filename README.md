@@ -32,7 +32,7 @@ python3 -m http.server 8080 --directory site
 Then open:
 
 - **[http://localhost:8080/llm-panel-review/](http://localhost:8080/llm-panel-review/)** -- the panel reader, the main surface for this workflow. Pick a behaviour in the sidebar; every passage the panel scored lights up in the spec text, with the per-judge verdicts on hover.
-- **[http://localhost:8080/spec-reader/](http://localhost:8080/spec-reader/)** -- the side-by-side spec reader. Documents render as parallel panes with a resizable boundary; your own registered specs appear here too (see below).
+- **[http://localhost:8080/spec-reader/](http://localhost:8080/spec-reader/)** -- the spec reader: both specifications in full, with a behaviour menu. Tick one behaviour or several and every passage cited for it lights up in the text; a compare view shows the two specs side by side with a resizable boundary. Your own registered specs appear here too (see below).
 
 ### 3. API keys (only for running new judging)
 
@@ -208,4 +208,4 @@ python3 engine/validate_data.py                  # schema-check data/, incl. you
 | [`data/behaviours.json`](data/behaviours.json)         | The behaviour registry -- where your behaviours go                                                                         |
 | [`site/`](site/)                                       | The local reader surfaces                                                                                                  |
 
-The remaining directories (`research/`, `methodology/`, `docs/`, `design/`, and friends) are the project's own editorial records and maintenance; none of them are needed to use the tool.
+The remaining directories (`research/`, `methodology/`, `design/`, and friends) are the project's own editorial records and maintenance; none of them are needed to use the tool.

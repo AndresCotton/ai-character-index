@@ -70,7 +70,7 @@ or `..`), so `--out=` cannot write outside the data dir.
 ## Behaviour metadata is registry-driven
 The displayed behaviours (sidebar names, definitions, categories, numeric ids)
 come from the behaviour registry `data/behaviours.json`, not from the payload's
-source runlog: the reader-test bench set in registry `numeric_id` order (the
+source runlog: the reader set in registry `numeric_id` order (the
 shipped order), then any `set:user` behaviours the run covers. A `set:user`
 runlog key is its registry slug (the clone/fork seam: a user behaviour's panel
 run flows straight into the page once it is registered in a local registry
@@ -81,9 +81,9 @@ user forks point it elsewhere) and `--run-date=YYYY-MM-DD` (pins
 payload byte-for-byte).
 
 ## The procedure
-The end-to-end coverage procedure (dry run, execution, failure substitutions,
-coverage-gate checks) is `.claude/skills/sweep-coverage/SKILL.md`. This README
-covers only the mechanics of the individual scripts.
+There is no end-to-end coverage procedure any more: the sweep pipeline was
+retired with the publish path, and the coverage ledger (`data/coverage.json`)
+is frozen. This README covers the mechanics of the individual scripts.
 
 ## Tests
 `python3 engine/panel/test_panel.py` -- unit tests for the pure logic (verdict
@@ -116,8 +116,16 @@ do; `--out=behaviours.json` rebuilds the shipped payload in place, whose
 pin `--run-date=`). The score cut honours `display.threshold` (1 = keep
 everything scored, matching every shipped payload), so a defaults build
 reproduces the shipped payload; `--threshold=`/`--solid-threshold=` override
-both for derived builds (the bench payload is cut at 4/6, the 3-judge band
-boundary).
+both for derived builds (the reader payload is cut at 4/6, the 3-judge band boundary).
+
+The reader (`site/spec-reader/`) is pinned to that derived payload by literal
+filename -- `../llm-panel-review/data/behaviours-v5-reader.json`. The pin exists
+because the reader payload is band-filtered (363 citations against the panel
+payloads' ~3,600) and `data/manifest.json` here is gitignored: resolving through
+the panel's manifest would feed the reader unfiltered data that disappears on a
+fresh clone. The designed fix is a reader-side manifest of reader-shaped
+payloads; until it exists, `engine/verify-reader-test.mjs` asserts the pinned
+URL returns 200 so a moved or renamed payload fails loud in CI.
 
 A NEW panel run must write a new runlog, and a regenerated payload needs its
 own committed log + passing check -- provenance travels with the data.

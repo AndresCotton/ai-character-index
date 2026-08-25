@@ -12,20 +12,19 @@ Everything that keeps the index alive: resolves spec citations, runs LLM panel j
 |---|---|
 | `spec-cite/cite.py` | Locator resolver/verifier (`outline`/`show`/`resolve`/`find`). Grammar defined by `specs/CITATION.md`; bundled specs (`BUNDLED_SPECS`) plus an optional user-spec manifest (`specs/user/specs.json`, gitignored; `SPEC_CITE_USER_SPECS` overrides) whose entries can carry `title`/`sourceUrl` rendering metadata (`spec_meta()`/`user_specs()`). Stdlib-only; CLI **and** imported library. Tests: `tests/test_cite.py`, `tests/test_cite_user_specs.py`. |
 | `spec-watch/pull-latest.sh` | Pulls upstream OpenAI/Anthropic specs into `specs/` via `gh`. Manual today; no version pinning or diff detection. Known issue: the dated upstream HTML release archives exceed the contents API's 1 MB inline limit and are fetched as 0-byte files. |
-| `panel/` | LLM panel pipeline: `harness.py` (library: lazy injectable config, frozen rubrics v1/v2/v3, explicit prompt composition, verdict parsing, resume), `whole_doc.py` (one API call per behaviour×spec×model), `run_rollout.py` (grid driver, dry-run default), `build_site_data.py` (runlog → site payload; behaviour metadata registry-driven from `data/behaviours.json`; parameterized via `--runlog=`/`--rubric=`/`--panel=`/`--behaviours=`/`--registry=`/`--run-date=`/`--out=`/`--threshold=`/`--solid-threshold=` for iteration and derived builds; with no `--out=`, a run writes timestamped `behaviours-<ts>.json` + `data/manifest.json`, latest-by-default), `select_strata.py` (validation sampler), `select_run.py` (pin → manifest-latest → shipped-fallback resolution, same order as the page), `verify_panel_provenance.py` (proves the shipped payload rebuilds byte-identically from the committed runlog), `test_panel.py` (92 offline tests), `test_verify_panel_provenance.py`, `panel-config.json`, `behaviours.json`, `runlog-v3.jsonl` (canonical runlog, documented in `runlog-v3.md`). |
-| `publish-coverage.py` | Parses a coverage artifact — the structured `spec-coverage.json` sidecar when present (schema-checked), else the `spec-coverage.md` markdown via regexes; sweeps predating the rename keep the legacy `4-spec-coverage.*` names, which resolve too — and publishes records into `data/coverage.json`, re-verifying every quote through `cite.py resolve` (subprocess). Sidecar contract pinned by `tests/test_sidecar.py`. |
-| `generate_behaviour_constants.py` | Regenerates the derived behaviour constants from `data/behaviours.json` (the registry): `GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in `build-spec-reader-data.py`, and the `title` fields of `engine/panel/behaviours.json` (keys are registry slugs). `--check` exits 1 with a diff on drift; `tests/test_behaviour_registry.py` is the drift gate. |
+| `panel/` | LLM panel pipeline: `harness.py` (library: lazy injectable config, frozen rubrics v1/v2/v3, explicit prompt composition, verdict parsing, resume), `whole_doc.py` (one API call per behaviour×spec×model), `run_rollout.py` (grid driver, dry-run default), `build_site_data.py` (runlog → site payload; behaviour metadata registry-driven from `data/behaviours.json`; parameterized via `--runlog=`/`--rubric=`/`--panel=`/`--behaviours=`/`--registry=`/`--run-date=`/`--out=`/`--threshold=`/`--solid-threshold=` for iteration and derived builds; with no `--out=`, a run writes timestamped `behaviours-<ts>.json` + `data/manifest.json`, latest-by-default), `select_strata.py` (validation sampler), `select_run.py` (pin → manifest-latest → shipped-fallback resolution, same order as the page), `verify_panel_provenance.py` (proves the shipped payload rebuilds byte-identically from the committed runlog), `test_panel.py` (92 offline tests), `test_verify_panel_provenance.py`, `panel-config.json`, `behaviours.json`, `runlog-v5.jsonl` (canonical runlog behind the shipped payload, documented in `runlog-v5.md`; the v3-era `runlog-v3.jsonl` stays committed with its record). |
+| `generate_behaviour_constants.py` | Regenerates the derived behaviour constants from `data/behaviours.json` (the registry): `BEHAVIOURS` in `build-spec-reader-data.py`, and the `title` fields of `engine/panel/behaviours.json` (keys are registry slugs). `--check` exits 1 with a diff on drift; `tests/test_behaviour_registry.py` is the drift gate. |
 | `build-spec-reader-data.py` | `data/coverage.json` + spec markdown → `site/spec-reader/data/documents.json`. Index behaviour list (`BEHAVIOURS`) generated from `data/behaviours.json` by `generate_behaviour_constants.py` (currently ids 1–3, the covered behaviours); `--user-manifest=PATH` folds user-registered specs in as extra documents (byte-identical output with no manifest — pinned by test). |
-| `verify-spec-reader.mjs`, `verify-reader-test.mjs` | Playwright E2E checks (need Chrome): every published passage must anchor, no console errors. Hardcode site DOM selectors; duplicate a static-server harness between them. |
+| `verify-reader-test.mjs` | Playwright E2E check of the reader (needs Chrome): every published passage must anchor, the nav must be present and every link resolve, the pinned `BEHAVIOURS_URL` must return 200, no console errors. Hardcodes site DOM selectors; duplicates a static-server harness with the panel harness. |
 | `verify-panel-features.mjs`, `stage_user_demo.py` | Site feature harness (needs Chrome): drives the panel + reader against BOTH the bundled payload and a user-extended staging, pinning URL/DOM-state features (payload resolution, tier bands incl. the single-judge floor, N-document compare, export) and interactions (resizers, focus toggle, passage navigation, URL sync). `stage_user_demo.py` stages a clone/fork-style site into scratch (synthetic user spec + a `set:user` behaviour); the repo's own site data is restored exactly after. |
 | `notion-sync/` | Empty placeholder (`.gitkeep`) — Phase 3 per PLAN.md; does not exist. |
 
 ## Relationships
 
-- `cite.py` is the shared foundation: imported by `panel/harness.py` and invoked as a subprocess by `publish-coverage.py`.
-- Behaviour identity is registry-driven: `data/behaviours.json` → `generate_behaviour_constants.py` → the derived constants (reader `GROUPS`, reader-builder `BEHAVIOURS`, judge-prompt titles in `engine/panel/behaviours.json`); `tests/test_behaviour_registry.py` fails any drift.
-- The panel chain: `run_rollout.py` drives `whole_doc.py` → `runlog-v3.jsonl` (the canonical log behind the shipped payload is committed here, documented in `runlog-v3.md`; other runlogs stay gitignored) → `build_site_data.py` → `site/llm-panel-review/data/`. The builder reads `data/behaviours.json` for behaviour metadata and `data/panel-cell-curation.json` for the per-lab cell rows (verdict/depth/verifiedDate); with no `--out=` it writes a timestamped payload + `data/manifest.json` (latest-by-default, both gitignored). A second committed payload, `behaviours-v5-reader.json` (built with `--threshold=4 --solid-threshold=6 --run-date=2026-08-17`), is the reader test bench's data — `site/spec-reader-test/` fetches it from the panel data dir.
-- The curated chain: sweep coverage artifact (sidecar JSON preferred, markdown fallback) → `publish-coverage.py` → `data/coverage.json` → `build-spec-reader-data.py` → `site/spec-reader/data/documents.json` (user-registered specs fold in via `--user-manifest=`).
+- `cite.py` is the shared foundation: imported by `panel/harness.py`; `tests/test_coverage_json.py` re-resolves the frozen ledger's quotes against it in-process.
+- Behaviour identity is registry-driven: `data/behaviours.json` → `generate_behaviour_constants.py` → the derived constants (reader-builder `BEHAVIOURS`, judge-prompt titles in `engine/panel/behaviours.json`); `tests/test_behaviour_registry.py` fails any drift.
+- The panel chain: `run_rollout.py` drives `whole_doc.py` → runlogs (the canonical log behind the shipped payload is committed as `runlog-v5.jsonl`, documented in `runlog-v5.md`; the v3-era `runlog-v3.jsonl` stays committed with its record; other runlogs stay gitignored) → `build_site_data.py` → `site/llm-panel-review/data/`. The builder reads `data/behaviours.json` for behaviour metadata and `data/panel-cell-curation.json` for the per-lab cell rows (verdict/depth/verifiedDate); with no `--out=` it writes a timestamped payload + `data/manifest.json` (latest-by-default, both gitignored). A second committed payload, `behaviours-v5-reader.json` (built with `--threshold=4 --solid-threshold=6 --run-date=2026-08-17`), is the reader's behaviour data — `site/spec-reader/` fetches it from the panel data dir, pinned by literal filename (band-filtered payload; it must not resolve through the panel's manifest).
+- The frozen chain: `data/coverage.json` (frozen ledger) → `build-spec-reader-data.py` → `site/spec-reader/data/documents.json` (user-registered specs fold in via `--user-manifest=`).
 - `spec-watch` overwrites `specs/`, which `cite.py` and `build-spec-reader-data.py` consume.
 
 ## Dependency map
@@ -40,33 +39,29 @@ graph LR
   cite --> harness["panel/harness.py"]
   rollout["panel/run_rollout.py"] --> wholedoc["panel/whole_doc.py"]
   harness --> wholedoc
-  wholedoc --> runlog["runlog-v3.jsonl (committed canonical log; see runlog-v3.md)"]
+  wholedoc --> runlog["runlog-v5.jsonl (committed canonical log; see runlog-v5.md)"]
   runlog --> bsd["panel/build_site_data.py"]
   reg["data/behaviours.json (registry)"] --> gbc["generate_behaviour_constants.py"]
   gbc -->|derived constants| bsr
   reg -->|behaviour metadata| bsd
   bsd --> panelpayload["site/llm-panel-review/data/behaviours-*.json + manifest.json"]
-  sweep4["research/sweeps/NN/spec-coverage.json sidecar (or .md; legacy 4- prefix on old sweeps)"] --> publish["publish-coverage.py"]
-  cite --> publish
-  publish --> coverage["data/coverage.json"]
-  coverage --> bsr
+  coverage["data/coverage.json (frozen ledger)"] --> bsr
   bsr --> docpayload["site/spec-reader/data/documents.json"]
   cur["data/panel-cell-curation.json"] --> bsd
-  bsd -->|"--threshold=4 --solid-threshold=6"| benchpayload["behaviours-v5-reader.json (bench payload)"]
+  bsd -->|"--threshold=4 --solid-threshold=6"| readerpayload["behaviours-v5-reader.json (reader payload, pinned by filename)"]
   docpayload --> verify["verify-*.mjs (Playwright E2E)"]
-  benchpayload --> verify
+  readerpayload --> verify
 ```
 
 ## As-is observations
 
 - No Python package structure: no `__init__.py`/`pyproject.toml`; all cross-module wiring is `importlib` file-loading and a `sys.path` hack. Renames/moves break only at runtime.
-- `cite.py` is the foundation of every chain (flagged in `docs/onboarding-spec-coverage.md` as "the trickiest code in the repo"); its bundled + user-manifest contracts are pinned by `tests/test_cite.py` and `tests/test_cite_user_specs.py` (plus the corpus goldens in `tests/golden/`).
-- Markdown-as-API (mitigated): `publish-coverage.py` regex-scrapes human-written coverage artifacts when no structured sidecar is present; the `spec-coverage.json` sidecar is the preferred, schema-checked contract.
+- `cite.py` is the foundation of every chain — the trickiest code in the repo; its bundled + user-manifest contracts are pinned by `tests/test_cite.py` and `tests/test_cite_user_specs.py` (plus the corpus goldens in `tests/golden/`).
 - Behaviour identity is registry-driven (`data/behaviours.json` → `generate_behaviour_constants.py`, drift-gated); spec identity still lives in `cite.py`'s bundled registry + `specs/CITATION.md` examples.
 - Config loads lazily at use time and is injectable (`harness.load_config()`); the import-side-effect probe in `test_panel.py` pins that no panel module reads files at import.
 - Runlog defaults disagree: `harness.RUNLOG` = `runlog.jsonl`, executors default to `runlog-v3.jsonl`; resume silently reads the wrong file if the override is forgotten.
-- Locator separators diverge by producer: panel chain emits `" > "`, curated chain `" › "`; cite.py tolerates both, consumers must know which producer they face.
+- Locator separators: the panel chain and the frozen coverage ledger both carry `" > "`; `cite.py` also tolerates the grammar's display separator `" › "`.
 - `threshold`/`solid_threshold` are both live: `threshold` sets `keeps_citation`'s score cut, `solid_threshold` bakes into the payload's `adjacent` flag (tier display is client-side), and `--threshold=`/`--solid-threshold=` override both for derived builds without touching the committed config.
 - Rubric prompts compose explicitly from named slots (`harness.render_system_v3`), with frozen-prompt tests pinning byte-identity to the pre-refactor strings (replaced the former `str.replace`+`assert` coupling).
-- `.github/workflows/ci.yml` runs the offline battery (panel/provenance/registry suites, data gate, byte-identity rebuilds, publish checks, app.js harnesses) and the browser walkers on every PR.
+- `.github/workflows/ci.yml` runs the offline battery (panel/provenance/registry suites, data gate, byte-identity rebuilds, app.js harnesses) and the two browser walkers on every PR.
 - Hygiene: `__pycache__/` + `*.pyc` are now gitignored (the committed `.pyc` was removed); `wholedoc-FAILED-*.txt` outputs are still not gitignored.

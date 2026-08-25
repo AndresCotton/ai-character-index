@@ -1,8 +1,8 @@
 # site/llm-panel-review/
 
 The spec reader with passages scored for behaviour relevance by a panel of frontier
-LLMs -- a copy of `site/spec-reader-test/` whose highlights come from model verdicts
-instead of the curated coverage sweeps.
+LLMs -- highlights come from model verdicts instead of the frozen coverage ledger
+(`data/coverage.json`).
 
 ## What it shows
 Three behaviours (Helpfulness, Harm avoidance to third parties, Avoiding both over-
@@ -27,7 +27,10 @@ runlog (see `engine/panel/README.md`). Behaviour names/definitions are
 registry-driven (`data/behaviours.json`); the cell verdict/depth/verifiedDate
 rows come from `data/panel-cell-curation.json`. The sibling
 `behaviours-v5-reader.json` is the same builder's band-boundary build for the
-reader test bench.
+spec reader (`site/spec-reader/`), pinned there by literal filename: it is
+band-filtered, so the reader must not resolve through this surface's manifest
+(the manifest is gitignored and its payloads are unfiltered).
+`engine/verify-reader-test.mjs` asserts the pinned URL returns 200.
 
 ## Which payload the page loads
 Resolution order, no selection UI:

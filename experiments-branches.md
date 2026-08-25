@@ -44,7 +44,7 @@ graph LR
 ### Other unmerged/untracked items
 
 - `feat/cite-sweep`: the term-sweep stage 4 this branch implements is not the operative procedure (the LLM panel is); kept as the **only remote custodian of the cite.py regression suite**. That TBD is now resolved — the Phase-2 stack committed the suite into its `tests/` (`test_cite.py`, `test_cite_user_specs.py`, the corpus goldens, and `dump_goldens.py`), so once the stack merges into main the suite's permanent home is `tests/` and this branch's custodial role ends. (This worktree's own `tests/` is still empty — the suite lives on the stack, not here.)
-- `research/sweeps/04-instruction-hierarchy/` — untracked working record.
+- `research/sweeps/04-instruction-hierarchy/` — untracked working record; the tracked `research/sweeps/` home is retired with the publish path, so this record has nowhere to land.
 - `docs/semantic-tagging-demo.md` — untracked working-copy file (semantic-tagging demo); belongs to no branch.
 - `tests/` in this worktree — empty except bytecode.
 - `experiments/panel-judges/.gitignore` is deliberately permissive: run logs and score JSONs are tracked ("that's the data").
