@@ -178,7 +178,7 @@ const navIssues = await page.evaluate(async expected => {
     if (!target.getElementById(id)) issues.push(`${href} -> no element #${id}`);
   }
   return issues;
-}, expectedNav);
+}, navHrefs);
 report(navIssues.length === 0, "navigation links resolve",
   navIssues.length ? navIssues.join("; ") : "self-link, methodology");
 

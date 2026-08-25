@@ -10,4 +10,4 @@ The public static site. Two surfaces, plain HTML + vanilla JS, no build step —
 
 The two engine verifiers (`engine/verify-reader-test.mjs`, `engine/verify-reader-features.mjs`) boot Chrome against the page and assert every renderable passage anchors; run them after changing markup or payloads.
 
-Page map and layout sketches in [PLAN.md §3](../PLAN.md) (the Astro stack sketched there was not adopted); aesthetics discussion in [`design/`](../design/).
+Page map and layout sketches in [PLAN.md §3](../PLAN.md) (the Astro stack sketched there was not adopted; its homepage map retired with the index prototype -- the reader is the landing surface); aesthetics discussion in [`design/`](../design/).
