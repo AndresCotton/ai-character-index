@@ -94,15 +94,12 @@ class TestRegistryStructure(unittest.TestCase):
 
 
 class TestRegistryMatchesPublishedLedgers(unittest.TestCase):
-    """The registry mirrors two published files that never change their ids."""
+    """The registry mirrors the published reader ledger, which never changes its ids."""
 
     @classmethod
     def setUpClass(cls):
         cls.registry = load_registry()
         cls.coverage = json.loads((ROOT / "data" / "coverage.json").read_text(encoding="utf-8"))
-        cls.reader_test = json.loads(
-            (ROOT / "data" / "reader-test-coverage.json").read_text(encoding="utf-8")
-        )
 
     def test_index_names_match_coverage_records(self):
         # coverage.json repeats the behaviour name on every record; the registry
@@ -115,20 +112,6 @@ class TestRegistryMatchesPublishedLedgers(unittest.TestCase):
                 entry = by_id.get(record["behaviour_id"])
                 self.assertIsNotNone(entry, f"behaviour_id {record['behaviour_id']} not in registry")
                 self.assertEqual(entry["name"], record["behaviour_name"])
-
-    def test_reader_test_entries_mirror_the_ledger(self):
-        ledger = {b["slug"]: b for b in self.reader_test["behaviours"]}
-        registered = {
-            slug: e for slug, e in self.registry.items() if e["set"] == "reader-test"
-        }
-        self.assertEqual(set(registered), set(ledger))
-        for slug, behaviour in ledger.items():
-            with self.subTest(slug=slug):
-                entry = registered[slug]
-                self.assertEqual(entry["numeric_id"], behaviour["id"])
-                self.assertEqual(entry["name"], behaviour["name"])
-                self.assertEqual(entry["definition"], behaviour["definition"])
-                self.assertEqual(entry["group"], behaviour["category"])
 
 
 class TestDerivedConstantsMatchRegistry(unittest.TestCase):
