@@ -336,8 +336,8 @@ def main(argv=None):
     DISPLAY = config["display"]
     runlog = HERE / "runlog-v5.jsonl"   # the committed canonical log behind the shipped payload
     # display.rubric is the rubric the SHIPPED payload builds from (v5, 9-point);
-    # top-level config["rubric"] stays what the v3 executors stamp (v3w) -- the two
-    # diverge until whole_doc.py gains a v5 prompt port.
+    # top-level config["rubric"] matches it since the v5 prompt port (whole_doc.py
+    # stamps v5 by default; the v3 prompts remain behind --rubric=).
     rubric = DISPLAY.get("rubric", config["rubric"])
     out_name = None
     registry_path = ROOT / "data" / "behaviours.json"
