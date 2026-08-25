@@ -29,7 +29,7 @@ ROLLOUT = ["helpfulness", "harmlessness-to-the-user", "harm-avoidance-to-third-p
            "proportionate-risk-mitigation", "how-to-approach-tradeoffs",
            "avoiding-over-and-under-caution", "objectivity-on-contested-questions",
            "user-autonomy", "animal-welfare-impacts"]
-DEFAULT_PANEL = "frontier_primary"   # primaries only; substitutes run manually (coverage skill); --panel= overrides
+DEFAULT_PANEL = "frontier_fast"   # the v5 production panel (sol, fable, deepseek); substitutes run manually (coverage skill); --panel= overrides
 # Cost is derived from config, not a hardcoded table: input is deterministic
 # (spec token count times price_per_mtok); output is a range, bare verdict lines
 # up to the model's max_output ceiling (models differ this much: 3k to 48k).
@@ -84,7 +84,7 @@ def main():
     panels = config["panels"]
     panel_name = DEFAULT_PANEL
     go = "--go" in sys.argv
-    runlog = HERE / "runlog-v3.jsonl"   # the SAME file whole_doc.py appends to
+    runlog = HERE / "runlog-user.jsonl"   # the SAME gitignored default whole_doc.py appends to
     behaviours = ROLLOUT
     panel = list(panels[DEFAULT_PANEL])
     for a in sys.argv[1:]:

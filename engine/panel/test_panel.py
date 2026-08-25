@@ -1393,5 +1393,55 @@ class TestMainSmoke(unittest.TestCase):
         self.assertEqual(m_panel.group(1), admission)    # the display/admission panel, not frontier_primary
 
 
+class V5PromptPortDefaults(unittest.TestCase):
+    """The v5 flip (2026-08-24): a fresh whole_doc.py run must match the shipped
+    bench -- v5 prompt, v5 rubric stamps -- and must default to a gitignored
+    runlog, so a plain run can neither mix rubrics with the v3 era nor append to
+    a committed canonical log."""
+
+    def test_engine_prompt_is_the_calibration_prompt_byte_for_byte(self):
+        # The canonical runlog-v5.jsonl was produced with the calibration-loop
+        # prompt; the ported copy must never drift from that source.
+        engine = (HERE / "prompts" / "v5.txt").read_bytes()
+        source = (HERE.parent.parent / "experiments" / "panel-calibration"
+                  / "prompts" / "v5.txt").read_bytes()
+        self.assertEqual(engine, source)
+        self.assertEqual(wd.system_v5(), engine.decode())
+
+    def test_default_rubric_is_v5_and_legacy_flags_still_resolve(self):
+        self.assertEqual(wd.pick_rubric([]), "v5")
+        self.assertEqual(wd.pick_rubric(["--rubric=v3w"]), "v3w")
+        self.assertEqual(wd.pick_rubric(["--sparse"]), "v3s")
+        self.assertEqual(wd.pick_rubric(["--rubric=v3s", "--sparse"]), "v3s")
+        with self.assertRaises(SystemExit):
+            wd.pick_rubric(["--rubric=v5", "--sparse"])   # contradiction, not a guess
+        with self.assertRaises(SystemExit):
+            wd.pick_rubric(["--rubric=v4a"])              # calibration variants are not shipped
+
+    def test_default_runlog_is_gitignored_not_a_committed_log(self):
+        self.assertEqual(wd.RUNLOG.name, "runlog-user.jsonl")
+        ignored = subprocess.run(["git", "check-ignore", str(wd.RUNLOG)],
+                                 capture_output=True, cwd=HERE)
+        self.assertEqual(ignored.returncode, 0, "runlog-user.jsonl must be gitignored")
+
+    def test_config_rubric_matches_the_display_rubric(self):
+        # run_rollout resumes with config["rubric"]; the builder prefers
+        # display.rubric. The two diverging is exactly the pre-port bug.
+        cfg = h.load_config()
+        self.assertEqual(cfg["rubric"], "v5")
+        self.assertEqual(cfg["display"]["rubric"], "v5")
+
+    def test_parse_verdicts4_reads_the_v5_scale(self):
+        txt = "1: 3\n2: 0\n[3] - 2\n4. 1\n"
+        self.assertEqual(wd.parse_verdicts4(txt, 4), {1: 3, 2: 0, 3: 2, 4: 1})
+
+    def test_parse_verdicts4_tail_sequence_fallback(self):
+        txt = "reasoning first\n3\n0\n2\n1\n"
+        self.assertEqual(wd.parse_verdicts4(txt, 4), {1: 3, 2: 0, 3: 2, 4: 1})
+
+    def test_parse_verdicts4_drops_out_of_range_passages(self):
+        self.assertEqual(wd.parse_verdicts4("1: 3\n99: 2\n", 2), {1: 3})
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

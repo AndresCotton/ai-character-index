@@ -1,3 +1,8 @@
+> **Provenance note.** The text below is the upstream README, reproduced
+> verbatim from the publisher's own repository. Its "this repository"
+> references describe *that* repository, not the AI Character Index. Retained
+> unedited so the licence statement it carries is the publisher's own.
+
 # Claude's Constitution
 
 This repository contains Claude's Constitution—the foundational document that describes the values we want Claude to embody and the reasoning behind them. It covers what it means for Claude to be helpful while remaining safe and ethical, and provides guidance for navigating difficult tradeoffs.
