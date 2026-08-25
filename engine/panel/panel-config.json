@@ -259,7 +259,7 @@
     ],
     "_itest_note": "single cheap judge for end-to-end integration testing (~2 cents per behaviour); never for published data. Must be a long-context model: whole-doc prompts reach ~65k tokens (qwen-small's 41k context cannot fit them)."
   },
-  "rubric": "v3w",
+  "rubric": "v5",
   "specs": [
     "constitution",
     "model-spec"
@@ -282,7 +282,7 @@
     "_generated_note": "Curated panel-review display list (registry reader-test slugs), hand-maintained; engine/panel/build_site_data.py validates every entry against data/behaviours.json, so a renamed or unknown slug fails the build.",
     "panel": "frontier_fast",
     "rubric": "v5",
-    "_rubric_note": "The rubric the SHIPPED payload builds from (v5: 0-3 per judge, 9-point cells on the 3-judge panel). Top-level `rubric` (v3w) stays what whole_doc.py's v3 prompts stamp; the two diverge until a v5 prompt port lands. build_site_data.py prefers this key.",
+    "_rubric_note": "The rubric the SHIPPED payload builds from (v5: 0-3 per judge, 9-point cells on the 3-judge panel). Matches top-level `rubric` since the v5 prompt port: whole_doc.py stamps v5 by default (legacy v3 prompts behind --rubric=). build_site_data.py prefers this key.",
     "threshold": 3,
     "solid_threshold": 5,
     "_activation_note": "The full-bench v5 rollout landed (runlog-v5.jsonl, 2026-08-17): all ten reader-test slugs are listed and the dual-slug mapping in build_site_data.py (animal-welfare-impacts feeds general-welfare-impacts-strict) is active."

@@ -15,8 +15,11 @@ template -- one OpenRouter key suffices, native keys optional).
   the judge-prompt entry here) and prints the judge/build/view commands;
   `test_new_behaviour.py` covers it.
 - `whole_doc.py` -- whole-document judging (entire spec in one prompt, all verdicts
-  in one response; rubric tag `v3w`). This mode produced the shipped data, winning
-  an empirical dense-vs-sparse comparison.
+  in one response). Runs the v5 rubric by default -- the shipped bench's prompt,
+  `prompts/v5.txt` -- with the legacy v3 prompts behind `--rubric=v3w`/`v3s`; rows
+  land in the gitignored `runlog-user.jsonl` unless `--runlog=` says otherwise.
+  This mode produced the shipped data, winning an empirical dense-vs-sparse
+  comparison.
 - `select_strata.py` + `smoke-*.txt` -- stratified validation sample (pinned).
 - `run_rollout.py` -- the driver: full-dataset plan, dry-run by default, --go to spend.
 - `build_site_data.py` -- runlog -> site payload; behaviour metadata is
@@ -116,9 +119,10 @@ do; `--out=behaviours.json` rebuilds the shipped payload in place, whose
 
 A NEW panel run must write a new runlog, and a regenerated payload needs its
 own committed log + passing check -- provenance travels with the data.
-(Regenerating v3-family verdicts from scratch: `python3 whole_doc.py
-<behaviour> <spec> sol,fable,kimi` per cell into `runlog-v3.jsonl`; the runlog
-is append-only + resume-safe. The v5 verdicts came from the calibration-loop
-whole-doc runs -- `whole_doc.py` still renders the v3 prompts, so regenerating
-v5 rows needs the v5 prompt, `experiments/panel-calibration/prompts/v5.txt`,
-until a v5 prompt port lands.)
+(Regenerating verdicts from scratch: `python3 whole_doc.py <behaviour> <spec>
+frontier_fast` per cell -- v5 is the default rubric since the prompt port
+(`prompts/v5.txt`, byte-identical to the calibration source that produced the
+canonical log, pinned by `test_panel.py`); the runlog is append-only +
+resume-safe, landing in the gitignored `runlog-user.jsonl` unless `--runlog=`
+names another file. v3-family reruns sit behind `--rubric=v3w`/`v3s` and belong
+in a v3 log.)

@@ -45,11 +45,11 @@ pinned to `spec@version`.
    `SLUGS` in `build_site_data.py` and to `display.behaviours` in
    `panel-config.json` -- without both, the run produces data the site never shows.
 2. Dry-run first -- prints the exact call plan, what resume skips, and the cost
-   estimate, and sends nothing. The v3-family run log is
-   `engine/panel/runlog-v3.jsonl` (the driver and `whole_doc.py` default to it;
-   its committed history is documented in `engine/panel/runlog-v3.md`; the
-   SHIPPED payload builds from `engine/panel/runlog-v5.jsonl`, the builder's
-   default -- see `runlog-v5.md`):
+   estimate, and sends nothing. The driver and `whole_doc.py` default to the v5
+   rubric and the gitignored `engine/panel/runlog-user.jsonl` (the SHIPPED
+   payload builds from the committed `engine/panel/runlog-v5.jsonl`, the
+   builder's default -- see `runlog-v5.md`; the v3-era history is
+   `runlog-v3.md`):
    `python3 engine/panel/run_rollout.py --behaviours=<key>`
 3. Execute with `--go`. Interrupting is safe: the run log is append-only and rerun
    skips completed cells. Never hold verdicts only in memory.
@@ -65,8 +65,9 @@ pinned to `spec@version`.
    automatically; the data-level provenance note is NOT automatic -- when you
    substitute, update the `substitution` string in `build_site_data.py` to
    describe what happened and why.
-5. Build: `python3 engine/panel/build_site_data.py --runlog=<runlog> --rubric=v3w
-   --panel=frontier`.
+5. Build: `python3 engine/panel/build_site_data.py --runlog=<runlog>
+   --panel=frontier_fast` (the v5 production panel; pass `--rubric=`/`--panel=`
+   overrides only for legacy v3-family reruns).
 
 ## The coverage artifact (format is a parsing contract)
 
