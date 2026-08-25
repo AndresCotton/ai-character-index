@@ -440,6 +440,14 @@ body.resizing-columns {
     linear-gradient(to left, rgb(var(--hue-1) / var(--rule-core)) 0 2px, transparent 2px),
     linear-gradient(rgb(var(--hue-1) / var(--tint-core)), rgb(var(--hue-1) / var(--tint-core)));
 }
+/* Defining carries the widest margin rule, the same way .legend-mark.defining is the
+   widest mark in the header: the tier the shipped 3-point data actually puts its
+   passages in was missing from the key entirely. */
+.key-swatch.defining {
+  background:
+    linear-gradient(to left, rgb(var(--hue-1) / var(--rule-core)) 0 4px, transparent 4px),
+    linear-gradient(rgb(var(--hue-1) / var(--tint-core)), rgb(var(--hue-1) / var(--tint-core)));
+}
 .key-swatch.related {
   background:
     linear-gradient(to left, rgb(var(--hue-1) / var(--rule-related)) 0 2px, transparent 2px),
@@ -623,10 +631,88 @@ body.resizing-columns {
   cursor: pointer;
 }
 .document-focus-toggle:hover { border-color: var(--accent); color: var(--accent); }
-.rail-legend { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+/* The toggles carry their counts, which makes the legend wide enough to overrun a
+   phone-width header. Each button stays unbroken (nowrap); the row wraps instead. */
+.rail-legend {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
 /* Neutral: the legend explains intensity, and the colour belongs to the behaviour. */
 .legend-mark { width: 3px; height: 9px; display: inline-block; border-radius: 2px; background: var(--muted); }
 .legend-mark.adjacent { margin-left: 3px; opacity: .4; }
+
+/* Tier toggles: the legend is the control. Each mark-and-word pair is a button; a
+   pressed pair sits enclosed in a small bordered well, an unpressed one fades but
+   keeps its footprint. Mark weight orders the tiers: heavy bar = defining, solid =
+   core, faint = related -- the same weights the passage rail carries. */
+.tier-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+  transition: color .12s ease, border-color .12s ease, background-color .12s ease;
+}
+.tier-toggle .legend-mark { background: currentColor; }
+.tier-toggle .legend-mark.adjacent { margin-left: 0; }
+.tier-toggle:hover { color: var(--muted); border-color: var(--line-light); }
+.tier-toggle[aria-pressed="true"] {
+  border-color: var(--line);
+  background: var(--chrome-deep);
+  color: var(--ink);
+}
+/* The run block sits under the key, closing the sidebar: collapsed it is one line of
+   run identity, opened it is the payload's full provenance. */
+.sidebar-run {
+  padding: 10px 22px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10px;
+}
+.sidebar-run > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sidebar-run > summary::-webkit-details-marker { display: none; }
+.sidebar-run > summary::before { content: "▸"; opacity: .6; font-size: 9px; }
+.sidebar-run[open] > summary::before { content: "▾"; }
+.sidebar-run > summary:hover { color: var(--ink); }
+/* A pin that could not be served still renders the page; the marker is the only
+   on-screen sign that what you asked for is not what you are looking at. */
+.sidebar-run.fell-through > summary::after {
+  content: "pin unavailable";
+  margin-left: auto;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  color: var(--warn, #b4690e);
+  font-size: 9px;
+}
+.run-detail { margin: 9px 0 0; display: grid; grid-template-columns: 1fr; gap: 2px; }
+.run-detail dt { color: var(--faint); text-transform: uppercase; letter-spacing: .04em; font-size: 9px; }
+.run-detail dd { margin: 0 0 7px; color: var(--muted); overflow-wrap: anywhere; }
+
+.tier-count { font-variant-numeric: tabular-nums; opacity: .7; }
+/* A tier this data cannot reach: dimmed, not clickable, and it keeps its count (0)
+   so the reason is legible rather than implied by silence. */
+.tier-toggle.unreachable {
+  opacity: .4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+.tier-toggle.unreachable:hover { color: var(--faint); border-color: transparent; }
+.legend-mark.defining { width: 5px; }
 .document-scroll { position: relative; flex: 1; min-height: 0; overflow: auto; scroll-behavior: smooth; }
 
 .document-body {
@@ -1026,6 +1112,9 @@ body.no-behaviours .sidebar-export { display: none; }
 /* .rail-legend sets its own display, which would otherwise beat the [hidden] default
    when the reader hides the highlight legend for want of a behaviour. */
 .document-meta [hidden] { display: none; }
+
+/* panel rationale: model-vote list uses newlines */
+.passage-reason-role { white-space: pre-line; }
 
 /* The compare picker: two selects that only appear when there is a third document to
    choose between. Sized to sit in the toolbar without pushing the spec switcher. */

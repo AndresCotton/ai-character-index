@@ -1,27 +1,98 @@
 /*
- * The spec reader (site/spec-reader/).
- *
- * The behaviour menu is built from whatever set has been published to this
- * reader; the reader degrades to plain reading -- both specs in full, nothing
- * highlighted -- when that set is empty; and the menu is a checklist rather
- * than a single choice, so any number of behaviours can be read over the same
- * text at once. Each behaviour carries its own colour, a core passage is that
- * colour at full strength and a related one the same colour washed out, and a
- * passage cited by more than one selected behaviour blends their colours and
- * shows one gutter rule per behaviour. Colour distinguishes the behaviours;
- * the margin rule's texture distinguishes the groups -- see GROUP_TEXTURE
- * below.
+ * Spec reader -- both specifications in full with a behaviour menu laid over them.
+ * The behaviour set and its per-passage citations come from a panel run
+ * (engine/panel/build_site_data.py), resolved in order from a ?data=<name> pin,
+ * data/manifest.json "latest", or the shipped data/behaviours.json fallback (see
+ * loadBehaviours); each citation carries per-model verdicts scored into tiers --
+ * defining / core / related -- which the header band toggles show or hide
+ * (applyPanelThreshold); and the menu is a checklist, so any number of behaviours
+ * can be read over the same text at once, side by side in the compare view when it
+ * is open. Each behaviour carries its own colour, a core passage is that colour at
+ * full strength and a related one the same colour washed out, and a passage cited
+ * by more than one selected behaviour blends their colours and shows one gutter
+ * rule per behaviour. Colour distinguishes the behaviours; the margin rule's
+ * texture distinguishes the groups -- see GROUP_TEXTURE below. The spec text is
+ * data/documents.json, built by engine/build-spec-reader-data.py.
  */
 
 const DOCUMENTS_URL = "./data/documents.json";
-/* The v5 9-point panel run, pre-filtered to the panel's band boundary
- * (behaviours-v5-reader.json is built by engine/panel/build_site_data.py
- * with --threshold=4 --solid-threshold=6 from runlog-v5.jsonl). The pin is a
- * literal filename on purpose: the reader payload is band-filtered (a small
- * fraction of the panel payloads), so the reader must not resolve through the
- * panel's manifest; a reader-side manifest is the designed fix and is not
- * built yet. engine/verify-reader-test.mjs asserts this URL returns 200. */
-const BEHAVIOURS_URL = "../llm-panel-review/data/behaviours-v5-reader.json";
+/* Which behaviour payload the reader loads, resolved in this order:
+ *   1. ?data=<name>  -- a pin, name only, no paths (lets prompt-calibration iterations
+ *      sit side by side, e.g. ?data=behaviours-v4a, or any timestamped run);
+ *   2. data/manifest.json "latest" -- the newest timestamped run emitted by
+ *      engine/panel/build_site_data.py (run files and the manifest stay local);
+ *   3. data/behaviours.json -- the shipped fallback, always tracked.
+ * A source that fails to fetch or parse falls through to the next, so a stale pin,
+ * a dangling manifest entry, or a fresh clone (no manifest at all) never breaks the
+ * page. The same chain, CLI-side, is engine/panel/select_run.py. */
+const MANIFEST_URL = "./data/manifest.json";
+const FALLBACK_DATA_URL = "./data/behaviours.json";
+const FALLBACK_DATA_NAME = "behaviours.json";
+const DATA_NAME = /^[\w.-]+$/;
+
+function dataUrl(name) {
+  return `./data/${dataName(name)}`;
+}
+
+/* payloadName() is a predicate; this is the filename it approves. */
+function dataName(name) {
+  return `${name.replace(/\.json$/, "")}.json`;
+}
+
+/* Whether a ?data= pin or a manifest "latest" entry may resolve as a payload. It must
+ * pass the DATA_NAME charset AND be a behaviours payload -- never the manifest. Loading
+ * manifest.json itself would render the run ledger as if it were a behaviour set, so the
+ * chain refuses it; only behaviours*.json files are payloads here. Mirrors
+ * engine/panel/build_site_data.py's _payload_name(). */
+function payloadName(name) {
+  if (typeof name !== "string" || !name) return false;
+  if (!DATA_NAME.test(name)) return false;
+  const fname = name.endsWith(".json") ? name : `${name}.json`;
+  if (fname === "manifest.json") return false;
+  return fname.startsWith("behaviours");
+}
+
+/* Resolves the payload AND records which source won, in state.payloadSource:
+ * {origin: "pin"|"latest"|"fallback", name, requested}. The fall-through itself is
+ * deliberate -- a stale pin must never break the page -- but the viewer has to be able
+ * to tell that it happened, or a dead link is indistinguishable from a live one. The
+ * sidebar run block reads this; `requested` is set only when a pin was asked for and
+ * not served, which is exactly the case worth flagging. */
+async function loadBehaviours() {
+  const pinned = new URLSearchParams(location.search).get("data");
+  if (payloadName(pinned)) {
+    const url = dataUrl(pinned);
+    try {
+      const payload = await loadJSON(url);
+      state.payloadSource = { origin: "pin", name: dataName(pinned) };
+      return payload;
+    } catch (error) {
+      console.warn(`Pinned panel data ${url} unavailable (${error.message}); falling back.`);
+    }
+  }
+  // Two different failures, and the reader deserves to know which: a validly-named
+  // pin that could not be fetched (stale link) versus a name payloadName() refuses
+  // outright (manifest.json, a traversal attempt). Both fall through by design.
+  const requested = pinned ? { name: pinned, refused: !payloadName(pinned) } : null;
+  let latest = null;
+  try {
+    latest = (await loadJSON(MANIFEST_URL)).latest;
+  } catch {
+    /* No manifest (fresh clone) or an unreadable one -- fall through to the shipped data. */
+  }
+  if (payloadName(latest)) {
+    const url = dataUrl(latest);
+    try {
+      const payload = await loadJSON(url);
+      state.payloadSource = { origin: "latest", name: dataName(latest), requested };
+      return payload;
+    } catch (error) {
+      console.warn(`Latest run ${url} unavailable (${error.message}); falling back.`);
+    }
+  }
+  state.payloadSource = { origin: "fallback", name: FALLBACK_DATA_NAME, requested };
+  return loadJSON(FALLBACK_DATA_URL);
+}
 
 /* Shown for a document when no behaviour is under test. */
 const NO_COVERAGE = { verdict: null, depth: null, note: "", verifiedDate: "", passages: [] };
@@ -48,6 +119,8 @@ function behaviourTexture(behaviour) {
 
 const state = {
   payload: null,
+  rawBehaviours: null,   // unfiltered panel data; the tier toggles re-filter from this
+  bands: null,           // Set of "defining" | "core" | "related" -- which tiers render
   selectedSlugs: [],
   selectedSpec: "anthropic",
   comparing: false,
@@ -86,6 +159,81 @@ const elements = {
   specSwitcher: document.querySelector(".spec-switcher"),
   template: document.querySelector("#document-template"),
 };
+
+/* Display tiers for panel-scored passages, strongest first. Per cell with j judges:
+ * defining is score >= 2j+1 (a "3" vote must be present -- on 3-point data this
+ * clamps to unanimous core), core is score >= 2j (unanimous-core strength), related
+ * is score >= j+1 (at least two judges behind it) -- except a single-judge cell has
+ * no consensus to demand (the clone/fork cheap-run case): the sole judge's verdict
+ * IS the whole evidence, so their related vote renders at its own weight instead of
+ * dying under the multi-judge floor. Weaker citations never render: with two-plus
+ * judges a lone related vote is recorded in the data, not shown. Each tier is a
+ * toggle in the document headers; the defaults show defining + core. */
+const TIERS = ["defining", "core", "related"];
+const DEFAULT_BANDS = ["defining", "core"];
+
+/* The tier band for one passage score in one cell, or null when below every tier.
+ * `related` is the related-vote weight (display tuning, default 1): for a
+ * single-judge cell it sets the related cut so the lone vote renders at its own
+ * weight; with the weight set to 0 the user has zeroed related votes, so they
+ * stay hidden (cut falls back to 1). Extracted verbatim-friendly for
+ * engine/panel/test_appjs_tiers.js. */
+/* The scores a cell can actually produce. applyPanelThreshold tallies each passage as
+ * `sum over judges of (v >= 2 ? v : v === 1 ? related : 0)`, so a judge contributes one
+ * of {0, related, 2..maxVerdict} -- NOT any integer. With a fractional ?related= weight
+ * the reachable set is sparse, and assuming a contiguous 0..maxCell range invents scores
+ * no passage can hold. */
+function achievableScores(judges, maxCell, related) {
+  const maxVerdict = judges > 0 ? Math.round(maxCell / judges) : 2;
+  const perJudge = [0, ...(related > 0 ? [related] : []),
+                    ...Array.from({ length: Math.max(0, maxVerdict - 1) }, (_, i) => i + 2)];
+  let sums = new Set([0]);
+  for (let j = 0; j < judges; j += 1) {
+    const next = new Set();
+    sums.forEach(s => perJudge.forEach(v => next.add(s + v)));
+    sums = next;
+  }
+  return sums;
+}
+
+/* The strongest band among several, or null if none is set. A block can carry more
+ * than one behaviour's citation, and a passage that is defining for one and related to
+ * another should be named by the stronger claim. */
+function strongestBand(bands) {
+  return TIERS.find(tier => bands.includes(tier)) || null;
+}
+
+/* "defining" -> "Defining". The tier vocabulary is what the header toggles call these,
+ * so the rail and the export must use the same words. */
+function bandLabel(band) {
+  return band ? band[0].toUpperCase() + band.slice(1) : "Scored";
+}
+
+/* Which tiers a cell can actually put a passage in. The cuts can collide: on a 3-point
+ * rubric maxCell is 2j, so the defining cut clamps onto the core cut and NO score can
+ * land in core -- its toggle would sit in the header doing nothing. Answered by asking
+ * tierBand about every score the cell can actually produce, so the two cannot disagree
+ * by construction: a band is reachable exactly when some achievable score lands in it.
+ * (Deriving it from the cuts alone gets j=2 / maxCell=4 / ?related=0.5 wrong -- the
+ * related cut of 3 sits between the achievable 2.5 and 4.) Pure, like tierBand, so
+ * engine/panel/test_appjs_tiers.js can extract and pin it. */
+function bandReachable(judges, maxCell, related) {
+  const hit = { defining: false, core: false, related: false };
+  achievableScores(judges, maxCell, related).forEach(score => {
+    const band = tierBand(score, judges, maxCell, related);
+    if (band) hit[band] = true;
+  });
+  return hit;
+}
+
+function tierBand(score, judges, maxCell, related) {
+  const defCut = Math.min(2 * judges + 1, maxCell || 2 * judges + 1);
+  const relatedCut = judges > 1 ? judges + 1 : related > 0 ? related : 1;
+  return score >= defCut ? "defining"
+    : score >= 2 * judges ? "core"
+    : score >= relatedCut ? "related"
+    : null;
+}
 
 const initialParams = new URLSearchParams(location.search);
 state.embedded = initialParams.get("embedded") === "1";
@@ -129,6 +277,12 @@ function syncURL() {
   } else {
     params.delete("compare");
     params.delete("compare-with");
+  }
+  if (state.bands) {
+    params.set("tiers", TIERS.filter(t => state.bands.has(t)).join(",") || "none");
+    params.delete("tier");        // the toggles supersede the legacy score params
+    params.delete("threshold");
+    params.delete("solid");
   }
   if (state.embedded) params.set("embedded", "1");
   else params.delete("embedded");
@@ -315,7 +469,7 @@ setupSidebarResizer();
 function behaviourGroups() {
   const groups = new Map();
   (state.payload?.behaviours || []).forEach(behaviour => {
-    const name = behaviour.category || "Behaviors under test";
+    const name = behaviour.category || "Behaviours under test";
     if (!groups.has(name)) groups.set(name, []);
     groups.get(name).push(behaviour);
   });
@@ -458,9 +612,9 @@ function passagesMarkdown() {
   const behaviours = selectedBehaviours();
   const documents = state.payload?.documents || [];
   const lines = [
-    "# Spec reader -- specification passages",
+    "# LLM panel -- specification passages",
     "",
-    `Exported from the AI Character Index spec reader on ${today()}.`,
+    `Exported from the AI Character Index LLM panel on ${today()}.`,
     "",
     `Behaviors: ${behaviours.map(behaviour => `${paddedNumber(behaviour)} ${behaviour.name}`).join(", ")}.`,
     "",
@@ -481,7 +635,8 @@ function passagesMarkdown() {
       const summary = coverageSummary(coverage);
       if (summary) lines.push("", summary);
       lines.push("", `Source: ${doc.sourceUrl}`);
-      if (coverage.note) lines.push("", `**Coverage note.** ${coverage.note}`);
+      // Coverage notes are curation-era prose; the reader ships passage sets only
+      // (removed from the export per Andres 2026-08-17 -- stale beside re-run panel data).
       if (!coverage.passages.length) {
         lines.push(
           "",
@@ -493,7 +648,7 @@ function passagesMarkdown() {
       coverage.passages.forEach((passage, index) => {
         lines.push(
           "",
-          `#### ${index + 1}. ${passage.adjacent ? "Related" : "Core"} passage`,
+          `#### ${index + 1}. ${bandLabel(passage.band)} passage`,
           "",
           `\`${passage.locator}\``,
           "",
@@ -542,10 +697,8 @@ function updateFindingBar(overlaps = null) {
     const bench = benchBehaviours().length;
     elements.findingBehaviour.textContent = bench ? "No behaviors selected" : "No behavior under test";
     elements.findingDefinition.textContent = bench
-      ? (state.embedded
-        ? "Both specifications are shown in full. Open the full reader to choose a behavior to highlight."
-        : "Both specifications are shown in full. Tick a behavior in the menu to highlight the passages that bear on it.")
-      : "Reading both specifications in full -- nothing is highlighted until a behavior is published to this reader.";
+      ? "Both specifications are shown in full. Tick a behavior in the menu to highlight the passages that bear on it."
+      : "Reading both specifications in full -- nothing is highlighted until a behavior is published to this bench.";
     return;
   }
 
@@ -1081,6 +1234,7 @@ function annotatePassages(panel, doc) {
           hue: behaviourHue(behaviour),
           texture: behaviourTexture(behaviour),
           adjacent: own.every(item => item.passage.adjacent),
+          band: strongestBand(own.map(item => item.passage.band)),
           anchored: own.filter(item => item.anchored).map(item => item.passage),
         };
       })
@@ -1092,6 +1246,9 @@ function annotatePassages(panel, doc) {
 
     block.classList.add("passage");
     block.classList.toggle("adjacent", marks.every(mark => mark.adjacent));
+    // The rail and the export read this rather than inferring a tier from the
+    // `adjacent` class, which can only ever answer "related or not".
+    block.dataset.band = strongestBand(marks.map(mark => mark.band)) || "";
     block.classList.toggle("passage-continuation", !anchored);
     block.classList.toggle("passage-overlap", marks.length > 1);
     block.style.setProperty("--tint", tintGradient(marks, false));
@@ -1301,6 +1458,11 @@ function renderDocument(doc) {
   panel.querySelector(".document-lab").textContent = doc.lab;
   panel.querySelector(".document-title").textContent = doc.title;
   panel.querySelector(".document-version").textContent = `Version ${doc.version}`;
+  // Toggle state comes from the shared band set; in compare mode the twin header
+  // is kept in step by the rebuild that toggleBand triggers.
+  panel.querySelectorAll(".tier-toggle").forEach(button => {
+    button.setAttribute("aria-pressed", String(Boolean(state.bands?.has(button.dataset.tier))));
+  });
   panel.querySelector(".document-body").innerHTML = renderMarkdown(doc.markdown, markdownContext);
   setupSectionFocus(panel);
   setupInternalLinks(panel);
@@ -1324,6 +1486,112 @@ function coverageDepthLine(doc) {
   return `Coverage depth ${low}–${high} / 4 · ${depths.length} behaviors`;
 }
 
+/* Tier toggles report what they hold and stop pretending to be live when they
+ * cannot hold anything. Counts are summed over the ticked behaviours for THIS
+ * document, from the same cells the rail renders, so the number on the button and
+ * the passages on the page can never disagree. A tier no contributing cell can
+ * reach is disabled rather than left inert: on a 3-point rubric the defining cut
+ * clamps onto the core cut, so "Core" is structurally empty and a user toggling
+ * it would otherwise get silence and no reason for it. */
+function updateTierToggles(panel, doc) {
+  const cells = selectedBehaviours()
+    .map(behaviour => behaviour.coverage?.[doc.id])
+    .filter(cov => cov && cov.bandCounts);
+  panel.querySelectorAll(".tier-toggle").forEach(button => {
+    const tier = button.dataset.tier;
+    const count = cells.reduce((total, cov) => total + (cov.bandCounts[tier] || 0), 0);
+    const reachable = cells.length === 0 || cells.some(cov => cov.bandReachable?.[tier]);
+    button.querySelector(".tier-count").textContent = ` (${count})`;
+    button.disabled = !reachable;
+    button.classList.toggle("unreachable", !reachable);
+    if (!reachable) {
+      button.title = `No ${tier} band in this data: on a 3-point rubric the defining `
+        + `cut clamps onto the core cut, so no passage can score into ${tier}.`;
+    } else if (button.dataset.titleDefault) {
+      button.title = button.dataset.titleDefault;
+    }
+  });
+}
+
+/* The run block: which payload is on screen and who judged it. The payload has always
+ * carried this -- rubric, panel, the judges actually seen in the data, and any
+ * substitution -- and the page has never drawn any of it, so a reader could not tell
+ * one run from another, could not see that a judge was substituted on some cells, and
+ * had no way to know the judge count that sets the tier cuts they are toggling.
+ * It doubles as the fall-through signal: when a ?data= pin cannot be served the page
+ * still renders (by design), and this is where it says so. */
+/* The judge count that MATTERS is the per-PASSAGE one: applyPanelThreshold bands each
+ * passage on its own verdict count, so that is the number explaining its tier. This
+ * comment used to argue the opposite -- that the cell's maximum was the number to
+ * report, because a passage missing a verdict did not lower its cell's cut. That was
+ * accurate then and it was the bug: a 2-judge passage in a 3-judge cell was measured
+ * against a cut it could not reach. Reported as a range only when passages genuinely
+ * differ from each other.
+ *
+ * It is also not the length of judges_seen_in_data: the shipped payload lists five
+ * judges across the run while each cell was scored by three, because two of the five
+ * are substitutes standing in on single cells. */
+function judgesPerCellLabel() {
+  const perCell = [];
+  (state.rawBehaviours || []).forEach(behaviour => {
+    Object.values(behaviour.coverage || {}).forEach(cov => {
+      (cov.passages || [])
+        .filter(p => p.verdicts)
+        .forEach(p => perCell.push(Math.max(1, Object.values(p.verdicts).length)));   // mirrors applyPanelThreshold
+    });
+  });
+  if (!perCell.length) return null;
+  const lo = Math.min(...perCell), hi = Math.max(...perCell);
+  const n = lo === hi ? `${lo}` : `${lo}\u2013${hi}`;
+  return `${n} judge${hi === 1 ? "" : "s"} per passage`;
+}
+
+function renderRunProvenance() {
+  const box = document.getElementById("run-provenance");
+  const summary = document.getElementById("run-summary");
+  const detail = document.getElementById("run-detail");
+  if (!box || !summary || !detail) return;
+  const prov = state.provenance || {};
+  const src = state.payloadSource || {};
+  const bits = [
+    prov.panel_config,
+    prov.rubric,
+    judgesPerCellLabel(),
+    prov.runDate,
+  ].filter(Boolean);
+  summary.textContent = bits.length ? bits.join(" · ") : "Run details";
+  box.classList.toggle("fell-through", Boolean(src.requested));
+
+  const rows = [];
+  if (src.requested) {
+    rows.push(["Requested", src.requested.refused
+      ? `${src.requested.name} — not a loadable payload name`
+      : `${src.requested.name} — not available`]);
+  }
+  rows.push(["Showing", `${src.name || "—"}${src.origin ? ` (${src.origin})` : ""}`]);
+  if (prov.method) rows.push(["Method", prov.method]);
+  if (prov.rubric) rows.push(["Rubric", prov.rubric]);
+  if ((prov.panel || []).length) rows.push(["Panel", prov.panel.join(", ")]);
+  if ((prov.judges_seen_in_data || []).length) {
+    rows.push(["Judges appearing anywhere in this run", prov.judges_seen_in_data.join(", ")]);
+  }
+  const perCell = judgesPerCellLabel();
+  // Spelled out because it is not the length of the list above, and it is the number
+  // the tier cuts are derived from.
+  if (perCell) rows.push(["Judges scoring each cell", perCell.replace(" per cell", "")]);
+  // Published verdicts partly come from substitute judges. Concealing that while
+  // publishing the verdicts it produced would misrepresent the panel.
+  if (prov.substitution) rows.push(["Substitutions", prov.substitution]);
+
+  detail.replaceChildren(...rows.flatMap(([term, value]) => {
+    const dt = document.createElement("dt");
+    dt.textContent = term;
+    const dd = document.createElement("dd");
+    dd.textContent = value;
+    return [dt, dd];
+  }));
+}
+
 function updatePanelMeta(panel, doc) {
   const tracking = highlightsActive();
   const depth = panel.querySelector(".coverage-depth");
@@ -1331,6 +1599,7 @@ function updatePanelMeta(panel, doc) {
   depth.hidden = !tracking;
   panel.querySelector(".rail-legend").hidden = !tracking;
   panel.querySelector(".document-focus-toggle").hidden = !tracking;
+  if (tracking) updateTierToggles(panel, doc);
 
   // Counted from the published set, not from what resolved: a passage that failed to
   // anchor is an unresolved-anchor warning, not an absence of coverage.
@@ -1338,14 +1607,21 @@ function updatePanelMeta(panel, doc) {
     .reduce((total, behaviour) => total + (behaviour.coverage?.[doc.id]?.passages.length || 0), 0);
   if (tracking && published === 0) {
     const several = selectedBehaviours().length > 1;
+    const filtered = selectedBehaviours()
+      .reduce((total, behaviour) => total + (behaviour.coverage?.[doc.id]?.panelFiltered || 0), 0);
     panel.querySelector(".document-body").insertAdjacentHTML(
       "afterbegin",
-      `<div class="zero-coverage" role="note">
-        <strong>${several
-          ? "None of the selected behaviors map to a passage in this specification."
-          : "No mapped passages in this specification."}</strong>
-        <span>Absence of coverage is an index finding, not missing data.</span>
-      </div>`,
+      filtered > 0
+        ? `<div class="zero-coverage" role="note">
+            <strong>No passages in the selected tiers.</strong>
+            <span>${filtered} scored ${filtered === 1 ? "passage sits" : "passages sit"} in tiers toggled off -- turn one back on above to see them.</span>
+          </div>`
+        : `<div class="zero-coverage" role="note">
+            <strong>${several
+              ? "None of the selected behaviors map to a passage in this specification."
+              : "No mapped passages in this specification."}</strong>
+            <span>Absence of coverage is an index finding, not missing data.</span>
+          </div>`,
     );
   }
 }
@@ -1372,6 +1648,10 @@ function applyHighlights() {
   elements.readerStatus.textContent = missing.length
     ? `${missing.length} cached passage ${missing.length === 1 ? "anchor could" : "anchors could"} not be resolved against this document version.`
     : "";
+  if (missing.length) {
+    elements.readerStatus.title = missing.join(" ; ");
+    console.info("[anchors] unresolved:", missing);
+  }
   updateFindingBar(overlaps);
 
   requestAnimationFrame(() => {
@@ -1496,7 +1776,7 @@ function updateRails() {
       mark.style.height = `max(5px, ${(anchor.offsetHeight / body.scrollHeight) * 100}%)`;
       mark.setAttribute(
         "aria-label",
-        `${overlap ? "Shared" : anchor.classList.contains("adjacent") ? "Related" : "Core"}`
+        `${overlap ? "Shared" : bandLabel(anchor.dataset.band)}`
         + ` passage ${localIndex + 1}, ${anchor.dataset.behaviours}: ${anchor.dataset.role}`,
       );
       mark.title = `${anchor.dataset.behaviours} · ${anchor.dataset.role}`;
@@ -1570,6 +1850,149 @@ window.addEventListener("resize", () => {
   requestAnimationFrame(updateRails);
 });
 
+/* Panel-score display filter. Which tiers render is state.bands (the header toggles,
+ * ?tiers= in the URL; legacy ?tier=/?threshold= links are mapped once at load by
+ * initialBands). One score param remains, URL-only:
+ *   ?related=W    weight of a "related" (1) verdict when scoring; core is always 2 and,
+ *                 in 4-point rubric data (v5+), defining is always 3.
+ *                 [default 1; try 0.5 to demote related votes, or 0 for core-votes-only]
+ * Scores are recomputed from each citation's per-model verdicts, so the params compose. */
+function applyPanelThreshold(payload) {
+  const params = new URLSearchParams(location.search);
+  const related = Number(params.get("related") ?? 1);
+  (payload.behaviours || []).forEach(behaviour => {
+    Object.values(behaviour.coverage || {}).forEach(cov => {
+      if (!cov.passages) return;
+      // cell scale: 2 on the classic rubric, 3 when any judge awarded a "defining" (v5+)
+      const maxVerdict = Math.max(2, ...cov.passages.flatMap(p => p.verdicts ? Object.values(p.verdicts) : []));
+      cov.passages.forEach(p => {
+        if (!p.verdicts) return;
+        const vs = Object.values(p.verdicts);
+        p.score = vs.reduce((a, v) => a + (v >= 2 ? v : v === 1 ? related : 0), 0);
+        p.maxScore = maxVerdict * vs.length;
+      });
+      const maxCell = Math.max(0, ...cov.passages.map(p => p.maxScore || 0));
+      // Tier bands (the header toggles): per-cell cuts derived from the judge count, so
+      // the same tier means the same thing on 3-point and 4-point cells alike. On 3-point
+      // cells the defining cut clamps to unanimous core, whose passages then count as
+      // defining and the core band sits empty.
+      const judges = Math.max(1, ...cov.passages.map(p => p.verdicts ? Object.values(p.verdicts).length : 0));
+      /* Cuts follow the passage, not the cell. `judges` above is the cell's LARGEST
+       * verdict count, but a passage scored by fewer judges tops out lower -- and
+       * compared against the cell's cut it can be structurally incapable of reaching
+       * the band it earned. Three passages in behaviours-v4a-ds.json scored a
+       * unanimous 4/4 and rendered as "Related · (score 4/4)": no verdict combination
+       * could have done better. Each passage is banded on its own scale instead. */
+      const passageJudges = p => Math.max(1, Object.keys(p.verdicts || {}).length);
+      const band = p => tierBand(p.score, passageJudges(p), p.maxScore || maxCell, related);
+      const shownBands = state.bands ?? new Set(DEFAULT_BANDS);
+      const before = cov.passages.length;
+      // Per-band tallies and reachability, taken BEFORE the toggle filter so the
+      // header can report what a tier holds even while that tier is switched off.
+      cov.bandCounts = { defining: 0, core: 0, related: 0 };
+      cov.bandReachable = bandReachable(judges, maxCell, related);
+      cov.passages.forEach(p => {
+        if (p.score === undefined) return;
+        const b = band(p);
+        if (b) cov.bandCounts[b] += 1;
+      });
+      let subTier = 0;   // below every tier -- never rendered, so never "toggled off"
+      cov.passages = cov.passages.filter(p => {
+        if (p.score === undefined) return true;
+        const b = band(p);
+        if (b === null) { subTier += 1; return false; }
+        return shownBands.has(b);
+      });
+      cov.panelFiltered = before - subTier - cov.passages.length;   // hidden by the tier toggles, NOT absent
+      cov.passages.forEach(p => {
+        if (p.score === undefined) return;
+        // The band is what the passage IS; `adjacent` is one question about it, kept
+        // because the tint and gutter styling key off it.
+        p.band = band(p);
+        p.adjacent = p.band === "related";
+        // the baked role text carries the build-time score; rewrite it with the recomputed one
+        const shown = Number.isInteger(p.score) ? p.score : p.score.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+        p.role = (p.role || "").replace(/\(score [^)]*\)/, `(score ${shown}/${p.maxScore})`);
+      });
+    });
+  });
+  return payload;
+}
+
+/* Bands a legacy ?threshold=<score> link should select. Named and standalone so
+ * engine/panel/test_appjs_tiers.js can extract it verbatim -- a test that copies
+ * this arithmetic instead would keep passing after the real code regressed. */
+function legacyThresholdBands(t, judges, scale) {
+  const defCut = judges > 0 ? Math.min(2 * judges + 1, scale || 2 * judges + 1) : 7;
+  const coreCut = judges > 0 ? 2 * judges : 6;
+  return t >= defCut ? ["defining"] : t >= coreCut ? ["defining", "core"] : TIERS;
+}
+
+/* Judge count and cell scale, read from the loaded payload. Both vary per cell --
+ * maxVerdict is 2 on the classic rubric and 3 once any judge awards a "defining", so
+ * one payload can carry 6-scale and 9-scale cells at once (behaviours-v5.json does).
+ * These take the largest, which is what a score cut written into a URL meant. */
+function judgesPerCell() {
+  const counts = (state.rawBehaviours || []).flatMap(b =>
+    Object.values(b.coverage || {}).flatMap(cov =>
+      (cov.passages || []).map(p => Object.keys(p.verdicts || {}).length)));
+  return counts.length ? Math.max(...counts) : 0;
+}
+
+function maxCellScore() {
+  const scales = (state.rawBehaviours || []).flatMap(b =>
+    Object.values(b.coverage || {}).map(cov => {
+      const ps = cov.passages || [];
+      if (!ps.length) return 0;
+      const maxVerdict = Math.max(2, ...ps.flatMap(p => Object.values(p.verdicts || {})));
+      return maxVerdict * Math.max(0, ...ps.map(p => Object.keys(p.verdicts || {}).length));
+    }));
+  return scales.length ? Math.max(...scales) : 0;
+}
+
+/* Initial tier selection: ?tiers= list, else legacy single-position params mapped to
+ * the bands they showed (?tier= gauge links; ?threshold= score links), else defaults. */
+function initialBands() {
+  const listed = (initialParams.get("tiers") || "")
+    .split(",").map(part => (part.trim() === "adjacent" ? "related" : part.trim()))
+    .filter(tier => TIERS.includes(tier));
+  if (listed.length || initialParams.get("tiers") === "none") return new Set(listed);
+  const tier = initialParams.get("tier") === "adjacent" ? "related" : initialParams.get("tier");
+  if (TIERS.includes(tier)) return new Set(TIERS.slice(0, TIERS.indexOf(tier) + 1));
+  if (initialParams.has("threshold")) {
+    // Legacy score links. The cuts are 2j+1 / 2j / j+1, so they depend on the judge
+    // count and the cell scale -- 7/6 were those values for a 3-judge 3-point cell,
+    // frozen. A 4-point cell (v5+) tops out at 9 and a 2-judge cell at 4, so the same
+    // ?threshold= meant different bands on different data. Derive them instead.
+    return new Set(legacyThresholdBands(
+      Number(initialParams.get("threshold")), judgesPerCell(), maxCellScore()));
+  }
+  return new Set(DEFAULT_BANDS);
+}
+
+function toggleBand(tier) {
+  if (!state.rawBehaviours || !state.bands) return;   // data not loaded yet
+  if (state.bands.has(tier)) state.bands.delete(tier);
+  else state.bands.add(tier);
+  state.payload.behaviours =
+    applyPanelThreshold({ behaviours: structuredClone(state.rawBehaviours) }).behaviours;
+  updateFindingBar();
+  syncURL();
+  rebuildReader();
+}
+
+/* The toggles live in the document headers, which rebuildReader re-clones, so the
+ * listener is delegated and focus is put back on the equivalent button afterwards. */
+elements.documentReader.addEventListener("click", (event) => {
+  const button = event.target.closest?.(".tier-toggle");
+  if (!button || !TIERS.includes(button.dataset.tier)) return;
+  const panelId = button.closest(".document-panel")?.dataset.documentId;
+  toggleBand(button.dataset.tier);
+  elements.documentReader
+    .querySelector(`.document-panel[data-document-id="${panelId}"] .tier-toggle[data-tier="${button.dataset.tier}"]`)
+    ?.focus({ preventScroll: true });
+});
+
 async function loadJSON(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
@@ -1609,13 +2032,17 @@ async function initialize() {
   try {
     const [documents, behaviours] = await Promise.all([
       loadJSON(DOCUMENTS_URL),
-      loadJSON(BEHAVIOURS_URL),
+      loadBehaviours(),
     ]);
+    state.rawBehaviours = behaviours.behaviours || [];
+    state.provenance = behaviours.provenance || {};
+    state.bands = initialBands();
     state.payload = {
       documents: documents.documents,
-      behaviours: behaviours.behaviours || [],
+      behaviours: applyPanelThreshold({ behaviours: structuredClone(state.rawBehaviours) }).behaviours,
     };
     renderSpecOptions();
+    renderRunProvenance();
     const bench = state.payload.behaviours;
     state.documentFocus = { anthropic: bench.length > 0, openai: bench.length > 0 };
     const params = initialParams;

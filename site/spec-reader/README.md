@@ -1,20 +1,48 @@
-# site/spec-reader/ -- the product reader
+# site/llm-panel-review/
 
-The public reader: ten behaviours traced through both lab specifications,
-rendered from the v5 9-point panel run.
+The spec reader with passages scored for behaviour relevance by a panel of frontier
+LLMs -- highlights come from model verdicts instead of the frozen coverage ledger
+(`data/coverage.json`).
 
-- Payload: `../llm-panel-review/data/behaviours-v5-reader.json` -- the band-boundary
-  build of `engine/panel/runlog-v5.jsonl` (`--threshold=4 --solid-threshold=6`):
-  363 citations (43 defining, 57 core, 263 related). A fork user's freshly built
-  payload appears in `llm-panel-review/` but not here (the reader stays pinned;
-  a reader-side manifest is the documented later fix).
-- Spec text: `data/documents.json`, shared with the published surfaces; never
-  duplicated.
-- Menu: 01-08 "Behaviours under test" (flat, as supplied) + 09-10 "General
-  Guidelines" -- one supplied definition read two ways; the strict reading's
-  source judgment (constitution 29 -> 16 vs model spec 22 -> 22) is preserved
-  in `archive/general-welfare-strict-reading/`.
-- Multi-behaviour reading: passages cited by more than one selected behaviour
-  blend their tints and carry a shared mark; the finding bar counts them once.
-- Verified by `engine/verify-reader-test.mjs` (anchoring, nav, tint/role
-  agreement, export, BEHAVIOURS_URL 200) on every PR.
+## What it shows
+Three behaviours (Helpfulness, Harm avoidance to third parties, Avoiding both over-
+and under-caution), each passage of both specifications graded by three judges --
+GPT-5.6 Sol, Claude Fable 5, Kimi-K3 -- on a 3-point scale (2 core / 1 related /
+0 neither). A passage's score is the sum over judges (max 6). Claude Opus 4.8
+substitutes for Fable on one cell (harm-to-third-parties × model spec) where Fable's
+output was content-filtered; the "?" popup on any highlight names each judge and
+its decision.
+
+## Display tuning (URL params, no UI)
+- `?threshold=N` -- minimum score to highlight [default 6 = unanimous core, clamped
+  to a cell's max where a judge's votes are pending]
+- `?related=W` -- weight of a "related" vote when scoring (core is always 2)
+  [default 1; try 0.5 or 0]
+Params compose with the page's own `?spec=` and `?behavior=`. Scores are recomputed
+client-side from each citation's raw per-model verdicts.
+
+## Regenerating the data
+`data/behaviours.json` is built by `engine/panel/build_site_data.py` from a verdict
+runlog (see `engine/panel/README.md`). Behaviour names/definitions are
+registry-driven (`data/behaviours.json`); the cell verdict/depth/verifiedDate
+rows come from `data/panel-cell-curation.json`. The sibling
+`behaviours-v5-reader.json` is the same builder's band-boundary build for the
+spec reader (`site/spec-reader/`), pinned there by literal filename: it is
+band-filtered, so the reader must not resolve through this surface's manifest
+(the manifest is gitignored and its payloads are unfiltered).
+`engine/verify-reader-test.mjs` asserts the pinned URL returns 200.
+
+## Which payload the page loads
+Resolution order, no selection UI:
+1. `?data=<name>` -- a pin naming a `behaviours*.json` payload in `data/` (e.g. a
+   timestamped run or a calibration variant like `?data=behaviours-v4a`); name only,
+   no paths; `manifest.json` is never a valid pin, and non-`behaviours*` files are
+   refused, so the ledger can't be rendered as a behaviour set;
+2. `data/manifest.json` `latest` -- the newest timestamped run the builder emitted;
+3. `data/behaviours.json` -- the shipped fallback, always tracked.
+
+A source that fails to fetch or parse falls through to the next, so a stale pin or a
+fresh clone (no manifest yet) still renders. Each `build_site_data.py` run writes
+`data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json` and updates the manifest; both are
+gitignored and stay local. `engine/panel/select_run.py` resolves/verifies pins from
+the CLI the same way the page does (`--pin <name>`, `--latest`).
