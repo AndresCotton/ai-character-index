@@ -207,4 +207,28 @@ python3 engine/validate_data.py                  # schema-check data/, incl. you
 | [`data/behaviours.json`](data/behaviours.json)         | The behaviour registry -- where your behaviours go                                                                         |
 | [`site/`](site/)                                       | The local reader surfaces                                                                                                  |
 
+HEAD
 The remaining directories (`research/`, `methodology/`, `design/`, and friends) are the project's own editorial records and maintenance; none of them are needed to use the tool.
+
+## Licence and citation
+
+Dual-licensed, by what the file is rather than where it sits:
+
+| | Licence | Covers |
+|---|---|---|
+| Software | [Apache-2.0](LICENSE) | `.py`, `.js`, `.mjs`, `.html`, `.css`, `.sh`, `.yml`, plus dependency manifests |
+| Written work and data | [CC BY 4.0](LICENSE-CC-BY-4.0) | `.md`, `.json`, `.jsonl`, `.txt` — coverage data, judged runlogs, methodology, docs |
+
+Both require attribution. CC BY is the licence academic work expects for data
+and written material; Apache-2.0 carries the patent grant that matters for code.
+
+**`specs/` is not ours.** It holds verbatim copies of specifications published by
+Anthropic and OpenAI, both released under
+[CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) — a public-domain
+dedication that imposes no conditions and requires no attribution. We attribute
+them anyway. Cite those documents to their publishers, never to this project.
+CC0 covers copyright, not trademarks; nothing here is endorsed by or affiliated
+with either organisation. See [NOTICE](NOTICE) for the full statement.
+
+To cite this project, use [CITATION.cff](CITATION.cff) — GitHub renders it as a
+"Cite this repository" button with BibTeX and APA output.

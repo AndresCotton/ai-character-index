@@ -66,10 +66,12 @@ Everything stays local — nothing pushes back.
 
    It has **no dry-run** -- it calls the API immediately, so run one cell and
    read the cost before looping. One cell of a ~15 KB spec on `haiku` is well
-   under a cent (measured: 5,884 in / 383 out = $0.008). Always pass
-   `--runlog=`: the default is `engine/panel/runlog-v3.jsonl`, the committed
-   v3-era log (the SHIPPED payload's log is `engine/panel/runlog-v5.jsonl`).
-   Put yours in `local/`, which is gitignored. It also appends
+   under a cent (measured: 5,884 in / 383 out = $0.008). Still pass
+   `--runlog=` so yours sits in `local/` beside your registry copy -- the
+   no-flag default is the gitignored `engine/panel/runlog-user.jsonl`, and the
+   committed canonical logs (`runlog-v5.jsonl`, `runlog-v3.jsonl`) are never
+   written unless named explicitly. Runs stamp the v5 rubric by default
+   (`--rubric=v3w`/`v3s` for the legacy prompts). It also appends
    to `engine/panel/metrics.jsonl` (gitignored).
 
    To rehearse steps 2-6 without spending, `python3 engine/stage_user_demo.py
@@ -93,14 +95,15 @@ Everything stays local — nothing pushes back.
 
    ```sh
    python3 engine/panel/build_site_data.py --runlog=local/my-run.jsonl \
-     --rubric=v3w --panel=haiku --registry=local/my-behaviours.json \
+     --panel=haiku --registry=local/my-behaviours.json \
      --behaviours=<your-slug>
    ```
 
    It prints the citation count -- if that is 0, check your panel's seats
    against the runlog's `model` values before looking anywhere else. The
    `(threshold 3, solid 5)` it also prints is builder-side and does not gate what
-   renders: a single-judge run renders its 2s as defining and its 1s as related.
+   renders: tier cutoffs derive client-side from the judge count and each
+   passage's own scale (`test_appjs_tiers.js` pins them).
 6. View: `python3 -m http.server 8123 --directory site` →
    `http://localhost:8123/spec-reader/`
    (loads the manifest's latest run by default; pin with `?data=<name>`).
