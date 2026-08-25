@@ -114,11 +114,7 @@ def main():
                 [sys.executable, str(ENGINE / "panel" / "build_site_data.py"),
                  f"--runlog={runlog}", f"--registry={reg_path}",
                  f"--behaviours=helpfulness,{USER_BEHAVIOUR}",
-                 "--panel=itest", "--rubric=v3w", f"--run-date={RUN_DATE}",
-                 # keep everything scored: this synthetic single-judge run
-                 # predates band cuts, and the committed config's threshold is
-                 # a stale 6-point-era value
-                 "--threshold=1"],
+                 "--panel=itest", "--rubric=v3w", f"--run-date={RUN_DATE}"],
                 check=True, cwd=ROOT, env=env, capture_output=True, text=True)
             emitted = json.loads(prior_manifest.read_text())
             name = emitted["latest"]

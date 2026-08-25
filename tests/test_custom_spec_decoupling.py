@@ -298,14 +298,10 @@ class UserBehaviourInPanelTest(unittest.TestCase):
 
     def build(self, runlog, behaviours, panel="itest", rubric="v3w"):
         data_dir = Path(self._tmp.name) / "panel-data"
-        # --threshold=1: these synthetic single-judge runs model the cheap
-        # clone/fork build; the committed config's display.threshold is a
-        # stale 6-point-era value (3) that would drop every citation here.
         run_panel_builder(
             [f"--runlog={runlog}", f"--registry={self.registry}",
              f"--behaviours={behaviours}", f"--panel={panel}",
              f"--rubric={rubric}", "--run-date=2026-08-19",
-             "--threshold=1",
              "--out=panel-payload.json"],
             data_dir, manifest=self.manifest,
         )
@@ -397,13 +393,9 @@ class PanelByteIdentityTest(unittest.TestCase):
         self.addCleanup(shutil.rmtree, data_dir, ignore_errors=True)
         # manifest=None pins the bundled-only state: an ambient local manifest
         # must never leak into a byte-identity rebuild.
-        # --threshold=1 pins the legacy effective cut: the shipped payloads
-        # predate display.threshold being honoured (the builder hardcoded
-        # score >= 1), so a byte-identity rebuild must pin that semantics.
         run_panel_builder(
             [f"--runlog={ROOT / runlog}", f"--rubric={rubric}", f"--panel={panel}",
              f"--behaviours={behaviours}", f"--run-date={run_date}",
-             "--threshold=1",
              f"--out={payload_name}"],
             data_dir, manifest=None,
         )

@@ -9,10 +9,10 @@ Implements the MVP display rules from panel-config.json `display`:
     carries at least min(2, panel-size) votes (keeps_citation drops a lone
     stray vote on a multi-judge panel); the page re-filters at render time
     via tier bands. The cut honours display.threshold (the committed config
-    carries 3, a stale 6-point-era value; shipped payloads were built with the
-    effective cut 1, so historical byte-identity rebuilds pin --threshold=1);
-    --threshold= overrides it for derived payloads (e.g. a pre-filtered
-    reader shape cut at the panel's band boundary);
+    carries 1 = keep everything scored, which matches every shipped payload,
+    so a defaults build reproduces them); --threshold= overrides it for
+    derived payloads (e.g. a pre-filtered reader shape cut at the panel's
+    band boundary);
   - the citation `adjacent` flag is score < display.solid_threshold
     (--solid-threshold= overrides it for derived payloads);
   - the citation `role` (shown when the reader clicks "?") lists each model's decision.

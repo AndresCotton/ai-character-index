@@ -117,13 +117,8 @@ def rebuild(runlog, rubric, panel, scratch_root):
     saved_argv = sys.argv
     # --out= pins the rebuild to the canonical filename: without it the
     # builder emits a timestamped run file (and touches the manifest).
-    # --threshold=1 pins the legacy effective cut: the shipped payload predates
-    # display.threshold being honoured (the builder hardcoded score >= 1; the
-    # committed config carries a stale 6-point-era 3), so a byte-identity
-    # rebuild must pin the semantics the file was actually built with.
     sys.argv = ["build_site_data.py", f"--runlog={runlog}",
                 f"--rubric={rubric}", f"--panel={panel}",
-                "--threshold=1",
                 "--out=behaviours.json"]
     try:
         bs.main()
