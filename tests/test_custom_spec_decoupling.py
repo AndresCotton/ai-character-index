@@ -357,7 +357,7 @@ class UserBehaviourInPanelTest(unittest.TestCase):
         payload = self.build(self._write_runlog(rows),
                              behaviours=f"helpfulness,{self.BEHAVIOUR}")
         slugs = [b["slug"] for b in payload["behaviours"]]
-        # reader-test bench order first, then the user seam
+        # reader-test set order first, then the user seam
         self.assertEqual(slugs, ["helpfulness", self.BEHAVIOUR])
         self.assertEqual(payload["behaviours"][0]["name"], "Helpfulness")
 
