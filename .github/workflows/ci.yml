@@ -41,6 +41,7 @@ jobs:
       - name: Panel + provenance suites
         run: |
           python3 engine/panel/test_panel.py
+          python3 engine/panel/test_new_behaviour.py
           python3 engine/panel/test_verify_panel_provenance.py
           python3 engine/panel/verify_panel_provenance.py
 

@@ -1,37 +1,214 @@
-# AI Character Index
+# Spec Reader
 
-A public index of **AI character**, anchored in model specs. It maps *important behaviours* → *model-spec coverage*, side by side across frontier labs, to make gaps legible: routing technical effort toward neglected areas and holding labs accountable to their own declared targets.
+A tool for researchers working in the model-spec space. Point a panel of LLM judges at a spec -- Anthropic's constitution, OpenAI's Model Spec, or a document of your own -- and give the panel a behaviour you care about. You get back a passage-level coverage map: every place the spec addresses that behaviour, scored by each judge and quoted verbatim, browsable in a local reader.
 
-In the spirit of AI Lab Watch, with a neutral, METR-like framing. By Andrés Cotton.
+What people use it for:
 
-**Status:** deployed to Cloudflare Pages (`ai-character-index.pages.dev`). Building v0 -- see [PLAN.md](PLAN.md) for the full build plan and system design.
+- **Assess coverage.** How well does a spec address a behaviour you are interested in? Is it a defining commitment, a passing mention, or a gap?
+- **Locate the exact text.** Every verdict anchors to a specific passage, so you see precisely *where* in the spec a behaviour is addressed.
+- **Select passages for downstream work.** Every citation is a stable, re-resolvable locator plus a verbatim quote, in plain JSON -- ready to feed automated adherence evals (for example, Petri scenarios testing whether models actually follow the passages you selected).
+- **Experiment with spec edits.** Register your own spec versions locally, run the panel against each, and compare how coverage shifts as you rewrite.
 
-## How it works (short version)
+The repo ships with a complete bench out of the box: ten behaviours judged against both bundled specs by a three-judge frontier panel, so you can explore an example with results before running anything yourself.
 
-Data changes land through reviewed pull requests against `data/` and `research/` -- merging the PR is the "push to production" act. The public site is static output committed under `site/`, deployed to Cloudflare Pages on merges that touch it; there is no build step. `engine/spec-watch/pull-latest.sh` refreshes the mirrored lab specs (run manually; automatic re-verification of coverage claims after a spec change is planned but not built). System map: [SYSTEM.md](SYSTEM.md); the original design: [PLAN.md §1](PLAN.md).
+## Quickstart
 
-Spec coverage enters through **coverage sweeps**: a staged pipeline with a human sign-off gate between every stage, run one behaviour at a time. The `spec-coverage-pass` route runs the coverage and publish stages on a per-behaviour branch (behaviours 2–3 were published this way); results reach the public reader when the branch merges after the fresh-context verify audit signs its gate. How to run one: [.claude/skills/README.md](.claude/skills/README.md).
+### 1. What you need
 
-## Repo map
+- **Python 3.10+**. The only third-party package is `openai` (`pip install openai`) -- every judge provider is called through the OpenAI-compatible API.
+- **A browser.** All result surfaces are static local pages.
+- Optional: `pip install jsonschema` for stricter validation when you edit the behaviour registry.
 
-| Folder | What it holds |
-|---|---|
-| [`research/`](research/) | The intellectual core: the [canonical behaviour list](research/core-behaviour-list.md) (mirrored from Notion; the repo copy lags at rows 11–13), sweep records in [`sweeps/`](research/sweeps/), superseded drafts in `archive/` |
-| [`.claude/skills/`](.claude/skills/) | The coverage-sweep pipeline: versioned procedure files, one per stage, each ending at a human gate -- [how to run a sweep](.claude/skills/README.md) |
-| [`specs/`](specs/) | Local mirrors of the specs the index scores against (Claude constitution, OpenAI Model Spec) |
-| [`methodology/`](methodology/) | Depth rubric (anchors every published depth score), the editable site methodology copy, method-exploration write-ups |
-| [`behaviours-for-adria/`](behaviours-for-adria/) | External reviewer's ten-behaviour coverage batch — feeds the reader test bench and three rows of the panel surface |
-| [`data/`](data/) | Machine-readable data behind the site — rendered via engine-built payloads; writers and hand-maintained exceptions in [`data/README.md`](data/README.md) |
-| [`engine/`](engine/) | The automation: `spec-cite/` (citation resolver), `panel/` (LLM panel judging), coverage/payload builders, site verifiers, `spec-watch/` (manual pulls); `notion-sync/` is a placeholder. See [`engine/README.md`](engine/README.md) |
-| [`site/`](site/) | The public static site |
-| [`docs/`](docs/) | Onboarding prose (the spec-coverage track) + ruling-approved skill-rescope proposals — see [`docs/OVERVIEW.md`](docs/OVERVIEW.md) |
-| [`design/`](design/) | Aesthetics discussion: typography, palette, reference sites |
-| `outreach/` | Communication strategy and interview guides (internal, not published; gitignored, so it exists only in local clones) |
-| [`vision/`](vision/) | The original vision documents, including [features to build](vision/features%20to%20build.md) |
+No Node.js, no build step.
 
-## Contributing
+### 2. Clone and browse the shipped results (no API keys)
 
-Questions, corrections, or anything you think we've got wrong: use the **contact link** on the repo's Issues page ("Contact Andrés directly"), or open a blank issue. We read everything.
+```sh
+git clone https://github.com/AndresCotton/ai-character-index.git
+cd ai-character-index
+python3 -m http.server 8080 --directory site
+```
+
+Then open:
+
+- **[http://localhost:8080/llm-panel-review/](http://localhost:8080/llm-panel-review/)** -- the panel reader, the main surface for this workflow. Pick a behaviour in the sidebar; every passage the panel scored lights up in the spec text, with the per-judge verdicts on hover.
+- **[http://localhost:8080/spec-reader/](http://localhost:8080/spec-reader/)** -- the side-by-side spec reader. Documents render as parallel panes with a resizable boundary; your own registered specs appear here too (see below).
+
+### 3. API keys (only for running new judging)
+
+```sh
+cp engine/panel/.env.example engine/panel/.env
+```
+
+Open the copy and paste in one **`OPENROUTER_API_KEY`** -- that is the whole setup: every judge routes through OpenRouter unless you uncomment a direct provider key in the same file. `.env` is gitignored and never leaves your machine.
+
+## Add a new behaviour
+
+**Prefer to delegate?** Everything from here on can be done by a coding agent: open one in the clone (Claude Code or similar) and say "register a behaviour about X and run the panel against both specs". The repo ships agent instructions ([`AGENTS.md`](AGENTS.md)) carrying these same steps and their gotchas. What follows is the by-hand path.
+
+One command registers a behaviour and prints exactly what to run next:
+
+```sh
+python3 engine/panel/new_behaviour.py bribery-resistance \
+    --name="Bribery resistance" \
+    --definition="The model should not change its behaviour in response to offers of payment, reward, or favours, and should not solicit them."
+```
+
+- `--definition=` is the field that matters most: the statement the judges score against, passed verbatim. Write it the way you would brief a careful human reviewer.
+- Optional flags: `--facet="..."` (repeatable; clarifying sentences added to the judge prompt), `--scope="..."` (what this behaviour is *not* -- sharpens verdicts on behaviours that border related ones), `--group="..."` (sidebar label).
+
+Under the hood a behaviour is one JSON entry in the registry, `data/behaviours.json`, keyed by its slug -- the behaviour's identity everywhere (run commands, log rows, the sidebar):
+
+```json
+"bribery-resistance": {
+  "name": "Bribery resistance",
+  "set": "user",
+  "numeric_id": 1,
+  "group": null,
+  "definition": "The model should not change its behaviour in response to offers of payment, reward, or favours, and should not solicit them.",
+  "facets": []
+}
+```
+
+That is all the registrar does: write this entry, numbered for you (plus, with `--scope`, a matching judge-prompt entry in `engine/panel/behaviours.json`). Editing the file by hand works just as well -- the shipped entries are the template.
+
+### Run the panel
+
+One command spins up the judges -- one API call per behaviour x spec x judge, each call carrying the entire spec:
+
+```sh
+python3 engine/panel/whole_doc.py bribery-resistance constitution,model-spec frontier_fast \
+    --registry=data/behaviours.json --runlog=engine/panel/runlog-user.jsonl
+```
+
+- The three positional arguments are comma-separated lists: behaviours, specs, and judges (a panel name from `engine/panel/panel-config.json`, or individual model tags like `sol,fable`).
+- Verdicts append to the runlog as they arrive. The run is **resume-safe**: rerun the same command after a crash or provider failure and finished cells are skipped.
+- Registered with `--scope`? Run *without* the `--registry=` flag (the registrar's printed command already does): the judge entry then comes from `engine/panel/behaviours.json`, which carries the scope.
+- Cost: a whole-spec prompt is roughly 65k tokens, so one behaviour x both specs x the three-seat frontier panel (six calls) lands in the low single-digit dollars. Swap `frontier_fast` for `itest` to rehearse the same flow for about two cents.
+
+### Visualize the results
+
+Two commands turn the runlog into the reader page. First build the viewer payload:
+
+```sh
+python3 engine/panel/build_site_data.py --runlog=engine/panel/runlog-user.jsonl \
+    --panel=frontier_fast --behaviours=bribery-resistance
+```
+
+Then serve the site (skip if the quickstart server is still running) and open the panel reader:
+
+```sh
+python3 -m http.server 8080 --directory site
+```
+
+**[http://localhost:8080/llm-panel-review/](http://localhost:8080/llm-panel-review/)** now loads your run first -- the build wrote a timestamped payload under `site/llm-panel-review/data/` (local to your clone, gitignored) and pointed the page's manifest at it, so a plain refresh is enough. Your behaviour is in the sidebar; every passage the panel scored is highlighted in the spec text. Notes:
+
+- **v5 is the default rubric end to end**: the judges run the v5 prompt (each passage scored 0-3), rows are stamped `v5`, and the builder selects `v5` rows without being told. `--rubric=` exists only for deliberately running a different prompt variant; on a mismatch the builder exits listing the rubrics your runlog actually carries.
+- `--behaviours=` lists what appears in the sidebar; every slug must exist in the registry. Judged on a different panel (`itest`, say)? Mirror it in `--panel=`.
+- To get back to the shipped bench, open the page with `?data=behaviours.json`; `python3 engine/panel/select_run.py` shows the run ledger and what the page will load.
+
+### Reading the scores
+
+Each judge scores each passage 0-3 on the v5 rubric; a passage's score is the sum across the panel (0-9 with the default three judges). The reader buckets scores into three tiers -- **defining** (the passage is squarely about the behaviour), **core**, and **related** -- with the cutoffs derived from the panel size and scale. By default the page shows defining + core; toggle the related tier on for the wider penumbra.
+
+## Selecting passages for downstream work
+
+The simplest way: in the panel reader, tick the behaviours you care about, set the tier toggles, and click **"↓ Download passages"** in the sidebar. You get a Markdown file with each ticked behaviour's definition and exactly the passages shown under your current selection, across the specs on the page -- ready to hand to your eval tooling (a Petri scenario's target passages, say) or a doc.
+
+Need it machine-readable instead? The same data is plain JSON in the payload the build wrote: `site/llm-panel-review/data/behaviours-<timestamp>.json` (the shipped bench is `behaviours.json` next to it). Each behaviour carries a coverage record per document, and each record's `passages` array holds the `locator`, the verbatim `quote`, the per-judge `verdicts`, and the summed `score`:
+
+```sh
+python3 - <<'EOF'
+import json
+payload = json.load(open("site/llm-panel-review/data/behaviours.json"))  # or your run's file
+for b in payload["behaviours"]:
+    for doc, record in b["coverage"].items():
+        for p in record["passages"]:
+            if p["score"] >= 6:            # keep the top tiers; lower the bar to widen
+                print(b["slug"], "|", doc, "|", p["score"], "|", p["locator"])
+EOF
+```
+
+Swap the `print` for whatever your next step needs.
+
+What makes the selection durable is the **locator**: every citation follows the grammar in [`specs/CITATION.md`](specs/CITATION.md):
+
+```
+spec@version > section > ¶paragraph sentence
+```
+
+`engine/spec-cite/cite.py` is the resolver, and the contract is byte-exact: a locator always resolves to the same text or fails loudly, so a selected passage stays a stable reference rather than a copy-paste that drifts.
+
+```sh
+python3 engine/spec-cite/cite.py outline model-spec                              # section tree
+python3 engine/spec-cite/cite.py show "constitution > Being honest"              # numbered ¶/sentences
+python3 engine/spec-cite/cite.py resolve "model-spec@2025-12-18 > #avoid_sycophancy > ¶2 s1"
+python3 engine/spec-cite/cite.py find model-spec "some remembered phrase"        # text -> locator
+```
+
+## Other features
+
+### Bring your own spec (and spec versions)
+
+Register any document you want to assess -- including your own working edits of a lab's spec -- in a local manifest at `specs/user/specs.json`:
+
+```json
+{
+  "my-spec": {
+    "2026-08-24": {"path": "specs/user/my-spec.md", "default": true}
+  }
+}
+```
+
+- The document is a Markdown file with headings; the citation engine splits it into sections, paragraphs, and sentences. Check the parse with `python3 engine/spec-cite/cite.py outline my-spec` and `... show "my-spec > Some Section"`.
+- Versions are ISO dates. A spec can carry several versions side by side; `"default"` marks the one used when a locator carries no `@version` pin (optional when there is exactly one version).
+- Paths resolve relative to the repo root; absolute paths work too.
+- **Everything under `specs/user/` is gitignored.** Your manifest and documents stay on your machine.
+- The bundled names (`constitution`, `model-spec`) cannot be redefined, and a malformed manifest fails every panel command loudly at startup by design -- fix or delete the manifest to recover.
+
+Once registered, the name works everywhere the bundled specs do:
+
+```sh
+# judge a behaviour against your spec
+python3 engine/panel/whole_doc.py bribery-resistance my-spec frontier_fast \
+    --registry=data/behaviours.json --runlog=engine/panel/runlog-user.jsonl
+
+# render your spec as a pane in the readers
+python3 engine/build-spec-reader-data.py
+```
+
+The second command regenerates the shared document payload (again local to your clone) so both reader surfaces display your spec's full text alongside the bundled ones.
+
+**Iterating on edits:** save each revision as a new dated version in the manifest, run the panel against each version, and compare the coverage maps. Locators pin the version (`my-spec@2026-08-24 > ...`), so citations into older drafts keep resolving as your document evolves.
+
+### Customize the judge prompt
+
+The rubric the judges run is **v5**: one system prompt carrying the 0-3 scale and its calibration rules, plus a per-behaviour block that lays out your title, definition, clarifications, and scope. Both live with the pipeline under [`engine/panel/`](engine/panel/) as named template pieces -- edit them there to change what every judge is told.
+
+Two hygiene rules when you experiment with the wording. First, the shipped prompt text is pinned by tests as a provenance guarantee, so `test_panel.py` will flag any in-place edit -- that is deliberate, not breakage. Second, give modified-prompt runs their own runlog file (`--runlog=engine/panel/runlog-myprompt.jsonl`) and build payloads only from that file, so verdicts produced by different prompts never mix in one dataset.
+
+## Sanity checks
+
+All offline, no keys:
+
+```sh
+python3 engine/panel/test_panel.py               # unit tests for the judging pipeline
+python3 engine/panel/test_new_behaviour.py       # the behaviour registrar's tests
+python3 engine/panel/verify_panel_provenance.py  # shipped payload rebuilds from its committed runlog
+python3 engine/validate_data.py                  # schema-check data/, incl. your registry edits
+```
+
+## Where things live
+
+| Path                                                    | What it is                                                                                                                 |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| [`engine/panel/`](engine/panel/)                       | The judging pipeline: config, prompts, run scripts, payload builder ([README](engine/panel/README.md))                      |
+| [`engine/spec-cite/cite.py`](engine/spec-cite/cite.py) | The citation resolver behind every quote                                                                                   |
+| [`specs/`](specs/)                                     | Bundled spec mirrors and the locator grammar ([`CITATION.md`](specs/CITATION.md)); `specs/user/` is your local manifest |
+| [`data/behaviours.json`](data/behaviours.json)         | The behaviour registry -- where your behaviours go                                                                         |
+| [`site/`](site/)                                       | The local reader surfaces                                                                                                  |
+
+The remaining directories (`research/`, `methodology/`, `docs/`, `design/`, and friends) are the project's own editorial records and maintenance; none of them are needed to use the tool.
 
 ## Licence and citation
 
