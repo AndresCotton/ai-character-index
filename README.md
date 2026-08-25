@@ -40,7 +40,7 @@ Then open:
 cp engine/panel/.env.example engine/panel/.env
 ```
 
-Open the copy and paste in one **`OPENROUTER_API_KEY`** -- that is the whole setup: every judge seat routes through its OpenRouter mirror when its native key is absent. Prefer calling a provider directly? The example file lists each native key (OpenAI, Anthropic, DeepInfra for the default panel) and the seat it powers; set any of them and those seats switch to the native route. `.env` is gitignored and never leaves your machine; a variable exported in your shell wins over the file.
+Open the copy and paste in one **`OPENROUTER_API_KEY`** -- that is the whole setup: every judge routes through OpenRouter unless you uncomment a direct provider key in the same file. `.env` is gitignored and never leaves your machine.
 
 ## Add a new behaviour
 
