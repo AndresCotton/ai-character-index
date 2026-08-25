@@ -513,7 +513,7 @@ function exportFilename() {
   const subject = behaviours.length === 1
     ? behaviours[0].slug
     : `${behaviours.length}-behaviors`;
-  return `reader-test-${subject}-passages-${today()}.md`;
+  return `spec-reader-${subject}-passages-${today()}.md`;
 }
 
 function downloadPassages() {
@@ -542,7 +542,9 @@ function updateFindingBar(overlaps = null) {
     const bench = benchBehaviours().length;
     elements.findingBehaviour.textContent = bench ? "No behaviors selected" : "No behavior under test";
     elements.findingDefinition.textContent = bench
-      ? "Both specifications are shown in full. Tick a behavior in the menu to highlight the passages that bear on it."
+      ? (state.embedded
+        ? "Both specifications are shown in full. Open the full reader to choose a behavior to highlight."
+        : "Both specifications are shown in full. Tick a behavior in the menu to highlight the passages that bear on it.")
       : "Reading both specifications in full -- nothing is highlighted until a behavior is published to this reader.";
     return;
   }
