@@ -17,7 +17,10 @@
  */
 
 const DOCUMENTS_URL = "../spec-reader/data/documents.json";
-const BEHAVIOURS_URL = "./data/behaviours.json";
+/* The v5 9-point panel run, pre-filtered to the panel's band boundary
+ * (behaviours-v5-reader.json is built by engine/panel/build_site_data.py
+ * with --threshold=4 --solid-threshold=6 from runlog-v5.jsonl). */
+const BEHAVIOURS_URL = "../llm-panel-review/data/behaviours-v5-reader.json";
 
 /* Shown for a document when no behaviour is under test. */
 const NO_COVERAGE = { verdict: null, depth: null, note: "", verifiedDate: "", passages: [] };

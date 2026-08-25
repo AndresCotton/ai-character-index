@@ -13,8 +13,10 @@ __pycache__/
 # timestamped payload and updates the manifest; neither is pushed. The tracked
 # site/llm-panel-review/data/behaviours.json is the fresh-clone fallback. (The
 # tracked calibration variants behaviours-v*.json predate this rule; gitignore
-# only covers files git does not already track.)
+# only covers files git does not already track.) behaviours-v5-reader.json is a
+# deliberate exception: the committed reader-test bench payload.
 site/llm-panel-review/data/behaviours-*.json
+!site/llm-panel-review/data/behaviours-v5-reader.json
 site/llm-panel-review/data/manifest.json
 
 # Regenerable experiment artifacts: virtualenvs and model-weight caches
