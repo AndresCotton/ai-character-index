@@ -3,13 +3,17 @@
 Pipeline that produces the LLM-panel relevance data for `site/llm-panel-review/`.
 
 Credentials: `panel-config.json` holds env-var NAMES only; keys live in the
-environment or a gitignored `.env` in this directory.
+environment or a gitignored `.env` in this directory (`.env.example` is the
+template -- one OpenRouter key suffices, native keys optional).
 
 ## Pieces
 - `panel-config.json` -- providers, model tags, panels, rubric, display behaviours.
 - `harness.py` -- shared library: config load, prompt builders (rubrics v1 binary /
   v2 ternary+scope / v3 ternary+form-fields, frozen for provenance), verdict
   parsing, run-log resume conventions. Not a CLI.
+- `new_behaviour.py` -- registers a user behaviour (registry row; `--scope` adds
+  the judge-prompt entry here) and prints the judge/build/view commands;
+  `test_new_behaviour.py` covers it.
 - `whole_doc.py` -- whole-document judging (entire spec in one prompt, all verdicts
   in one response; rubric tag `v3w`). This mode produced the shipped data, winning
   an empirical dense-vs-sparse comparison.
