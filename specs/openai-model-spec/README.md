@@ -1,3 +1,8 @@
+> **Provenance note.** The text below is the upstream README, reproduced
+> verbatim from the publisher's own repository. Its "this repository"
+> references describe *that* repository, not the AI Character Index. Retained
+> unedited so the licence statement it carries is the publisher's own.
+
 
 # The OpenAI Model Spec
 

@@ -1,0 +1,49 @@
+AI Character Index
+Copyright 2026 Matt Stults and Andres Cotton
+
+This product includes software and written work developed for the
+AI Character Index project.
+
+LICENSING
+---------
+This repository is dual-licensed. Which licence applies depends on what
+the file is, not where it sits:
+
+  Software   -- Apache License 2.0, see LICENSE
+                .py, .js, .mjs, .html, .css, .sh, .yml, and the build,
+                harness, and verification code under engine/, site/,
+                tests/, and .github/
+
+  Written    -- Creative Commons Attribution 4.0 International,
+  work and     see LICENSE-CC-BY-4.0
+  data         .md, .json, .jsonl, .txt -- the coverage data, judged
+                runlogs, methodology, and documentation
+
+  Exception  -- package.json and other dependency/config manifests are
+                software, and are covered by Apache-2.0 despite the
+                extension.
+
+THIRD-PARTY MATERIAL
+--------------------
+specs/ contains verbatim copies of specifications published by other
+organisations. They are NOT covered by the licences above and remain
+under their publishers' terms:
+
+  specs/claude-constitution/   Claude's Constitution, Anthropic.
+                               Released under CC0 1.0 (public domain
+                               dedication).
+
+  specs/openai-model-spec/     OpenAI Model Spec, OpenAI.
+                               Released under CC0 1.0 (public domain
+                               dedication).
+
+CC0 imposes no conditions on redistribution and requires no attribution.
+Attribution is given here because the academic and research norms this
+project is built for expect it, not because the licence compels it.
+
+TRADEMARKS
+----------
+CC0 dedicates copyright to the public domain; it does not grant rights in
+trademarks. "Anthropic", "Claude", "OpenAI", and "Model Spec" are marks of
+their respective owners. Nothing in this project is endorsed by, affiliated
+with, or produced in cooperation with either organisation.
