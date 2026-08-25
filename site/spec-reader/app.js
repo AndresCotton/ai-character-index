@@ -1977,6 +1977,7 @@ function toggleBand(tier) {
   state.payload.behaviours =
     applyPanelThreshold({ behaviours: structuredClone(state.rawBehaviours) }).behaviours;
   updateFindingBar();
+  updateExportControl();
   syncURL();
   rebuildReader();
 }
