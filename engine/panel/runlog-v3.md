@@ -2,7 +2,7 @@
 
 `runlog-v3.jsonl` (next to this note) is the committed run log that produced
 the v3-era published panel numbers. **Superseded as the shipped default on
-2026-08-24**: `site/llm-panel-review/data/behaviours.json` now builds from
+2026-08-24**: `site/spec-reader/data/behaviours.json` now builds from
 `runlog-v5.jsonl` (see `runlog-v5.md`). This log stays committed and frozen --
 the v3 payload remains reproducible from it:
 

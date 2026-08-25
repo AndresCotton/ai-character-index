@@ -102,8 +102,8 @@ Everything stays local — nothing pushes back.
    `(threshold 3, solid 5)` it also prints is builder-side and does not gate what
    renders: a single-judge run renders its 2s as defining and its 1s as related.
 6. View: `python3 -m http.server 8123 --directory site` →
-   `http://localhost:8123/spec-reader/` and `http://localhost:8123/llm-panel-review/`
-   (panel loads the manifest's latest run by default; pin with `?data=<name>`).
+   `http://localhost:8123/spec-reader/`
+   (loads the manifest's latest run by default; pin with `?data=<name>`).
    **Check the port is free first** (`lsof -i:8123`) and use any free port
    otherwise -- if another clone of this repo is already serving `site/` there,
    the URL returns 200 and renders *its* payload with nothing on the page saying
@@ -115,20 +115,14 @@ Your run stays on your machine. `manifest.json` and the timestamped
 `behaviours-<ts>.json` payloads are gitignored, so a panel run cannot be pushed even
 by accident, and the deployed site can only ever serve the committed fallback.
 
-It lands on **`site/llm-panel-review/`** and nowhere else. That surface is the
-project's own calibration bench: unlisted, `noindex`, and linked from nothing in
-`site/`. Once a user specification is registered, every surface marks itself "Local
-specifications", and the surfaces grow an "LLM panel review" nav link to
-the panel, so it is reachable from a local clone and invisible on the published site
-(`site/shared/local-mode.js`).
+It lands on **`site/spec-reader/`**: the reader resolves the manifest's latest run
+by default, so your run is what your clone shows -- your behaviour in the sidebar
+alongside the bundled ones, and your registered specification as a document, with
+your run's passages against it for the behaviours you judged. `site/shared/
+local-mode.js` marks the page "Local specifications" so a local run is never
+mistaken for the published index.
 
-The spec reader will **not** show your behaviours. It renders the committed reader
-payload (`site/llm-panel-review/data/behaviours-v5-reader.json`, the v5 panel run
-pre-filtered to the band boundary); the coverage ledger it once rendered from
-(`data/coverage.json`) is frozen. Your specification does appear in the reader as a
-document, with no passages against it.
-
-There is no supported path from a panel run into the committed reader payload: the
+There is no supported path from a panel run into the committed payload: the
 publish pipeline is retired and the coverage ledger is frozen. `.claude/skills/`
 records the retirement.
 
@@ -140,7 +134,7 @@ python3 engine/panel/test_verify_panel_provenance.py
 python3 engine/panel/verify_panel_provenance.py    # shipped payload byte-identity
 python3 -m unittest tests.test_cite tests.test_cite_user_specs \
     tests.test_custom_spec_decoupling tests.test_behaviour_registry \
-    tests.test_coverage_json
+    tests.test_coverage_json tests.test_reader_v5_payload
 python3 engine/test_validate_data.py && python3 engine/validate_data.py
 node engine/panel/test_appjs_tiers.js            # tier-band cuts (single-judge floor)
 node engine/panel/test_appjs_fallthrough.js
@@ -154,7 +148,7 @@ node engine/verify-reader-features.mjs            # Tier-1 site features × bund
   static output (no build step), deployed on merges that touch `site/**`.
 - Local-only artifacts must never be pushed. Gitignored: `specs/user/` (your
   spec and its manifest), `local/` (your registry copies, runlogs and scratch),
-  `site/llm-panel-review/data/manifest.json` and the timestamped
+  `site/spec-reader/data/manifest.json` and the timestamped
   `behaviours-*.json` payloads, `engine/panel/metrics.jsonl`. A registry or runlog written **outside** `local/` may not be
   ignored -- check with `git status` before committing. Two more the panel
   writes: `engine/panel/metrics.jsonl` (ignored) and, on a parse failure,

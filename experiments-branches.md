@@ -27,7 +27,7 @@ Alignment and planning conversations need the full inventory, not just main. Thi
 graph LR
   exp["experiment/panel-judges<br/>(frozen harness fork; canonical run log untracked here)"] -->|"one of two harness copies"| engp["engine/panel/ on main"]
   hard["panel-hardening<br/>(merged into main via #27)"] -->|"resolve() shared"| engp
-  engp --> site["site/llm-panel-review/ on main"]
+  engp --> site["site/spec-reader/ on main"]
 ```
 
 - `panel-hardening` is fully merged into main (PR #27: rubric calibration v4a/v5/v5.1, the `frontier_fast` calibration panel, the full v5 bench); it stays as a merged ref only. The calibration rubric texts are the prompt files in `experiments/panel-calibration/prompts/` (v3w/v4a/v5/v5.1) carried by runlog keys — the frozen rubrics in `engine/panel/harness.py` remain v1/v2/v3.

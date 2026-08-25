@@ -1,6 +1,6 @@
 # engine/panel
 
-Pipeline that produces the LLM-panel relevance data for `site/llm-panel-review/`.
+Pipeline that produces the LLM-panel relevance data for `site/spec-reader/`.
 
 Credentials: `panel-config.json` holds env-var NAMES only; keys live in the
 environment or a gitignored `.env` in this directory (`.env.example` is the
@@ -27,9 +27,9 @@ template -- one OpenRouter key suffices, native keys optional).
 
 ## Run outputs, manifest, pinning
 Each `build_site_data.py` run emits its own timestamped file
-`site/llm-panel-review/data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json` (hyphen-separated:
+`site/spec-reader/data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json` (hyphen-separated:
 lexicographically sortable = chronological, URL-safe) and updates
-`site/llm-panel-review/data/manifest.json`:
+`site/spec-reader/data/manifest.json`:
 `{"latest": <filename>, "runs": [newest-first entries with filename, timestamp,
 rubric, panel and citation metadata]}`. A second build in the same second takes a
 numeric sequence suffix (`behaviours-<ts>-02.json`, then `-03`, ... -- zero-padded to
@@ -39,7 +39,7 @@ the manifest are
 gitignored -- they stay local; the tracked `behaviours.json` is the fallback a fresh
 clone loads.
 
-The page (`site/llm-panel-review/app.js`) resolves its payload in this order:
+The page (`site/spec-reader/app.js`) resolves its payload in this order:
 1. `?data=<name>` URL param (a pin; name only, no paths);
 2. manifest `latest`;
 3. the shipped `behaviours.json`.
@@ -102,7 +102,7 @@ python3 engine/panel/verify_panel_provenance.py
 ```
 
 rebuilds the payload from that log into a scratch directory and proves
-`site/llm-panel-review/data/behaviours.json` matches byte-for-byte, with one
+`site/spec-reader/data/behaviours.json` matches byte-for-byte, with one
 documented exception: `provenance.runDate`, which the builder stamps with the
 build date (`date.today()`) and which cannot be re-derived because the log
 schema carries no timestamps. Exit 0 = verified.
@@ -118,14 +118,14 @@ everything scored, matching every shipped payload), so a defaults build
 reproduces the shipped payload; `--threshold=`/`--solid-threshold=` override
 both for derived builds (the reader payload is cut at 4/6, the 3-judge band boundary).
 
-The reader (`site/spec-reader/`) is pinned to that derived payload by literal
-filename -- `../llm-panel-review/data/behaviours-v5-reader.json`. The pin exists
-because the reader payload is band-filtered (363 citations against the panel
-payloads' ~3,600) and `data/manifest.json` here is gitignored: resolving through
-the panel's manifest would feed the reader unfiltered data that disappears on a
-fresh clone. The designed fix is a reader-side manifest of reader-shaped
-payloads; until it exists, `engine/verify-reader-test.mjs` asserts the pinned
-URL returns 200 so a moved or renamed payload fails loud in CI.
+The derived payload `behaviours-v5-reader.json` is the band keep-set: the same v5
+run cut at the boundary the reader's lowest band applies (363 citations against
+the panel payloads' ~3,600). The reader (`site/spec-reader/`) renders nothing
+below that cut in the first place, so the keep-set is exactly what it can show;
+the walker holds the two together -- `engine/verify-reader-test.mjs` walks the
+reader's default state and asserts every view anchors exactly the keep-set's
+passage counts, so a drift between the client's band math and the builder's cut
+fails loud in CI. It is also loadable directly: `?data=behaviours-v5-reader`.
 
 A NEW panel run must write a new runlog, and a regenerated payload needs its
 own committed log + passing check -- provenance travels with the data.

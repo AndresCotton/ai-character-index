@@ -14,7 +14,7 @@ The methodological backbone for the coverage side of the index: the rubric that 
 | `mentee-project-archetypes.md` | Provisional (2026-07-21) shape of mentee/SPAR contributions on the evidence layer: four archetypes (A1 audit, A2 reproduction, A3 convergent validity, A4 new-facet eval) plus a per-behaviour suitability map for behaviours 1–13 |
 
 ## Relationships
-`spec-coverage-depth-rubric.md` is the source of the `depth_0_4` values in the frozen `data/coverage.json` and is cited by the preserved strict-reading judgment in `archive/general-welfare-strict-reading/`. `site-copy-how-we-assess-coverage.md` is the working copy synced into `site/methodology.html` (the HTML is the published source). The exploration doc motivates the panel approach implemented in `engine/panel/` and surfaced via `site/llm-panel-review/`. `mentee-project-archetypes.md` maps onto the since-retired sweep pipeline (A1 = the evidence-discovery stages) and the behaviour list in `research/core-behaviour-list.md`.
+`spec-coverage-depth-rubric.md` is the source of the `depth_0_4` values in the frozen `data/coverage.json` and is cited by the preserved strict-reading judgment in `archive/general-welfare-strict-reading/`. `site-copy-how-we-assess-coverage.md` is the working copy synced into `site/methodology.html` (the HTML is the published source). The exploration doc motivates the panel approach implemented in `engine/panel/` and surfaced via `site/spec-reader/`. `mentee-project-archetypes.md` maps onto the since-retired sweep pipeline (A1 = the evidence-discovery stages) and the behaviour list in `research/core-behaviour-list.md`.
 
 ## Dependency map
 ```mermaid
@@ -22,7 +22,7 @@ graph LR
   RUBRIC["spec-coverage-depth-rubric.md"] -->|anchors depth 0-4| COVERAGE["data/coverage.json (frozen)"]
   SITECOPY["site-copy-how-we-assess-coverage.md"] -->|synced into| METHOD["site/methodology.html"]
   RUBRIC -->|published explanation of| SITECOPY
-  EXPLORE["exploration-process-...llm-panel.md"] -->|motivates| PANEL["engine/panel + site/llm-panel-review"]
+  EXPLORE["exploration-process-...llm-panel.md"] -->|motivates| PANEL["engine/panel + site/spec-reader"]
   MENTEE["mentee-project-archetypes.md"] -->|maps to the retired sweep stages| SKILLS[".claude/skills/ (retired)"]
 ```
 
