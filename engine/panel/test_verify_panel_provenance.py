@@ -103,7 +103,7 @@ class TestEndToEnd(unittest.TestCase):
         sha = hashlib.sha256(v.DEFAULT_PAYLOAD.read_bytes()).hexdigest()
         self.assertEqual(
             sha, "f20879b019b8461be8c1fe47e6e7605259371b3dc1810d12470817c434ff1ef5",
-            "committed site/llm-panel-review/data/behaviours.json changed bytes")
+            "committed site/spec-reader/data/behaviours.json changed bytes")
 
     def test_unreadable_panel_config_fails_not_traceback(self):
         # the panel-config.json read must honor the FAIL-not-traceback contract (rc 2),

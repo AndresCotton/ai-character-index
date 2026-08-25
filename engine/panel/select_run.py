@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resolve/verify which payload site/llm-panel-review/ will load.
+"""Resolve/verify which payload site/spec-reader/ will load.
 
 The page resolves its behaviour data in this order (see app.js there):
   1. ?data=<name>          URL-param pin                 (--pin here)

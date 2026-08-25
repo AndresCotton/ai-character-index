@@ -39,7 +39,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS_OUT = ROOT / "site" / "spec-reader" / "data" / "documents.json"
-PANEL_DATA = ROOT / "site" / "llm-panel-review" / "data"
+PANEL_DATA = ROOT / "site" / "spec-reader" / "data"
 SPEC_READER_BUILDER = ROOT / "engine" / "build-spec-reader-data.py"
 PANEL_BUILDER = ROOT / "engine" / "panel" / "build_site_data.py"
 

@@ -33,7 +33,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 ENGINE = ROOT / "engine"
 SITE = ROOT / "site"
-PANEL_DATA = SITE / "llm-panel-review" / "data"
+PANEL_DATA = SITE / "spec-reader" / "data"
 
 USER_SPEC = "acme-spec"
 USER_BEHAVIOUR = "acme-transparency"
@@ -119,10 +119,10 @@ def main():
             emitted = json.loads(prior_manifest.read_text())
             name = emitted["latest"]
             src = PANEL_DATA / name
-            shutil.copy2(src, out_site / "llm-panel-review" / "data" / name)
+            shutil.copy2(src, out_site / "spec-reader" / "data" / name)
             src.unlink()
             entry = next(r for r in emitted["runs"] if r["filename"] == name)
-            (out_site / "llm-panel-review" / "data" / "manifest.json").write_text(
+            (out_site / "spec-reader" / "data" / "manifest.json").write_text(
                 json.dumps({"latest": name, "runs": [entry]}, indent=2))
         finally:
             if saved is not None:

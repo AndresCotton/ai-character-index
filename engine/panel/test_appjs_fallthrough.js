@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Automated guard for the three-tier payload resolution that
- * site/llm-panel-review/app.js implements:  ?data= pin -> manifest "latest" ->
+ * site/spec-reader/app.js implements:  ?data= pin -> manifest "latest" ->
  * shipped behaviours.json.  app.js runs DOM code at module scope, so it cannot be
  * imported directly; instead the resolution functions (dataUrl, payloadName,
  * loadBehaviours) are extracted verbatim from the real file and loadBehaviours is
@@ -13,7 +13,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const APP_JS = path.join(__dirname, "..", "..", "site", "llm-panel-review", "app.js");
+const APP_JS = path.join(__dirname, "..", "..", "site", "spec-reader", "app.js");
 const src = fs.readFileSync(APP_JS, "utf8");
 const lines = src.split("\n");
 

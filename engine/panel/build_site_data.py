@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build site/llm-panel-review/data/behaviours.json from panel verdicts.
+"""Build site/spec-reader/data/behaviours.json from panel verdicts.
 
 Implements the MVP display rules from panel-config.json `display`:
   - only the listed behaviours appear in the sidebar;
@@ -32,9 +32,9 @@ per-lab verdict/depth/verifiedDate cell rows, carried through untouched.
   the 9-point scale: three 0-3 judges per passage)
 
 Output: by DEFAULT each run emits its own timestamped file
-  site/llm-panel-review/data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json
+  site/spec-reader/data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json
 (hyphen-separated: lexicographically sortable = chronological, URL-safe) and updates
-  site/llm-panel-review/data/manifest.json
+  site/spec-reader/data/manifest.json
 ({"latest": <filename>, "runs": [newest-first]}), which the page reads to pick what to
 show. A second build in the same second takes a numeric sequence suffix
 (behaviours-<ts>-02.json, then -03, ... -- zero-padded) so a run is never silently
@@ -72,7 +72,7 @@ MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwe
 SLUGS_EXTRA = {"animal-welfare-impacts": ["general-welfare-impacts-strict"]}   # one run feeds both general-guidelines rows
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
-DATA_DIR = ROOT / "site" / "llm-panel-review" / "data"
+DATA_DIR = ROOT / "site" / "spec-reader" / "data"
 MANIFEST_NAME = "manifest.json"
 FALLBACK_NAME = "behaviours.json"
 # Committed payloads with a documented rebuild path; the byte-identity tests
@@ -175,7 +175,7 @@ def _payload_name(name):
     a behaviour set, so the chain refuses it; only behaviours*.json files are payloads
     here. A non-string (malformed manifest latest) is refused too -- that subsumes the
     old isinstance guard / app.js's `typeof latest === "string"` check. Mirrors
-    payloadName() in site/llm-panel-review/app.js."""
+    payloadName() in site/spec-reader/app.js."""
     if not isinstance(name, str) or not name:
         return False
     if not SAFE_NAME.match(name):
@@ -187,7 +187,7 @@ def _payload_name(name):
 
 
 def resolve_data_name(data_dir, pin=None, manifest=None):
-    """The resolution chain site/llm-panel-review/app.js implements, for CLI tooling:
+    """The resolution chain site/spec-reader/app.js implements, for CLI tooling:
     pin (?data= / --pin) -> manifest latest -> shipped behaviours.json.
     Returns (filename, source) with source one of pin/latest/fallback; a name that
     fails _payload_name (charset, the manifest itself, a non-behaviours file, or a
@@ -470,7 +470,7 @@ def main(argv=None):
             src_entry = by_slug_lab.get((b["slug"], lab), {})
             # post-substitution verdicts per passage in this cell; the role's
             # denominator is the cell's true maximum (maxVerdict x votes), the
-            # same rule site/llm-panel-review/app.js applies at render -- so the
+            # same rule site/spec-reader/app.js applies at render -- so the
             # baked fraction is what the page shows, never an impossible one.
             cell_mv = []
             for (beh, loc), mv in votes.items():

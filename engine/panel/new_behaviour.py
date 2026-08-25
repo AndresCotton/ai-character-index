@@ -142,7 +142,7 @@ def main(argv=None):
         "",
         "View it:",
         "  python3 -m http.server 8080 --directory site",
-        "  then open http://localhost:8080/llm-panel-review/",
+        "  then open http://localhost:8080/spec-reader/",
     ]
     print("\n".join(lines))
 

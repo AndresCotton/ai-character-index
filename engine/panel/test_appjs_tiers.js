@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Automated guard for the tier-band cuts that site/llm-panel-review/app.js
+/* Automated guard for the tier-band cuts that site/spec-reader/app.js
  * applies to panel-scored passages (tierBand, extracted verbatim from the real
  * file). Pins BOTH regimes:
  *
@@ -17,7 +17,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const APP_JS = path.join(__dirname, "..", "..", "site", "llm-panel-review", "app.js");
+const APP_JS = path.join(__dirname, "..", "..", "site", "spec-reader", "app.js");
 const src = fs.readFileSync(APP_JS, "utf8");
 const lines = src.split("\n");
 

@@ -688,14 +688,14 @@ class TestSafeNameAscii(unittest.TestCase):
 
 
 class TestAppJSResolution(unittest.TestCase):
-    """site/llm-panel-review/app.js is the other half of the resolution chain
+    """site/spec-reader/app.js is the other half of the resolution chain
     select_run.py / build_site_data.py implement. These guard it without a browser:
     the three-tier fetch fallthrough drives the REAL app.js loadBehaviours in Node
     against a stubbed loadJSON, and the name-validation check compares the REAL
     app.js payloadName() against _payload_name() live. Both skip (not fail) when the
     `node` binary is absent -- the panel Python suite itself has no JS dependency."""
 
-    APP_JS = HERE.parent.parent / "site" / "llm-panel-review" / "app.js"
+    APP_JS = HERE.parent.parent / "site" / "spec-reader" / "app.js"
     HARNESS = HERE / "test_appjs_fallthrough.js"
 
     def setUp(self):
@@ -1005,7 +1005,7 @@ class TestSubstitutionNote(unittest.TestCase):
     def test_committed_payloads_claim_no_substitution_they_did_not_have(self):
         """A payload may only carry the note when its panel is the one it describes."""
         notes = self._notes()
-        data = HERE.parent.parent / "site" / "llm-panel-review" / "data"
+        data = HERE.parent.parent / "site" / "spec-reader" / "data"
         for path in sorted(data.glob("behaviours*.json")):
             payload = json.loads(path.read_text())
             prov = payload.get("provenance") or {}
@@ -1112,11 +1112,11 @@ class TestMainSmoke(unittest.TestCase):
         # timestamped payload and overwriting manifest.json. Asking for help must
         # not mutate the repo.
         before = sorted(p.name for p in
-                        (HERE.parent.parent / "site" / "llm-panel-review" / "data").iterdir())
+                        (HERE.parent.parent / "site" / "spec-reader" / "data").iterdir())
         r = subprocess.run([sys.executable, str(HERE / "build_site_data.py"), "--help"],
                            capture_output=True, text=True, timeout=120)
         after = sorted(p.name for p in
-                       (HERE.parent.parent / "site" / "llm-panel-review" / "data").iterdir())
+                       (HERE.parent.parent / "site" / "spec-reader" / "data").iterdir())
         self.assertNotEqual(r.returncode, 0)
         self.assertEqual(before, after, "--help wrote files")
         self.assertNotIn("Traceback", r.stdout + r.stderr)
@@ -1203,7 +1203,7 @@ class TestMainSmoke(unittest.TestCase):
         bg = importlib.util.module_from_spec(sp)
         sp.loader.exec_module(bg)
         bg.ROOT = scratch
-        bg.DATA_DIR = scratch / "site" / "llm-panel-review" / "data"
+        bg.DATA_DIR = scratch / "site" / "spec-reader" / "data"
         (bg.DATA_DIR).mkdir(parents=True, exist_ok=True)
         saved = sys.argv
         sys.argv = ["build_site_data.py", "--threshold=4", "--solid-threshold=6",
