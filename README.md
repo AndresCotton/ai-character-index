@@ -1,21 +1,21 @@
-# AI Character Index
+# Spec Reader
 
 A tool for researchers working in the model-spec space. Point a panel of LLM judges at a spec -- Anthropic's constitution, OpenAI's Model Spec, or a document of your own -- and give the panel a behaviour you care about. You get back a passage-level coverage map: every place the spec addresses that behaviour, scored by each judge and quoted verbatim, browsable in a local reader.
 
 What people use it for:
 
 - **Assess coverage.** How well does a spec address a behaviour you are interested in? Is it a defining commitment, a passing mention, or a gap?
-- **Locate the exact text.** Every verdict anchors to a specific passage, so you see precisely *where* in the spec a behaviour is addressed, not just *whether*.
+- **Locate the exact text.** Every verdict anchors to a specific passage, so you see precisely *where* in the spec a behaviour is addressed.
 - **Select passages for downstream work.** Every citation is a stable, re-resolvable locator plus a verbatim quote, in plain JSON -- ready to feed automated adherence evals (for example, Petri scenarios testing whether models actually follow the passages you selected).
 - **Experiment with spec edits.** Register your own spec versions locally, run the panel against each, and compare how coverage shifts as you rewrite.
 
-The repo ships with a complete bench out of the box: ten behaviours judged against both bundled specs by a three-judge frontier panel, so you can explore results before running anything yourself.
+The repo ships with a complete bench out of the box: ten behaviours judged against both bundled specs by a three-judge frontier panel, so you can explore an example with results before running anything yourself.
 
 ## Quickstart
 
 ### 1. What you need
 
-- **Python 3.10+**. The only third-party package is `openai` (`pip install openai`) -- every judge provider is called through the OpenAI-compatible API. You only need it when you run new judging; browsing shipped results needs nothing.
+- **Python 3.10+**. The only third-party package is `openai` (`pip install openai`) -- every judge provider is called through the OpenAI-compatible API.
 - **A browser.** All result surfaces are static local pages.
 - Optional: `pip install jsonschema` for stricter validation when you edit the behaviour registry.
 
@@ -31,60 +31,44 @@ python3 -m http.server 8080 --directory site
 
 Then open:
 
-- **<http://localhost:8080/llm-panel-review/>** -- the panel reader, the main surface for this workflow. Pick a behaviour in the sidebar; every passage the panel scored lights up in the spec text, with the per-judge verdicts on hover.
-- **<http://localhost:8080/spec-reader/>** -- the side-by-side spec reader. Documents render as parallel panes with a resizable boundary; your own registered specs appear here too (see below).
+- **[http://localhost:8080/llm-panel-review/](http://localhost:8080/llm-panel-review/)** -- the panel reader, the main surface for this workflow. Pick a behaviour in the sidebar; every passage the panel scored lights up in the spec text, with the per-judge verdicts on hover.
+- **[http://localhost:8080/spec-reader/](http://localhost:8080/spec-reader/)** -- the side-by-side spec reader. Documents render as parallel panes with a resizable boundary; your own registered specs appear here too (see below).
 
 ### 3. API keys (only for running new judging)
 
-Judges are called through provider APIs. Which keys you need depends on the panel you run; the default frontier panel (`frontier_fast`) needs three:
-
-| Seat | Model | Provider | Env var |
-|---|---|---|---|
-| `sol` | GPT-5.6 Sol | OpenAI | `OPENAI_API_KEY` |
-| `fable` | Claude Fable 5 | Anthropic | `ANTHROPIC_API_KEY` |
-| `deepseek` | DeepSeek V3.2 | DeepInfra | `DEEPINFRA_API_KEY` |
-
-Two useful alternatives:
-
-- **One key instead of three:** set `OPENROUTER_API_KEY` and any seat whose native key is absent is routed through its OpenRouter mirror automatically.
-- **A two-cent test run:** the `itest` panel is a single cheap judge (DeepInfra key) for checking your setup end to end before spending on the frontier panel.
-
-**Where keys go:** either export them in your shell, or put them in a `.env` file at `engine/panel/.env` (gitignored -- it never leaves your machine):
-
 ```sh
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
-DEEPINFRA_API_KEY=...
+cp engine/panel/.env.example engine/panel/.env
 ```
 
-`engine/panel/panel-config.json` holds env-var *names* only, never values. Keys are read from the environment first, then the `.env` file.
+Open the copy and paste in one **`OPENROUTER_API_KEY`** -- that is the whole setup: every judge seat routes through its OpenRouter mirror when its native key is absent. Prefer calling a provider directly? The example file lists each native key (OpenAI, Anthropic, DeepInfra for the default panel) and the seat it powers; set any of them and those seats switch to the native route. `.env` is gitignored and never leaves your machine; a variable exported in your shell wins over the file.
 
 ## Add a new behaviour
 
-A behaviour is one entry in the registry, `data/behaviours.json`. Add yours with `"set": "user"`:
+One command registers a behaviour and prints exactly what to run next:
+
+```sh
+python3 engine/panel/new_behaviour.py bribery-resistance \
+    --name="Bribery resistance" \
+    --definition="The model should not change its behaviour in response to offers of payment, reward, or favours, and should not solicit them."
+```
+
+- `--definition=` is the field that matters most: the statement the judges score against, passed verbatim. Write it the way you would brief a careful human reviewer.
+- Optional flags: `--facet="..."` (repeatable; clarifying sentences added to the judge prompt), `--scope="..."` (what this behaviour is *not* -- sharpens verdicts on behaviours that border related ones), `--group="..."` (sidebar label).
+
+Under the hood a behaviour is one JSON entry in the registry, `data/behaviours.json`, keyed by its slug -- the behaviour's identity everywhere (run commands, log rows, the sidebar):
 
 ```json
 "bribery-resistance": {
   "name": "Bribery resistance",
   "set": "user",
   "numeric_id": 1,
-  "group": "My experiments",
+  "group": null,
   "definition": "The model should not change its behaviour in response to offers of payment, reward, or favours, and should not solicit them.",
   "facets": []
 }
 ```
 
-The fields:
-
-- **key** (`bribery-resistance`) -- the behaviour's slug, its identity everywhere: run commands, log rows, build flags, the sidebar.
-- **`name`** -- the title, shown to the judges and in the reader sidebar.
-- **`definition`** -- the behaviour statement the judges score against, passed verbatim. Required and non-empty; this is the field that matters most, so write it the way you would brief a careful human reviewer.
-- **`facets`** -- optional clarifying sentences, appended to the judge prompt as clarifications. Empty list is fine.
-- **`group`** -- sidebar grouping label; anything you like.
-- **`numeric_id`** -- unique within the `user` set (start at 1).
-- **`set`** -- `"user"` marks it as yours, separate from the project's own lists.
-
-The judge prompt also has an optional **scope** field ("what this behaviour is *not*"), which sharpens verdicts on behaviours that border on related ones. The registry shape cannot carry it; if you want it, add your entry to `engine/panel/behaviours.json` instead, in that file's shape (`title` / `query` / `clarifications` / `boundary` -- see the existing entries), and drop the `--registry=` flag from the run command below. Keep the `data/behaviours.json` row either way; the viewer build reads it.
+The registrar refuses an existing slug and picks the next free `numeric_id`; `--scope` additionally writes the judge-prompt entry in `engine/panel/behaviours.json`, the one field the registry shape cannot carry. You can equally write these entries by hand following the shipped ones -- or ask a coding agent to: the repo carries agent context (`AGENTS.md`), so telling an agent in this clone to "register a behaviour about X and run the panel" follows exactly these steps.
 
 ### Run the panel
 
@@ -97,26 +81,70 @@ python3 engine/panel/whole_doc.py bribery-resistance constitution,model-spec fro
 
 - The three positional arguments are comma-separated lists: behaviours, specs, and judges (a panel name from `engine/panel/panel-config.json`, or individual model tags like `sol,fable`).
 - Verdicts append to the runlog as they arrive. The run is **resume-safe**: rerun the same command after a crash or provider failure and finished cells are skipped.
+- Registered with `--scope`? Run *without* the `--registry=` flag (the registrar's printed command already does): the judge entry then comes from `engine/panel/behaviours.json`, which carries the scope.
 - Cost: a whole-spec prompt is roughly 65k tokens, so one behaviour x both specs x the three-seat frontier panel (six calls) lands in the low single-digit dollars. Swap `frontier_fast` for `itest` to rehearse the same flow for about two cents.
 
-### Build the viewer payload and look at the results
+### Visualize the results
+
+Two commands turn the runlog into the reader page. First build the viewer payload:
 
 ```sh
 python3 engine/panel/build_site_data.py --runlog=engine/panel/runlog-user.jsonl \
     --rubric=v3w --panel=frontier_fast --behaviours=bribery-resistance
 ```
 
-This writes a timestamped payload under `site/llm-panel-review/data/` (local to your clone, gitignored) and updates a manifest; the panel reader loads the newest run first, so just refresh the browser. Notes:
+Then serve the site (skip if the quickstart server is still running) and open the panel reader:
+
+```sh
+python3 -m http.server 8080 --directory site
+```
+
+**[http://localhost:8080/llm-panel-review/](http://localhost:8080/llm-panel-review/)** now loads your run first -- the build wrote a timestamped payload under `site/llm-panel-review/data/` (local to your clone, gitignored) and pointed the page's manifest at it, so a plain refresh is enough. Your behaviour is in the sidebar; every passage the panel scored is highlighted in the spec text. Notes:
 
 - `--rubric=v3w` is what fresh `whole_doc.py` runs stamp their rows with (the shipped bench was produced with the newer v5 rubric; the builder lists the valid values if you pass a mismatched one). The reader adapts its score tiers to whichever scale the payload carries.
-- `--behaviours=` lists what appears in the sidebar; every slug must exist in the registry.
+- `--behaviours=` lists what appears in the sidebar; every slug must exist in the registry. Judged on a different panel (`itest`, say)? Mirror it in `--panel=`.
 - To get back to the shipped bench, open the page with `?data=behaviours.json`; `python3 engine/panel/select_run.py` shows the run ledger and what the page will load.
 
 ### Reading the scores
 
 Each judge scores each passage on a small relevance scale; a passage's score is the sum across the panel. The reader buckets scores into three tiers -- **defining** (the passage is squarely about the behaviour), **core**, and **related** -- with the cutoffs derived from the panel size and scale. By default the page shows defining + core; toggle the related tier on for the wider penumbra.
 
-## Bring your own spec (and spec versions)
+## Selecting passages for downstream work
+
+The passages you saw in the reader live in the payload the build just wrote: `site/llm-panel-review/data/behaviours-<timestamp>.json` (the shipped bench is `behaviours.json` next to it). It is plain JSON -- each behaviour carries a coverage record per document, and each record's `passages` array is the extraction target: `locator`, the verbatim `quote`, the per-judge `verdicts`, and the summed `score`. Pull out what you selected with a few lines:
+
+```sh
+python3 - <<'EOF'
+import json
+payload = json.load(open("site/llm-panel-review/data/behaviours.json"))  # or your run's file
+for b in payload["behaviours"]:
+    for doc, record in b["coverage"].items():
+        for p in record["passages"]:
+            if p["score"] >= 6:            # keep the top tiers; lower the bar to widen
+                print(b["slug"], "|", doc, "|", p["score"], "|", p["locator"])
+EOF
+```
+
+Swap the `print` for whatever your next step needs -- locator + quote pairs are exactly what an automated adherence eval (a Petri scenario, say) takes as its target passages.
+
+What makes the selection durable is the **locator**: every citation follows the grammar in [`specs/CITATION.md`](specs/CITATION.md):
+
+```
+spec@version > section > ¶paragraph sentence
+```
+
+`engine/spec-cite/cite.py` is the resolver, and the contract is byte-exact: a locator always resolves to the same text or fails loudly, so a selected passage stays a stable reference rather than a copy-paste that drifts.
+
+```sh
+python3 engine/spec-cite/cite.py outline model-spec                              # section tree
+python3 engine/spec-cite/cite.py show "constitution > Being honest"              # numbered ¶/sentences
+python3 engine/spec-cite/cite.py resolve "model-spec@2025-12-18 > #avoid_sycophancy > ¶2 s1"
+python3 engine/spec-cite/cite.py find model-spec "some remembered phrase"        # text -> locator
+```
+
+## Other features
+
+### Bring your own spec (and spec versions)
 
 Register any document you want to assess -- including your own working edits of a lab's spec -- in a local manifest at `specs/user/specs.json`:
 
@@ -149,24 +177,14 @@ The second command regenerates the shared document payload (again local to your 
 
 **Iterating on edits:** save each revision as a new dated version in the manifest, run the panel against each version, and compare the coverage maps. Locators pin the version (`my-spec@2026-08-24 > ...`), so citations into older drafts keep resolving as your document evolves.
 
-## Selecting passages for downstream work
+### Customize the judge prompt
 
-Every citation the tool produces is a **locator** in the grammar defined in [`specs/CITATION.md`](specs/CITATION.md):
+The full prompt every judge receives is composed in [`engine/panel/harness.py`](engine/panel/harness.py) from named pieces, so there is one place to edit:
 
-```
-spec@version > section > ¶paragraph sentence
-```
+- `SYSTEM_V3_TEMPLATE` -- the rubric itself: the scoring instructions, filled through `render_system_v3()` with an independence clause (`INDEPENDENCE_WHOLE_DOC`) and an output format (`OUTPUT_FORMAT_FULL` / `OUTPUT_FORMAT_SPARSE`).
+- `BEHAVIOUR_TEMPLATE_V3` -- the per-behaviour block: how your title, definition, clarifications, and scope are laid out in the user message.
 
-`engine/spec-cite/cite.py` is the resolver, and the contract is byte-exact: a locator always resolves to the same text or fails loudly.
-
-```sh
-python3 engine/spec-cite/cite.py outline model-spec                              # section tree
-python3 engine/spec-cite/cite.py show "constitution > Being honest"              # numbered ¶/sentences
-python3 engine/spec-cite/cite.py resolve "model-spec@2025-12-18 > #avoid_sycophancy > ¶2 s1"
-python3 engine/spec-cite/cite.py find model-spec "some remembered phrase"        # text -> locator
-```
-
-The panel payloads under `site/llm-panel-review/data/` are plain JSON: each citation carries its locator, the exact quote, and the per-judge verdicts behind the score. So the selection workflow is: browse in the reader, decide which tiers or passages you care about, then script over the payload to pull the locator + quote pairs into your eval pipeline -- for example, as the target passages of automated model-spec-adherence evals in Petri. Because locators re-resolve exactly, your selection stays a stable reference rather than a copy-paste that drifts.
+Two hygiene rules when you experiment with the wording. First, the shipped prompt text is pinned by tests as a provenance guarantee, so `test_panel.py` will flag any in-place edit -- that is deliberate, not breakage. Second, give modified-prompt runs their own runlog file (`--runlog=engine/panel/runlog-myprompt.jsonl`) and build payloads only from that file, so verdicts produced by different prompts never mix in one dataset.
 
 ## Sanity checks
 
@@ -174,22 +192,19 @@ All offline, no keys:
 
 ```sh
 python3 engine/panel/test_panel.py               # unit tests for the judging pipeline
+python3 engine/panel/test_new_behaviour.py       # the behaviour registrar's tests
 python3 engine/panel/verify_panel_provenance.py  # shipped payload rebuilds from its committed runlog
 python3 engine/validate_data.py                  # schema-check data/, incl. your registry edits
 ```
 
 ## Where things live
 
-| Path | What it is |
-|---|---|
-| [`engine/panel/`](engine/panel/) | The judging pipeline: config, prompts, run scripts, payload builder ([README](engine/panel/README.md)) |
-| [`engine/spec-cite/cite.py`](engine/spec-cite/cite.py) | The citation resolver behind every quote |
-| [`specs/`](specs/) | Bundled spec mirrors and the locator grammar ([`CITATION.md`](specs/CITATION.md)); `specs/user/` is your local manifest |
-| [`data/behaviours.json`](data/behaviours.json) | The behaviour registry -- where your behaviours go |
-| [`site/`](site/) | The local reader surfaces |
+| Path                                                    | What it is                                                                                                                 |
+| ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| [`engine/panel/`](engine/panel/)                       | The judging pipeline: config, prompts, run scripts, payload builder ([README](engine/panel/README.md))                      |
+| [`engine/spec-cite/cite.py`](engine/spec-cite/cite.py) | The citation resolver behind every quote                                                                                   |
+| [`specs/`](specs/)                                     | Bundled spec mirrors and the locator grammar ([`CITATION.md`](specs/CITATION.md)); `specs/user/` is your local manifest |
+| [`data/behaviours.json`](data/behaviours.json)         | The behaviour registry -- where your behaviours go                                                                         |
+| [`site/`](site/)                                       | The local reader surfaces                                                                                                  |
 
 The remaining directories (`research/`, `methodology/`, `docs/`, `design/`, and friends) are the project's own editorial records and maintenance; none of them are needed to use the tool.
-
-## Questions
-
-Something broken, unclear, or wrong: open an issue -- or use the contact link on the Issues page to reach Andrés directly. We read everything.
