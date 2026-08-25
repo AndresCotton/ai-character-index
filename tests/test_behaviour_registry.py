@@ -4,7 +4,6 @@ The registry (data/behaviours.json) carries every behaviour in every set, keyed
 by slug. The derived constants regenerate from it via
 engine/generate_behaviour_constants.py:
 
-  - GROUPS in site/spec-reader/app.js
   - BEHAVIOURS in engine/build-spec-reader-data.py
   - titles in engine/panel/behaviours.json (keys are registry slugs, committed
     order preserved; the judge prompts themselves stay curated)
@@ -86,7 +85,8 @@ class TestRegistryStructure(unittest.TestCase):
                 self.assertEqual(slugs_by_id.get(numeric_id), slug)
 
     def test_every_index_behaviour_has_a_group(self):
-        # GROUPS renders the whole index set; a group-less entry cannot appear.
+        # BEHAVIOURS renders every covered index entry's group as its
+        # category; a group-less entry cannot appear.
         for slug, entry in self.registry.items():
             if entry["set"] == "index":
                 with self.subTest(slug=slug):
@@ -120,16 +120,6 @@ class TestDerivedConstantsMatchRegistry(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.registry = gbc.load_registry(ROOT)
-
-    def test_groups_block_matches_app_js(self):
-        app_js = (ROOT / "site" / "spec-reader" / "app.js").read_text(encoding="utf-8")
-        start = app_js.index("const GROUPS = [")
-        end = app_js.index("\n];\n", start) + len("\n];\n")
-        self.assertEqual(
-            app_js[start:end],
-            gbc.render_groups_js(self.registry) + "\n",
-            "GROUPS in site/spec-reader/app.js drifted from the registry",
-        )
 
     def test_behaviours_block_matches_builder(self):
         builder = (ROOT / "engine" / "build-spec-reader-data.py").read_text(encoding="utf-8")
@@ -182,7 +172,6 @@ class ScratchTreeTestCase(unittest.TestCase):
         "data/behaviours.json",
         "data/coverage.json",
         "data/schema/behaviours.schema.json",
-        "site/spec-reader/app.js",
         "engine/build-spec-reader-data.py",
         "engine/panel/panel-config.json",
         "engine/panel/behaviours.json",
@@ -236,16 +225,16 @@ class TestDriftIsCaught(ScratchTreeTestCase):
         self.mutate_registry(mutate)
         result = self.run_check()
         self.assertEqual(result.returncode, 1)
-        self.assertIn("app.js", result.stdout + result.stderr)
+        self.assertIn("build-spec-reader-data.py", result.stdout + result.stderr)
 
-    def test_editing_groups_without_the_registry_fails(self):
+    def test_editing_behaviours_without_the_registry_fails(self):
         # The exact failure mode: a hand-edit to the derived copy only.
-        path = self.tmp / "site" / "spec-reader" / "app.js"
+        path = self.tmp / "engine" / "build-spec-reader-data.py"
         text = path.read_text(encoding="utf-8")
-        path.write_text(text.replace('[2, "Calibration"]', '[2, "Model calibration"]'), encoding="utf-8")
+        path.write_text(text.replace('"name": "Calibration",', '"name": "Model calibration",'), encoding="utf-8")
         result = self.run_check()
         self.assertEqual(result.returncode, 1)
-        self.assertIn("app.js", result.stdout + result.stderr)
+        self.assertIn("build-spec-reader-data.py", result.stdout + result.stderr)
 
     def test_bool_numeric_id_is_rejected(self):
         # bool is an int subclass in Python (True == 1), so a JSON `true` would
@@ -273,7 +262,7 @@ class TestDriftIsCaught(ScratchTreeTestCase):
 
     def test_entry_missing_group_fails_loudly(self):
         # Before the loader validated the full schema-required set, a missing
-        # `group` on an index entry died as a bare KeyError in render_groups_js
+        # `group` on an index entry died as a bare KeyError in a renderer
         # instead of being reported against the slug.
         def mutate(registry):
             del registry["calibration"]["group"]
@@ -327,10 +316,10 @@ class TestWriteModeRoundTrip(ScratchTreeTestCase):
         }
 
         # Disturb a derived constant, then let write mode restore it.
-        app_js = self.tmp / "site" / "spec-reader" / "app.js"
-        app_js.write_text(
-            app_js.read_text(encoding="utf-8").replace(
-                '[2, "Calibration"]', '[2, "DRIFT"]'
+        builder = self.tmp / "engine" / "build-spec-reader-data.py"
+        builder.write_text(
+            builder.read_text(encoding="utf-8").replace(
+                '"name": "Calibration",', '"name": "DRIFT",'
             ),
             encoding="utf-8",
         )

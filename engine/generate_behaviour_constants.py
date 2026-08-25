@@ -5,17 +5,13 @@ data/behaviours.json is the behaviour-identity registry (Decision 1, 2026-08-18)
 one entry per behaviour across all sets, keyed by slug. This script rewrites the
 derived constants that must stay in lockstep with it:
 
-  1. GROUPS               site/spec-reader/app.js
-                          All index-set entries, listed under their group in
-                          numeric_id order. Group order = order of first
-                          appearance by numeric_id.
-  2. BEHAVIOURS           engine/build-spec-reader-data.py
+  1. BEHAVIOURS           engine/build-spec-reader-data.py
                           The index-set entries whose numeric_id has a record in
                           data/coverage.json (today ids 1-3) -- exactly the set
                           the builder can render. A coverage record with no
                           registry definition is an error; a definition with no
                           coverage record is stored but not published.
-  3. titles               engine/panel/behaviours.json
+  2. titles               engine/panel/behaviours.json
                           The judge prompts stay curated here; their keys are
                           registry slugs (the panel runlogs are keyed by the
                           same slugs) and every key must be one -- a judge
@@ -139,43 +135,6 @@ def coverage_ids(root: Path) -> set:
 # Renderers (pure: registry -> constant text)
 # ---------------------------------------------------------------------------
 
-def js_string(value: str) -> str:
-    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
-    return '"' + escaped.replace("\u2028", "\\u2028").replace("\u2029", "\\u2029") + '"'
-
-
-def render_groups_js(registry: dict) -> str:
-    """The `const GROUPS = [...];` block for site/spec-reader/app.js."""
-    entries = index_entries(registry)
-    groups = []  # (name, [(numeric_id, name), ...]) in first-appearance order
-    for slug, entry in entries:
-        group = entry["group"]
-        if not group:
-            sys.exit(
-                f"registry: index behaviour {slug} has no group -- every index "
-                f"behaviour must appear under a GROUPS category"
-            )
-        if not groups or groups[-1][0] != group:
-            groups.append((group, []))
-        groups[-1][1].append((entry["numeric_id"], entry["name"]))
-    # first-appearance order by numeric_id means groups are already ordered; a
-    # group that reappeared later would split the sidebar, so forbid it
-    names = [name for name, _ in groups]
-    if len(names) != len(set(names)):
-        sys.exit("registry: index groups are not contiguous in numeric_id order")
-    lines = ["const GROUPS = ["]
-    for name, behaviours in groups:
-        lines.append("  {")
-        lines.append(f"    name: {js_string(name)},")
-        lines.append("    behaviours: [")
-        for numeric_id, behaviour_name in behaviours:
-            lines.append(f"      [{numeric_id}, {js_string(behaviour_name)}],")
-        lines.append("    ],")
-        lines.append("  },")
-    lines.append("];")
-    return "\n".join(lines)
-
-
 def py_string_parts(definition: str) -> list:
     """Greedy word-wrap into quoted parts of at most DEFINITION_WIDTH chars,
     trailing space included (the earlier part keeps the space at a split). The
@@ -265,16 +224,12 @@ def regenerate(root: Path) -> dict:
     """Returns {repo-relative path: new full text} for every derived file."""
     registry = load_registry(root)
 
-    app_js = (root / "site" / "spec-reader" / "app.js").read_text(encoding="utf-8")
-    new_app_js = _splice(app_js, "const GROUPS = [", "\n];\n", render_groups_js(registry) + "\n")
-
     builder = (root / "engine" / "build-spec-reader-data.py").read_text(encoding="utf-8")
     new_builder = _splice(builder, "BEHAVIOURS = [", "\n]\n", render_behaviours_py(registry, coverage_ids(root)) + "\n")
 
     new_panel = render_panel_behaviours(root, registry)
 
     return {
-        "site/spec-reader/app.js": new_app_js,
         "engine/build-spec-reader-data.py": new_builder,
         "engine/panel/behaviours.json": new_panel,  # written without trailing newline
     }
@@ -313,7 +268,7 @@ def main(argv=None) -> int:
                   "run `python3 engine/generate_behaviour_constants.py` and commit the result",
                   file=sys.stderr)
             return 1
-        print("OK: GROUPS, BEHAVIOURS, and the panel judge-prompt titles match data/behaviours.json")
+        print("OK: BEHAVIOURS and the panel judge-prompt titles match data/behaviours.json")
         return 0
     return 0
 

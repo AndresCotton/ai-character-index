@@ -49,7 +49,10 @@ class TestBuildersReproduceCommittedPayloads(unittest.TestCase):
 
     def _assert_reproduces(self, builder_path, module_name, committed):
         if not committed.exists():
-            self.skipTest(f"{committed} not present")
+            self.fail(
+                f"{committed} not present -- a moved or deleted payload must "
+                "not silently drop the byte-identity guard"
+            )
         committed_bytes = committed.read_bytes()
         mod = _load_module(module_name, builder_path)
         # Redirect OUTPUT into an in-repo scratch dir (the builders print

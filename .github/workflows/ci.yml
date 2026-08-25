@@ -7,7 +7,7 @@ name: CI
 #               decoupling pins), the data gate, byte-identity rebuilds,
 #               and the node app.js harnesses. Stdlib python + node only.
 #
-#   browser  -- the three Playwright walkers (readers + panel feature
+#   browser  -- the two Playwright walkers (reader + panel feature
 #               harness x bundled and user-extended data), which need a
 #               real Chrome.
 #
@@ -88,10 +88,8 @@ jobs:
       - name: Install Chrome
         uses: browser-actions/setup-chrome@v1
 
-      - name: Reader view walkers
-        run: |
-          node engine/verify-spec-reader.mjs
-          node engine/verify-reader-test.mjs
+      - name: Reader view walker
+        run: node engine/verify-reader-test.mjs
 
       - name: Panel feature harness (bundled + user-extended)
         run: node engine/verify-panel-features.mjs

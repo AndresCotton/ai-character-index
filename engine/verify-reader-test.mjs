@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// Verify the reader test bench (site/spec-reader-test/) against its payload --
+// Verify the spec reader (site/spec-reader/) against its behaviour payload --
 // the v5 9-point panel run pre-filtered to the panel's band boundary
 // (site/llm-panel-review/data/behaviours-v5-reader.json, the same file the page
-// fetches) -- and the spec text it shares with the published reader. Every
-// behaviour x spec view must anchor exactly its published passage count, with no
+// fetches) -- and the spec text it renders. Every behaviour x spec view must
+// anchor exactly its published passage count, the nav must be intact and every
+// nav link must resolve, the pinned BEHAVIOURS_URL must return 200, with no
 // unresolved-anchor warnings and no console errors; with an empty behaviour
 // set, both specs must render in full with nothing highlighted.
 // Usage: node engine/verify-reader-test.mjs   (requires Chrome installed)
@@ -36,7 +37,7 @@ const server = createServer(async (request, response) => {
   }
 });
 await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
-const base = `http://127.0.0.1:${server.address().port}/spec-reader-test/`;
+const base = `http://127.0.0.1:${server.address().port}/spec-reader/`;
 
 const behaviours = JSON.parse(
   await readFile(join(SITE, "llm-panel-review/data/behaviours-v5-reader.json"), "utf8"),
@@ -46,13 +47,13 @@ const documents = JSON.parse(
 ).documents;
 
 /* The two payloads above are built by different scripts and can legally diverge.
- * The bench set carries no document list of its own, so the list comes from the
- * published reader -- which grows a document the moment a user registers a spec
- * (build-spec-reader-data.py --user-manifest=), while the bench behaviours still
- * cover the bundled pair. A document the bench says nothing about anchors nothing:
- * assert that, rather than dereferencing a coverage record that was never written.
- * On the committed two-document tree every document has a record, so this is a
- * no-op. */
+ * The behaviour payload carries no document list of its own, so the list comes
+ * from the spec text payload -- which grows a document the moment a user
+ * registers a spec (build-spec-reader-data.py --user-manifest=), while the
+ * behaviour set still covers the bundled pair. A document the behaviour set says
+ * nothing about anchors nothing: assert that, rather than dereferencing a
+ * coverage record that was never written. On the committed two-document tree
+ * every document has a record, so this is a no-op. */
 const coveredPassages = (behaviour, id) => behaviour.coverage[id]?.passages ?? [];
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
@@ -130,8 +131,45 @@ async function expectView(url, expected, label) {
     + (seen.behaviour !== expected.behaviour ? `  behaviour: ${seen.behaviour}` : ""));
 }
 
+// Navigation: the promoted reader is the site's spec-reader surface. The
+// deleted index-reader walker carried the only nav coverage -- keep it: the
+// expected links must be present and every one must resolve (any #fragment to
+// a real id in its target).
+await readView(base);
+const expectedNav = ["../", "./", "../methodology.html", "../#about"];
+const navHrefs = await page.evaluate(
+  () => [...document.querySelectorAll('nav[aria-label="Primary navigation"] a')].map(a => a.getAttribute("href")),
+);
+const missingNav = expectedNav.filter(href => !navHrefs.includes(href));
+report(missingNav.length === 0, "navigation presence",
+  missingNav.length ? `missing nav link(s): ${missingNav.join(", ")}` : "all expected nav links present");
+const navIssues = await page.evaluate(async expected => {
+  const issues = [];
+  for (const href of expected) {
+    const url = new URL(href, location.href);
+    const response = await fetch(url.pathname);
+    if (!response.ok) { issues.push(`${href} -> HTTP ${response.status}`); continue; }
+    if (!url.hash) continue;
+    const id = decodeURIComponent(url.hash.slice(1));
+    const target = url.pathname === location.pathname
+      ? document
+      : new DOMParser().parseFromString(await response.text(), "text/html");
+    if (!target.getElementById(id)) issues.push(`${href} -> no element #${id}`);
+  }
+  return issues;
+}, expectedNav);
+report(navIssues.length === 0, "navigation links resolve",
+  navIssues.length ? navIssues.join("; ") : "index, self-link, methodology, About");
+
+// BEHAVIOURS_URL is pinned to a literal filename (the reader payload is
+// band-filtered, so it must not resolve through the panel's manifest): a moved
+// or renamed payload must fail loud here instead of silently emptying the menu.
+const behavioursStatus = await page.evaluate(async () =>
+  (await fetch("../llm-panel-review/data/behaviours-v5-reader.json")).status);
+report(behavioursStatus === 200, "BEHAVIOURS_URL returns 200", `HTTP ${behavioursStatus}`);
+
 if (behaviours.length === 0) {
-  // The bench is empty: the point is that both specs are fully readable and untouched.
+  // The behaviour set is empty: the point is that both specs are fully readable and untouched.
   for (const document of documents) {
     const seen = await readView(`${base}?spec=${document.id}`);
     const panel = seen.panels[0];

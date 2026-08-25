@@ -5,8 +5,8 @@
 // behaviour, staged into a scratch copy of site/ -- the repo itself is
 // restored untouched). Covers the panel's URL/DOM-state features and the
 // reader's user-data path; interactive-only features (resizer drags, focus
-// toggles, scroll behaviour) stay manual (Tier 2). The bench surface is
-// covered by verify-reader-test.mjs and is not repeated here.
+// toggles, scroll behaviour) stay manual (Tier 2). The reader's passage
+// anchoring is covered by verify-reader-test.mjs and is not repeated here.
 //
 // Usage:  node engine/verify-panel-features.mjs   (needs Chrome + python3)
 // Exits 0 when every check passes, 1 otherwise.
@@ -40,6 +40,8 @@ const USER_SPEC = stageInfo.userSpec;          // acme-spec
 const PAYLOAD = stageInfo.payload;             // behaviours-<ts>.json
 const userDocs = JSON.parse(readFileSync(join(SITE, "spec-reader/data/documents.json"), "utf8"));
 const userPayload = JSON.parse(readFileSync(join(SITE, "llm-panel-review/data", PAYLOAD), "utf8"));
+// The reader's behaviour payload: pinned literal filename, untouched by staging.
+const readerBehaviours = JSON.parse(readFileSync(join(SITE, "llm-panel-review/data/behaviours-v5-reader.json"), "utf8")).behaviours;
 
 // --- Serve the staged site ----------------------------------------------------
 const server = createServer(async (req, res) => {
@@ -407,9 +409,9 @@ await page.waitForTimeout(250);
 }
 {
   // Bundled regression: a published view still anchors exactly its passages.
-  const b = userDocs.behaviours.find(x => x.slug === "no-sycophancy");
+  const b = readerBehaviours.find(x => x.slug === "helpfulness");
   const expected = b.coverage.anthropic.passages.length;
-  await load(readerBase, "?behavior=no-sycophancy&spec=anthropic");
+  await load(readerBase, "?behavior=helpfulness&spec=anthropic");
   const seen = await page.evaluate(() =>
     document.querySelectorAll("[data-passage-id]").length);
   check(seen === expected, "bundled view unregressed by the user-extended documents.json",
@@ -498,7 +500,7 @@ await panelUrl("");
 
 // =============================================================================
 console.log("== Reader: interactions (Tier-2) ==");
-await load(readerBase, "?behavior=no-sycophancy");
+await load(readerBase, "?behavior=helpfulness");
 await page.click("#compare-toggle");
 await page.waitForTimeout(250);
 {
@@ -509,7 +511,7 @@ await page.waitForTimeout(250);
   check(out.pressed === "true" && out.comparing,
     "reader compare toggle switches to the compare view");
 }
-await load(readerBase, "?behavior=no-sycophancy&compare=1");
+await load(readerBase, "?behavior=helpfulness&compare=1");
 {
   const out = await page.evaluate(() => ({
     panels: document.querySelectorAll(".document-panel").length,
@@ -519,7 +521,7 @@ await load(readerBase, "?behavior=no-sycophancy&compare=1");
     "reader compare renders the chosen two documents",
     `${out.panels} panels, ${out.resizers} resizers`);
 }
-await load(readerBase, "?behavior=no-sycophancy");
+await load(readerBase, "?behavior=helpfulness");
 {
   const counter = () => page.evaluate(() =>
     document.querySelector("#passage-count").textContent.trim());
