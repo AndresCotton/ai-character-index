@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 // Verify the spec reader (site/spec-reader/) against its behaviour payload --
-// the v5 9-point panel run pre-filtered to the panel's band boundary
-// (site/llm-panel-review/data/behaviours-v5-reader.json, the same file the page
-// fetches) -- and the spec text it renders. Every behaviour x spec view must
-// anchor exactly its published passage count, the nav must be intact and every
-// nav link must resolve, the pinned BEHAVIOURS_URL must return 200, with no
-// unresolved-anchor warnings and no console errors; with an empty behaviour
-// set, both specs must render in full with nothing highlighted.
+// the shipped panel run it resolves by default (its own data/behaviours.json:
+// the resolution chain is ?data= pin -> data/manifest.json latest -> fallback,
+// and the committed state carries neither a pin nor a manifest) -- and the
+// spec text it renders. The client's band math renders nothing below the
+// related cut, so the view at all tiers shows exactly the band keep-set: the
+// committed data/behaviours-v5-reader.json (the same v5 run cut at that
+// boundary) is the oracle for every expected passage count here. Every
+// behaviour x spec view must anchor exactly its keep-set count, the nav must
+// be intact and every nav link must resolve, the shipped fallback payload
+// must return 200, with no unresolved-anchor warnings and no console errors;
+// with an empty behaviour set, both specs must render in full with nothing
+// highlighted.
 // Usage: node engine/verify-reader-test.mjs   (requires Chrome installed)
 
 import { createServer } from "node:http";
@@ -25,6 +30,11 @@ const MIME = {
   ".png": "image/png",
 };
 
+/* Every 404 this server emits, audited at the end: the committed state has no
+ * manifest, so the reader's manifest fetch is EXPECTED to 404 (it falls through
+ * to the shipped data) -- but Chrome logs each one as a console error, and so
+ * would a genuinely moved file. The server-side audit tells the two apart. */
+const missingPaths = [];
 const server = createServer(async (request, response) => {
   let path = normalize(decodeURIComponent(new URL(request.url, "http://x").pathname));
   if (path.endsWith("/")) path += "index.html";
@@ -33,6 +43,7 @@ const server = createServer(async (request, response) => {
     response.writeHead(200, { "content-type": MIME[extname(path)] || "application/octet-stream" });
     response.end(body);
   } catch {
+    missingPaths.push(path);
     response.writeHead(404).end("not found");
   }
 });
@@ -40,8 +51,14 @@ await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
 const base = `http://127.0.0.1:${server.address().port}/spec-reader/`;
 
 const behaviours = JSON.parse(
-  await readFile(join(SITE, "llm-panel-review/data/behaviours-v5-reader.json"), "utf8"),
+  await readFile(join(SITE, "spec-reader/data/behaviours.json"), "utf8"),
 ).behaviours;
+/* The band keep-set: same v5 run, cut at the boundary the client's lowest band
+ * applies. What the reader can render IS this set, so its coverage is the
+ * passage-count oracle for every view below. */
+const keepSet = new Map(JSON.parse(
+  await readFile(join(SITE, "spec-reader/data/behaviours-v5-reader.json"), "utf8"),
+).behaviours.map(behaviour => [behaviour.slug, behaviour]));
 const documents = JSON.parse(
   await readFile(join(SITE, "spec-reader/data/documents.json"), "utf8"),
 ).documents;
@@ -55,6 +72,10 @@ const documents = JSON.parse(
  * coverage record that was never written. On the committed two-document tree
  * every document has a record, so this is a no-op. */
 const coveredPassages = (behaviour, id) => behaviour.coverage[id]?.passages ?? [];
+/* The keep-set coverage for a behaviour slug; a behaviour the keep-set does not
+ * carry renders nothing (the two payloads list the same ten behaviours, so this
+ * is a defensive default, not a live case). */
+const renderable = (slug, id) => coveredPassages(keepSet.get(slug) ?? { coverage: {} }, id);
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const page = await browser.newPage();
@@ -77,6 +98,10 @@ function report(ok, label, detail) {
 }
 
 async function readView(url) {
+  /* Every view walks with all three bands on so the rendered anchors must equal
+   * the keep-set count; the default view keeps the related band collapsed (and
+   * verify-reader-features.mjs covers the band cuts). */
+  url += (url.includes("?") ? "&" : "?") + "tiers=defining,core,related";
   await page.goto(url, { waitUntil: "networkidle" });
   await page.waitForFunction(
     () => !document.querySelector("#passage-count").textContent.startsWith("Loading"),
@@ -131,10 +156,10 @@ async function expectView(url, expected, label) {
     + (seen.behaviour !== expected.behaviour ? `  behaviour: ${seen.behaviour}` : ""));
 }
 
-// Navigation: the promoted reader is the site's spec-reader surface. The
-// deleted index-reader walker carried the only nav coverage -- keep it: the
-// expected links must be present and every one must resolve (any #fragment to
-// a real id in its target).
+// Navigation: the reader is the site's spec-reader surface. The deleted
+// index-reader walker carried the only nav coverage -- keep it: the expected
+// links must be present and every one must resolve (any #fragment to a real id
+// in its target).
 await readView(base);
 const expectedNav = ["../", "./", "../methodology.html", "../#about"];
 const navHrefs = await page.evaluate(
@@ -161,12 +186,18 @@ const navIssues = await page.evaluate(async expected => {
 report(navIssues.length === 0, "navigation links resolve",
   navIssues.length ? navIssues.join("; ") : "index, self-link, methodology, About");
 
-// BEHAVIOURS_URL is pinned to a literal filename (the reader payload is
-// band-filtered, so it must not resolve through the panel's manifest): a moved
-// or renamed payload must fail loud here instead of silently emptying the menu.
-const behavioursStatus = await page.evaluate(async () =>
-  (await fetch("../llm-panel-review/data/behaviours-v5-reader.json")).status);
-report(behavioursStatus === 200, "BEHAVIOURS_URL returns 200", `HTTP ${behavioursStatus}`);
+// The committed state resolves to the shipped fallback: no ?data= pin, and no
+// manifest (it is gitignored run output). A local manifest would shadow the
+// fallback and silently swap the payload under test, so fail loud on it; and
+// the fallback file itself must serve, or the menu empties.
+const manifestStatus = await page.evaluate(async () =>
+  (await fetch("./data/manifest.json")).status);
+report(manifestStatus === 404, "no manifest shadows the shipped fallback",
+  `HTTP ${manifestStatus}`);
+const fallbackStatus = await page.evaluate(async () =>
+  (await fetch("./data/behaviours.json")).status);
+report(fallbackStatus === 200, "shipped fallback payload returns 200",
+  `HTTP ${fallbackStatus}`);
 
 if (behaviours.length === 0) {
   // The behaviour set is empty: the point is that both specs are fully readable and untouched.
@@ -185,7 +216,7 @@ if (behaviours.length === 0) {
         && panel.coverageChipHidden
         && panel.focusToggleHidden
         && panel.legendHidden,
-      `empty bench · ${document.id}`,
+      `empty behaviour set · ${document.id}`,
       `${seen.passages} passages, ${panel?.blocks} blocks, ${panel?.hiddenBlocks} hidden,`
       + ` menu items ${seen.menuItems}, chip hidden ${panel?.coverageChipHidden}`
       + (seen.status ? `, status: ${seen.status}` : ""),
@@ -196,14 +227,14 @@ if (behaviours.length === 0) {
     compared.panels.length === 2
       && compared.passages === 0
       && compared.panels.every(panel => panel.blocks > 100 && panel.hiddenBlocks === 0),
-    "empty bench · compare",
+    "empty behaviour set · compare",
     compared.panels.map(panel => `${panel.lab} ${panel.blocks} blocks, ${panel.hiddenBlocks} hidden`).join(", "),
   );
 } else {
   for (const behaviour of behaviours) {
     let total = 0;
     for (const document of documents) {
-      const passages = anchorCount(coveredPassages(behaviour, document.id));
+      const passages = anchorCount(renderable(behaviour.slug, document.id));
       total += passages;
       await expectView(
         `${base}?behavior=${behaviour.slug}&spec=${document.id}`,
@@ -241,9 +272,9 @@ if (behaviours.length === 0) {
     for (const document of documents) {
       const seen = await readView(`${base}?behavior=${slugs.join(",")}&spec=${document.id}`);
       const short = selection.map(behaviour =>
-        `${behaviour.slug} ${seen.byBehaviour[behaviour.name] || 0}/${anchorCount(coveredPassages(behaviour, document.id))}`);
+        `${behaviour.slug} ${seen.byBehaviour[behaviour.name] || 0}/${anchorCount(renderable(behaviour.slug, document.id))}`);
       const accounted = selection.every(behaviour =>
-        (seen.byBehaviour[behaviour.name] || 0) === anchorCount(coveredPassages(behaviour, document.id)));
+        (seen.byBehaviour[behaviour.name] || 0) === anchorCount(renderable(behaviour.slug, document.id)));
       report(
         accounted
           && seen.status === ""
@@ -252,7 +283,7 @@ if (behaviours.length === 0) {
         `${slugs.length} behaviors · ${document.id}`,
         `${seen.passages} passages, ${seen.sharedMarked} shared`
         + (accounted ? "" : `  unaccounted: ${short.join(", ")}`)
-        + (seen.status ? `  status: ${seen.status}` : ""),
+        + (seen.status ? `, status: ${seen.status}` : ""),
       );
     }
   }
@@ -281,7 +312,7 @@ if (behaviours.length === 0) {
   }));
   report(
     Math.abs(after.scrollTop - before) < 4
-      && after.passages === anchorCount(second.coverage.anthropic.passages)
+      && after.passages === anchorCount(renderable(second.slug, "anthropic"))
       && after.behaviour === second.name
       && after.url === second.slug,
     "unticking one of two · anthropic",
@@ -322,10 +353,11 @@ if (behaviours.length === 0) {
   // The export carries the reading away from the reader: every published citation of every
   // ticked behaviour, in both specifications, as the whole citation -- quote and locator and
   // role sentence -- and counted per citation rather than per highlighted block, because two
-  // sentences of one paragraph are two citations even where they light one passage.
+  // sentences of one paragraph are two citations even where they light one passage. What the
+  // reader publishes is the keep-set, so the export must carry exactly the keep-set citations.
   const exported = behaviours.slice(0, 3);
   const citations = exported.flatMap(behaviour =>
-    documents.flatMap(document => coveredPassages(behaviour, document.id)));
+    documents.flatMap(document => renderable(behaviour.slug, document.id)));
   await readView(`${base}?behavior=${exported.map(behaviour => behaviour.slug).join(",")}&spec=anthropic`);
   const [download] = await Promise.all([
     page.waitForEvent("download"),
@@ -354,9 +386,20 @@ if (behaviours.length === 0) {
   );
 }
 
-if (consoleErrors.length) {
+/* 404 audit: the only path allowed to miss is the manifest (its absence is the
+ * fresh-clone state the reader is designed to fall through). Anything else
+ * missing is a moved or renamed file failing loud, exactly as intended. */
+const unexpectedMissing = [...new Set(missingPaths)].filter(path => path !== "/spec-reader/data/manifest.json");
+report(unexpectedMissing.length === 0, "nothing unexpected 404s",
+  unexpectedMissing.join(", ") || "only the absent manifest");
+/* Chrome echoes every 404 -- including the audited manifest one -- into the
+ * console as "Failed to load resource ... 404"; the audit above is the real
+ * check, so only that exact message is filtered here. */
+const realConsoleErrors = consoleErrors.filter(message =>
+  message !== "Failed to load resource: the server responded with a status of 404 (Not Found)");
+if (realConsoleErrors.length) {
   failures += 1;
-  console.log("console errors:", consoleErrors);
+  console.log("console errors:", realConsoleErrors);
 }
 await browser.close();
 server.close();

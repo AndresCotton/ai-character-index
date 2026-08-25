@@ -20,7 +20,7 @@ The public presentation layer: renders engine-generated JSON payloads into stati
 
 - All dynamic content arrives as committed JSON under each app's `data/`; the deploy's `paths: site/**` filter works precisely because payloads live inside `site/`.
 - Producer map: `engine/build-spec-reader-data.py` → `spec-reader/data/documents.json` (spec text; its `behaviours` key still derives from the frozen `data/coverage.json` but no surface renders it); `engine/panel/build_site_data.py` → panel payload, and with `--threshold=4 --solid-threshold=6` the reader's behaviour payload (`behaviours-v5-reader.json`).
-- `engine/verify-reader-test.mjs` / `verify-panel-features.mjs` are the E2E tests of these surfaces (repo-wide, `engine/panel/test_panel.py` covers the panel pipeline): they boot Chrome against these pages and assert every passage anchors, and `verify-panel-features.mjs` additionally exercises the panel's URL/DOM-state features and the reader's user-data path; they hardcode the DOM selectors used here.
+- `engine/verify-reader-test.mjs` / `verify-reader-features.mjs` are the E2E tests of these surfaces (repo-wide, `engine/panel/test_panel.py` covers the panel pipeline): they boot Chrome against these pages and assert every passage anchors, and `verify-reader-features.mjs` additionally exercises the panel's URL/DOM-state features and the reader's user-data path; they hardcode the DOM selectors used here.
 - `index.html` is connected to **no** pipeline — its inline data is hand-maintained.
 
 ## Dependency map

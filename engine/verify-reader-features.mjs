@@ -1,14 +1,15 @@
 #!/usr/bin/env node
-// Tier-1 feature harness for the site surfaces, driven against TWO data
-// states: the bundled payloads that ship in the repo, and a user-extended
-// staging built by engine/stage_user_demo.py (synthetic user spec + set:user
-// behaviour, staged into a scratch copy of site/ -- the repo itself is
-// restored untouched). Covers the panel's URL/DOM-state features and the
-// reader's user-data path; interactive-only features (resizer drags, focus
-// toggles, scroll behaviour) stay manual (Tier 2). The reader's passage
-// anchoring is covered by verify-reader-test.mjs and is not repeated here.
+// Tier-1 feature harness for the site's spec reader (site/spec-reader/),
+// driven against TWO data states: the bundled payloads that ship in the repo,
+// and a user-extended staging built by engine/stage_user_demo.py (synthetic
+// user spec + set:user behaviour, staged into a scratch copy of site/ -- the
+// repo itself is restored untouched). Covers the reader's URL/DOM-state
+// features and the user-data path; interactive-only features (resizer drags,
+// focus toggles, scroll behaviour) stay manual (Tier 2). The reader's passage
+// anchoring against the shipped payload is covered by verify-reader-test.mjs
+// and is not repeated here.
 //
-// Usage:  node engine/verify-panel-features.mjs   (needs Chrome + python3)
+// Usage:  node engine/verify-reader-features.mjs   (needs Chrome + python3)
 // Exits 0 when every check passes, 1 otherwise.
 
 import { spawnSync } from "node:child_process";
@@ -26,7 +27,7 @@ const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css
                ".md": "text/markdown", ".txt": "text/plain" };
 
 // --- Stage the user-extended site into a scratch dir -------------------------
-const scratch = mkdtempSync(join(tmpdir(), "panel-features-"));
+const scratch = mkdtempSync(join(tmpdir(), "reader-features-"));
 const staged = spawnSync("python3", [join(ENGINE, "stage_user_demo.py"), "--out", scratch],
                          { encoding: "utf8" });
 if (staged.status !== 0) {
@@ -38,10 +39,10 @@ const SITE = stageInfo.site;
 const USER = stageInfo.userBehaviour;          // acme-transparency
 const USER_SPEC = stageInfo.userSpec;          // acme-spec
 const PAYLOAD = stageInfo.payload;             // behaviours-<ts>.json
-const userDocs = JSON.parse(readFileSync(join(SITE, "spec-reader/data/documents.json"), "utf8"));
-const userPayload = JSON.parse(readFileSync(join(SITE, "llm-panel-review/data", PAYLOAD), "utf8"));
-// The reader's behaviour payload: pinned literal filename, untouched by staging.
-const readerBehaviours = JSON.parse(readFileSync(join(SITE, "llm-panel-review/data/behaviours-v5-reader.json"), "utf8")).behaviours;
+const userPayload = JSON.parse(readFileSync(join(SITE, "spec-reader/data", PAYLOAD), "utf8"));
+// The band-filtered keep-set variant: used below to exercise the ?data= pin
+// path; untouched by staging.
+const keepSet = JSON.parse(readFileSync(join(SITE, "spec-reader/data/behaviours-v5-reader.json"), "utf8")).behaviours;
 
 // --- Serve the staged site ----------------------------------------------------
 const server = createServer(async (req, res) => {
@@ -54,8 +55,7 @@ const server = createServer(async (req, res) => {
   } catch { res.writeHead(404).end("not found"); }
 });
 await new Promise(r => server.listen(0, "127.0.0.1", r));
-const panelBase = `http://127.0.0.1:${server.address().port}/llm-panel-review/`;
-const readerBase = `http://127.0.0.1:${server.address().port}/spec-reader/`;
+const base = `http://127.0.0.1:${server.address().port}/spec-reader/`;
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
 const page = await browser.newPage();
@@ -83,48 +83,52 @@ const sidebar = () => page.evaluate(() =>
 const cards = () => page.evaluate(() =>
   document.querySelectorAll(".passage").length);
 
-const panelUrl = q => load(panelBase, q);
+const at = q => load(base, q);
 
 // =============================================================================
-console.log("== Panel: payload resolution (bundled vs user-extended) ==");
-await panelUrl("");
+console.log("== Reader: payload resolution (bundled vs user-extended) ==");
+await at("");
 check((await sidebar()).includes("Acme transparency"),
   "default load resolves manifest latest = the user-extended run");
 check(pageErrors.length === 0, "default load: no console errors", pageErrors.join("; "));
 
-await panelUrl("?data=behaviours");
+await at("?data=behaviours");
 {
   const sb = await sidebar();
   check(!sb.includes("Acme transparency"), "?data=behaviours pin loads the shipped fallback");
 }
-await panelUrl(`?data=${PAYLOAD.replace(/\.json$/, "")}`);
+await at(`?data=${PAYLOAD.replace(/\.json$/, "")}`);
 check((await sidebar()).includes("Acme transparency"),
   "?data=<staged run> pin loads the user-extended run");
-await panelUrl("?data=manifest.json");
+await at("?data=manifest.json");
 check(pageErrors.length === 0 && (await sidebar()).includes("Acme transparency"),
   "?data=manifest.json is refused as a pin and degrades to manifest latest (no error)",
   pageErrors.join("; "));
 
-// The panel surface loads the reader bench payload (a legal behaviours* pin)
-// and runs applyPanelThreshold's full path against the 9-scale + ragged shapes.
-await panelUrl("?data=behaviours-v5-reader&behavior=helpfulness&spec=anthropic"
+// The reader loads the band-filtered keep-set variant (a legal behaviours*
+// pin) and runs applyPanelThreshold's full path against the 9-scale + ragged
+// shapes.
+await at("?data=behaviours-v5-reader&behavior=helpfulness&spec=anthropic"
   + "&tiers=defining,core,related");
 await page.waitForTimeout(400);
 {
+  const blockOf = locator => locator.replace(/ s\d+(?:-s?\d+)?$/, "");
+  const expected = new Set(keepSet.find(b => b.slug === "helpfulness")
+    .coverage.anthropic.passages.map(p => blockOf(p.locator))).size;
   const anchors = await page.evaluate(
     () => document.querySelectorAll("[data-passage-id]").length);
   const role = await page.evaluate(
     () => document.querySelector(".passage-reason-role")?.textContent ?? "");
-  check(anchors === 29, "panel loads the bench payload (29 helpfulness/anthropic passages)",
+  check(anchors === expected, `keep-set pin loads (${expected} helpfulness/anthropic passages)`,
     `${anchors} anchors`);
-  check(/score \d+\/9/.test(role), "panel rewrites role fractions to the 9-scale", role.slice(0, 40));
-  check(pageErrors.length === 0, "bench payload on panel: no console errors",
+  check(/score \d+\/9/.test(role), "reader rewrites role fractions to the 9-scale", role.slice(0, 40));
+  check(pageErrors.length === 0, "keep-set pin: no console errors",
     pageErrors.join("; "));
 }
 
 // =============================================================================
-console.log("== Panel: sidebar + behaviour selection ==");
-await panelUrl("");
+console.log("== Reader: sidebar + behaviour selection ==");
+await at("");
 {
   const sb = await sidebar();
   check(sb.includes("Behaviours under test"),
@@ -132,7 +136,7 @@ await panelUrl("");
     sb.replace(/\s+/g, " ").slice(0, 100));
   check(sb.includes("Helpfulness"), "bundled behaviour present in the user-extended payload");
 }
-await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
+await at(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
 {
   const finding = await page.evaluate(() => ({
     name: document.querySelector("#finding-behaviour")?.textContent.trim(),
@@ -141,15 +145,15 @@ await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`
   check(finding.name === "Acme transparency", "?behavior= selects the user behaviour", finding.name);
   check(finding.def.includes("disclose compute usage"), "user behaviour definition renders");
 }
-await panelUrl("?behavior=no-such-behaviour");
+await at("?behavior=no-such-behaviour");
 check(pageErrors.length === 0 && (await page.evaluate(() =>
   document.querySelector("#finding-behaviour")?.textContent.trim().length > 0)),
   "unknown ?behavior= degrades to a real behaviour without errors",
   pageErrors.join("; "));
 
 // =============================================================================
-console.log("== Panel: tier bands (incl. the single-judge floor, B1) ==");
-const acmeAll = q => panelUrl(`?behavior=${USER}&spec=${USER_SPEC}${q}`);
+console.log("== Reader: tier bands (incl. the single-judge floor, B1) ==");
+const acmeAll = q => at(`?behavior=${USER}&spec=${USER_SPEC}${q}`);
 await acmeAll("");                       // default bands: defining + core
 {
   const n = await cards();
@@ -174,7 +178,7 @@ check((await cards()) === 1, "?related=0 zeroes the lone related vote (weight tu
 // The toggles report what they hold, and a tier this data cannot reach is disabled
 // rather than left inert. On the staged single-judge v3w cell the defining cut clamps
 // onto the core cut, so core is structurally empty -- the case the counts exist for.
-await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
+await at(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
 {
   const tiers = () => page.evaluate(() =>
     Object.fromEntries([...document.querySelectorAll(".document-panel .tier-toggle")].map(b => [
@@ -194,8 +198,8 @@ await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`
 }
 
 // =============================================================================
-console.log("== Panel: document view, source link, compare, embedded ==");
-await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
+console.log("== Reader: document view, source link, compare, embedded ==");
+await at(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
 {
   const href = await page.evaluate(() =>
     document.querySelector("#source-link")?.getAttribute("href") || "");
@@ -205,17 +209,17 @@ await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`
     document.querySelector("#document-reader")?.textContent || "");
   check(bodyText.includes("disclose compute usage"), "user spec text renders behind the cards");
 }
-await panelUrl(`?behavior=${USER}&spec=no-such-spec`);
+await at(`?behavior=${USER}&spec=no-such-spec`);
 check(pageErrors.length === 0, "unknown ?spec= degrades to the default document without errors",
   pageErrors.join("; "));
-// Panel spec switcher is generated from documents.json: the user spec
+// The spec switcher is generated from documents.json: the user spec
 // gets a button, and clicking it selects the spec.
-await panelUrl(`?behavior=${USER}`);
+await at(`?behavior=${USER}`);
 {
   const options = await page.evaluate(() =>
     [...document.querySelectorAll(".spec-option")].map(o => o.dataset.spec));
   check(options.includes(USER_SPEC),
-    "panel spec options are generated from documents.json (user spec included)",
+    "spec options are generated from documents.json (user spec included)",
     options.join(","));
 }
 await page.click(`.spec-option[data-spec="${USER_SPEC}"]`);
@@ -224,9 +228,9 @@ await page.waitForTimeout(250);
   const href = await page.evaluate(() =>
     document.querySelector("#source-link")?.getAttribute("href") || "");
   check(href === "https://acme.example.com/spec",
-    "clicking the generated panel spec option selects the user spec", href);
+    "clicking the generated spec option selects the user spec", href);
 }
-await panelUrl(`?compare=1`);
+await at(`?compare=1`);
 {
   const out = await page.evaluate(() => ({
     panels: document.querySelectorAll(".document-panel").length,
@@ -244,13 +248,13 @@ await panelUrl(`?compare=1`);
   check(out.toggle === "true", "compare toggle reflects ?compare=1");
   check(out.link === "Sources ↗", "source link switches to 'Sources ↗' in compare view", out.link);
 }
-await panelUrl("?embedded=1");
+await at("?embedded=1");
 check(await page.evaluate(() => document.body.classList.contains("embedded")),
   "?embedded=1 sets the embedded body class");
 
 // =============================================================================
-console.log("== Panel: toolbar controls ==");
-await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
+console.log("== Reader: toolbar controls ==");
+await at(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
 {
   const enabled = await page.evaluate(() =>
     !document.querySelector("#download-passages").disabled);
@@ -261,14 +265,14 @@ await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`
   }));
   check(prevNext.prev && prevNext.next, "prev/next passage buttons enabled with anchors present");
 }
-await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
+await at(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
 await page.click("#clear-behaviours");
 await page.waitForTimeout(250);
 check((await cards()) === 0, "clear-behaviours empties the view");
 await page.click("#select-all-behaviours");
 await page.waitForTimeout(250);
 check((await cards()) > 0, "select-all-behaviours restores the view");
-await panelUrl("?behavior=helpfulness");
+await at("?behavior=helpfulness");
 {
   const before = await page.evaluate(() => document.body.dataset.palette);
   await page.click("#mode");
@@ -294,7 +298,7 @@ console.log("== Reader: compare is a two-document choice ==");
     overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
   }));
 
-  await load(readerBase, "?compare=1");
+  await load(base, "?compare=1");
   let c = await compareState();
   check(c.panes === 2 && c.resizers === 1,
     "compare renders exactly two panes and one boundary", `${c.panes} panes, ${c.resizers} resizers`);
@@ -313,7 +317,7 @@ console.log("== Reader: compare is a two-document choice ==");
     "the chosen pair is written to ?compare-with=", new URL(page.url()).searchParams.get("compare-with"));
 
   // A shared link restores the pair.
-  await load(readerBase, `?compare=1&compare-with=${USER_SPEC},openai`);
+  await load(base, `?compare=1&compare-with=${USER_SPEC},openai`);
   c = await compareState();
   check(c.a === USER_SPEC && c.b === "openai",
     "?compare-with= restores the pair from a shared link", `${c.a} / ${c.b}`);
@@ -326,7 +330,7 @@ console.log("== Reader: compare is a two-document choice ==");
     "picking the other side's document swaps them instead of duplicating", `${c.a} / ${c.b}`);
 
   // A stale or nonsense pair degrades to the first two documents rather than breaking.
-  await load(readerBase, "?compare=1&compare-with=nope,alsonope");
+  await load(base, "?compare=1&compare-with=nope,alsonope");
   c = await compareState();
   check(c.panes === 2 && c.a !== c.b,
     "an unknown ?compare-with= falls back to two real documents", `${c.a} / ${c.b}`);
@@ -335,52 +339,35 @@ console.log("== Reader: compare is a two-document choice ==");
 }
 
 // =============================================================================
-console.log("== Local mode: a run of your own is marked and reachable ==");
-// The staged site registers a user specification, so every surface is showing local
-// data and should say so -- and the panel, which nothing otherwise links to, has to be
-// reachable from the surfaces a reader actually lands on.
+console.log("== Local mode: a run of your own is marked ==");
+// The staged site registers a user specification, so the reader is showing local
+// data and should say so. The reader is linked from the site's navs by default;
+// local mode adds a status marker only, never a second nav entry for the page
+// you are already on.
 {
-  for (const [name, url] of [["panel", panelBase], ["reader", readerBase]]) {
-    await load(url, "");
-    const out = await page.evaluate(() => ({
-      marked: document.body.dataset.localData === "true",
-      badge: (document.querySelector("#local-data-note")?.textContent || "").trim(),
-      badgeVisible: !!document.querySelector("#local-data-note")?.offsetParent,
-      panelLink: !!document.querySelector('nav a[href*="llm-panel-review"]'),
-      noteInNav: !!document.querySelector('nav #local-data-note'),
-      panelLinkText: (document.querySelector('nav a[href*="llm-panel-review"]')?.textContent || "").trim(),
-      panelNavCount: [...document.querySelectorAll("nav a")]
-        .filter(a => /llm-panel-review|Local analysis/.test(a.getAttribute("href") + a.textContent)
-                     || a.getAttribute("aria-current") === "page").length,
-    }));
-    check(out.marked, `${name}: local data is marked on the document`);
-    check(out.badgeVisible && /local/i.test(out.badge),
-      `${name}: a visible note says the data is local`, out.badge);
-    // A status marker is not a destination. Inside <nav> it reads as a link to
-    // anything traversing the list, screen readers included.
-    check(!out.noteInNav, `${name}: the marker is not inside the navigation list`);
-    // The panel's own nav marks itself with href="./", so "reachable" is only a
-    // question on the surfaces a reader lands on instead.
-    if (name !== "panel") {
-      check(out.panelLink, `${name}: the panel is reachable from the nav`);
-      // The link has to name the page it lands on. The page is still called "LLM
-      // panel review"; a second name for it would break that contract.
-      check(out.panelLinkText === "LLM panel review",
-        `${name}: the link names the page it lands on`, out.panelLinkText);
-    }
-    // ...and on the panel the risk is the opposite one: a second link, under another
-    // name, to the page you are already on.
-    if (name === "panel") {
-      check(out.panelNavCount === 1,
-        "panel: no duplicate nav entry for the page you are on", `${out.panelNavCount} entries`);
-    }
-  }
+  await load(base, "");
+  const out = await page.evaluate(() => ({
+    marked: document.body.dataset.localData === "true",
+    badge: (document.querySelector("#local-data-note")?.textContent || "").trim(),
+    badgeVisible: !!document.querySelector("#local-data-note")?.offsetParent,
+    noteInNav: !!document.querySelector('nav #local-data-note'),
+    selfLinks: [...document.querySelectorAll("nav a")]
+      .filter(a => a.getAttribute("aria-current") === "page").length,
+  }));
+  check(out.marked, "local data is marked on the document");
+  check(out.badgeVisible && /local/i.test(out.badge),
+    "a visible note says the data is local", out.badge);
+  // A status marker is not a destination. Inside <nav> it reads as a link to
+  // anything traversing the list, screen readers included.
+  check(!out.noteInNav, "the marker is not inside the navigation list");
+  check(out.selfLinks === 1,
+    "exactly one nav entry marks the page you are on", `${out.selfLinks} entries`);
   check(pageErrors.length === 0, "local mode: no console errors", pageErrors.join("; "));
 }
 
 // =============================================================================
 console.log("== Reader: user-extended documents ==");
-await load(readerBase, "");
+await load(base, "");
 {
   const options = await page.evaluate(() =>
     [...document.querySelectorAll(".spec-option")].map(o => o.dataset.spec));
@@ -408,19 +395,21 @@ await page.waitForTimeout(250);
   check(n > 0, "clicking a bundled spec option returns to its coverage", `${n} passages`);
 }
 {
-  // Bundled regression: a published view still anchors exactly its passages.
-  const b = readerBehaviours.find(x => x.slug === "helpfulness");
-  const expected = b.coverage.anthropic.passages.length;
-  await load(readerBase, "?behavior=helpfulness&spec=anthropic");
+  // Anchoring regression: the staged surface resolves the staged manifest latest,
+  // so a published view must anchor exactly the staged run's own coverage.
+  const blockOf = locator => locator.replace(/ s\d+(?:-s?\d+)?$/, "");
+  const expected = new Set(userPayload.behaviours.find(x => x.slug === "helpfulness")
+    .coverage.anthropic.passages.map(p => blockOf(p.locator))).size;
+  await load(base, "?behavior=helpfulness&spec=anthropic");
   const seen = await page.evaluate(() =>
     document.querySelectorAll("[data-passage-id]").length);
-  check(seen === expected, "bundled view unregressed by the user-extended documents.json",
+  check(seen === expected, "staged coverage anchors exactly (helpfulness · anthropic)",
     `${seen}/${expected} passages`);
 }
 
 // =============================================================================
-console.log("== Panel: interactions (Tier-2) ==");
-await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
+console.log("== Reader: interactions (Tier-2) ==");
+await at(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
 {
   await page.focus("#sidebar-resizer");
   await page.keyboard.press("Home");
@@ -432,7 +421,7 @@ await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`
   check(atHome === "200" && Number(atEnd) > Number(atHome),
     "sidebar resizer: keyboard Home/End resize", `${atHome} -> ${atEnd}`);
 }
-await panelUrl("?compare=1");
+await at("?compare=1");
 {
   const widths = () => page.evaluate(() =>
     [...document.querySelectorAll(".document-resizer")].map(r =>
@@ -447,7 +436,7 @@ await panelUrl("?compare=1");
     "compare: the single boundary responds to the keyboard",
     JSON.stringify({ before, afterRight, afterHome }));
 }
-await panelUrl("?behavior=helpfulness&spec=anthropic&tiers=defining,core,related");
+await at("?behavior=helpfulness&spec=anthropic&tiers=defining,core,related");
 {
   const collapsed = () => page.evaluate(() =>
     document.querySelectorAll(".section-collapsed").length);
@@ -462,7 +451,7 @@ await panelUrl("?behavior=helpfulness&spec=anthropic&tiers=defining,core,related
     "document focus toggle collapses/expands sections (reversible)",
     `${c0} -> ${c1} -> ${c2} collapsed`);
 }
-await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
+await at(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
 {
   const counter = () => page.evaluate(() =>
     document.querySelector("#passage-count").textContent.trim());
@@ -473,7 +462,7 @@ await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`
   check(after !== before, "next-passage advances the passage counter",
     `${before} -> ${after}`);
 }
-await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
+await at(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`);
 {
   const [download] = await Promise.all([
     page.waitForEvent("download"),
@@ -485,7 +474,7 @@ await panelUrl(`?behavior=${USER}&spec=${USER_SPEC}&tiers=defining,core,related`
   check(text.includes("disclose compute usage"),
     "export downloads markdown containing the selected passages", `${text.length} chars`);
 }
-await panelUrl("");
+await at("");
 {
   await page.evaluate((user) => {
     const label = [...document.querySelectorAll(".behaviour-option")]
@@ -499,8 +488,10 @@ await panelUrl("");
 }
 
 // =============================================================================
-console.log("== Reader: interactions (Tier-2) ==");
-await load(readerBase, "?behavior=helpfulness");
+console.log("== Reader: compare toggle (click path) ==");
+// The URL path into compare is covered above; this is the button a reader
+// actually clicks, from an ordinary one-document view.
+await load(base, "?behavior=helpfulness");
 await page.click("#compare-toggle");
 await page.waitForTimeout(250);
 {
@@ -509,28 +500,7 @@ await page.waitForTimeout(250);
     comparing: document.querySelector("#document-reader").classList.contains("compare"),
   }));
   check(out.pressed === "true" && out.comparing,
-    "reader compare toggle switches to the compare view");
-}
-await load(readerBase, "?behavior=helpfulness&compare=1");
-{
-  const out = await page.evaluate(() => ({
-    panels: document.querySelectorAll(".document-panel").length,
-    resizers: document.querySelectorAll(".document-resizer").length,
-  }));
-  check(out.panels === 2 && out.resizers === 1,
-    "reader compare renders the chosen two documents",
-    `${out.panels} panels, ${out.resizers} resizers`);
-}
-await load(readerBase, "?behavior=helpfulness");
-{
-  const counter = () => page.evaluate(() =>
-    document.querySelector("#passage-count").textContent.trim());
-  const before = await counter();
-  await page.click("#next-passage");
-  await page.waitForTimeout(250);
-  const after = await counter();
-  check(after !== before, "reader next-passage advances the passage counter",
-    `${before} -> ${after}`);
+    "clicking the compare toggle switches to the compare view");
 }
 
 // =============================================================================

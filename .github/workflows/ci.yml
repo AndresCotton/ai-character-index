@@ -86,4 +86,4 @@ jobs:
         run: node engine/verify-reader-test.mjs
 
       - name: Panel feature harness (bundled + user-extended)
-        run: node engine/verify-panel-features.mjs
+        run: node engine/verify-reader-features.mjs

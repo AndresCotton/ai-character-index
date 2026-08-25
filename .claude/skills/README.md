@@ -12,6 +12,6 @@ Live procedures live elsewhere:
   [`engine/README.md`](../../engine/README.md) (user specs) and
   [`engine/panel/README.md`](../../engine/panel/README.md).
 - **Site verification** — `engine/verify-reader-test.mjs` and
-  `engine/verify-panel-features.mjs` (both need Chrome).
+  `engine/verify-reader-features.mjs` (both need Chrome).
 - **Fixed locations** — spec versions and canonical paths:
   [`references/locations.md`](references/locations.md).

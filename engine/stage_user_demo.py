@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage a user-extended site for the feature harness (verify-panel-features.mjs).
+"""Stage a user-extended site for the feature harness (verify-reader-features.mjs).
 
 Copies site/ into --out DIR/site, then exercises the SAME builder path a
 clone/fork user would take, pointed at the copy:

@@ -18,7 +18,7 @@ The root holds the project's two entry documents (`PLAN.md`, `README.md`) and a 
 ## Relationships
 - `deploy:site` and `.github/workflows/deploy.yml` are two routes to the same Cloudflare Pages project `ai-character-index`: the script uses interactive `wrangler login` and no `--branch` flag; CI uses repo secrets and `--branch main`, with wrangler pinned to the same 4.110.0 via `cloudflare/wrangler-action@v3`. `.github/workflows/README.md` documents both.
 - In `deploy.yml`, `pnpm/action-setup@v4` reads `packageManager` from `package.json`, and `actions/setup-node` caches against `pnpm-lock.yaml` (workflow comment: pnpm 11.12 needs Node ≥ 22.13, hence `node-version: 22`).
-- `playwright-core` is consumed by `engine/verify-reader-test.mjs` and `engine/verify-panel-features.mjs` (both `import { chromium } from "playwright-core"`); the browser job of `.github/workflows/ci.yml` runs them.
+- `playwright-core` is consumed by `engine/verify-reader-test.mjs` and `engine/verify-reader-features.mjs` (both `import { chromium } from "playwright-core"`); the browser job of `.github/workflows/ci.yml` runs them.
 - `README.md`'s repo-map links resolve in the post-merge tree (`SYSTEM.md` is added by this documentation set; `outreach/` is gitignored and unlinked): `research/` (+ `core-behaviour-list.md`), `.claude/skills/` (+ its README), `specs/`, `methodology/`, `data/` (+ `data/README.md`), `engine/` (+ `engine/README.md`), `site/`, `design/`, `vision/` (+ `features to build.md`); the README points onward to `SYSTEM.md` for the system map and frames `PLAN.md` as the original design.
 
 ## Dependency map

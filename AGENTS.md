@@ -145,7 +145,7 @@ python3 engine/test_validate_data.py && python3 engine/validate_data.py
 node engine/panel/test_appjs_tiers.js            # tier-band cuts (single-judge floor)
 node engine/panel/test_appjs_fallthrough.js
 node engine/verify-reader-test.mjs               # needs Chrome
-node engine/verify-panel-features.mjs            # Tier-1 site features × bundled + user-extended (stages its own scratch site; needs Chrome + python3; run it alone)
+node engine/verify-reader-features.mjs            # Tier-1 site features × bundled + user-extended (stages its own scratch site; needs Chrome + python3; run it alone)
 ```
 
 ## Conventions
