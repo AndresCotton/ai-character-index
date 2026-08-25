@@ -138,7 +138,7 @@ def main(argv=None):
         "",
         "Build the viewer payload (judged on another panel? mirror it in --panel=):",
         f"  python3 engine/panel/build_site_data.py --runlog=engine/panel/runlog-user.jsonl "
-        f"--rubric=v3w --panel=frontier_fast --behaviours={o['slug']}",
+        f"--panel=frontier_fast --behaviours={o['slug']}",
         "",
         "View it:",
         "  python3 -m http.server 8080 --directory site",

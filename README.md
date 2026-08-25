@@ -92,7 +92,7 @@ Two commands turn the runlog into the reader page. First build the viewer payloa
 
 ```sh
 python3 engine/panel/build_site_data.py --runlog=engine/panel/runlog-user.jsonl \
-    --rubric=v3w --panel=frontier_fast --behaviours=bribery-resistance
+    --panel=frontier_fast --behaviours=bribery-resistance
 ```
 
 Then serve the site (skip if the quickstart server is still running) and open the panel reader:
@@ -103,13 +103,13 @@ python3 -m http.server 8080 --directory site
 
 **[http://localhost:8080/llm-panel-review/](http://localhost:8080/llm-panel-review/)** now loads your run first -- the build wrote a timestamped payload under `site/llm-panel-review/data/` (local to your clone, gitignored) and pointed the page's manifest at it, so a plain refresh is enough. Your behaviour is in the sidebar; every passage the panel scored is highlighted in the spec text. Notes:
 
-- `--rubric=v3w` is what fresh `whole_doc.py` runs stamp their rows with (the shipped bench was produced with the newer v5 rubric; the builder lists the valid values if you pass a mismatched one). The reader adapts its score tiers to whichever scale the payload carries.
+- **v5 is the default rubric end to end**: the judges run the v5 prompt (each passage scored 0-3), rows are stamped `v5`, and the builder selects `v5` rows without being told. `--rubric=` exists only for deliberately running a different prompt variant; on a mismatch the builder exits listing the rubrics your runlog actually carries.
 - `--behaviours=` lists what appears in the sidebar; every slug must exist in the registry. Judged on a different panel (`itest`, say)? Mirror it in `--panel=`.
 - To get back to the shipped bench, open the page with `?data=behaviours.json`; `python3 engine/panel/select_run.py` shows the run ledger and what the page will load.
 
 ### Reading the scores
 
-Each judge scores each passage on a small relevance scale; a passage's score is the sum across the panel. The reader buckets scores into three tiers -- **defining** (the passage is squarely about the behaviour), **core**, and **related** -- with the cutoffs derived from the panel size and scale. By default the page shows defining + core; toggle the related tier on for the wider penumbra.
+Each judge scores each passage 0-3 on the v5 rubric; a passage's score is the sum across the panel (0-9 with the default three judges). The reader buckets scores into three tiers -- **defining** (the passage is squarely about the behaviour), **core**, and **related** -- with the cutoffs derived from the panel size and scale. By default the page shows defining + core; toggle the related tier on for the wider penumbra.
 
 ## Selecting passages for downstream work
 
@@ -183,10 +183,7 @@ The second command regenerates the shared document payload (again local to your 
 
 ### Customize the judge prompt
 
-The full prompt every judge receives is composed in [`engine/panel/harness.py`](engine/panel/harness.py) from named pieces, so there is one place to edit:
-
-- `SYSTEM_V3_TEMPLATE` -- the rubric itself: the scoring instructions, filled through `render_system_v3()` with an independence clause (`INDEPENDENCE_WHOLE_DOC`) and an output format (`OUTPUT_FORMAT_FULL` / `OUTPUT_FORMAT_SPARSE`).
-- `BEHAVIOUR_TEMPLATE_V3` -- the per-behaviour block: how your title, definition, clarifications, and scope are laid out in the user message.
+The rubric the judges run is **v5**: one system prompt carrying the 0-3 scale and its calibration rules, plus a per-behaviour block that lays out your title, definition, clarifications, and scope. Both live with the pipeline under [`engine/panel/`](engine/panel/) as named template pieces -- edit them there to change what every judge is told.
 
 Two hygiene rules when you experiment with the wording. First, the shipped prompt text is pinned by tests as a provenance guarantee, so `test_panel.py` will flag any in-place edit -- that is deliberate, not breakage. Second, give modified-prompt runs their own runlog file (`--runlog=engine/panel/runlog-myprompt.jsonl`) and build payloads only from that file, so verdicts produced by different prompts never mix in one dataset.
 
