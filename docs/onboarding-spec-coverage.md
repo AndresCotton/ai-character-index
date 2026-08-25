@@ -188,8 +188,7 @@ definition fields (`behaviours.json`: definition, optional clarifications and
 scope); the mechanics are a script with an append-only run log. Provider
 failures are caught, named, and substituted openly -- see the failure modes and
 substitution rules in the coverage skill. Earlier methods and their artifacts are
-preserved under `research/sweeps/` and `behaviours-for-adria/`, which also hold
-the supplied definitions.
+preserved under `research/sweeps/`.
 
 ---
 
@@ -349,9 +348,9 @@ have since been closed; the one remaining open item is CI.
   (`GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in
   `engine/build-spec-reader-data.py`, and the panel slug lists), drift-gated by
   `tests/test_behaviour_registry.py`. Residual: `behaviour_id` is still reused
-  across two disjoint per-file numbering spaces (`coverage.json` vs
-  `reader-test-coverage.json`); the registry documents those as file-local, with
-  slugs as the global join key.
+  across disjoint per-file numbering spaces (`coverage.json` vs the registry's
+  reader-test set); the registry documents those as file-local, with slugs as
+  the global join key.
 - **The artifact as a parsing contract. (RESOLVED)** Coverage artifacts now emit a
   structured sidecar (`spec-coverage.json`, schema-checked) that
   `publish-coverage.py` prefers, with the markdown regex parse kept as a fallback

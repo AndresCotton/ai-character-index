@@ -1,22 +1,21 @@
 # site/spec-reader-test/ -- the reader test bench
 
 A separate tab (`/spec-reader-test/`) that is a copy of the published spec reader
-([`site/spec-reader/`](../spec-reader/)), carrying its own behaviour set: the behaviours an
-external reviewer asked us to trace through the specs. It exists so those results can be
-published, revised and withdrawn without touching the index's own reader, whose behaviour
-set is the gate-approved output of the [behaviour sweeps](../../.claude/skills/README.md).
+([`site/spec-reader/`](../spec-reader/)), carrying the v5 9-point panel run: ten behaviours
+judged against both specifications, pre-filtered to the panel's band boundary. It exists so
+those results can be published, revised and withdrawn without touching the index's own reader,
+whose behaviour set is the gate-approved output of the
+[behaviour sweeps](../../.claude/skills/README.md).
 
-**Current state:** ten behaviours are under test -- the set in
-[`behaviours-for-adria/`](../../behaviours-for-adria/README.md), published from their
-spec-coverage sweeps, 294 citations across the two specifications. Eight of them appear under
-the menu heading "Behaviours under test", because that is how the set was supplied: a flat
-list, with no grouping of ours imposed on it. The other two make up a second group,
-["General Guidelines"](../../behaviours-for-adria/general-guidelines/README.md), which is drawn
-differently -- see below. Those two are one supplied definition read two ways: General welfare
-impacts, and a strict reading of it that keeps a passage only where both specifications state
-the same rule, so the reader can hold the two side by side. Each behaviour's coverage-gate human
-spot-read is still open; this bench is the surface it happens on, which is why the set is
-published before sign-off.
+**Current state:** ten behaviours render, 363 citations across the two specifications
+(43 defining, 57 core, 263 related). Eight appear under the menu heading "Behaviours under
+test" as a flat list; the other two make up a second group, "General Guidelines", which is
+drawn differently -- see below. Those two are one supplied definition read two ways: General
+welfare impacts, and a strict reading of it that keeps a passage only where both
+specifications state the same rule, so the reader can hold the two side by side. The strict
+reading's source judgment -- including the asymmetric cut it found, constitution 29 -> 16 vs
+model spec 22 -> 22 -- is preserved in
+[`archive/general-welfare-strict-reading/`](../../archive/general-welfare-strict-reading/README.md).
 
 ## What is shared, what is not
 
@@ -103,16 +102,19 @@ Every entry needs a `coverage` record for **both** `anthropic` and `openai` (use
 Quotes must be resolver output for a pinned locator, per
 [`specs/CITATION.md`](../../specs/CITATION.md).
 
-Never hand-edit that file. It is generated from
-[`data/reader-test-coverage.json`](../../data/reader-test-coverage.json) -- the bench's own
-ledger, one behaviour definition plus one record per behaviour x lab, in the same record shape
-`data/coverage.json` uses, so a record can be lifted out of a sweep unchanged:
+Never hand-edit that file. It is the panel builder's band-boundary build of the committed v5
+run (`engine/panel/runlog-v5.jsonl`, panel `frontier_fast`, rubric v5), cut at the 3-judge
+band boundary (relatedCut = j+1 = 4, coreCut = 2j = 6) so the bench shows exactly what the
+panel view renders:
 
 ```sh
-python3 engine/build-reader-test-data.py
+python3 engine/panel/build_site_data.py --threshold=4 --solid-threshold=6 \
+    --run-date=2026-08-17 --out=behaviours-v5-reader.json
 ```
 
-Delete the ledger and re-run to empty the bench; the specs then render in full again.
+The payload lives in `../llm-panel-review/data/` beside the panel payloads; `BEHAVIOURS_URL`
+in `app.js` points at it. Behaviour metadata is registry-driven (`data/behaviours.json`); the
+cell verdict/depth/verifiedDate rows come from `data/panel-cell-curation.json`.
 
 ## Verifying
 

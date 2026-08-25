@@ -31,9 +31,8 @@ stage signs its gate.
   pointers if the coverage stage found passages the list missed.
 - **Reader payload:** `python3 engine/build-spec-reader-data.py` rebuilds
   `site/spec-reader/data/documents.json` from `coverage.json` + the spec mirrors.
-  (If the behaviour is one of the panel-surface rows in
-  `data/reader-test-coverage.json`, `engine/panel/build_site_data.py` rebuilds the
-  panel payload from that ledger.)
+  (If the behaviour has rows in the committed panel runlog,
+  `engine/panel/build_site_data.py` rebuilds the panel payload from it.)
 - Commit only the sweep's files (conventional format, e.g. `feat(coverage):
   behaviour NN <name>`).
 

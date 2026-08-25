@@ -15,8 +15,8 @@ the registry at build time (a renamed or unknown slug fails the build), and
 this suite pins the same invariant against the committed tree.
 
 This suite fails when the registry's structure breaks, when the registry
-disagrees with the published ledgers it mirrors (data/coverage.json names,
-data/reader-test-coverage.json behaviours), or when any derived constant has
+disagrees with the published ledger it mirrors (data/coverage.json names),
+or when any derived constant has
 drifted from the registry's rendering. Editing a derived copy without updating
 the registry -- or the registry without regenerating the copies -- fails here.
 After an intentional registry change: run the generator, commit both sides.

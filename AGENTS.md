@@ -10,7 +10,7 @@ file does not duplicate them — it points at the canonical copies.
 - `CLOSEOUT-LIST.md` — the repo-owner's scope ruling and what is done vs open
 - `<dir>/OVERVIEW.md` — per-directory current-state docs (`engine/`, `data/`,
   `research/`, `site/`, `specs/`, `.claude/skills/`, `design/`, `docs/`,
-  `methodology/`, `behaviours-for-adria/`, `.github/`, root)
+  `methodology/`, `.github/`, root)
 - `docs/onboarding-spec-coverage.md` — human onboarding for the coverage pipeline
 
 ## Procedures (agent-executable)

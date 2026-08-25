@@ -14,12 +14,12 @@ The methodological backbone for the coverage side of the index: the rubric that 
 | `mentee-project-archetypes.md` | Provisional (2026-07-21) shape of mentee/SPAR contributions on the evidence layer: four archetypes (A1 audit, A2 reproduction, A3 convergent validity, A4 new-facet eval) plus a per-behaviour suitability map for behaviours 1–13 |
 
 ## Relationships
-`spec-coverage-depth-rubric.md` is the source of the `depth_0_4` values in `data/coverage.json` and is cited by `research/sweeps/03-action-honesty/4-spec-coverage.md` and all ten `behaviours-for-adria/*/4-spec-coverage.md`; `02-calibration`'s artifact predates the rubric's anchoring (both Gate 4s signed 2026-07-20; the rubric was anchored at behaviour 3's gate) and does not cite it. `site-copy-how-we-assess-coverage.md` is the working copy synced into `site/methodology.html` (the HTML is the published source). The exploration doc motivates the panel approach implemented in `engine/panel/` and surfaced via `site/llm-panel-review/`. `mentee-project-archetypes.md` maps onto the sweep pipeline (A1 = the since-retired evidence-discovery stages of `.claude/skills/`) and the behaviour list in `research/core-behaviour-list.md`.
+`spec-coverage-depth-rubric.md` is the source of the `depth_0_4` values in `data/coverage.json` and is cited by `research/sweeps/03-action-honesty/4-spec-coverage.md` and by the preserved strict-reading judgment in `archive/general-welfare-strict-reading/`; `02-calibration`'s artifact predates the rubric's anchoring (both Gate 4s signed 2026-07-20; the rubric was anchored at behaviour 3's gate) and does not cite it. `site-copy-how-we-assess-coverage.md` is the working copy synced into `site/methodology.html` (the HTML is the published source). The exploration doc motivates the panel approach implemented in `engine/panel/` and surfaced via `site/llm-panel-review/`. `mentee-project-archetypes.md` maps onto the sweep pipeline (A1 = the since-retired evidence-discovery stages of `.claude/skills/`) and the behaviour list in `research/core-behaviour-list.md`.
 
 ## Dependency map
 ```mermaid
 graph LR
-  RUBRIC["spec-coverage-depth-rubric.md"] -->|anchors depth 0-4| SWEEP["coverage artifacts: research/sweeps + behaviours-for-adria"]
+  RUBRIC["spec-coverage-depth-rubric.md"] -->|anchors depth 0-4| SWEEP["coverage artifacts: research/sweeps"]
   SWEEP -->|verdict + depth| COVERAGE["data/coverage.json"]
   SITECOPY["site-copy-how-we-assess-coverage.md"] -->|synced into| METHOD["site/methodology.html"]
   RUBRIC -->|published explanation of| SITECOPY

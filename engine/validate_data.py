@@ -349,33 +349,38 @@ def _cross_file_checks(files: dict) -> list:
                     f"is not an index-set id in the behaviour registry (data/behaviours.json)"
                 )
 
-    reader_test = files.get("reader-test-coverage.json")
-    if isinstance(reader_test, dict):
-        records = reader_test.get("coverage")
-        check_lab_ids("reader-test-coverage.json", records)
-        check_unique_records("reader-test-coverage.json", records)
-        behaviour_ids = {
-            behaviour.get("id")
-            for behaviour in reader_test.get("behaviours", [])
-            if isinstance(behaviour, dict)
-        }
-        if not behaviour_ids:
-            # Same rule as labs.json above: with no behaviours list there is
-            # nothing to check behaviour_id against, and that must fail the
-            # gate instead of silently skipping the membership check.
+    curation = files.get("panel-cell-curation.json")
+    if isinstance(curation, dict):
+        cells = curation.get("cells")
+        check_lab_ids("panel-cell-curation.json", cells)
+        registry_slugs = set(registry) if isinstance(registry, dict) else set()
+        if not registry_slugs:
+            # Same rule as above: with no registry there is nothing to check
+            # the slugs against, and that must fail the gate instead of
+            # silently skipping the membership check.
             errors.append(
-                "cross-file behaviour_id checks skipped: "
-                "reader-test-coverage.json behaviours missing or empty"
+                "cross-file slug checks skipped: behaviours.json missing or empty"
             )
-        for index, record in enumerate(records or []):
-            if not isinstance(record, dict):
+        seen = {}
+        for index, cell in enumerate(cells or []):
+            if not isinstance(cell, dict):
                 continue
-            behaviour_id = record.get("behaviour_id")
-            if behaviour_id is not None and behaviour_ids and behaviour_id not in behaviour_ids:
+            slug = cell.get("slug")
+            if slug is not None and registry_slugs and slug not in registry_slugs:
                 errors.append(
-                    f"reader-test-coverage.json: coverage[{index}]: behaviour_id "
-                    f"{behaviour_id!r} is not in this file's behaviours list"
+                    f"panel-cell-curation.json: cells[{index}]: slug {slug!r} "
+                    f"is not a behaviour slug in the registry (data/behaviours.json)"
                 )
+            if slug is None or cell.get("lab_id") is None:
+                continue  # schema-invalid cell; the schema errors cover it
+            key = (slug, cell["lab_id"])
+            if key in seen:
+                errors.append(
+                    f"panel-cell-curation.json: cells[{index}]: duplicate cell for "
+                    f"slug={key[0]!r} lab_id={key[1]!r} (first at cells[{seen[key]}])"
+                )
+            else:
+                seen[key] = index
 
     return errors
 

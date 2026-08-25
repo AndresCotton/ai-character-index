@@ -63,9 +63,9 @@ class TestFieldMapping(unittest.TestCase):
 
 
 class TestScopeIdParameter(unittest.TestCase):
-    """The one knob the two original copies differed on: the passage-id prefix
-    is whatever the caller passes as the second argument -- the document id for
-    build-spec-reader-data.py, the lab id for build-reader-test-data.py."""
+    """The one knob the original copies differed on: the passage-id prefix is
+    whatever the caller passes as the second argument -- the document id (the
+    lab namespace) for the reader payload."""
 
     def test_passage_ids_follow_scope_id(self):
         as_document = cp.coverage_payload(RECORD, "anthropic", "no-sycophancy")

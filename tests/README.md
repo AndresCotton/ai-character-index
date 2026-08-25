@@ -64,8 +64,8 @@ One test file per subject under test:
   (`GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in
   `engine/build-spec-reader-data.py`, the panel slug lists) must equal
   `engine/generate_behaviour_constants.py`'s rendering of it. Also pins the
-  registry against the published ledgers it mirrors (`data/coverage.json`
-  names, `data/reader-test-coverage.json` behaviours) and proves the gate
+  registry against the published ledger it mirrors (`data/coverage.json`
+  names) and proves the gate
   has teeth by mutating scratch copies (--check must fail). After an
   intentional registry change, run the generator and commit both sides.
 

@@ -80,7 +80,7 @@ The reader surfaces render from generated payloads, never from hand-edited JSON:
 
 ```sh
 python3 engine/build-spec-reader-data.py   # data/coverage.json + specs/ -> site/spec-reader/data/documents.json
-python3 engine/build-reader-test-data.py   # data/reader-test-coverage.json -> site/spec-reader-test/data/behaviours.json
+python3 engine/panel/build_site_data.py --threshold=4 --solid-threshold=6 --run-date=2026-08-17 --out=behaviours-v5-reader.json   # rebuild the reader-test bench payload (band-boundary build of the v5 run)
 node engine/verify-spec-reader.mjs         # every behaviour x spec view of the published reader + nav presence + full link/fragment crawl (needs Chrome)
 node engine/verify-reader-test.mjs         # the same for the reader test bench (needs Chrome)
 ```
@@ -91,7 +91,7 @@ text and nothing else, so work there cannot alter what the index publishes.
 
 ## data validation
 
-Every file in [`data/`](../data/) is validated against the JSON Schemas in [`data/schema/`](../data/schema/), plus the cross-file rules from [`data/README.md`](../data/README.md): no **published** coverage verdict without a citation (the reader-test bench models an absence finding as a record with empty citations), no coverage record pointing at a lab that `labs.json` doesn't define, no coverage record reference to a behaviour id the registry's index set doesn't define, and no unknown behaviour IDs in `reader-test-coverage.json` (checked against its own behaviours list).
+Every file in [`data/`](../data/) is validated against the JSON Schemas in [`data/schema/`](../data/schema/), plus the cross-file rules from [`data/README.md`](../data/README.md): no **published** coverage verdict without a citation, no coverage record pointing at a lab that `labs.json` doesn't define, no coverage record reference to a behaviour id the registry's index set doesn't define, and every `panel-cell-curation.json` cell's slug present in the registry with at most one cell per slug × lab.
 
 ```sh
 python3 engine/validate_data.py          # uses jsonschema when installed, stdlib fallback otherwise
