@@ -68,5 +68,5 @@ graph LR
 - Locator separators diverge by producer: panel chain emits `" > "`, curated chain `" › "`; cite.py tolerates both, consumers must know which producer they face.
 - `threshold`/`solid_threshold` are both live: `threshold` sets `keeps_citation`'s score cut, `solid_threshold` bakes into the payload's `adjacent` flag (tier display is client-side), and `--threshold=`/`--solid-threshold=` override both for derived builds without touching the committed config.
 - Rubric prompts compose explicitly from named slots (`harness.render_system_v3`), with frozen-prompt tests pinning byte-identity to the pre-refactor strings (replaced the former `str.replace`+`assert` coupling).
-- Nothing runs in CI: no workflow executes `test_panel.py`, `publish-coverage.py --check`, locator re-resolution, or the verifiers.
+- `.github/workflows/ci.yml` runs the offline battery (panel/provenance/registry suites, data gate, byte-identity rebuilds, publish checks, app.js harnesses) and the browser walkers on every PR.
 - Hygiene: `__pycache__/` + `*.pyc` are now gitignored (the committed `.pyc` was removed); `wholedoc-FAILED-*.txt` outputs are still not gitignored.

@@ -289,14 +289,14 @@ def _cross_file_checks(files: dict) -> list:
         # gate just because nothing got checked against it.
         errors.append("cross-file lab_id checks skipped: labs.json missing or empty")
 
-    def check_lab_ids(file_name, records):
+    def check_lab_ids(file_name, records, array_name="coverage"):
         for index, record in enumerate(records or []):
             if not isinstance(record, dict):
                 continue
             lab_id = record.get("lab_id")
             if lab_id is not None and lab_ids and lab_id not in lab_ids:
                 errors.append(
-                    f"{file_name}: coverage[{index}]: lab_id {lab_id!r} is not "
+                    f"{file_name}: {array_name}[{index}]: lab_id {lab_id!r} is not "
                     f"defined in data/labs.json (known: {sorted(lab_ids, key=str)})"
                 )
 
@@ -352,7 +352,7 @@ def _cross_file_checks(files: dict) -> list:
     curation = files.get("panel-cell-curation.json")
     if isinstance(curation, dict):
         cells = curation.get("cells")
-        check_lab_ids("panel-cell-curation.json", cells)
+        check_lab_ids("panel-cell-curation.json", cells, "cells")
         registry_slugs = set(registry) if isinstance(registry, dict) else set()
         if not registry_slugs:
             # Same rule as above: with no registry there is nothing to check

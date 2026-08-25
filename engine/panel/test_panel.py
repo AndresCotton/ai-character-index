@@ -1149,14 +1149,23 @@ class TestMainSmoke(unittest.TestCase):
         self.assertIn("0 citations", blob)
         self.assertIn("rubric", blob)          # and must say why
 
-    def test_out_name_refuses_a_tracked_payload(self):
-        # --out=behaviours-v5.json would have silently overwritten a committed
-        # calibration payload; only the manifest was guarded.
-        with self.assertRaises(SystemExit) as cm:
-            bs.check_out_name("behaviours-v5.json")
-        self.assertIn("tracked", str(cm.exception))
-        bs.check_out_name("my-scratch.json")   # untracked names still fine
-        bs.check_out_name("behaviours.json")   # the documented fallback rebuild
+    def test_out_name_guard_and_rebuildable_exceptions(self):
+        # A tracked payload that is NOT in REBUILDABLE_NAMES must still be
+        # refused (the byte-identity tests are the only reason the listed
+        # committed payloads are exempt); the manifest always is.
+        saved = bs.REBUILDABLE_NAMES
+        try:
+            bs.REBUILDABLE_NAMES = {bs.FALLBACK_NAME}
+            with self.assertRaises(SystemExit) as cm:
+                bs.check_out_name("behaviours-v5.json")
+            self.assertIn("tracked", str(cm.exception))
+        finally:
+            bs.REBUILDABLE_NAMES = saved
+        bs.check_out_name("my-scratch.json")        # untracked names still fine
+        bs.check_out_name("behaviours.json")        # documented fallback rebuild
+        bs.check_out_name("behaviours-v5-reader.json")  # documented bench rebuild
+        with self.assertRaises(SystemExit):
+            bs.check_out_name("manifest.json")
 
     def test_unknown_panel_name_exits_instead_of_building_empty(self):
         # B1: `.get(name) or [name]` turned a typo'd panel into a one-seat panel

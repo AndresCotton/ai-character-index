@@ -257,6 +257,65 @@ class TestPanelCellCurationSchema(MutationMixin, unittest.TestCase):
         self.assert_valid(mutate)
 
 
+class TestPropertyNamesFallback(unittest.TestCase):
+    """The stdlib fallback enforces propertyNames (the registry's slug rule)."""
+
+    SCHEMA = {"type": "object", "propertyNames": {"pattern": "^[a-z][a-z0-9-]*$"}}
+
+    def test_invalid_property_name_fails_on_stdlib(self):
+        errors = vd._validate_with_stdlib({"Bad Key!": 1}, self.SCHEMA)
+        self.assertTrue(
+            any("propertyNames" in e and "pattern" in e for e in errors),
+            f"no propertyNames error; got: {errors}",
+        )
+
+    def test_valid_property_names_pass_on_stdlib(self):
+        self.assertEqual(vd._validate_with_stdlib({"good-key": 1}, self.SCHEMA), [])
+
+
+class TestStdlibKeywordGuard(unittest.TestCase):
+    """The stdlib fallback implements a keyword subset; any other validation
+    keyword must fail loudly, never be silently skipped -- otherwise a schema
+    edit silently diverges the two backends."""
+
+    def assert_flagged(self, schema, instance, keyword, location):
+        errors = vd.validate_instance(instance, schema, force_stdlib=True)
+        self.assertTrue(errors, f"unsupported keyword {keyword!r} passed silently")
+        self.assertTrue(
+            any(keyword in error and location in error for error in errors),
+            f"no error names {keyword!r} at {location!r}; got: {errors}",
+        )
+
+    def test_format_is_flagged(self):
+        schema = {"type": "string", "format": "date"}
+        self.assert_flagged(schema, "2026-01-01", "format", "$")
+
+    def test_one_of_is_flagged(self):
+        schema = {"oneOf": [{"type": "string"}, {"type": "integer"}]}
+        self.assert_flagged(schema, 1, "oneOf", "$")
+
+    def test_unique_items_nested_under_items_is_flagged_with_location(self):
+        schema = {"type": "array", "items": {"type": "integer", "uniqueItems": True}}
+        self.assert_flagged(schema, [1, 2], "uniqueItems", "$.items")
+
+    def test_supported_keywords_pass_the_guard(self):
+        # Positive control: the keyword subset the committed schemas use.
+        schema = {
+            "type": "object",
+            "required": ["a"],
+            "additionalProperties": False,
+            "properties": {
+                "a": {"type": "string", "minLength": 1, "pattern": "^[a-z]+$"},
+                "b": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0, "maximum": 4}},
+                "c": {"enum": ["x", "y"]},
+            },
+        }
+        self.assertEqual(
+            vd.validate_instance({"a": "ok", "b": [1], "c": "x"}, schema, force_stdlib=True),
+            [],
+        )
+
+
 class TestCrossFileRules(unittest.TestCase):
     """Rules a single-file schema cannot express, run against a scratch repo copy."""
 

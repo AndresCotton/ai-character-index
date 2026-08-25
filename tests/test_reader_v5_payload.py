@@ -15,11 +15,9 @@ Three nets here:
 2. Every stored quote re-resolves byte-for-byte through cite.py -- the same
    net data/coverage.json gets in tests/test_coverage_json.py.
 3. A golden rebuild: the builder with the same overrides reproduces the
-   committed payload byte-for-byte once the role fractions carry the cell's
-   true maximum -- the rule site/llm-panel-review/app.js applies at render
-   (the '(score N/M)' in the role rewritten with M = maxVerdict x votes,
-   maxVerdict the largest verdict in the cell, min 2). A silent change in
-   either cut shows up as a diff here.
+   committed payload byte-for-byte -- it emits the same render-form role
+   fractions site/llm-panel-review/app.js applies at render. A silent change
+   in either cut shows up as a diff here.
 
 Band LABELS (adjacent vs the band the panel view renders) need the real
 tierBand arithmetic; engine/panel/test_reader_v5_labels.js extracts tierBand
@@ -150,25 +148,6 @@ class GoldenRebuildTest(unittest.TestCase):
     byte-for-byte, once role fractions carry the cell's true maximum (the rule
     app.js applies at render). A silent change in either cut surfaces here."""
 
-    @staticmethod
-    def _normalize_roles(payload):
-        for behaviour in payload["behaviours"]:
-            for cell in behaviour["coverage"].values():
-                passages = cell.get("passages") or []
-                if not passages:
-                    continue
-                max_verdict = max(
-                    [2] + [v for p in passages for v in (p.get("verdicts") or {}).values()]
-                )
-                for passage in passages:
-                    votes = list((passage.get("verdicts") or {}).values())
-                    shown = sum(v if v >= 2 else (1 if v == 1 else 0) for v in votes)
-                    passage["role"] = re.subn(
-                        r"\(score [^)]*\)",
-                        f"(score {shown}/{max_verdict * len(votes)})",
-                        passage["role"],
-                    )[0]
-
     def test_rebuild_reproduces_the_committed_payload(self):
         sp = importlib.util.spec_from_file_location("builder_under_test", BUILDER)
         bs = importlib.util.module_from_spec(sp)
@@ -185,14 +164,12 @@ class GoldenRebuildTest(unittest.TestCase):
                 bs.main()
         finally:
             sys.argv = saved
-        rebuilt = json.loads(
-            (scratch / "site" / "llm-panel-review" / "data" /
-             "behaviours-v5-reader.json").read_text(encoding="utf-8"))
-        self._normalize_roles(rebuilt)
-        self.maxDiff = None
+        rebuilt = (scratch / "site" / "llm-panel-review" / "data" /
+                   "behaviours-v5-reader.json").read_bytes()
+        # a real byte comparison: the builder emits the render-form role
+        # fractions itself, so no test-side transformation is needed
         self.assertEqual(
-            json.dumps(rebuilt, indent=1, ensure_ascii=False) + "\n",
-            PAYLOAD.read_text(encoding="utf-8"),
+            rebuilt, PAYLOAD.read_bytes(),
             "rebuilt bench payload diverges from the committed file",
         )
 

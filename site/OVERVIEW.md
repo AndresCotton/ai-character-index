@@ -30,7 +30,7 @@ The public presentation layer: renders engine-generated JSON payloads into stati
 graph LR
   docpayload["spec-reader/data/documents.json"] --> reader["spec-reader/"]
   docpayload --> bench["spec-reader-test/"]
-  benchdata["spec-reader-test/data/behaviours.json"] --> bench
+  benchdata["llm-panel-review/data/behaviours-v5-reader.json"] --> bench
   docpayload --> panel["llm-panel-review/"]
   paneldata["llm-panel-review/data/behaviours.json"] --> panel
   index["index.html (inline prototype data)"] -.->|iframe modal| reader

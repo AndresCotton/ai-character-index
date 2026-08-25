@@ -1,6 +1,6 @@
 /*
  * Reader test -- a standalone copy of the published spec reader (site/spec-reader/),
- * kept separate so an external reviewer's behaviour set can be published, revised and
+ * kept separate so the bench's behaviour set can be published, revised and
  * withdrawn without touching the index's own reader.
  *
  * Differences from the original: the behaviour menu is built from whatever set has

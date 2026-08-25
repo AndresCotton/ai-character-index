@@ -55,6 +55,11 @@ One test file per subject under test:
   citation_format, verified_against_version, duplicate labs, unknown lab,
   sidecar-beats-markdown precedence) has a mutation guard on a scratch
   copy of the behaviour-1 sweep.
+- `test_reader_v5_payload.py` -- pins the bench payload: 363 citations (not the
+  unfiltered 3,630 nor the retired bench's 294), the score/votes cuts,
+  adjacent-vs-band agreement against `tierBand` extracted from app.js (three
+  enumerated ragged exceptions), quote re-resolution, and a golden
+  byte-identical rebuild.
 - `test_coverage_json.py` -- re-resolves **every** locator in
   `data/coverage.json` against `cite.py`, whether or not the behaviour has
   any artifact. Resolution is in-process (one spec load per spec), so this

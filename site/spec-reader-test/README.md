@@ -22,7 +22,7 @@ model spec 22 -> 22 -- is preserved in
 | | Source | Why |
 |---|---|---|
 | Spec text | `../spec-reader/data/documents.json` (shared) | Both surfaces must show the identical document versions; duplicating ~500 KB of spec markdown would let them drift |
-| Behaviour set + passage mappings | [`data/behaviours.json`](data/behaviours.json) (own) | This is the part under test, and must not reach the published reader |
+| Behaviour set + passage mappings | [`../llm-panel-review/data/behaviours-v5-reader.json`](../llm-panel-review/data/behaviours-v5-reader.json) (own, built) | This is the part under test, and must not reach the published reader |
 
 `app.js` and `styles.css` are a deliberate fork of the reader's, not a shared module: the
 bench can diverge freely, and nothing done here can regress the live reader. The differences
@@ -76,10 +76,10 @@ which is why the count under the button can exceed the reader's passage count. T
 named `reader-test-<slug>-passages-<date>.md` for one behaviour and
 `reader-test-<n>-behaviors-passages-<date>.md` for several.
 
-## Publishing a behaviour to the bench
+## The bench payload's shape
 
-`data/behaviours.json` is `{"behaviours": [...]}`, each entry the same shape the reader's
-payload uses:
+`../llm-panel-review/data/behaviours-v5-reader.json` is `{"behaviours": [...]}`, each entry
+the same shape the reader's payload uses:
 
 ```json
 {

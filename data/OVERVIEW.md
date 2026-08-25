@@ -29,7 +29,7 @@ graph LR
 ```
 
 ## As-is observations
-- Schemas exist for every canonical file and `engine/validate_data.py` (+ its test suite) enforces them; no CI workflow runs the gate yet.
+- Schemas exist for every canonical file and `engine/validate_data.py` (+ its test suite) enforces them; `.github/workflows/ci.yml` runs the gate on every PR.
 - `meta.json` (site-wide metadata) is still planned-but-absent; `behaviours.json` is the registry (see Contents).
 - Behaviour IDs are per-set: `coverage.json` id 1 = "No sycophancy" while the reader-test set starts at "Helpfulness"; the registry namespaces ids per set and documents the join semantics (ids are file-local, slugs are the global key).
 - The reader's published behaviour definitions (ids 1-3) live as a generated `BEHAVIOURS` constant in `engine/build-spec-reader-data.py`, regenerated from `data/behaviours.json` by `engine/generate_behaviour_constants.py` (ids 1-3 because those are the covered behaviours); the panel's metadata is registry-driven too.

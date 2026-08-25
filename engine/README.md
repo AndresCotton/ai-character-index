@@ -86,7 +86,7 @@ node engine/verify-reader-test.mjs         # the same for the reader test bench 
 ```
 
 The reader test bench ([`site/spec-reader-test/`](../site/spec-reader-test/)) is a separate
-tab carrying an external reviewer's behaviour set. It shares the published reader's spec
+tab carrying the v5 panel run's behaviour set. It shares the published reader's spec
 text and nothing else, so work there cannot alter what the index publishes.
 
 ## data validation
