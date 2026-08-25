@@ -97,10 +97,10 @@ class TestEndToEnd(unittest.TestCase):
         # The shipped behaviours.json was once accidentally rebuilt in a worktree during
         # assembly (provenance.runDate re-stamped) and had to be restored byte-identical;
         # any rebuild or byte-level tamper of the committed file trips here. If a change
-        # is deliberate, update this hash AND the runlog-v3.md / runDate record together.
+        # is deliberate, update this hash AND the runlog-v5.md / runDate record together.
         sha = hashlib.sha256(v.DEFAULT_PAYLOAD.read_bytes()).hexdigest()
         self.assertEqual(
-            sha, "3a70b9f934da2e68987acabecfd8471238722f80e753ec671942955cb7a43a7c",
+            sha, "da629368d7bc5fa6ba259745b139ce505dea5e0074b92336bcd8769752cacb39",
             "committed site/llm-panel-review/data/behaviours.json changed bytes")
 
     def test_unreadable_panel_config_fails_not_traceback(self):
@@ -128,7 +128,7 @@ class TestEndToEnd(unittest.TestCase):
         with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
             f.write(json.dumps({"behaviour": "helpfulness", "spec": "constitution",
                                 "locator": "x", "verdict": 2,
-                                "parsed": True, "rubric": "v3w"}) + "\n")
+                                "parsed": True, "rubric": v.DEFAULT_RUBRIC}) + "\n")
             malformed = Path(f.name)
         self.addCleanup(malformed.unlink, missing_ok=True)
         rc, out = quietly(v.verify, runlog=malformed, verbose=True)
@@ -158,7 +158,7 @@ class TestBuilderCrashPath(unittest.TestCase):
         with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:
             f.write(json.dumps({"behaviour": "helpfulness", "spec": "constitution",
                                 "model": "sol", "verdict": 2,
-                                "parsed": True, "rubric": "v3w"}) + "\n")
+                                "parsed": True, "rubric": v.DEFAULT_RUBRIC}) + "\n")
             crashy = Path(f.name)
         self.addCleanup(crashy.unlink, missing_ok=True)
         out, err = io.StringIO(), io.StringIO()
@@ -198,23 +198,27 @@ class TestBuilderCrashPath(unittest.TestCase):
 
 class TestRunlogFacts(unittest.TestCase):
     """Tripwires on the canonical log's identity (it is frozen data; if these
-    fail, the log changed -- runlog-v3.md must change with it, deliberately)."""
+    fail, the log changed -- runlog-v5.md must change with it, deliberately)."""
 
     def test_canonical_log_identity(self):
         facts = v.runlog_facts(v.DEFAULT_RUNLOG, v.DEFAULT_RUBRIC)
-        self.assertEqual(facts["rows_total"], 10298)
-        self.assertEqual(facts["rows_rubric"], 9415)
-        self.assertEqual(facts["parsed_false"], 0)
-        self.assertEqual(set(facts["models"]), {"sol", "fable", "kimi", "opus", "kimi-k2"})
-        # registry slugs since the PR #46 re-key (runlog-v3.md carries the
-        # EDIT note with the legacy-key mapping and the pre-re-key hash)
+        self.assertEqual(facts["rows_total"], 31293)
+        self.assertEqual(facts["rows_rubric"], 31293)
+        self.assertEqual(facts["parsed_false"], 8)
+        # the log also holds the audition rows (glm, deepseek-v4, qwen38-max);
+        # build_site_data admits only the frontier_fast seats from it
+        self.assertEqual(set(facts["models"]),
+                         {"sol", "fable", "deepseek", "glm", "deepseek-v4", "qwen38-max"})
         self.assertEqual(set(facts["behaviours"]),
-                         {"helpfulness", "harm-avoidance-to-third-parties",
-                          "avoiding-over-and-under-caution"})
-        # full sha256 recorded in engine/panel/runlog-v3.md -- any byte-level
+                         {"helpfulness", "harmlessness-to-the-user",
+                          "harm-avoidance-to-third-parties", "proportionate-risk-mitigation",
+                          "how-to-approach-tradeoffs", "avoiding-over-and-under-caution",
+                          "objectivity-on-contested-questions", "user-autonomy",
+                          "animal-welfare-impacts"})
+        # full sha256 recorded in engine/panel/runlog-v5.md -- any byte-level
         # alteration of the frozen log trips here, via the documented hash
         sha = hashlib.sha256(v.DEFAULT_RUNLOG.read_bytes()).hexdigest()
-        self.assertEqual(sha, "d46e2b69428916f46674af72680889529b09ffa748fca8d38cf5591b5d1153dc")
+        self.assertEqual(sha, "05ba1e1c010e39ac6f8574e208af780e3a5354682e7aa2a39868bb265caffb9c")
 
     def test_zero_matching_rows_detected(self):
         with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as f:

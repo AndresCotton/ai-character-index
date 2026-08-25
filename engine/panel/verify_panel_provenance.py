@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Verify that the shipped site/llm-panel-review/data/behaviours.json is
-reproducible from the committed canonical runlog (engine/panel/runlog-v3.jsonl).
+reproducible from the committed canonical runlog (engine/panel/runlog-v5.jsonl).
 
 Standard being checked: "a fresh clone can verify and reproduce every published
 panel number."
@@ -23,10 +23,10 @@ DOCUMENTED ALLOWANCE -- provenance.runDate
   time; the runlog row schema carries no timestamp field, so the original
   build date cannot be re-derived from the log -- a rebuild can only ever emit
   the day it runs, never the historical build date. The shipped value is
-  corroborated outside the log: runlog-v3.md records the evidence (the source
-  file's mtime 2026-07-29, and the 2026-07-30 integration run named in
-  test_panel.py), and verify() tripwires it against DOCUMENTED_RUN_DATE.
-  Every other byte must match; step 5 proves that.
+  corroborated outside the log: runlog-v5.md records the evidence (the
+  calibration-loop v5 full bench of 2026-08-17, the date the audition note in
+  panel-config.json pins), and verify() tripwires it against
+  DOCUMENTED_RUN_DATE. Every other byte must match; step 5 proves that.
 
 Usage
   python3 engine/panel/verify_panel_provenance.py
@@ -49,16 +49,16 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-DEFAULT_RUNLOG = HERE / "runlog-v3.jsonl"
+DEFAULT_RUNLOG = HERE / "runlog-v5.jsonl"
 DEFAULT_PAYLOAD = ROOT / "site" / "llm-panel-review" / "data" / "behaviours.json"
-DEFAULT_RUBRIC = "v3w"
-DEFAULT_PANEL = "frontier"
+DEFAULT_RUBRIC = "v5"
+DEFAULT_PANEL = "frontier_fast"
 # JSON paths the builder cannot reproduce deterministically; see module docstring.
 ALLOWED_FIELDS = [("provenance", "runDate")]
 # The allowance is anchored to the human-reviewed provenance record:
-# runlog-v3.md documents the shipped build date. Drift means the payload
+# runlog-v5.md documents the shipped build date. Drift means the payload
 # was rebuilt after the note was written.
-DOCUMENTED_RUN_DATE = "2026-07-30"
+DOCUMENTED_RUN_DATE = "2026-08-17"
 
 
 def _load(name, path):
@@ -275,7 +275,7 @@ def verify(runlog=DEFAULT_RUNLOG, payload=DEFAULT_PAYLOAD, rubric=DEFAULT_RUBRIC
     if not runlog.exists():
         say(f"FAIL: canonical runlog not found: {runlog}")
         say("      the committed log that produced the shipped payload must exist; "
-            "see engine/panel/runlog-v3.md")
+            "see engine/panel/runlog-v5.md")
         return 2
     try:
         shipped_raw = payload.read_bytes()

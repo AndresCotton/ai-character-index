@@ -21,8 +21,9 @@ behaviours (the clone/fork seam) flow into the payload -- display them with
 reader-test-coverage.json still supplies the curated per-lab
 verdict/depth/verifiedDate rows, carried through untouched.
 
-  python3 build_site_data.py --runlog=<runlog> --rubric=v3w --panel=frontier
-  (the shipped data: --runlog=runlog-v3.jsonl committed in engine/panel/, rubric v3w)
+  python3 build_site_data.py --runlog=<runlog> --rubric=v5 --panel=frontier_fast
+  (the shipped data: --runlog=runlog-v5.jsonl committed in engine/panel/, rubric v5,
+  the 9-point scale: three 0-3 judges per passage)
 
 Output: by DEFAULT each run emits its own timestamped file
   site/llm-panel-review/data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json
@@ -333,8 +334,11 @@ def main(argv=None):
     sp.loader.exec_module(h)
     config = h.load_config()
     DISPLAY = config["display"]
-    runlog = HERE / "runlog-v3.jsonl"   # same default as whole_doc.py and run_rollout.py
-    rubric = config["rubric"]
+    runlog = HERE / "runlog-v5.jsonl"   # the committed canonical log behind the shipped payload
+    # display.rubric is the rubric the SHIPPED payload builds from (v5, 9-point);
+    # top-level config["rubric"] stays what the v3 executors stamp (v3w) -- the two
+    # diverge until whole_doc.py gains a v5 prompt port.
+    rubric = DISPLAY.get("rubric", config["rubric"])
     out_name = None
     registry_path = ROOT / "data" / "behaviours.json"
     run_date = str(date.today())
@@ -368,6 +372,7 @@ def main(argv=None):
     runlog_rubrics = set()
     spec_of = {}
     runlog_keys = set()
+    max_verdict = 0   # scale of the admitted rows; names the scoring rule in provenance
     for line in runlog.read_text().splitlines():
         d = json.loads(line)
         runlog_keys.add(d["behaviour"])
@@ -376,6 +381,7 @@ def main(argv=None):
         if d.get("rubric", "v1") != rubric or not d.get("parsed", True) or d["model"] not in panel:
             continue
         votes[(d["behaviour"], d["locator"])][d["model"]] = d.get("verdict", 0)
+        max_verdict = max(max_verdict, d.get("verdict", 0))
         spec_of[(d["behaviour"], d["locator"])] = d["spec"]
     unknown_keys = sorted(runlog_keys - set(registry))
     if unknown_keys:
@@ -462,7 +468,12 @@ def main(argv=None):
                **({"substitution": substitution} if substitution else {}),
                "judges_seen_in_data": seats,
                "runDate": run_date,
-               "scoring": "per passage: sum over judges of core=2/related=1/neither=0; display thresholds are client-side URL params"},
+               # The scoring rule names the scale the admitted rows actually carry:
+               # a 4-point rubric (defining=3 exists) must not describe itself as 2/1/0.
+               "scoring": ("per passage: sum over judges of defining=3/core=2/related=1/neither=0; "
+                           "display thresholds are client-side URL params") if max_verdict >= 3 else
+                          ("per passage: sum over judges of core=2/related=1/neither=0; "
+                           "display thresholds are client-side URL params")},
            "behaviours": out_behaviours}
     n = sum(len(c["passages"]) for b in out_behaviours for c in b["coverage"].values())
     summary = f"{len(out_behaviours)} behaviours, {n} citations " \

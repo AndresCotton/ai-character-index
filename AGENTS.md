@@ -72,7 +72,8 @@ Everything stays local — nothing pushes back.
    read the cost before looping. One cell of a ~15 KB spec on `haiku` is well
    under a cent (measured: 5,884 in / 383 out = $0.008). Always pass
    `--runlog=`: the default is `engine/panel/runlog-v3.jsonl`, the committed
-   shipped runlog. Put yours in `local/`, which is gitignored. It also appends
+   v3-era log (the SHIPPED payload's log is `engine/panel/runlog-v5.jsonl`).
+   Put yours in `local/`, which is gitignored. It also appends
    to `engine/panel/metrics.jsonl` (gitignored).
 
    To rehearse steps 2-6 without spending, `python3 engine/stage_user_demo.py
@@ -166,8 +167,9 @@ node engine/verify-panel-features.mjs            # Tier-1 site features × bundl
   `site/spec-reader/data/documents.json` is **tracked**, and
   `build-spec-reader-data.py --user-manifest=` rewrites it in place with your
   spec's text inlined -- it is build output the site serves, so it cannot be
-  ignored; check it before committing. The committed `runlog-v3.jsonl` and
-  `behaviours.json` fallback are deliberate, and provenance-verified.
+  ignored; check it before committing. The committed runlogs (`runlog-v5.jsonl`,
+  `runlog-v3.jsonl`) and the `behaviours.json` fallback are deliberate, and
+  provenance-verified.
 - Behaviour identity is registry-driven: edit `data/behaviours.json`, then run
   `engine/generate_behaviour_constants.py` (its `--check` and
   `tests/test_behaviour_registry.py` fail loudly on drift).

@@ -17,7 +17,7 @@
    "sol"
   ],
   "runDate": "2026-08-17",
-  "scoring": "per passage: sum over judges of core=2/related=1/neither=0; display thresholds are client-side URL params"
+  "scoring": "per passage: sum over judges of defining=3/core=2/related=1/neither=0; display thresholds are client-side URL params"
  },
  "behaviours": [
   {

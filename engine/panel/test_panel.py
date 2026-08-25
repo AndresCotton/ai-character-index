@@ -544,7 +544,10 @@ class TestBuildMain(unittest.TestCase):
     def build(self, *extra):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            bs.main([f"--runlog={self.runlog}", *extra])
+            # the synthetic rows are v3w/frontier; the config defaults moved to
+            # v5/frontier_fast with the shipped payload, so pin them explicitly
+            bs.main([f"--runlog={self.runlog}", "--rubric=v3w", "--panel=frontier",
+                     *extra])
         return out.getvalue()
 
     def test_timestamped_build_writes_run_file_and_manifest_row(self):
@@ -1303,8 +1306,11 @@ class TestMainSmoke(unittest.TestCase):
         rubric = cfg["rubric"]
         exec_panel = cfg["panels"]["frontier_primary"]   # the --panel= override below
         admission = cfg["display"]["panel"]              # what the hint must name
-        self.assertEqual(set(exec_panel) | {"opus", "kimi-k2"},
-                         set(cfg["panels"][admission]))  # premise: admission adds subs
+        # premise: the admission panel differs from the execution panel (since the
+        # v5 flip, display.panel is frontier_fast -- deepseek third seat -- while
+        # this driver still executes frontier_primary), so a hint naming the wrong
+        # one is detectable.
+        self.assertNotEqual(set(exec_panel), set(cfg["panels"][admission]))
         first_loc = {s: h.passages(s)[0][0] for s in cfg["specs"]}
         rows = [{"behaviour": "helpfulness", "spec": s, "model": m,
                  "locator": first_loc[s], "rubric": rubric}
@@ -1325,7 +1331,7 @@ class TestMainSmoke(unittest.TestCase):
         self.assertIn("COMPLETE", r.stdout)
         m_panel = re.search(r"--panel=(\S+)", r.stdout)
         self.assertIsNotNone(m_panel, r.stdout)
-        self.assertEqual(m_panel.group(1), admission)    # frontier, not frontier_primary
+        self.assertEqual(m_panel.group(1), admission)    # the display/admission panel, not frontier_primary
 
 
 if __name__ == "__main__":

@@ -56,9 +56,10 @@ as JSON. To rebuild the shipped fallback (or any fixed filename) instead of emit
 a timestamped run, pass `--out=` -- e.g. `--out=behaviours.json`; the manifest is
 left alone on that path. The name is validated (URL-safe chars, no path separators
 or `..`), so `--out=` cannot write outside the data dir.
-- `runlog-v3.jsonl` -- the committed canonical runlog that produced the shipped
-  payload (`runlog-v3.md` documents its contents and provenance). Every other
-  `runlog*.jsonl` stays gitignored.
+- `runlog-v5.jsonl` -- the committed canonical runlog that produces the shipped
+  payload (`runlog-v5.md` documents its contents and provenance); the v3-era
+  log `runlog-v3.jsonl` stays committed alongside its record `runlog-v3.md`.
+  Every other `runlog*.jsonl` stays gitignored.
 - `verify_panel_provenance.py` -- proves the shipped payload rebuilds from that
   log; `test_verify_panel_provenance.py` is its test suite.
 
@@ -89,7 +90,8 @@ provenance check below (green rebuild, tamper detection, missing-input failure).
 
 ## Verifying + reproducing the shipped data
 The canonical runlog behind the shipped payload is committed here:
-`runlog-v3.jsonl` (see `runlog-v3.md` for its contents and provenance record).
+`runlog-v5.jsonl` (see `runlog-v5.md` for its contents and provenance record --
+the v5 full bench: 4-point verdicts, 9-point cells on the frontier_fast panel).
 
 ```sh
 python3 engine/panel/verify_panel_provenance.py
@@ -101,14 +103,18 @@ documented exception: `provenance.runDate`, which the builder stamps with the
 build date (`date.today()`) and which cannot be re-derived because the log
 schema carries no timestamps. Exit 0 = verified.
 
-Manual rebuild: `python3 build_site_data.py` (defaults `--runlog=runlog-v3.jsonl
---rubric=v3w --panel=frontier` are the shipped configuration). Without `--out=`
-the build lands in a new timestamped run file (see "Run outputs, manifest,
-pinning" above) -- what ordinary re-runs should do; `--out=behaviours.json`
-rebuilds the shipped payload in place, whose `runDate` a plain rebuild
-re-stamps with today's date.
+Manual rebuild: `python3 build_site_data.py` (defaults `--runlog=runlog-v5.jsonl`
+plus the display config `rubric: v5`, `panel: frontier_fast` are the shipped
+configuration). Without `--out=` the build lands in a new timestamped run file
+(see "Run outputs, manifest, pinning" above) -- what ordinary re-runs should
+do; `--out=behaviours.json` rebuilds the shipped payload in place, whose
+`runDate` a plain rebuild re-stamps with today's date.
 
 A NEW panel run must write a new runlog, and a regenerated payload needs its
 own committed log + passing check -- provenance travels with the data.
-(Regenerating verdicts from scratch: `python3 whole_doc.py <behaviour> <spec>
-sol,fable,kimi` per cell; the runlog is append-only + resume-safe.)
+(Regenerating v3-family verdicts from scratch: `python3 whole_doc.py
+<behaviour> <spec> sol,fable,kimi` per cell into `runlog-v3.jsonl`; the runlog
+is append-only + resume-safe. The v5 verdicts came from the calibration-loop
+whole-doc runs -- `whole_doc.py` still renders the v3 prompts, so regenerating
+v5 rows needs the v5 prompt, `experiments/panel-calibration/prompts/v5.txt`,
+until a v5 prompt port lands.)
