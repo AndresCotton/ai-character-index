@@ -13,7 +13,7 @@ merging). Two jobs:
   `tests/` suite (cite goldens, decoupling pins), the data gate, builder
   byte-identity rebuilds, the registry drift gate, and the node app.js
   resolution harnesses. Stdlib python + node only; nothing to install.
-- **browser** — the two Playwright walkers (reader, panel feature harness ×
+- **browser** — the two Playwright walkers (reader, reader feature harness ×
   bundled + user-extended data) against an installed Chrome.
 
 No secrets are needed; `contents: read` is the only permission.

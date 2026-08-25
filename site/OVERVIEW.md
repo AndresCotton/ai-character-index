@@ -1,6 +1,6 @@
 # site/ — three static surfaces, no build step, data via committed JSON payloads
 
-> Current-state doc: describes what exists now, not what should exist. Brought current with the Phase-2 stack (#28–#41) and the reader consolidation.
+> Current-state doc: describes what exists now, not what should exist.
 
 ## Purpose
 
@@ -12,7 +12,7 @@ The public presentation layer: renders engine-generated JSON payloads into stati
 |---|---|
 | `index.html` | Core-page **prototype**: all data is inline JS (`const B = {...}`, `const GROUPS = [...]`); only behaviour 1 carries real coverage data, the rest are labeled illustrative placeholders. Embeds `spec-reader/` in an iframe modal. Hand-maintained copy of `design/prototypes/core-page.html`; the two have diverged. |
 | `methodology.html` | Static prose page. Describes coverage assessment: the LLM panel procedure as operative, the fixed term-list search as the predecessor that produced behaviours 1–3. |
-| `spec-reader/` | The spec reader: both specifications in full with a behaviour menu over them (checklist, multi-select, compare view), each citation carrying raw per-judge verdicts scored client-side into tiers (defining / core / related band toggles). Spec text from its own `data/documents.json` (built by `engine/build-spec-reader-data.py`); behaviour data from its own `data/behaviours.json` (built by `engine/panel/build_site_data.py`), resolved ?data=<name> pin -> `data/manifest.json` latest -> that shipped fallback. `data/` also holds the calibration variants (v3w-fresh / v4a / v4a-ds / v5 / v5-1) and the band-filtered keep-set (`behaviours-v5-reader.json`) side by side, each loadable as a `?data=` pin. |
+| `spec-reader/` | The spec reader: both specifications in full with a behaviour menu over them (checklist, multi-select, compare view), each citation carrying raw per-judge verdicts scored client-side into tiers (defining / core / related band toggles). Spec text from its own `data/documents.json` (built by `engine/build-spec-reader-data.py`); behaviour data from its own `data/behaviours.json` (built by `engine/panel/build_site_data.py`), resolved ?data=<name> pin -> `data/manifest.json` latest -> the shipped fallback. `data/` also holds the calibration variants (v3w-fresh / v4a / v4a-ds / v5 / v5-1) and the band-filtered keep-set (`behaviours-v5-reader.json`) side by side, each loadable as a `?data=` pin. |
 | `README.md` | Layer status; lists the three tabs. |
 
 ## Relationships

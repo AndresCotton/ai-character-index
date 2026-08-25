@@ -7,7 +7,7 @@ name: CI
 #               the data gate, byte-identity rebuilds, and the node app.js
 #               harnesses. Stdlib python + node only.
 #
-#   browser  -- the two Playwright walkers (reader + panel feature
+#   browser  -- the two Playwright walkers (reader anchoring + reader feature
 #               harness x bundled and user-extended data), which need a
 #               real Chrome.
 #
@@ -85,5 +85,5 @@ jobs:
       - name: Reader view walker
         run: node engine/verify-reader-test.mjs
 
-      - name: Panel feature harness (bundled + user-extended)
+      - name: Reader feature harness (bundled + user-extended)
         run: node engine/verify-reader-features.mjs

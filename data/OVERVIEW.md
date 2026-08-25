@@ -1,5 +1,5 @@
 # data/ — canonical machine-readable data the site renders from
-> Current-state doc: describes what exists now, not what should exist. Brought current with the Phase-2 stack (#28–#34).
+> Current-state doc: describes what exists now, not what should exist.
 
 ## Purpose
 Per `data/README.md`, this directory is "the canonical machine-readable data the site renders from," changed only via reviewed PRs. It currently holds the frozen cited spec-coverage verdicts, the behaviour registry, the lab list, and the panel's cell curation. Derived views (evidence strength per cell, the gap list) are planned but computed nowhere today; when implemented they should be computed at render time, never stored here.

@@ -72,9 +72,7 @@ const documents = JSON.parse(
  * coverage record that was never written. On the committed two-document tree
  * every document has a record, so this is a no-op. */
 const coveredPassages = (behaviour, id) => behaviour.coverage[id]?.passages ?? [];
-/* The keep-set coverage for a behaviour slug; a behaviour the keep-set does not
- * carry renders nothing (the two payloads list the same ten behaviours, so this
- * is a defensive default, not a live case). */
+/* The keep-set coverage for a behaviour slug. */
 const renderable = (slug, id) => coveredPassages(keepSet.get(slug) ?? { coverage: {} }, id);
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
@@ -156,10 +154,8 @@ async function expectView(url, expected, label) {
     + (seen.behaviour !== expected.behaviour ? `  behaviour: ${seen.behaviour}` : ""));
 }
 
-// Navigation: the reader is the site's spec-reader surface. The deleted
-// index-reader walker carried the only nav coverage -- keep it: the expected
-// links must be present and every one must resolve (any #fragment to a real id
-// in its target).
+// Navigation: the expected links must be present and every one must resolve
+// (any #fragment to a real id in its target).
 await readView(base);
 const expectedNav = ["../", "./", "../methodology.html", "../#about"];
 const navHrefs = await page.evaluate(

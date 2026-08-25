@@ -298,7 +298,7 @@ def _cross_file_checks(files: dict) -> list:
 
     def check_unique_records(file_name, records):
         # Exactly one record per (behaviour_id, lab_id): the published reader
-        # silently absorbs duplicates (first record wins) and the bench
+        # silently absorbs duplicates (first record wins) and the reader
         # builder hard-crashes on them, so duplicates must fail at the gate.
         seen = {}
         for index, record in enumerate(records or []):

@@ -85,7 +85,7 @@ def main():
         user_locs = [loc for loc, _s, _t in harness.passages(USER_SPEC)]
         if len(user_locs) < 2:
             sys.exit("user spec must expose at least two passages")
-        bench_loc = next(iter(harness.passages("constitution")))[0]
+        bundled_loc = next(iter(harness.passages("constitution")))[0]
         runlog = tmp / "runlog.jsonl"
         rows = [
             {"behaviour": USER_BEHAVIOUR, "spec": USER_SPEC, "model": "qwen-big",
@@ -93,7 +93,7 @@ def main():
             {"behaviour": USER_BEHAVIOUR, "spec": USER_SPEC, "model": "qwen-big",
              "locator": user_locs[1], "rubric": "v3w", "parsed": True, "verdict": 2},
             {"behaviour": "helpfulness", "spec": "constitution", "model": "qwen-big",
-             "locator": bench_loc, "rubric": "v3w", "parsed": True, "verdict": 2},
+             "locator": bundled_loc, "rubric": "v3w", "parsed": True, "verdict": 2},
         ]
         runlog.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
 

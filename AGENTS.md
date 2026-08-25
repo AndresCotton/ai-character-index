@@ -117,8 +117,10 @@ by accident, and the deployed site can only ever serve the committed fallback.
 
 It lands on **`site/spec-reader/`**: the reader resolves the manifest's latest run
 by default, so your run is what your clone shows -- your behaviour in the sidebar
-alongside the bundled ones, and your registered specification as a document, with
-your run's passages against it for the behaviours you judged. `site/shared/
+(the run payload replaces the shipped set; judge the bundled behaviours in the
+same run if you want them alongside), and your registered specification as a
+document, with your run's passages against it for the behaviours you judged.
+`site/shared/
 local-mode.js` marks the page "Local specifications" so a local run is never
 mistaken for the published index.
 

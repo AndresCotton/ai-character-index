@@ -1163,7 +1163,7 @@ class TestMainSmoke(unittest.TestCase):
             bs.REBUILDABLE_NAMES = saved
         bs.check_out_name("my-scratch.json")        # untracked names still fine
         bs.check_out_name("behaviours.json")        # documented fallback rebuild
-        bs.check_out_name("behaviours-v5-reader.json")  # documented bench rebuild
+        bs.check_out_name("behaviours-v5-reader.json")  # documented keep-set rebuild
         with self.assertRaises(SystemExit):
             bs.check_out_name("manifest.json")
 

@@ -56,19 +56,22 @@ Rewritten constants: `BEHAVIOURS` in `build-spec-reader-data.py`, and the `title
 
 ## site builders and checks
 
-The reader surfaces render from generated payloads, never from hand-edited JSON:
+The reader renders from generated payloads, never from hand-edited JSON:
 
 ```sh
 python3 engine/build-spec-reader-data.py   # frozen data/coverage.json + specs/ -> site/spec-reader/data/documents.json
-python3 engine/panel/build_site_data.py --threshold=4 --solid-threshold=6 --run-date=2026-08-17 --out=behaviours-v5-reader.json   # rebuild the reader's behaviour payload (band-boundary build of the v5 run)
-node engine/verify-reader-test.mjs         # the reader: every behaviour x spec view + nav presence/resolution + the pinned payload URL (needs Chrome)
+python3 engine/panel/build_site_data.py --threshold=4 --solid-threshold=6 --run-date=2026-08-17 --out=behaviours-v5-reader.json   # rebuild the band keep-set (band-boundary build of the v5 run)
+node engine/verify-reader-test.mjs         # the reader: every behaviour x spec view against the keep-set + nav presence/resolution + fallback/manifest state (needs Chrome)
 ```
 
-The reader (`site/spec-reader/`) renders the spec text from `documents.json` and its
-behaviour set from the band-filtered `behaviours-v5-reader.json`, pinned by literal
-filename (see `site/README.md` for why it must not resolve through the panel's
-manifest). `data/coverage.json` is frozen: nothing writes it, and while the builder
-still derives `documents.json`'s `behaviours` key from it, no surface renders that key.
+The reader (`site/spec-reader/`) renders the spec text from `documents.json` and
+its behaviour set from `data/behaviours.json`, resolved ?data=<name> pin ->
+`manifest.json` latest -> that shipped fallback; `behaviours-v5-reader.json` is
+the band keep-set -- exactly what the client can render, since nothing below the
+related cut ever displays -- kept as the walker's passage-count oracle and a
+loadable `?data=` variant. `data/coverage.json` is frozen: nothing writes it, and
+while the builder still derives `documents.json`'s `behaviours` key from it, no
+surface renders that key.
 
 ## data validation
 

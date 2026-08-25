@@ -1,6 +1,6 @@
 # engine/ — the automation layer: citation resolution, LLM panel judging, and site-payload builders
 
-> Current-state doc: describes what exists now, not what should exist. Brought current with the Phase-2 stack (#28–#41).
+> Current-state doc: describes what exists now, not what should exist.
 
 ## Purpose
 

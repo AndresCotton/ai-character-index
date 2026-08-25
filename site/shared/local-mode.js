@@ -45,11 +45,9 @@ function addNote(header, nav) {
 export async function initLocalMode() {
   let documents = [];
   try {
-    /* The reader holds documents.json in its own data/ directory; the cross-directory
-     * form covers any other surface that loads this file. */
-    const url = location.pathname.includes("/spec-reader/")
-      ? "./data/documents.json"
-      : "../spec-reader/data/documents.json";
+    /* The reader holds documents.json in its own data/ directory, and it is the
+     * only surface that loads this file. */
+    const url = "./data/documents.json";
     DOCUMENTS_URL_HINT = url;
     documents = (await (await fetch(url)).json()).documents || [];
   } catch (error) {

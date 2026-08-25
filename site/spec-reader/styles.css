@@ -234,9 +234,9 @@ body.resizing-columns {
   user-select: none;
 }
 
-/* The bench's name and nothing else. What this copy of the reader is for belongs in the
-   note that sends a reviewer here, not standing over the menu they came to use -- the
-   sidebar's whole height is worth more as behaviours than as an explanation read once. */
+/* The reader's name and nothing else. What this surface is for belongs in the
+   note that sends a reviewer here, not standing over the menu they came to use --
+   the sidebar's whole height is worth more as behaviours than as an explanation read once. */
 .sidebar-intro { padding: 15px 25px 14px; border-bottom: 1px solid var(--line); }
 .eyebrow {
   margin: 0;
@@ -1104,7 +1104,7 @@ button:focus-visible, a:focus-visible, .column-resizer:focus-visible {
 .behaviour-empty strong { display: block; margin-bottom: 5px; color: var(--ink); }
 .behaviour-empty p { margin: 0; }
 
-/* The Mapped / Mapping pending key describes nothing while the bench is empty, and there is
+/* The Mapped / Mapping pending key describes nothing while the payload is empty, and there is
    nothing to take away either. */
 body.no-behaviours .sidebar-key,
 body.no-behaviours .sidebar-export { display: none; }

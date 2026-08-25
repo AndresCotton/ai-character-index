@@ -239,14 +239,14 @@ const initialParams = new URLSearchParams(location.search);
 state.embedded = initialParams.get("embedded") === "1";
 document.body.classList.toggle("embedded", state.embedded);
 
-function benchBehaviours() {
+function payloadBehaviours() {
   return state.payload?.behaviours || [];
 }
 
 /* The ticked behaviours, always in menu order: the order decides which colour a passage
  * blend starts from and the order of the rules in a shared passage's gutter. */
 function selectedBehaviours() {
-  return benchBehaviours().filter(behaviour => state.selectedSlugs.includes(behaviour.slug));
+  return payloadBehaviours().filter(behaviour => state.selectedSlugs.includes(behaviour.slug));
 }
 
 function highlightsActive() {
@@ -256,7 +256,7 @@ function highlightsActive() {
 /* A behaviour's colour is fixed by its place in the published set, not by what else is
  * ticked, so a passage keeps the same colour as the selection changes around it. */
 function behaviourHue(behaviour) {
-  const index = benchBehaviours().indexOf(behaviour);
+  const index = payloadBehaviours().indexOf(behaviour);
   return `var(--hue-${(Math.max(0, index) % HUE_SLOTS) + 1})`;
 }
 
@@ -530,7 +530,7 @@ function renderBehaviourList() {
 }
 
 function updateBehaviourCount() {
-  const total = benchBehaviours().length;
+  const total = payloadBehaviours().length;
   updateExportControl();
   if (!total) return;
   const chosen = state.selectedSlugs.length;
@@ -561,9 +561,9 @@ function selectedPassageTotal() {
 
 function updateExportControl() {
   const behaviours = selectedBehaviours();
-  const bench = benchBehaviours().length;
+  const loaded = payloadBehaviours().length;
   elements.downloadPassages.disabled = behaviours.length === 0;
-  if (!bench) {
+  if (!loaded) {
     elements.downloadHint.textContent = "";
     return;
   }
@@ -694,11 +694,11 @@ function behaviourChip(behaviour) {
 function updateFindingBar(overlaps = null) {
   const behaviours = selectedBehaviours();
   if (!behaviours.length) {
-    const bench = benchBehaviours().length;
-    elements.findingBehaviour.textContent = bench ? "No behaviors selected" : "No behavior under test";
-    elements.findingDefinition.textContent = bench
+    const loaded = payloadBehaviours().length;
+    elements.findingBehaviour.textContent = loaded ? "No behaviors selected" : "No behavior under test";
+    elements.findingDefinition.textContent = loaded
       ? "Both specifications are shown in full. Tick a behavior in the menu to highlight the passages that bear on it."
-      : "Reading both specifications in full -- nothing is highlighted until a behavior is published to this bench.";
+      : "Reading both specifications in full -- nothing is highlighted until a behavior is published to this reader.";
     return;
   }
 
@@ -716,7 +716,7 @@ function updateFindingBar(overlaps = null) {
 /* Ticking or unticking never re-renders the specification, only its highlight layer, so
  * the reader keeps its place in the text while a behaviour is added or taken away. */
 function setSelection(slugs) {
-  const order = benchBehaviours().map(behaviour => behaviour.slug);
+  const order = payloadBehaviours().map(behaviour => behaviour.slug);
   const chosen = new Set(slugs);
   state.selectedSlugs = order.filter(slug => chosen.has(slug));
 
@@ -1740,7 +1740,7 @@ function collectAnchors() {
   elements.nextPassage.disabled = state.anchors.length === 0;
 
   if (!state.anchors.length) {
-    if (!benchBehaviours().length) elements.passageCount.textContent = "No behaviors under test";
+    if (!payloadBehaviours().length) elements.passageCount.textContent = "No behaviors under test";
     else if (!highlightsActive()) elements.passageCount.textContent = "No behaviors selected";
     else if (state.comparing) elements.passageCount.textContent = "No passages in either spec";
     else elements.passageCount.textContent = "No passages in this spec";
@@ -1812,7 +1812,7 @@ function focusPassage(index, shouldScroll = true) {
 }
 
 elements.selectAllBehaviours.addEventListener("click", () => {
-  setSelection(benchBehaviours().map(behaviour => behaviour.slug));
+  setSelection(payloadBehaviours().map(behaviour => behaviour.slug));
 });
 elements.clearBehaviours.addEventListener("click", () => setSelection([]));
 
@@ -2043,17 +2043,17 @@ async function initialize() {
     };
     renderSpecOptions();
     renderRunProvenance();
-    const bench = state.payload.behaviours;
-    state.documentFocus = { anthropic: bench.length > 0, openai: bench.length > 0 };
+    const loaded = state.payload.behaviours;
+    state.documentFocus = { anthropic: loaded.length > 0, openai: loaded.length > 0 };
     const params = initialParams;
     // ?behavior= takes one slug or a comma-separated list; with none given the reader
     // opens on the first behaviour of the set, as the single-choice menu used to.
     const requested = (params.get("behavior") || "")
       .split(",")
       .map(slug => slug.trim())
-      .filter(slug => bench.some(behaviour => behaviour.slug === slug));
+      .filter(slug => loaded.some(behaviour => behaviour.slug === slug));
     if (requested.length) state.selectedSlugs = requested;
-    else if (!params.has("behavior") && bench.length) state.selectedSlugs = [bench[0].slug];
+    else if (!params.has("behavior") && loaded.length) state.selectedSlugs = [loaded[0].slug];
 
     const requestedSpec = params.get("spec");
     if (state.payload.documents.some(document => document.id === requestedSpec)) {
@@ -2070,7 +2070,7 @@ async function initialize() {
     rebuildReader();
   } catch (error) {
     elements.readerStatus.classList.add("visible");
-    elements.readerStatus.textContent = "The cached spec documents or this bench's behavior set could not be loaded. Serve this directory over HTTP and reload.";
+    elements.readerStatus.textContent = "The cached spec documents or the reader's behavior set could not be loaded. Serve this directory over HTTP and reload.";
     elements.passageCount.textContent = "Documents unavailable";
     console.error(error);
   }

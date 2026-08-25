@@ -15,7 +15,7 @@ def coverage_payload(record: dict, scope_id: str, slug: str) -> dict:
     """Build the reader-facing coverage dict for one (behaviour, spec) record.
 
     scope_id prefixes every passage id: the document id on the published
-    reader, the lab id on the reader-test bench.
+    reader, the lab id on the reader-test set.
     """
     return {
         "verdict": record["verdict"],

@@ -94,7 +94,7 @@ python3 engine/panel/build_site_data.py --runlog=engine/panel/runlog-user.jsonl 
     --panel=frontier_fast --behaviours=bribery-resistance
 ```
 
-Then serve the site (skip if the quickstart server is still running) and open the panel reader:
+Then serve the site (skip if the quickstart server is still running) and open the spec reader:
 
 ```sh
 python3 -m http.server 8080 --directory site

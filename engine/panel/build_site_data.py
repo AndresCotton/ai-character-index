@@ -19,7 +19,7 @@ Implements the MVP display rules from panel-config.json `display`:
 
 Behaviour identity (name/definition/category) comes from the behaviour
 registry (data/behaviours.json), the source of truth for behaviour identity.
-For the bundled reader-test set the registry matches the shipped bench data
+For the bundled reader-test set the registry matches the shipped reader-test data
 field-for-field (pinned by tests/test_behaviour_registry.py), so sourcing from
 the registry is byte-identical for the shipped data; the registry additionally
 lets set:user behaviours (the clone/fork seam) flow into the payload --
@@ -226,7 +226,7 @@ def check_out_name(name):
     # flag an overwrite -- only this check stands between --out= and a tracked file.
     # Committed payloads with a documented rebuild path are exempt (the
     # byte-identity tests are the guard against a careless overwrite): the
-    # shipped fallback, the calibration/full-bench variants, and the bench
+    # shipped fallback, the calibration/full-bench variants, and the keep-set
     # payload.
     if name not in REBUILDABLE_NAMES:
         try:
@@ -321,7 +321,7 @@ def behaviour_slug(runlog_key, registry):
 
 def display_behaviours(keep, registry, registry_path):
     """Metadata for the displayed behaviours, registry-driven: the reader-test
-    bench set in numeric_id order (the shipped order), then any set:user
+    reader-test set in numeric_id order (the shipped order), then any set:user
     behaviours in keep. Fails loudly on a keep slug the registry does not
     carry as reader-test/user -- a display list pointing at a renamed or
     unknown behaviour must not build silently."""
@@ -329,12 +329,12 @@ def display_behaviours(keep, registry, registry_path):
     for slug, entry in registry.items():
         if entry["set"] in ("reader-test", "user"):
             ordered[slug] = entry
-    bench = sorted((s for s, e in ordered.items() if e["set"] == "reader-test"),
+    reader_test = sorted((s for s, e in ordered.items() if e["set"] == "reader-test"),
                    key=lambda s: ordered[s]["numeric_id"])
     user = sorted((s for s, e in ordered.items() if e["set"] == "user"),
                   key=lambda s: ordered[s]["numeric_id"])
     behaviours = []
-    for slug in bench + user:
+    for slug in reader_test + user:
         if slug not in keep:
             continue
         entry = ordered[slug]
@@ -504,7 +504,7 @@ def main(argv=None):
             cits.sort(key=lambda c: (-c["score"], c["locator"]))
             cov[lab] = {"verdict": src_entry.get("verdict"), "depth": src_entry.get("depth_0_4"),
                         # depth_note stays in the coverage record; beside re-run panel data the
-                        # curation-era prose goes stale, so the bench ships passage sets only
+                        # curation-era prose goes stale, so the reader ships passage sets only
                         "note": "",
                         "verifiedDate": src_entry.get("verified_date", ""),
                         "passages": cits}
@@ -542,7 +542,7 @@ def main(argv=None):
               f"(threshold {DISPLAY['threshold']}, solid {DISPLAY['solid_threshold']})"
     if n == 0:
         # Kept nothing. Do not write, do not touch the manifest, do not report
-        # success: a promoted empty run renders as a blank bench with the reason
+        # success: a promoted empty run renders as a blank reader with the reason
         # only in terminal scrollback.
         sys.exit("error: " + summary.strip()
                  + zero_citation_reason(rubric, runlog_rubrics, runlog_models, panel))

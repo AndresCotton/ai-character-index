@@ -1,10 +1,12 @@
-"""Gate tests for the reader-test bench payload (behaviours-v5-reader.json).
+"""Gate tests for the band keep-set payload (behaviours-v5-reader.json).
 
-The bench renders the committed v5 panel run pre-filtered to the panel's band
+The keep-set is the committed v5 panel run pre-filtered to the panel's band
 boundary: site/spec-reader/data/behaviours-v5-reader.json, built by
 engine/panel/build_site_data.py with --threshold=4 --solid-threshold=6 from
 runlog-v5.jsonl (the two overrides are the 3-judge band boundary:
-relatedCut = j+1 = 4, coreCut = 2j = 6).
+relatedCut = j+1 = 4, coreCut = 2j = 6). The reader renders nothing below that
+cut, so the keep-set is exactly what it can show: engine/verify-reader-test.mjs
+uses it as the passage-count oracle, and ?data=behaviours-v5-reader loads it.
 
 Three nets here:
 

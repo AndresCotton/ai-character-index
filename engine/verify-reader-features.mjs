@@ -84,6 +84,9 @@ const cards = () => page.evaluate(() =>
   document.querySelectorAll(".passage").length);
 
 const at = q => load(base, q);
+// Two citations in one paragraph light one rendered block, so counts are per
+// distinct block: strip the sentence suffix and count.
+const blockOf = locator => locator.replace(/ s\d+(?:-s?\d+)?$/, "");
 
 // =============================================================================
 console.log("== Reader: payload resolution (bundled vs user-extended) ==");
@@ -112,7 +115,6 @@ await at("?data=behaviours-v5-reader&behavior=helpfulness&spec=anthropic"
   + "&tiers=defining,core,related");
 await page.waitForTimeout(400);
 {
-  const blockOf = locator => locator.replace(/ s\d+(?:-s?\d+)?$/, "");
   const expected = new Set(keepSet.find(b => b.slug === "helpfulness")
     .coverage.anthropic.passages.map(p => blockOf(p.locator))).size;
   const anchors = await page.evaluate(
@@ -397,7 +399,6 @@ await page.waitForTimeout(250);
 {
   // Anchoring regression: the staged surface resolves the staged manifest latest,
   // so a published view must anchor exactly the staged run's own coverage.
-  const blockOf = locator => locator.replace(/ s\d+(?:-s?\d+)?$/, "");
   const expected = new Set(userPayload.behaviours.find(x => x.slug === "helpfulness")
     .coverage.anthropic.passages.map(p => blockOf(p.locator))).size;
   await load(base, "?behavior=helpfulness&spec=anthropic");
