@@ -321,7 +321,7 @@ def behaviour_slug(runlog_key, registry):
 
 def display_behaviours(keep, registry, registry_path):
     """Metadata for the displayed behaviours, registry-driven: the reader-test
-    reader-test set in numeric_id order (the shipped order), then any set:user
+    set in numeric_id order (the shipped order), then any set:user
     behaviours in keep. Fails loudly on a keep slug the registry does not
     carry as reader-test/user -- a display list pointing at a renamed or
     unknown behaviour must not build silently."""

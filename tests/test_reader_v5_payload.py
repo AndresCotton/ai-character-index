@@ -172,7 +172,7 @@ class GoldenRebuildTest(unittest.TestCase):
         # fractions itself, so no test-side transformation is needed
         self.assertEqual(
             rebuilt, PAYLOAD.read_bytes(),
-            "rebuilt bench payload diverges from the committed file",
+            "rebuilt keep-set payload diverges from the committed file",
         )
 
 

@@ -66,7 +66,7 @@ node engine/verify-reader-test.mjs         # the reader: every behaviour x spec 
 
 The reader (`site/spec-reader/`) renders the spec text from `documents.json` and
 its behaviour set from `data/behaviours.json`, resolved ?data=<name> pin ->
-`manifest.json` latest -> that shipped fallback; `behaviours-v5-reader.json` is
+`manifest.json` latest -> the shipped fallback; `behaviours-v5-reader.json` is
 the band keep-set -- exactly what the client can render, since nothing below the
 related cut ever displays -- kept as the walker's passage-count oracle and a
 loadable `?data=` variant. `data/coverage.json` is frozen: nothing writes it, and

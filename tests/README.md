@@ -17,7 +17,7 @@ they pin). This does not replace the slow end-to-end checks, which need
 Node deps (`pnpm install`) and Chrome:
 
 ```sh
-node engine/verify-reader-test.mjs           # every behaviour x spec view + nav presence/resolution + the pinned payload URL
+node engine/verify-reader-test.mjs           # every behaviour x spec view + nav presence/resolution + the fallback-and-manifest state
 node engine/verify-reader-features.mjs        # Tier-1 site features × bundled + user-extended data (run it alone; it stages through the real manifest)
 ```
 
