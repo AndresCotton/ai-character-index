@@ -200,14 +200,6 @@ function achievableScores(judges, maxCell, related) {
   return sums;
 }
 
-/* Which tiers a cell can actually put a passage in. The cuts can collide: on a 3-point
- * rubric maxCell is 2j, so the defining cut clamps onto the core cut and NO score can
- * land in core -- its toggle would sit in the header doing nothing. Answered by asking
- * tierBand about every score the cell can actually produce, so the two cannot disagree
- * by construction: a band is reachable exactly when some achievable score lands in it.
- * (Deriving it from the cuts alone gets j=2 / maxCell=4 / ?related=0.5 wrong -- the
- * related cut of 3 sits between the achievable 2.5 and 4.) Pure, like tierBand, so
- * engine/panel/test_appjs_tiers.js can extract and pin it. */
 /* The strongest band among several, or null if none is set. A block can carry more
  * than one behaviour's citation, and a passage that is defining for one and related to
  * another should be named by the stronger claim. */
@@ -221,6 +213,14 @@ function bandLabel(band) {
   return band ? band[0].toUpperCase() + band.slice(1) : "Scored";
 }
 
+/* Which tiers a cell can actually put a passage in. The cuts can collide: on a 3-point
+ * rubric maxCell is 2j, so the defining cut clamps onto the core cut and NO score can
+ * land in core -- its toggle would sit in the header doing nothing. Answered by asking
+ * tierBand about every score the cell can actually produce, so the two cannot disagree
+ * by construction: a band is reachable exactly when some achievable score lands in it.
+ * (Deriving it from the cuts alone gets j=2 / maxCell=4 / ?related=0.5 wrong -- the
+ * related cut of 3 sits between the achievable 2.5 and 4.) Pure, like tierBand, so
+ * engine/panel/test_appjs_tiers.js can extract and pin it. */
 function bandReachable(judges, maxCell, related) {
   const hit = { defining: false, core: false, related: false };
   achievableScores(judges, maxCell, related).forEach(score => {
