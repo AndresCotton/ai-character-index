@@ -75,9 +75,8 @@ function addNote(header, nav) {
 export async function initLocalMode() {
   let documents = [];
   try {
-    /* Only the reader holds documents.json; the bench and the panel both read it
-     * from there. "/spec-reader-test/" does not contain "/spec-reader/", so the
-     * bench correctly takes the sibling path. */
+    /* Only the reader (site/spec-reader/) holds documents.json; the panel
+     * reads it from there. The reader itself takes the same-directory path. */
     const url = location.pathname.includes("/spec-reader/")
       ? "./data/documents.json"
       : "../spec-reader/data/documents.json";
