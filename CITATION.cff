@@ -7,10 +7,10 @@ message: >-
   publishers, not to this project.
 type: dataset
 authors:
+  - given-names: Andrés
+    family-names: Cotton
   - given-names: Matt
     family-names: Stults
-  - given-names: Andres
-    family-names: Cotton
 abstract: >-
   A structured index of where published AI behaviour specifications
   address particular model behaviours, built by an LLM panel of judges
