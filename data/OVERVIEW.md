@@ -32,6 +32,6 @@ graph LR
 - `meta.json` (site-wide metadata) is still planned-but-absent; `behaviours.json` is the registry (see Contents).
 - Behaviour IDs are per-set: `coverage.json` id 1 = "No sycophancy" while the reader-test set starts at "Helpfulness"; the registry namespaces ids per set and documents the join semantics (ids are file-local, slugs are the global key).
 - The builder's behaviour definitions (ids 1-3) live as a generated `BEHAVIOURS` constant in `engine/build-spec-reader-data.py`, regenerated from `data/behaviours.json` by `engine/generate_behaviour_constants.py` (ids 1-3 because those are the covered behaviours); the panel's metadata is registry-driven too. The `behaviours` key they feed into `documents.json` is rendered by no surface.
-- `labs.json`'s only programmatic consumer is the validation gate; `site/index.html` is a static prototype that fetches no JSON.
+- `labs.json`'s only programmatic consumer is the validation gate; `site/index.html` is a redirect that fetches nothing.
 - `panel-cell-curation.json` has one consumer: `engine/panel/build_site_data.py` (the cell verdict/depth/verifiedDate rows it ships beside passages).
 - `coverage.json` `citation_format` claims quotes are exact `cite.py resolve` output; `tests/test_coverage_json.py` enforces that claim in CI by byte-comparing every quote.

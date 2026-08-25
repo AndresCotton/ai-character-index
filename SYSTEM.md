@@ -27,7 +27,7 @@ graph TB
   bsr -->|"documents.json (spec text)"| reader["site/spec-reader/"]
   bsd -->|"behaviours payloads: timestamped runs + manifest (gitignored), behaviours.json fallback, keep-set + calibration variants"| reader
   arch["archive/general-welfare-strict-reading/ (preserved judgment)"]
-  proto["site/index.html (inline hand-maintained data)"]
+  proto["site/index.html (redirect to the reader)"]
   meth["site/methodology.html (static page)"]
   reader & proto & meth ==>|"deploy.yml on site/** changes"| cf["Cloudflare Pages"]
   notion["Notion DBs"] -.->|"planned sync -- engine/notion-sync/ is empty"| cov
@@ -44,7 +44,7 @@ graph TB
 | `research/` | Canonical behaviour list | [research/OVERVIEW.md](research/OVERVIEW.md) |
 | `archive/` | Preserved analytical artifact: the cross-spec strict-reading judgment (self-describing README inside) | — |
 | `methodology/` | Depth rubric, public site copy, method-exploration findings | [methodology/OVERVIEW.md](methodology/OVERVIEW.md) |
-| `site/` | Three static surfaces, no build step | [site/OVERVIEW.md](site/OVERVIEW.md) |
+| `site/` | Two static surfaces, no build step | [site/OVERVIEW.md](site/OVERVIEW.md) |
 | `.github/` | One deploy workflow + Issues-page contact link | [.github/OVERVIEW.md](.github/OVERVIEW.md) |
 | `design/`, `vision/` | Settled-design log (Jul 2026) and the originating brief | [design/OVERVIEW.md](design/OVERVIEW.md), [vision/OVERVIEW.md](vision/OVERVIEW.md) |
 | root files | PLAN.md, README.md, pnpm-for-wrangler setup | [ROOT.md](ROOT.md) |
@@ -64,7 +64,7 @@ graph TB
 2. **`cite.py` is the foundation** of every chain — the trickiest code in the repo. Its bundled + user-manifest contracts are now pinned by tests and corpus goldens.
 3. **Behaviour metadata is registry-driven** (`data/behaviours.json` → derived constants, drift-gated): `engine/generate_behaviour_constants.py` regenerates the reader builder's `BEHAVIOURS` list too, which currently enumerates ids 1–3 because those are the covered behaviours — expected sequencing, not hardcoding. Residual fragmentation: the disjoint per-file id spaces persist (documented in the registry's per-set semantics).
 4. **Documentation describes a system that half-exists**: PLAN.md promises Notion sync, four workflows, Astro, schemas; reality has one workflow, vanilla JS, and an empty `notion-sync/` — and this doc set now records the gap file-by-file.
-5. **Hand-maintained surfaces**: `index.html` inline data (diverged from its prototype source). The reader's keep-set payload is a derived build (`build_site_data.py --threshold=4 --solid-threshold=6` on the committed v5 run), committed at `site/spec-reader/data/behaviours-v5-reader.json`; its cell curation lives in `data/panel-cell-curation.json`.
+5. **Hand-maintained surfaces**: The reader's keep-set payload is a derived build (`build_site_data.py --threshold=4 --solid-threshold=6` on the committed v5 run), committed at `site/spec-reader/data/behaviours-v5-reader.json`; its cell curation lives in `data/panel-cell-curation.json`.
 6. **Provenance is committed and verified**: the shipped panel runlog is committed and byte-identity-verified; every quote in the frozen coverage ledger re-resolves through `cite.py` in CI (`tests/test_coverage_json.py`). Residual: the substitution note in the payload is still a hand-edited string, and single-judge runs degenerate the tier cutoffs (display model assumes ≥2 judges).
 7. **No Python packaging**: importlib/sys.path wiring persists (config is now lazy/injectable; dead code and the stale config comment are removed).
 8. **Residue**: `spec-watch` no longer fetches the dated release archives (nothing consumes them; they exceeded the contents API's inline limit) and aborts loud when upstream versions diverge from cite.py's registry. Root agent-context exists (`AGENTS.md`) pointing at the live procedures (`engine/panel/README.md`, the clone/fork pathway).

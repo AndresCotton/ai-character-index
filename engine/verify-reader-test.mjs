@@ -157,7 +157,7 @@ async function expectView(url, expected, label) {
 // Navigation: the expected links must be present and every one must resolve
 // (any #fragment to a real id in its target).
 await readView(base);
-const expectedNav = ["../", "./", "../methodology.html", "../#about"];
+const expectedNav = ["./", "../methodology.html"];
 const navHrefs = await page.evaluate(
   () => [...document.querySelectorAll('nav[aria-label="Primary navigation"] a')].map(a => a.getAttribute("href")),
 );
@@ -180,7 +180,7 @@ const navIssues = await page.evaluate(async expected => {
   return issues;
 }, expectedNav);
 report(navIssues.length === 0, "navigation links resolve",
-  navIssues.length ? navIssues.join("; ") : "index, self-link, methodology, About");
+  navIssues.length ? navIssues.join("; ") : "self-link, methodology");
 
 // The committed state resolves to the shipped fallback: no ?data= pin, and no
 // manifest (it is gitignored run output). A local manifest would shadow the

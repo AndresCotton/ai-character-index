@@ -1,6 +1,6 @@
 # data/
 
-The canonical machine-readable data the site renders from. **The dynamic site surfaces contain no data of their own** — the one exception is `site/index.html`, whose inline prototype data (`const B = {...}`) is hand-maintained and connected to nothing here; Notion is never read directly by the site. Changes arrive here via reviewed pull requests. `coverage.json` is a frozen ledger: the publish pipeline that wrote it is retired, nothing writes it any more, and CI keeps its citations machine-verified (every quote re-resolves through `engine/spec-cite/cite.py` in `tests/test_coverage_json.py`). The other files are hand-maintained. `engine/notion-sync/` (the planned Notion → data/ sync) is a placeholder, not built.
+The canonical machine-readable data the site renders from. **The dynamic site surfaces contain no data of their own** — the surfaces render only committed JSON payloads; Notion is never read directly by the site. Changes arrive here via reviewed pull requests. `coverage.json` is a frozen ledger: the publish pipeline that wrote it is retired, nothing writes it any more, and CI keeps its citations machine-verified (every quote re-resolves through `engine/spec-cite/cite.py` in `tests/test_coverage_json.py`). The other files are hand-maintained. `engine/notion-sync/` (the planned Notion → data/ sync) is a placeholder, not built.
 
 Current files:
 
@@ -19,4 +19,4 @@ One file here is **not** index data: `panel-cell-curation.json` — the per-lab 
 
 `schema/` holds a JSON Schema per canonical file. `engine/validate_data.py` is the gate (uses the `jsonschema` package when installed, otherwise a built-in stdlib fallback, plus the cross-file rules below). It exits non-zero on any failure and runs on every PR via `.github/workflows/ci.yml`. Encoded rules: no **published** coverage verdict without at least one citation; no coverage record pointing at a lab `labs.json` doesn't define; no coverage record reference to a behaviour id the registry's index set doesn't define.
 
-Derived views (evidence strength per cell, the gap list) are planned but computed nowhere today; the only evidence-strength display is hand-maintained inline data in `site/index.html`. When implemented they should be computed at render time and never stored here, so they can never go stale.
+Derived views (evidence strength per cell, the gap list) are planned but computed nowhere today; no evidence-strength display exists; the prototype that carried one is retired. When implemented they should be computed at render time and never stored here, so they can never go stale.
