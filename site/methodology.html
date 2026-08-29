@@ -59,17 +59,22 @@
   .sheet::before { top:-1px; left:-1px; border-top:1px solid var(--ink3); border-left:1px solid var(--ink3); }
   .sheet::after { bottom:-1px; right:-1px; border-bottom:1px solid var(--ink3); border-right:1px solid var(--ink3); }
 
-  .m-head { padding: 34px 44px 26px; border-bottom: 1px solid var(--hair); }
+  .m-head { padding: 34px 44px 30px; border-bottom: 1px solid var(--hair); }
   .m-title { font-size: 29px; font-weight: 500; font-variant-caps: all-small-caps; letter-spacing: .07em; }
-  .m-sub { font-style: italic; font-size: 15px; line-height: 1.55; color: var(--ink2);
+  .m-sub { font-style: italic; font-size: 15.5px; line-height: 1.6; color: var(--ink2);
            max-width: 62ch; margin-top: 10px; }
+  .repo-btn { display: inline-block; margin-top: 20px; padding: 10px 22px;
+              border: 1px solid var(--hair2); background: var(--lift); color: var(--ink);
+              font-variant-caps: all-small-caps; letter-spacing: .16em;
+              font-size: 15.5px; font-weight: 600; text-decoration: none; }
+  .repo-btn:hover { border-color: var(--ink3); background: var(--panel); text-decoration: none; }
+  .repo-btn:focus-visible { outline: 1px solid var(--spec); outline-offset: 2px; }
 
   section.m { padding: 26px 44px 30px; border-bottom: 1px solid var(--hair); }
   section.m:last-of-type { border-bottom: none; }
   h2 { font-size: 15px; font-weight: 600; font-variant-caps: all-small-caps; letter-spacing: .16em;
        color: var(--ink2); margin-bottom: 14px; }
   section.m p { font-size: 15.5px; line-height: 1.62; color: var(--ink); max-width: 66ch; margin-bottom: 10px; }
-  section.m p.aside { color: var(--ink2); font-style: italic; font-size: 14.5px; }
   section.m ul { list-style: none; max-width: 68ch; margin: 4px 0 10px; }
   section.m li { font-size: 15px; line-height: 1.58; color: var(--ink); padding: 3.5px 0 3.5px 22px; position: relative; }
   section.m li::before { content: "·"; position: absolute; left: 6px; color: var(--ink3); }
@@ -113,23 +118,12 @@
 
   <div class="m-head">
     <div class="m-title">Use the tool</div>
-    <p class="m-sub">The spec reader you are browsing is an open tool, and this site is its shipped
-    example. Everything needed to run it yourself -- on your own behaviours, your own documents --
-    lives in <a href="https://github.com/AndresCotton/ai-character-index" target="_blank"
-    rel="noopener">the GitHub repository</a>. This page is the short version of its README.</p>
+    <p class="m-sub">Point a panel of LLM judges at a model specification -- a published one or your
+    own -- and get back a passage-level coverage map for any behaviour you care about, every passage
+    scored and quoted verbatim.</p>
+    <a class="repo-btn" href="https://github.com/AndresCotton/ai-character-index"
+       target="_blank" rel="noopener">Get it on GitHub&thinsp;↗</a>
   </div>
-
-  <section class="m">
-    <h2>What the tool is</h2>
-    <p>A tool for researchers working in the model-spec space. Point a panel of LLM judges at a
-    specification -- Anthropic's constitution, OpenAI's Model Spec, or a document of your own -- and
-    give the panel a behaviour you care about. You get back a passage-level coverage map: every
-    place the spec addresses that behaviour, scored by each judge and quoted verbatim, browsable in
-    a local copy of this reader.</p>
-    <p>The repository ships with a complete bench out of the box -- ten behaviours judged against
-    both bundled specs by a three-judge frontier panel. That bench is what this site shows, so you
-    can explore an example with results before running anything yourself.</p>
-  </section>
 
   <section class="m">
     <h2>What people use it for</h2>
@@ -148,27 +142,23 @@
 
   <section class="m">
     <h2>Get it</h2>
-    <p>The tool lives at
-    <a href="https://github.com/AndresCotton/ai-character-index" target="_blank"
-    rel="noopener">github.com/AndresCotton/ai-character-index</a> -- clone it, fork it, adapt it.
-    Python 3.10+ and a browser are the only requirements; there is no Node.js and no build step.</p>
     <pre><code>git clone https://github.com/AndresCotton/ai-character-index.git
 cd ai-character-index
 python3 -m http.server 8080 --directory site</code></pre>
-    <p>That is enough to browse the shipped results locally, no API keys needed. Running new
-    judging takes exactly one key (OpenRouter). From there the
+    <p>Python and a browser, no build step -- that alone browses the shipped results locally.
+    Running new judging takes one API key. The
     <a href="https://github.com/AndresCotton/ai-character-index#readme" target="_blank"
-    rel="noopener">README</a> is the living documentation: registering a behaviour of your own,
-    running the panel, reading the scores, bringing your own spec, and customizing the judge
+    rel="noopener">README</a> covers the rest: your own behaviours, your own specs, the judge
     prompt.</p>
-    <p>Prefer to delegate? Everything from there on can be done by a coding agent: open one in the
-    clone and say &ldquo;register a behaviour about X and run the panel against both specs&rdquo;.
-    The repository ships agent instructions
-    (<a href="https://github.com/AndresCotton/ai-character-index/blob/main/AGENTS.md"
-    target="_blank" rel="noopener"><code>AGENTS.md</code></a>) carrying the same steps and their
-    gotchas.</p>
-    <p class="aside">Dual-licensed: code under Apache-2.0, written work and data under CC BY 4.0.
-    The bundled specifications belong to their publishers, not to this project.</p>
+  </section>
+
+  <section class="m">
+    <h2>Or hand it to an agent</h2>
+    <p><b>Everything can be done by a coding agent.</b> Open one in your clone and say
+    &ldquo;register a behaviour about X and run the panel&rdquo; -- the repository ships agent
+    instructions (<a href="https://github.com/AndresCotton/ai-character-index/blob/main/AGENTS.md"
+    target="_blank" rel="noopener"><code>AGENTS.md</code></a>) carrying the steps and their
+    gotchas, so no by-hand setup is needed.</p>
   </section>
 
   <section class="m">
@@ -181,9 +171,10 @@ python3 -m http.server 8080 --directory site</code></pre>
 
 <footer>
   <div class="f-row">
-    <span class="proto-flag">documentation lives with the code ·
+    <span>documentation lives with the code ·
       <a href="https://github.com/AndresCotton/ai-character-index" target="_blank"
       rel="noopener">github.com/AndresCotton/ai-character-index</a></span>
+    <span class="proto-flag">apache-2.0 code · cc by 4.0 writing &amp; data</span>
   </div>
 </footer>
 
