@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage a user-extended site for the feature harness (verify-panel-features.mjs).
+"""Stage a user-extended site for the feature harness (verify-reader-features.mjs).
 
 Copies site/ into --out DIR/site, then exercises the SAME builder path a
 clone/fork user would take, pointed at the copy:
@@ -33,7 +33,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 ENGINE = ROOT / "engine"
 SITE = ROOT / "site"
-PANEL_DATA = SITE / "llm-panel-review" / "data"
+PANEL_DATA = SITE / "spec-reader" / "data"
 
 USER_SPEC = "acme-spec"
 USER_BEHAVIOUR = "acme-transparency"
@@ -85,7 +85,7 @@ def main():
         user_locs = [loc for loc, _s, _t in harness.passages(USER_SPEC)]
         if len(user_locs) < 2:
             sys.exit("user spec must expose at least two passages")
-        bench_loc = next(iter(harness.passages("constitution")))[0]
+        bundled_loc = next(iter(harness.passages("constitution")))[0]
         runlog = tmp / "runlog.jsonl"
         rows = [
             {"behaviour": USER_BEHAVIOUR, "spec": USER_SPEC, "model": "qwen-big",
@@ -93,7 +93,7 @@ def main():
             {"behaviour": USER_BEHAVIOUR, "spec": USER_SPEC, "model": "qwen-big",
              "locator": user_locs[1], "rubric": "v3w", "parsed": True, "verdict": 2},
             {"behaviour": "helpfulness", "spec": "constitution", "model": "qwen-big",
-             "locator": bench_loc, "rubric": "v3w", "parsed": True, "verdict": 2},
+             "locator": bundled_loc, "rubric": "v3w", "parsed": True, "verdict": 2},
         ]
         runlog.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
 
@@ -119,10 +119,10 @@ def main():
             emitted = json.loads(prior_manifest.read_text())
             name = emitted["latest"]
             src = PANEL_DATA / name
-            shutil.copy2(src, out_site / "llm-panel-review" / "data" / name)
+            shutil.copy2(src, out_site / "spec-reader" / "data" / name)
             src.unlink()
             entry = next(r for r in emitted["runs"] if r["filename"] == name)
-            (out_site / "llm-panel-review" / "data" / "manifest.json").write_text(
+            (out_site / "spec-reader" / "data" / "manifest.json").write_text(
                 json.dumps({"latest": name, "runs": [entry]}, indent=2))
         finally:
             if saved is not None:

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-/* Band-label guard for the reader-test bench payload. The bench carries a flat
- * adjacent flag baked at build time (score < solid_threshold = 6); the panel
- * view bands each passage at render with tierBand. On 3-judge cells the two
+/* Band-label guard for the keep-set payload. The keep-set carries a flat
+ * adjacent flag baked at build time (score < solid_threshold = 6); the reader
+ * bands each passage at render with tierBand. On 3-judge cells the two
  * agree everywhere except ragged passages scored by fewer judges, whose own-
  * scale cuts sit below the flat one. tierBand is extracted verbatim from the
- * real site/llm-panel-review/app.js (as in test_appjs_tiers.js), and every
+ * real site/spec-reader/app.js (as in test_appjs_tiers.js), and every
  * committed passage must satisfy adjacent === (band === "related") -- with the
  * three accepted ragged exceptions enumerated in KNOWN_EXCEPTIONS (they score
  * 4/6 on two judges: core on their own scale, adjacent under the flat cut).
@@ -15,8 +15,8 @@ const fs = require("fs");
 const path = require("path");
 
 const ROOT = path.join(__dirname, "..", "..");
-const APP_JS = path.join(ROOT, "site", "llm-panel-review", "app.js");
-const PAYLOAD = path.join(ROOT, "site", "llm-panel-review", "data", "behaviours-v5-reader.json");
+const APP_JS = path.join(ROOT, "site", "spec-reader", "app.js");
+const PAYLOAD = path.join(ROOT, "site", "spec-reader", "data", "behaviours-v5-reader.json");
 
 const src = fs.readFileSync(APP_JS, "utf8");
 const lines = src.split("\n");

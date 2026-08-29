@@ -1,6 +1,6 @@
 # engine/panel
 
-Pipeline that produces the LLM-panel relevance data for `site/llm-panel-review/`.
+Pipeline that produces the LLM-panel relevance data for `site/spec-reader/`.
 
 Credentials: `panel-config.json` holds env-var NAMES only; keys live in the
 environment or a gitignored `.env` in this directory (`.env.example` is the
@@ -30,9 +30,9 @@ template -- one OpenRouter key suffices, native keys optional).
 
 ## Run outputs, manifest, pinning
 Each `build_site_data.py` run emits its own timestamped file
-`site/llm-panel-review/data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json` (hyphen-separated:
+`site/spec-reader/data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json` (hyphen-separated:
 lexicographically sortable = chronological, URL-safe) and updates
-`site/llm-panel-review/data/manifest.json`:
+`site/spec-reader/data/manifest.json`:
 `{"latest": <filename>, "runs": [newest-first entries with filename, timestamp,
 rubric, panel and citation metadata]}`. A second build in the same second takes a
 numeric sequence suffix (`behaviours-<ts>-02.json`, then `-03`, ... -- zero-padded to
@@ -42,7 +42,7 @@ the manifest are
 gitignored -- they stay local; the tracked `behaviours.json` is the fallback a fresh
 clone loads.
 
-The page (`site/llm-panel-review/app.js`) resolves its payload in this order:
+The page (`site/spec-reader/app.js`) resolves its payload in this order:
 1. `?data=<name>` URL param (a pin; name only, no paths);
 2. manifest `latest`;
 3. the shipped `behaviours.json`.
@@ -73,7 +73,7 @@ or `..`), so `--out=` cannot write outside the data dir.
 ## Behaviour metadata is registry-driven
 The displayed behaviours (sidebar names, definitions, categories, numeric ids)
 come from the behaviour registry `data/behaviours.json`, not from the payload's
-source runlog: the reader-test bench set in registry `numeric_id` order (the
+source runlog: the reader set in registry `numeric_id` order (the
 shipped order), then any `set:user` behaviours the run covers. A `set:user`
 runlog key is its registry slug (the clone/fork seam: a user behaviour's panel
 run flows straight into the page once it is registered in a local registry
@@ -84,9 +84,9 @@ user forks point it elsewhere) and `--run-date=YYYY-MM-DD` (pins
 payload byte-for-byte).
 
 ## The procedure
-The end-to-end coverage procedure (dry run, execution, failure substitutions,
-coverage-gate checks) is `.claude/skills/sweep-coverage/SKILL.md`. This README
-covers only the mechanics of the individual scripts.
+There is no end-to-end coverage procedure any more: the sweep pipeline was
+retired with the publish path, and the coverage ledger (`data/coverage.json`)
+is frozen. This README covers the mechanics of the individual scripts.
 
 ## Tests
 `python3 engine/panel/test_panel.py` -- unit tests for the pure logic (verdict
@@ -105,7 +105,7 @@ python3 engine/panel/verify_panel_provenance.py
 ```
 
 rebuilds the payload from that log into a scratch directory and proves
-`site/llm-panel-review/data/behaviours.json` matches byte-for-byte, with one
+`site/spec-reader/data/behaviours.json` matches byte-for-byte, with one
 documented exception: `provenance.runDate`, which the builder stamps with the
 build date (`date.today()`) and which cannot be re-derived because the log
 schema carries no timestamps. Exit 0 = verified.
@@ -119,8 +119,16 @@ do; `--out=behaviours.json` rebuilds the shipped payload in place, whose
 pin `--run-date=`). The score cut honours `display.threshold` (1 = keep
 everything scored, matching every shipped payload), so a defaults build
 reproduces the shipped payload; `--threshold=`/`--solid-threshold=` override
-both for derived builds (the bench payload is cut at 4/6, the 3-judge band
-boundary).
+both for derived builds (the reader payload is cut at 4/6, the 3-judge band boundary).
+
+The derived payload `behaviours-v5-reader.json` is the band keep-set: the same v5
+run cut at the boundary the reader's lowest band applies (363 citations against
+the panel payloads' ~3,600). The reader (`site/spec-reader/`) renders nothing
+below that cut in the first place, so the keep-set is exactly what it can show;
+the walker holds the two together -- `engine/verify-reader-test.mjs` walks the
+reader's default state and asserts every view anchors exactly the keep-set's
+passage counts, so a drift between the client's band math and the builder's cut
+fails loud in CI. It is also loadable directly: `?data=behaviours-v5-reader`.
 
 A NEW panel run must write a new runlog, and a regenerated payload needs its
 own committed log + passing check -- provenance travels with the data.

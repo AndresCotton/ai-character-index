@@ -39,7 +39,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS_OUT = ROOT / "site" / "spec-reader" / "data" / "documents.json"
-PANEL_DATA = ROOT / "site" / "llm-panel-review" / "data"
+PANEL_DATA = ROOT / "site" / "spec-reader" / "data"
 SPEC_READER_BUILDER = ROOT / "engine" / "build-spec-reader-data.py"
 PANEL_BUILDER = ROOT / "engine" / "panel" / "build_site_data.py"
 
@@ -357,7 +357,7 @@ class UserBehaviourInPanelTest(unittest.TestCase):
         payload = self.build(self._write_runlog(rows),
                              behaviours=f"helpfulness,{self.BEHAVIOUR}")
         slugs = [b["slug"] for b in payload["behaviours"]]
-        # reader-test bench order first, then the user seam
+        # reader-test set order first, then the user seam
         self.assertEqual(slugs, ["helpfulness", self.BEHAVIOUR])
         self.assertEqual(payload["behaviours"][0]["name"], "Helpfulness")
 

@@ -10,13 +10,11 @@ filtered required check would silently skip PRs outside its paths and block
 merging). Two jobs:
 
 - **offline** — the full no-network battery: panel + provenance suites, the
-  `tests/` suite (cite goldens, sidecar/publish checks, decoupling pins),
-  the data gate, builder byte-identity rebuilds, `publish-coverage.py --check`
-  for every published behaviour, the registry drift gate, and the node
-  app.js resolution harnesses. Stdlib python + node only; nothing to install.
-- **browser** — the three Playwright walkers (spec reader, reader-test bench,
-  panel feature harness × bundled + user-extended data) against an installed
-  Chrome.
+  `tests/` suite (cite goldens, decoupling pins), the data gate, builder
+  byte-identity rebuilds, the registry drift gate, and the node app.js
+  resolution harnesses. Stdlib python + node only; nothing to install.
+- **browser** — the two Playwright walkers (reader, reader feature harness ×
+  bundled + user-extended data) against an installed Chrome.
 
 No secrets are needed; `contents: read` is the only permission.
 

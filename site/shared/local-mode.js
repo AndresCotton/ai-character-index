@@ -5,44 +5,14 @@
  * marker is the whole signal -- nothing else needs to be built or stamped, and a site
  * with only the two bundled mirrors is untouched by this file.
  *
- * Two things follow from it:
- *
- *  - The page says the data is local. Production and a local clone are otherwise
- *    pixel-identical, and payload resolution deliberately falls through to the shipped
- *    data rather than failing, so without this a reader has no way to tell which one
- *    they are looking at.
- *
- *  - The panel becomes reachable. site/llm-panel-review/ is unlisted and noindexed:
- *    nothing in site/ links to it, which is right for the project's own calibration
- *    bench but wrong once it is also where YOUR run lands. The link appears only when
- *    there is a local run to look at, so the public site keeps its shape.
- *
- * Shared by all three surfaces rather than copied into each: the three app.js files
- * already carry three copies of too much, and new behaviour should not add a fourth.
+ * What follows from it: the page says the data is local. Production and a local clone
+ * are otherwise pixel-identical, and payload resolution deliberately falls through to
+ * the shipped data rather than failing, so without this a reader has no way to tell
+ * which one they are looking at. The reader (site/spec-reader/) is linked from every
+ * navigation on the site, so marking the data is all local mode has to add.
  */
-const PANEL_HREF = "llm-panel-review";
 
-const onPanel = () => location.pathname.includes(`/${PANEL_HREF}/`);
 let DOCUMENTS_URL_HINT = "documents.json";   // for the diagnostic below
-
-/* The panel already sits in its own nav, marked as the current page. A second link to
- * it under another name would just be two names for where you already are, so the link
- * is only ever added to the surfaces a reader arrives on. */
-/* The link says what the page it lands on is called. "Local analysis" describes the
- * job better, but the page is still titled "LLM panel review", and a link that names
- * its destination something else is a broken contract -- the rename, if it happens,
- * moves both together. */
-function addPanelLink(nav) {
-  if (!nav || onPanel() || nav.querySelector(`a[href*="${PANEL_HREF}"]`)) return;
-  const link = document.createElement("a");
-  link.href = `../${PANEL_HREF}/`;
-  link.textContent = "LLM panel review";
-  link.dataset.localOnly = "true";
-  /* Before the palette button, so the nav keeps its shape: links, then the control. */
-  const mode = nav.querySelector("#mode");
-  if (mode) nav.insertBefore(link, mode);
-  else nav.append(link);
-}
 
 /* A status marker, not a destination: it goes in the header beside the wordmark, not
  * into the navigation list, where anything traversing the links -- a screen reader
@@ -64,7 +34,7 @@ function addNote(header, nav) {
   else header.append(note);
 }
 
-/* documents.json is the one file every surface loads, so it is the one place the
+/* documents.json is the one file the surface loads, so it is the one place the
  * answer can come from.
  *
  * "No user specification" and "could not tell" are different answers and must not look
@@ -75,12 +45,9 @@ function addNote(header, nav) {
 export async function initLocalMode() {
   let documents = [];
   try {
-    /* Only the reader holds documents.json; the bench and the panel both read it
-     * from there. "/spec-reader-test/" does not contain "/spec-reader/", so the
-     * bench correctly takes the sibling path. */
-    const url = location.pathname.includes("/spec-reader/")
-      ? "./data/documents.json"
-      : "../spec-reader/data/documents.json";
+    /* The reader holds documents.json in its own data/ directory, and it is the
+     * only surface that loads this file. */
+    const url = "./data/documents.json";
     DOCUMENTS_URL_HINT = url;
     documents = (await (await fetch(url)).json()).documents || [];
   } catch (error) {
@@ -93,7 +60,6 @@ export async function initLocalMode() {
   document.body.dataset.localData = "true";
   const nav = document.querySelector("nav");
   addNote(document.querySelector(".site-header") || nav?.parentElement, nav);
-  addPanelLink(nav);
 }
 
 initLocalMode();

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "data/behaviours.json",
-  "description": "The behaviour-identity registry: one entry per behaviour across all sets, keyed by slug (the global join key). Source of truth for behaviour identity; the derived constants regenerate from it via engine/generate_behaviour_constants.py (GROUPS in site/spec-reader/app.js, BEHAVIOURS in engine/build-spec-reader-data.py, and the judge-prompt titles in engine/panel/behaviours.json). numeric_id is per-set and file-local: id 1 is 'No sycophancy' in the index set (matching data/coverage.json); the reader-test set has its own numeric space -- published ids are never renumbered. Facets are empty until editorially synced from research/core-behaviour-list.md (prose; not machine-parsed).",
+  "description": "The behaviour-identity registry: one entry per behaviour across all sets, keyed by slug (the global join key). Source of truth for behaviour identity; the derived constants regenerate from it via engine/generate_behaviour_constants.py (BEHAVIOURS in engine/build-spec-reader-data.py, and the judge-prompt titles in engine/panel/behaviours.json). numeric_id is per-set and file-local: id 1 is 'No sycophancy' in the index set (matching data/coverage.json); the reader-test set has its own numeric space -- published ids are never renumbered. Facets are empty until editorially synced from research/core-behaviour-list.md (prose; not machine-parsed).",
   "type": "object",
   "additionalProperties": { "$ref": "#/$defs/entry" },
   "propertyNames": {
@@ -17,7 +17,7 @@
         "name": { "type": "string", "minLength": 1 },
         "set": {
           "enum": ["index", "reader-test", "user"],
-          "description": "index = the project's own behaviour list (site/spec-reader/); reader-test = the external-reviewer bench set (site/spec-reader-test/); user = the clone/fork seam (empty until a fork defines its own behaviours)."
+          "description": "index = the project's own behaviour list (the frozen coverage ledger is sourced from it); reader-test = the panel-run set the reader renders (site/spec-reader/); user = the clone/fork seam (empty until a fork defines its own behaviours)."
         },
         "numeric_id": {
           "type": "integer",
@@ -27,7 +27,7 @@
         "group": {
           "type": ["string", "null"],
           "minLength": 1,
-          "description": "Display group: an index-set GROUPS category (site/spec-reader/app.js) or a reader-test category; null only where a set has no grouping (the user-set seam)."
+          "description": "Display group: an index-set category (rendered as the BEHAVIOURS category in engine/build-spec-reader-data.py) or a reader-test category; null only where a set has no grouping (the user-set seam)."
         },
         "definition": {
           "type": "string",

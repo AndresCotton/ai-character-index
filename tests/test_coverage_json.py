@@ -1,25 +1,20 @@
 """Gate test: every citation in the published reader ledger re-resolves
 byte-for-byte.
 
-Covers data/coverage.json (the published reader); the reader-test bench
-payload's quotes are re-resolved by tests/test_reader_v5_payload.py.
+Covers data/coverage.json; the reader payload's quotes are re-resolved by
+tests/test_reader_v5_payload.py.
 
-The publish --check gate (test_publish_check.py) only covers behaviours
-with a coverage artifact (`spec-coverage.md` or its structured sidecar
-`spec-coverage.json`; sweeps predating the rename keep the legacy
-`4-spec-coverage.*` names). This test is the net under that: it re-resolves
-every stored locator in data/coverage.json against cite.py and
-byte-compares the quote, whether or not the behaviour has any artifact --
-the same guarantee PLAN.md promises CI will enforce on every PR, run here
-directly against the data.
+Re-resolves every stored locator in data/coverage.json against cite.py and
+byte-compares the quote -- the same guarantee PLAN.md promises CI will
+enforce on every PR, run here directly against the data.
 
 Resolution runs in-process (cite's own functions, one spec load per spec)
 rather than one subprocess per citation: the CLI surface is already pinned
 exhaustively by the corpus golden, and per-citation subprocesses would grow
 the suite's runtime linearly with every published behaviour.
 
-Mirrors the comparison rule in publish-coverage.py: example blocks store the
-caption line, i.e. the first line of resolver output.
+Comparison rule: example blocks store the caption line, i.e. the first line
+of resolver output.
 """
 
 import json

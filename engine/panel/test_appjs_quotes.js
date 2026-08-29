@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Automated guard for the quote-anchoring helpers in
- * site/llm-panel-review/app.js (passageFragments + containsInOrder, extracted
+ * site/spec-reader/app.js (passageFragments + containsInOrder, extracted
  * verbatim from the real file -- not reimplemented here).
  *
  * The load-bearing case is the empty-fragment guard. A quote consisting only of
@@ -22,7 +22,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const APP_JS = path.join(__dirname, "..", "..", "site", "llm-panel-review", "app.js");
+const APP_JS = path.join(__dirname, "..", "..", "site", "spec-reader", "app.js");
 const src = fs.readFileSync(APP_JS, "utf8");
 const lines = src.split("\n");
 

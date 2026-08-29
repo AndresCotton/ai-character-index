@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build site/llm-panel-review/data/behaviours.json from panel verdicts.
+"""Build site/spec-reader/data/behaviours.json from panel verdicts.
 
 Implements the MVP display rules from panel-config.json `display`:
   - only the listed behaviours appear in the sidebar;
@@ -19,7 +19,7 @@ Implements the MVP display rules from panel-config.json `display`:
 
 Behaviour identity (name/definition/category) comes from the behaviour
 registry (data/behaviours.json), the source of truth for behaviour identity.
-For the bundled reader-test set the registry matches the shipped bench data
+For the bundled reader-test set the registry matches the shipped reader-test data
 field-for-field (pinned by tests/test_behaviour_registry.py), so sourcing from
 the registry is byte-identical for the shipped data; the registry additionally
 lets set:user behaviours (the clone/fork seam) flow into the payload --
@@ -32,9 +32,9 @@ per-lab verdict/depth/verifiedDate cell rows, carried through untouched.
   the 9-point scale: three 0-3 judges per passage)
 
 Output: by DEFAULT each run emits its own timestamped file
-  site/llm-panel-review/data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json
+  site/spec-reader/data/behaviours-<YYYY-MM-DDTHH-MM-SS>.json
 (hyphen-separated: lexicographically sortable = chronological, URL-safe) and updates
-  site/llm-panel-review/data/manifest.json
+  site/spec-reader/data/manifest.json
 ({"latest": <filename>, "runs": [newest-first]}), which the page reads to pick what to
 show. A second build in the same second takes a numeric sequence suffix
 (behaviours-<ts>-02.json, then -03, ... -- zero-padded) so a run is never silently
@@ -72,7 +72,7 @@ MODEL_LABEL = {"sol": "GPT-5.6 Sol", "fable": "Claude Fable 5", "qwen-max": "Qwe
 SLUGS_EXTRA = {"animal-welfare-impacts": ["general-welfare-impacts-strict"]}   # one run feeds both general-guidelines rows
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
-DATA_DIR = ROOT / "site" / "llm-panel-review" / "data"
+DATA_DIR = ROOT / "site" / "spec-reader" / "data"
 MANIFEST_NAME = "manifest.json"
 FALLBACK_NAME = "behaviours.json"
 # Committed payloads with a documented rebuild path; the byte-identity tests
@@ -175,7 +175,7 @@ def _payload_name(name):
     a behaviour set, so the chain refuses it; only behaviours*.json files are payloads
     here. A non-string (malformed manifest latest) is refused too -- that subsumes the
     old isinstance guard / app.js's `typeof latest === "string"` check. Mirrors
-    payloadName() in site/llm-panel-review/app.js."""
+    payloadName() in site/spec-reader/app.js."""
     if not isinstance(name, str) or not name:
         return False
     if not SAFE_NAME.match(name):
@@ -187,7 +187,7 @@ def _payload_name(name):
 
 
 def resolve_data_name(data_dir, pin=None, manifest=None):
-    """The resolution chain site/llm-panel-review/app.js implements, for CLI tooling:
+    """The resolution chain site/spec-reader/app.js implements, for CLI tooling:
     pin (?data= / --pin) -> manifest latest -> shipped behaviours.json.
     Returns (filename, source) with source one of pin/latest/fallback; a name that
     fails _payload_name (charset, the manifest itself, a non-behaviours file, or a
@@ -226,7 +226,7 @@ def check_out_name(name):
     # flag an overwrite -- only this check stands between --out= and a tracked file.
     # Committed payloads with a documented rebuild path are exempt (the
     # byte-identity tests are the guard against a careless overwrite): the
-    # shipped fallback, the calibration/full-bench variants, and the bench
+    # shipped fallback, the calibration/full-bench variants, and the keep-set
     # payload.
     if name not in REBUILDABLE_NAMES:
         try:
@@ -321,7 +321,7 @@ def behaviour_slug(runlog_key, registry):
 
 def display_behaviours(keep, registry, registry_path):
     """Metadata for the displayed behaviours, registry-driven: the reader-test
-    bench set in numeric_id order (the shipped order), then any set:user
+    set in numeric_id order (the shipped order), then any set:user
     behaviours in keep. Fails loudly on a keep slug the registry does not
     carry as reader-test/user -- a display list pointing at a renamed or
     unknown behaviour must not build silently."""
@@ -329,12 +329,12 @@ def display_behaviours(keep, registry, registry_path):
     for slug, entry in registry.items():
         if entry["set"] in ("reader-test", "user"):
             ordered[slug] = entry
-    bench = sorted((s for s, e in ordered.items() if e["set"] == "reader-test"),
+    reader_test = sorted((s for s, e in ordered.items() if e["set"] == "reader-test"),
                    key=lambda s: ordered[s]["numeric_id"])
     user = sorted((s for s, e in ordered.items() if e["set"] == "user"),
                   key=lambda s: ordered[s]["numeric_id"])
     behaviours = []
-    for slug in bench + user:
+    for slug in reader_test + user:
         if slug not in keep:
             continue
         entry = ordered[slug]
@@ -470,7 +470,7 @@ def main(argv=None):
             src_entry = by_slug_lab.get((b["slug"], lab), {})
             # post-substitution verdicts per passage in this cell; the role's
             # denominator is the cell's true maximum (maxVerdict x votes), the
-            # same rule site/llm-panel-review/app.js applies at render -- so the
+            # same rule site/spec-reader/app.js applies at render -- so the
             # baked fraction is what the page shows, never an impossible one.
             cell_mv = []
             for (beh, loc), mv in votes.items():
@@ -504,7 +504,7 @@ def main(argv=None):
             cits.sort(key=lambda c: (-c["score"], c["locator"]))
             cov[lab] = {"verdict": src_entry.get("verdict"), "depth": src_entry.get("depth_0_4"),
                         # depth_note stays in the coverage record; beside re-run panel data the
-                        # curation-era prose goes stale, so the bench ships passage sets only
+                        # curation-era prose goes stale, so the reader ships passage sets only
                         "note": "",
                         "verifiedDate": src_entry.get("verified_date", ""),
                         "passages": cits}
@@ -542,7 +542,7 @@ def main(argv=None):
               f"(threshold {DISPLAY['threshold']}, solid {DISPLAY['solid_threshold']})"
     if n == 0:
         # Kept nothing. Do not write, do not touch the manifest, do not report
-        # success: a promoted empty run renders as a blank bench with the reason
+        # success: a promoted empty run renders as a blank reader with the reason
         # only in terminal scrollback.
         sys.exit("error: " + summary.strip()
                  + zero_citation_reason(rubric, runlog_rubrics, runlog_models, panel))

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
 <style>
-  /* Shares the index's tokens and register: daylight (default) · umber. */
+  /* Shares the reader's tokens and register: daylight (default) · umber. */
   :root {
     --serif: "EB Garamond", Garamond, "Hoefler Text", "Iowan Old Style", Georgia, serif;
     --mono: "SF Mono", ui-monospace, Menlo, monospace;
@@ -33,7 +33,7 @@
   body { background: var(--bg); color: var(--ink); font-family: var(--serif);
          font-size: 16px; min-height: 100vh; }
 
-  /* ---------- header (as on the index) ---------- */
+  /* ---------- header (as on the reader) ---------- */
   header { display: flex; align-items: baseline; justify-content: space-between;
            padding: 22px 40px 14px; border-bottom: 1px solid var(--hair); position: relative; }
   header::after { content:""; position:absolute; left:0; right:0; bottom:3px;
@@ -147,15 +147,11 @@
 <body data-palette="daylight">
 
 <header>
-  <span class="wordmark"><a href="./">AI Character Index</a></span>
+  <span class="wordmark"><a href="spec-reader/">AI Character Index</a></span>
   <span class="tagline">A public record of declared AI character</span>
   <nav aria-label="site navigation">
-    <a href="./">The Index</a>
     <a href="spec-reader/">Spec reader</a>
-    <a href="spec-reader-test/" title="a separate copy of the spec reader, carrying one external reviewer's behaviour set">Reader test</a>
     <a class="active" href="methodology.html">Methodology</a>
-    <a title="stub · not built in this prototype" onclick="return false" href="#">Contribute</a>
-    <a title="stub · not built in this prototype" onclick="return false" href="#">About</a>
     <button class="mode" id="mode" aria-label="switch surface">☾</button>
   </nav>
 </header>
@@ -318,7 +314,7 @@
           critique of a haiku with a broken 5-7-5 pattern, and an invitation to pick between two
           presidents.</div>
 
-        <div class="demo-q"><b>published depth</b> -- as it appears on <a href="./">the index</a></div>
+        <div class="demo-q"><b>published depth</b> -- as it appears on <a href="spec-reader/">the reader</a></div>
         <div class="demo-cell demo-res"><span class="demo-lab-inline">constitution</span>
           <span class="run">●●●○</span> <b>3 &middot; prescribed</b> -- rules quotable as pass criteria;
           the construct itself unexampled.</div>
@@ -530,7 +526,7 @@
           (<code>specs/CITATION.md</code>) --
           <a href="https://github.com/AndresCotton/ai-character-index" target="_blank" rel="noopener">github.com/AndresCotton/ai-character-index</a>.</li>
       <li>The curated evaluations themselves are cited per behaviour, on each clause's record on
-          <a href="./">the index</a>.</li>
+          <a href="spec-reader/">the reader</a>.</li>
     </ul>
   </section>
 
@@ -543,7 +539,7 @@
 </footer>
 
 <script>
-/* surface toggle, shared state with the index */
+/* surface toggle, shared state with the reader */
 const SURFACES = ["daylight", "umber"];
 const modeBtn = document.getElementById("mode");
 function setPalette(p) {

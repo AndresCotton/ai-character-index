@@ -9,15 +9,13 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-# Panel run outputs stay local: each engine/panel/build_site_data.py run emits a
-# timestamped payload and updates the manifest; neither is pushed. The tracked
-# site/llm-panel-review/data/behaviours.json is the fresh-clone fallback. (The
-# tracked calibration variants behaviours-v*.json predate this rule; gitignore
-# only covers files git does not already track.) behaviours-v5-reader.json is a
-# deliberate exception: the committed reader-test bench payload.
-site/llm-panel-review/data/behaviours-*.json
-!site/llm-panel-review/data/behaviours-v5-reader.json
-site/llm-panel-review/data/manifest.json
+# Panel run outputs stay local: each build_site_data.py run emits a timestamped
+# payload and updates the manifest; neither is pushed. behaviours.json is the
+# tracked fresh-clone fallback; behaviours-v5-reader.json (the keep-set, walker
+# oracle + ?data= variant) is a deliberate exception so rebuilds stay addable.
+site/spec-reader/data/behaviours-*.json
+!site/spec-reader/data/behaviours-v5-reader.json
+site/spec-reader/data/manifest.json
 
 # Regenerable experiment artifacts: virtualenvs and model-weight caches
 .venv*/

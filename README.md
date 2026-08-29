@@ -31,8 +31,7 @@ python3 -m http.server 8080 --directory site
 
 Then open:
 
-- **[http://localhost:8080/llm-panel-review/](http://localhost:8080/llm-panel-review/)** -- the panel reader, the main surface for this workflow. Pick a behaviour in the sidebar; every passage the panel scored lights up in the spec text, with the per-judge verdicts on hover.
-- **[http://localhost:8080/spec-reader/](http://localhost:8080/spec-reader/)** -- the side-by-side spec reader. Documents render as parallel panes with a resizable boundary; your own registered specs appear here too (see below).
+- **[http://localhost:8080/spec-reader/](http://localhost:8080/spec-reader/)** -- the spec reader, the main surface for this workflow: both specifications in full with a behaviour menu laid over them. Pick a behaviour in the sidebar; every passage the panel scored lights up in the spec text, with the per-judge verdicts on hover. Tick one behaviour or several; a compare view shows the two specs side by side with a resizable boundary. Your own registered specs appear here too (see below).
 
 ### 3. API keys (only for running new judging)
 
@@ -95,17 +94,17 @@ python3 engine/panel/build_site_data.py --runlog=engine/panel/runlog-user.jsonl 
     --panel=frontier_fast --behaviours=bribery-resistance
 ```
 
-Then serve the site (skip if the quickstart server is still running) and open the panel reader:
+Then serve the site (skip if the quickstart server is still running) and open the spec reader:
 
 ```sh
 python3 -m http.server 8080 --directory site
 ```
 
-**[http://localhost:8080/llm-panel-review/](http://localhost:8080/llm-panel-review/)** now loads your run first -- the build wrote a timestamped payload under `site/llm-panel-review/data/` (local to your clone, gitignored) and pointed the page's manifest at it, so a plain refresh is enough. Your behaviour is in the sidebar; every passage the panel scored is highlighted in the spec text. Notes:
+**[http://localhost:8080/spec-reader/](http://localhost:8080/spec-reader/)** now loads your run first -- the build wrote a timestamped payload under `site/spec-reader/data/` (local to your clone, gitignored) and pointed the page's manifest at it, so a plain refresh is enough. Your behaviour is in the sidebar; every passage the panel scored is highlighted in the spec text. Notes:
 
 - **v5 is the default rubric end to end**: the judges run the v5 prompt (each passage scored 0-3), rows are stamped `v5`, and the builder selects `v5` rows without being told. `--rubric=` exists only for deliberately running a different prompt variant; on a mismatch the builder exits listing the rubrics your runlog actually carries.
 - `--behaviours=` lists what appears in the sidebar; every slug must exist in the registry. Judged on a different panel (`itest`, say)? Mirror it in `--panel=`.
-- To get back to the shipped bench, open the page with `?data=behaviours.json`; `python3 engine/panel/select_run.py` shows the run ledger and what the page will load.
+- To get back to the shipped payload, open the page with `?data=behaviours.json`; `python3 engine/panel/select_run.py` shows the run ledger and what the page will load.
 
 ### Reading the scores
 
@@ -113,14 +112,14 @@ Each judge scores each passage 0-3 on the v5 rubric; a passage's score is the su
 
 ## Selecting passages for downstream work
 
-The simplest way: in the panel reader, tick the behaviours you care about, set the tier toggles, and click **"↓ Download passages"** in the sidebar. You get a Markdown file with each ticked behaviour's definition and exactly the passages shown under your current selection, across the specs on the page -- ready to hand to your eval tooling (a Petri scenario's target passages, say) or a doc.
+The simplest way: in the spec reader, tick the behaviours you care about, set the tier toggles, and click **"↓ Download passages"** in the sidebar. You get a Markdown file with each ticked behaviour's definition and exactly the passages shown under your current selection, across the specs on the page -- ready to hand to your eval tooling (a Petri scenario's target passages, say) or a doc.
 
-Need it machine-readable instead? The same data is plain JSON in the payload the build wrote: `site/llm-panel-review/data/behaviours-<timestamp>.json` (the shipped bench is `behaviours.json` next to it). Each behaviour carries a coverage record per document, and each record's `passages` array holds the `locator`, the verbatim `quote`, the per-judge `verdicts`, and the summed `score`:
+Need it machine-readable instead? The same data is plain JSON in the payload the build wrote: `site/spec-reader/data/behaviours-<timestamp>.json` (the shipped payload is `behaviours.json` next to it). Each behaviour carries a coverage record per document, and each record's `passages` array holds the `locator`, the verbatim `quote`, the per-judge `verdicts`, and the summed `score`:
 
 ```sh
 python3 - <<'EOF'
 import json
-payload = json.load(open("site/llm-panel-review/data/behaviours.json"))  # or your run's file
+payload = json.load(open("site/spec-reader/data/behaviours.json"))  # or your run's file
 for b in payload["behaviours"]:
     for doc, record in b["coverage"].items():
         for p in record["passages"]:
@@ -208,7 +207,8 @@ python3 engine/validate_data.py                  # schema-check data/, incl. you
 | [`data/behaviours.json`](data/behaviours.json)         | The behaviour registry -- where your behaviours go                                                                         |
 | [`site/`](site/)                                       | The local reader surfaces                                                                                                  |
 
-The remaining directories (`research/`, `methodology/`, `docs/`, `design/`, and friends) are the project's own editorial records and maintenance; none of them are needed to use the tool.
+HEAD
+The remaining directories (`research/`, `methodology/`, `design/`, and friends) are the project's own editorial records and maintenance; none of them are needed to use the tool.
 
 ## Licence and citation
 

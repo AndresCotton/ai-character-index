@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Automated guard for the panel scoring PIPELINE in
- * site/llm-panel-review/app.js -- applyPanelThreshold and initialBands, plus the
+ * site/spec-reader/app.js -- applyPanelThreshold and initialBands, plus the
  * helpers they call, all extracted verbatim from the real file.
  *
  * The existing tiers harness pins the pure cut functions well. It does not pin
@@ -22,7 +22,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const APP_JS = path.join(__dirname, "..", "..", "site", "llm-panel-review", "app.js");
+const APP_JS = path.join(__dirname, "..", "..", "site", "spec-reader", "app.js");
 const src = fs.readFileSync(APP_JS, "utf8");
 const lines = src.split("\n");
 

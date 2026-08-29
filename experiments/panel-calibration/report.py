@@ -332,22 +332,22 @@ is what motivated iteration 2's relative tier. Panel: Sol &middot; Fable &middot
 
 <div class="col">
 <h2>Inspect in the review UI</h2>
-<p>All four runs are built as data files for <code>site/llm-panel-review</code>
+<p>All four runs are built as data files for <code>site/spec-reader</code>
 (<code>?data=</code> switches). For v5 data, <code>threshold=4&amp;solid=7</code> renders the defining band
 solid and the core/related tail thinned. Serve locally:
 <code>cd site &amp;&amp; python3 -m http.server 8000</code>, then per behaviour:</p>
 <ul class="urls mono">
-<li><a href="http://localhost:8000/llm-panel-review/?data=behaviours-v5&threshold=4&solid=7&behavior=proportionate-risk-mitigation&spec=anthropic">v5 &middot; proportionate risk &middot; constitution</a>
- &mdash; vs <a href="http://localhost:8000/llm-panel-review/?data=behaviours-v4a-ds&behavior=proportionate-risk-mitigation&spec=anthropic">v4a same panel</a>
- &mdash; vs <a href="http://localhost:8000/llm-panel-review/?data=behaviours-v3w-fresh&behavior=proportionate-risk-mitigation&spec=anthropic">v3w</a></li>
-<li><a href="http://localhost:8000/llm-panel-review/?data=behaviours-v5&threshold=4&solid=7&behavior=proportionate-risk-mitigation&spec=openai">v5 &middot; proportionate risk &middot; model spec</a>
- &mdash; vs <a href="http://localhost:8000/llm-panel-review/?data=behaviours-v4a-ds&behavior=proportionate-risk-mitigation&spec=openai">v4a same panel</a></li>
-<li><a href="http://localhost:8000/llm-panel-review/?data=behaviours-v5&threshold=4&solid=7&behavior=how-to-approach-tradeoffs&spec=anthropic">v5 &middot; tradeoffs</a>
- &mdash; vs <a href="http://localhost:8000/llm-panel-review/?data=behaviours-v4a-ds&behavior=how-to-approach-tradeoffs&spec=anthropic">v4a same panel</a></li>
-<li><a href="http://localhost:8000/llm-panel-review/?data=behaviours-v5&threshold=4&solid=7&behavior=avoiding-over-and-under-caution&spec=anthropic">v5 &middot; over-/under-caution</a>
- &mdash; vs <a href="http://localhost:8000/llm-panel-review/?data=behaviours-v4a-ds&behavior=avoiding-over-and-under-caution&spec=anthropic">v4a same panel</a></li>
-<li><a href="http://localhost:8000/llm-panel-review/?data=behaviours-v5&threshold=4&solid=7&behavior=helpfulness&spec=anthropic">v5 &middot; helpfulness</a>
- &mdash; vs <a href="http://localhost:8000/llm-panel-review/?data=behaviours-v4a-ds&behavior=helpfulness&spec=anthropic">v4a same panel</a></li>
+<li><a href="http://localhost:8000/spec-reader/?data=behaviours-v5&threshold=4&solid=7&behavior=proportionate-risk-mitigation&spec=anthropic">v5 &middot; proportionate risk &middot; constitution</a>
+ &mdash; vs <a href="http://localhost:8000/spec-reader/?data=behaviours-v4a-ds&behavior=proportionate-risk-mitigation&spec=anthropic">v4a same panel</a>
+ &mdash; vs <a href="http://localhost:8000/spec-reader/?data=behaviours-v3w-fresh&behavior=proportionate-risk-mitigation&spec=anthropic">v3w</a></li>
+<li><a href="http://localhost:8000/spec-reader/?data=behaviours-v5&threshold=4&solid=7&behavior=proportionate-risk-mitigation&spec=openai">v5 &middot; proportionate risk &middot; model spec</a>
+ &mdash; vs <a href="http://localhost:8000/spec-reader/?data=behaviours-v4a-ds&behavior=proportionate-risk-mitigation&spec=openai">v4a same panel</a></li>
+<li><a href="http://localhost:8000/spec-reader/?data=behaviours-v5&threshold=4&solid=7&behavior=how-to-approach-tradeoffs&spec=anthropic">v5 &middot; tradeoffs</a>
+ &mdash; vs <a href="http://localhost:8000/spec-reader/?data=behaviours-v4a-ds&behavior=how-to-approach-tradeoffs&spec=anthropic">v4a same panel</a></li>
+<li><a href="http://localhost:8000/spec-reader/?data=behaviours-v5&threshold=4&solid=7&behavior=avoiding-over-and-under-caution&spec=anthropic">v5 &middot; over-/under-caution</a>
+ &mdash; vs <a href="http://localhost:8000/spec-reader/?data=behaviours-v4a-ds&behavior=avoiding-over-and-under-caution&spec=anthropic">v4a same panel</a></li>
+<li><a href="http://localhost:8000/spec-reader/?data=behaviours-v5&threshold=4&solid=7&behavior=helpfulness&spec=anthropic">v5 &middot; helpfulness</a>
+ &mdash; vs <a href="http://localhost:8000/spec-reader/?data=behaviours-v4a-ds&behavior=helpfulness&spec=anthropic">v4a same panel</a></li>
 </ul>
 </div>
 </main>

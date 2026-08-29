@@ -1,10 +1,12 @@
-"""Gate tests for the reader-test bench payload (behaviours-v5-reader.json).
+"""Gate tests for the band keep-set payload (behaviours-v5-reader.json).
 
-The bench renders the committed v5 panel run pre-filtered to the panel's band
-boundary: site/llm-panel-review/data/behaviours-v5-reader.json, built by
+The keep-set is the committed v5 panel run pre-filtered to the panel's band
+boundary: site/spec-reader/data/behaviours-v5-reader.json, built by
 engine/panel/build_site_data.py with --threshold=4 --solid-threshold=6 from
 runlog-v5.jsonl (the two overrides are the 3-judge band boundary:
-relatedCut = j+1 = 4, coreCut = 2j = 6).
+relatedCut = j+1 = 4, coreCut = 2j = 6). The reader renders nothing below that
+cut, so the keep-set is exactly what it can show: engine/verify-reader-test.mjs
+uses it as the passage-count oracle, and ?data=behaviours-v5-reader loads it.
 
 Three nets here:
 
@@ -16,7 +18,7 @@ Three nets here:
    net data/coverage.json gets in tests/test_coverage_json.py.
 3. A golden rebuild: the builder with the same overrides reproduces the
    committed payload byte-for-byte -- it emits the same render-form role
-   fractions site/llm-panel-review/app.js applies at render. A silent change
+   fractions site/spec-reader/app.js applies at render. A silent change
    in either cut shows up as a diff here.
 
 Band LABELS (adjacent vs the band the panel view renders) need the real
@@ -39,7 +41,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PAYLOAD = ROOT / "site" / "llm-panel-review" / "data" / "behaviours-v5-reader.json"
+PAYLOAD = ROOT / "site" / "spec-reader" / "data" / "behaviours-v5-reader.json"
 BUILDER = ROOT / "engine" / "panel" / "build_site_data.py"
 LABELS_HARNESS = ROOT / "engine" / "panel" / "test_reader_v5_labels.js"
 
@@ -154,8 +156,8 @@ class GoldenRebuildTest(unittest.TestCase):
         sp.loader.exec_module(bs)
         scratch = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, scratch, ignore_errors=True)
-        (scratch / "site" / "llm-panel-review" / "data").mkdir(parents=True)
-        bs.DATA_DIR = scratch / "site" / "llm-panel-review" / "data"
+        (scratch / "site" / "spec-reader" / "data").mkdir(parents=True)
+        bs.DATA_DIR = scratch / "site" / "spec-reader" / "data"
         saved = sys.argv
         sys.argv = ["build_site_data.py", "--threshold=4", "--solid-threshold=6",
                     "--run-date=2026-08-17", "--out=behaviours-v5-reader.json"]
@@ -164,13 +166,13 @@ class GoldenRebuildTest(unittest.TestCase):
                 bs.main()
         finally:
             sys.argv = saved
-        rebuilt = (scratch / "site" / "llm-panel-review" / "data" /
+        rebuilt = (scratch / "site" / "spec-reader" / "data" /
                    "behaviours-v5-reader.json").read_bytes()
         # a real byte comparison: the builder emits the render-form role
         # fractions itself, so no test-side transformation is needed
         self.assertEqual(
             rebuilt, PAYLOAD.read_bytes(),
-            "rebuilt bench payload diverges from the committed file",
+            "rebuilt keep-set payload diverges from the committed file",
         )
 
 

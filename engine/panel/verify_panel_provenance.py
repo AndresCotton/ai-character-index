@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify that the shipped site/llm-panel-review/data/behaviours.json is
+"""Verify that the shipped site/spec-reader/data/behaviours.json is
 reproducible from the committed canonical runlog (engine/panel/runlog-v5.jsonl).
 
 Standard being checked: "a fresh clone can verify and reproduce every published
@@ -50,7 +50,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 DEFAULT_RUNLOG = HERE / "runlog-v5.jsonl"
-DEFAULT_PAYLOAD = ROOT / "site" / "llm-panel-review" / "data" / "behaviours.json"
+DEFAULT_PAYLOAD = ROOT / "site" / "spec-reader" / "data" / "behaviours.json"
 DEFAULT_RUBRIC = "v5"
 DEFAULT_PANEL = "frontier_fast"
 # JSON paths the builder cannot reproduce deterministically; see module docstring.
@@ -109,11 +109,11 @@ def rebuild(runlog, rubric, panel, scratch_root):
                     scratch_root / "data" / "panel-cell-curation.json")
     shutil.copyfile(ROOT / "data" / "behaviours.json",
                     scratch_root / "data" / "behaviours.json")
-    (scratch_root / "site" / "llm-panel-review" / "data").mkdir(parents=True, exist_ok=True)
+    (scratch_root / "site" / "spec-reader" / "data").mkdir(parents=True, exist_ok=True)
     bs = _load("build_site_data_under_test", HERE / "build_site_data.py")
     bs.ROOT = scratch_root
     # DATA_DIR is derived from ROOT at module load; rebind it too.
-    bs.DATA_DIR = scratch_root / "site" / "llm-panel-review" / "data"
+    bs.DATA_DIR = scratch_root / "site" / "spec-reader" / "data"
     saved_argv = sys.argv
     # --out= pins the rebuild to the canonical filename: without it the
     # builder emits a timestamped run file (and touches the manifest).
@@ -124,7 +124,7 @@ def rebuild(runlog, rubric, panel, scratch_root):
         bs.main()
     finally:
         sys.argv = saved_argv
-    return scratch_root / "site" / "llm-panel-review" / "data" / "behaviours.json"
+    return scratch_root / "site" / "spec-reader" / "data" / "behaviours.json"
 
 
 def _remove_allowed(doc):
@@ -348,7 +348,7 @@ def verify(runlog=DEFAULT_RUNLOG, payload=DEFAULT_PAYLOAD, rubric=DEFAULT_RUBRIC
 
 def main(argv=None):
     ap = argparse.ArgumentParser(
-        description="Verify the shipped llm-panel-review payload reproduces from the committed runlog.")
+        description="Verify the shipped spec-reader payload reproduces from the committed runlog.")
     ap.add_argument("--runlog", type=Path, default=DEFAULT_RUNLOG,
                     help=f"canonical runlog (default {DEFAULT_RUNLOG})")
     ap.add_argument("--payload", type=Path, default=DEFAULT_PAYLOAD,

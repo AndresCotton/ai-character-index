@@ -2,7 +2,7 @@
 
 `runlog-v5.jsonl` (next to this note) is the committed, canonical run log that
 produces the published panel numbers in
-`site/llm-panel-review/data/behaviours.json` -- the v5 full bench on the
+`site/spec-reader/data/behaviours.json` -- the v5 full bench on the
 9-point scale (three 0-3 judges per passage). It is committed data, not a
 runtime artifact: every other `runlog*.jsonl` in this directory stays
 gitignored. It supersedes `runlog-v3.jsonl` as the shipped default
@@ -45,7 +45,7 @@ so the payload asserts none).
 
 ## Which payload it reproduces
 
-`site/llm-panel-review/data/behaviours.json` -- 10 behaviours, 3,630
+`site/spec-reader/data/behaviours.json` -- 10 behaviours, 3,630
 citations, rubric `v5`, panel config `frontier_fast`, `provenance.runDate`
 2026-08-17. Rebuilding from this log reproduces the shipped file
 byte-identically, with one documented exception: the builder stamps

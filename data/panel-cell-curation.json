@@ -1,5 +1,5 @@
 {
-  "note": "Per-lab cell summaries shipped beside the panel payload's passages (site/llm-panel-review/data/*.json cell verdict/depth/verifiedDate). Read by engine/panel/build_site_data.py at build time. Extracted 2026-08-24 from the retired reader-test bench ledger (the adria transcription) before its deletion; the values are the bench-era assessments, not v5-run outputs.",
+  "note": "Per-lab cell summaries shipped beside the panel payload's passages (site/spec-reader/data/*.json cell verdict/depth/verifiedDate). Read by engine/panel/build_site_data.py at build time. Extracted 2026-08-24 from the retired reader-test bench ledger (the adria transcription) before its deletion; the values are the bench-era assessments, not v5-run outputs.",
   "cells": [
     {
       "slug": "helpfulness",

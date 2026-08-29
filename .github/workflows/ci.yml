@@ -3,11 +3,11 @@ name: CI
 # PR-time verification. Two jobs:
 #
 #   offline  -- the full no-network battery: panel + provenance + registry
-#               suites, the tests/ suite (cite goldens, publish checks,
-#               decoupling pins), the data gate, byte-identity rebuilds,
-#               and the node app.js harnesses. Stdlib python + node only.
+#               suites, the tests/ suite (cite goldens, decoupling pins),
+#               the data gate, byte-identity rebuilds, and the node app.js
+#               harnesses. Stdlib python + node only.
 #
-#   browser  -- the three Playwright walkers (readers + panel feature
+#   browser  -- the two Playwright walkers (reader anchoring + reader feature
 #               harness x bundled and user-extended data), which need a
 #               real Chrome.
 #
@@ -55,12 +55,6 @@ jobs:
           python3 engine/test_builders_fail_loud.py
           python3 engine/test_builders_reproduce_payloads.py
 
-      - name: Publish checks (every published behaviour)
-        run: |
-          python3 engine/publish-coverage.py research/sweeps/01-no-sycophancy --check
-          python3 engine/publish-coverage.py research/sweeps/02-calibration --check
-          python3 engine/publish-coverage.py research/sweeps/03-action-honesty --check
-
       - name: Registry drift gate
         run: python3 engine/generate_behaviour_constants.py --check
 
@@ -68,6 +62,9 @@ jobs:
         run: |
           node engine/panel/test_appjs_fallthrough.js
           node engine/panel/test_appjs_tiers.js
+          node engine/panel/test_appjs_quotes.js
+          node engine/panel/test_appjs_wiring.js
+          node engine/panel/test_reader_v5_labels.js
 
   browser:
     runs-on: ubuntu-latest
@@ -88,10 +85,8 @@ jobs:
       - name: Install Chrome
         uses: browser-actions/setup-chrome@v1
 
-      - name: Reader view walkers
-        run: |
-          node engine/verify-spec-reader.mjs
-          node engine/verify-reader-test.mjs
+      - name: Reader view walker
+        run: node engine/verify-reader-test.mjs
 
-      - name: Panel feature harness (bundled + user-extended)
-        run: node engine/verify-panel-features.mjs
+      - name: Reader feature harness (bundled + user-extended)
+        run: node engine/verify-reader-features.mjs
