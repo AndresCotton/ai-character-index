@@ -120,7 +120,6 @@ async function readView(url) {
       collapsedSections: panel.querySelectorAll(".section-collapsed").length,
       // Computed display, not the property: a stylesheet rule that sets its own display
       // silently beats [hidden], which is how the highlight legend first leaked through.
-      coverageChipHidden: getComputedStyle(panel.querySelector(".coverage-depth")).display === "none",
       focusToggleHidden: getComputedStyle(panel.querySelector(".document-focus-toggle")).display === "none",
       legendHidden: getComputedStyle(panel.querySelector(".rail-legend")).display === "none",
     })),
@@ -209,12 +208,11 @@ if (behaviours.length === 0) {
         && panel?.blocks > 100
         && panel.hiddenBlocks === 0
         && panel.collapsedSections === 0
-        && panel.coverageChipHidden
         && panel.focusToggleHidden
         && panel.legendHidden,
       `empty behaviour set · ${document.id}`,
       `${seen.passages} passages, ${panel?.blocks} blocks, ${panel?.hiddenBlocks} hidden,`
-      + ` menu items ${seen.menuItems}, chip hidden ${panel?.coverageChipHidden}`
+      + ` menu items ${seen.menuItems}`
       + (seen.status ? `, status: ${seen.status}` : ""),
     );
   }

@@ -619,8 +619,7 @@ body.resizing-columns {
   color: var(--muted);
   font-size: 9px;
 }
-.coverage-depth { color: var(--accent); font-weight: 600; }
-.coverage-depth, .document-version { grid-column: 1 / -1; }
+.document-version { grid-column: 1 / -1; }
 .document-focus-toggle {
   padding: 2px 0;
   border: 0;
