@@ -400,7 +400,7 @@ body.resizing-columns {
   gap: 7px;
   border: 1px solid var(--line);
   border-radius: 4px;
-  background: transparent;
+  background: var(--chrome-deep);
   color: var(--ink);
   font-size: 10px;
   letter-spacing: .08em;
