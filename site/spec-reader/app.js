@@ -95,10 +95,7 @@ async function loadBehaviours() {
 }
 
 /* Shown for a document when no behaviour is under test. */
-const NO_COVERAGE = { verdict: null, depth: null, note: "", verifiedDate: "", passages: [] };
-
-/* Depth anchors per the coverage depth rubric (../methodology.html#coverage). */
-const DEPTH_ANCHORS = ["absent", "named", "discussed", "prescribed", "demonstrated"];
+const NO_COVERAGE = { passages: [] };
 
 /* Behaviour colours live in the stylesheet, one --hue-N per slot and one set per
  * surface, so a palette switch repaints every highlight without re-annotating. */
@@ -598,16 +595,6 @@ function blockquote(value) {
     .join("\n");
 }
 
-function coverageSummary(coverage) {
-  const parts = [];
-  if (coverage.verdict) parts.push(`Verdict: ${coverage.verdict}`);
-  if (Number.isFinite(coverage.depth)) {
-    parts.push(`coverage depth ${coverage.depth} / 4 (${DEPTH_ANCHORS[coverage.depth] || "--"})`);
-  }
-  if (coverage.verifiedDate) parts.push(`verified ${coverage.verifiedDate}`);
-  return parts.join(" · ");
-}
-
 function passagesMarkdown() {
   const behaviours = selectedBehaviours();
   const documents = state.payload?.documents || [];
@@ -632,8 +619,6 @@ function passagesMarkdown() {
     documents.forEach(doc => {
       const coverage = behaviour.coverage?.[doc.id] || NO_COVERAGE;
       lines.push("", `### ${doc.lab} · ${doc.title} (${doc.version})`);
-      const summary = coverageSummary(coverage);
-      if (summary) lines.push("", summary);
       lines.push("", `Source: ${doc.sourceUrl}`);
       // Coverage notes are curation-era prose; the reader ships passage sets only
       // (removed from the export per Andres 2026-08-17 -- stale beside re-run panel data).
@@ -1470,22 +1455,6 @@ function renderDocument(doc) {
   return panel;
 }
 
-/* The coverage line reads one behaviour's depth verdict; over several it reads the range,
- * because a set of behaviours has no single depth and averaging them would invent one. */
-function coverageDepthLine(doc) {
-  const depths = selectedBehaviours()
-    .map(behaviour => behaviour.coverage?.[doc.id]?.depth)
-    .filter(depth => Number.isFinite(depth));
-  if (!depths.length) return "";
-  const low = Math.min(...depths);
-  const high = Math.max(...depths);
-  if (low === high) {
-    return `Coverage depth ${low} / 4 · ${DEPTH_ANCHORS[low] ?? ""}`
-      + (depths.length > 1 ? ` · all ${depths.length}` : "");
-  }
-  return `Coverage depth ${low}–${high} / 4 · ${depths.length} behaviors`;
-}
-
 /* Tier toggles report what they hold and stop pretending to be live when they
  * cannot hold anything. Counts are summed over the ticked behaviours for THIS
  * document, from the same cells the rail renders, so the number on the button and
@@ -1594,9 +1563,6 @@ function renderRunProvenance() {
 
 function updatePanelMeta(panel, doc) {
   const tracking = highlightsActive();
-  const depth = panel.querySelector(".coverage-depth");
-  depth.textContent = tracking ? coverageDepthLine(doc) : "";
-  depth.hidden = !tracking;
   panel.querySelector(".rail-legend").hidden = !tracking;
   panel.querySelector(".document-focus-toggle").hidden = !tracking;
   if (tracking) updateTierToggles(panel, doc);
