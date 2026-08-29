@@ -118,9 +118,10 @@
 
   <div class="m-head">
     <div class="m-title">Use the tool</div>
-    <p class="m-sub">Point a panel of LLM judges at a model specification -- a published one or your
-    own -- and get back a passage-level coverage map for any behaviour you care about, every passage
-    scored and quoted verbatim.</p>
+    <p class="m-sub">A tool for researchers working in the model-spec space. Point a panel of LLM
+    judges at a spec and give the panel a behaviour you care about. You get back a passage-level
+    coverage map: every place the spec addresses that behaviour, scored by each judge and quoted
+    verbatim.</p>
     <a class="repo-btn" href="https://github.com/AndresCotton/ai-character-index"
        target="_blank" rel="noopener">Get it on GitHub&thinsp;↗</a>
   </div>
@@ -142,14 +143,13 @@
 
   <section class="m">
     <h2>Get it</h2>
+    <p>Open a terminal and copy-paste:</p>
     <pre><code>git clone https://github.com/AndresCotton/ai-character-index.git
 cd ai-character-index
 python3 -m http.server 8080 --directory site</code></pre>
-    <p>Python and a browser, no build step -- that alone browses the shipped results locally.
-    Running new judging takes one API key. The
+    <p>If you'd like to run new judges, simply add an OpenRouter API key. Follow the
     <a href="https://github.com/AndresCotton/ai-character-index#readme" target="_blank"
-    rel="noopener">README</a> covers the rest: your own behaviours, your own specs, the judge
-    prompt.</p>
+    rel="noopener">README</a> for more details.</p>
   </section>
 
   <section class="m">
