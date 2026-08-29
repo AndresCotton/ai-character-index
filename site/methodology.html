@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI Character Index · Methodology</title>
+<title>AI Character Index · Use the tool</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2214%22 font-size=%2214%22>§</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +40,6 @@
                   border-bottom:1px solid var(--hair); }
   .wordmark { font-size: 19px; font-weight: 600; font-variant-caps: all-small-caps; letter-spacing: .22em; }
   .wordmark a { color: inherit; text-decoration: none; }
-  .tagline { font-style: italic; font-size: 14.5px; color: var(--ink2); }
   nav { display: flex; gap: 24px; }
   nav a { font-variant-caps: all-small-caps; letter-spacing: .12em; font-size: 14.5px;
           color: var(--ink3); text-decoration: none; }
@@ -69,75 +68,30 @@
   section.m:last-of-type { border-bottom: none; }
   h2 { font-size: 15px; font-weight: 600; font-variant-caps: all-small-caps; letter-spacing: .16em;
        color: var(--ink2); margin-bottom: 14px; }
-  h2 .stage-no { color: var(--ink3); font-weight: 500; margin-right: 10px; }
   section.m p { font-size: 15.5px; line-height: 1.62; color: var(--ink); max-width: 66ch; margin-bottom: 10px; }
   section.m p.aside { color: var(--ink2); font-style: italic; font-size: 14.5px; }
   section.m ul { list-style: none; max-width: 68ch; margin: 4px 0 10px; }
   section.m li { font-size: 15px; line-height: 1.58; color: var(--ink); padding: 3.5px 0 3.5px 22px; position: relative; }
   section.m li::before { content: "·"; position: absolute; left: 6px; color: var(--ink3); }
   section.m li b { font-weight: 600; }
-  .gate-line { font-size: 14.5px; line-height: 1.55; color: var(--ink2); max-width: 66ch;
-               border-left: 2px solid var(--hair2); padding: 2px 0 2px 14px; margin-top: 12px; }
-  .gate-line b { font-variant-caps: all-small-caps; letter-spacing: .1em; font-weight: 600; color: var(--ink); }
   code { font-family: var(--mono); font-size: 12.5px; color: var(--ink2);
          background: var(--lift); border: 1px solid var(--hair); padding: 0 4px; border-radius: 2px; }
+  pre { max-width: 66ch; margin: 12px 0 14px; padding: 12px 16px; overflow-x: auto;
+        background: var(--lift); border: 1px solid var(--hair); }
+  pre code { display: block; border: none; background: none; padding: 0;
+             font-size: 13px; line-height: 1.7; color: var(--ink); }
   a { color: var(--spec); text-decoration: none; }
   a:hover { text-decoration: underline; text-underline-offset: 3px; }
-
-  /* ---------- how we assess coverage ---------- */
-  .run { font-size: 10.5px; letter-spacing: 2.5px; white-space: nowrap; vertical-align: 1px;
-         color: var(--spec); opacity: .85; }
-  .subhead { font-variant-caps: all-small-caps; letter-spacing: .14em; font-size: 14.5px;
-             font-weight: 600; color: var(--ink2); margin: 24px 0 8px; }
-  .cite-sample { max-width: 66ch; margin: 12px 0 14px; border-left: 2px solid var(--hair2);
-                 padding: 4px 0 4px 16px; }
-  .cite-sample code { display: inline-block; margin-bottom: 7px; }
-  .cite-sample .q { font-family: var(--serif); font-size: 14.5px; line-height: 1.6; color: var(--ink); }
-  .cite-sample .role { font-size: 13px; font-style: italic; color: var(--ink3); margin-top: 5px; }
-  .rubric-ledger { max-width: 72ch; margin: 14px 0 18px; border-top: 1px solid var(--hair); }
-  .rl-row { display: grid; grid-template-columns: 56px 130px 1fr; gap: 0 18px; align-items: baseline;
-            padding: 8.5px 0; border-bottom: 1px solid var(--hair); }
-  .rl-anchor { font-variant-caps: all-small-caps; letter-spacing: .1em; font-weight: 600; font-size: 15.5px; }
-  .rl-anchor b { font-family: var(--mono); font-size: 12.5px; font-weight: 500; color: var(--ink3);
-                 margin-right: 7px; letter-spacing: 0; }
-  .rl-bar { font-size: 14.5px; line-height: 1.52; color: var(--ink); }
-
-  .demo { border: 1px solid var(--hair); margin: 14px 0 12px; background: var(--panel); }
-  .demo-grid { display: grid; grid-template-columns: 1fr 1fr; }
-  .demo-lab { padding: 10px 16px; font-variant-caps: all-small-caps; letter-spacing: .12em;
-              font-size: 14px; font-weight: 600; color: var(--ink2); border-bottom: 1px solid var(--hair); }
-  .demo-lab code { margin-left: 8px; font-variant-caps: normal; letter-spacing: 0; font-weight: 400; }
-  .demo-q { grid-column: 1 / -1; padding: 8px 16px; background: var(--lift);
-            border-bottom: 1px solid var(--hair); font-size: 13.5px; line-height: 1.5; color: var(--ink2); }
-  .demo-q b { font-variant-caps: all-small-caps; letter-spacing: .1em; font-size: 14px; color: var(--ink); }
-  .demo-cell { padding: 10px 16px 12px; font-size: 14px; line-height: 1.55; color: var(--ink);
-               border-bottom: 1px solid var(--hair); }
-  .demo-cell:last-child, .demo-cell:nth-last-child(2):not(.c2) { border-bottom: none; }
-  .c2 { border-left: 1px solid var(--hair); }
-  .demo-verdict { font-variant-caps: all-small-caps; letter-spacing: .1em; font-weight: 600;
-                  color: var(--ink2); margin-right: 6px; }
-  .demo-lab-inline { display: none; }
-  .demo-res b { font-variant-caps: all-small-caps; letter-spacing: .1em; font-size: 14.5px; }
-  @media (max-width: 640px) {
-    .demo-grid { grid-template-columns: 1fr; }
-    .demo-lab { display: none; }
-    .c2 { border-left: none; }
-    .demo-cell:nth-last-child(2):not(.c2) { border-bottom: 1px solid var(--hair); }
-    .demo-lab-inline { display: block; font-variant-caps: all-small-caps; letter-spacing: .12em;
-                       font-size: 12.5px; color: var(--ink3); margin-bottom: 2px; }
-  }
-
-  .src-list { list-style: none; max-width: 70ch; }
-  .src-list li { padding-left: 22px; }
 
   footer { max-width: 880px; margin: 14px auto 34px; display: flex; flex-direction: column; gap: 8px;
            font-variant-caps: all-small-caps; letter-spacing: .12em; font-size: 13.5px; color: var(--ink3); }
   .f-row { display: flex; align-items: baseline; gap: 24px; flex-wrap: wrap; }
   .proto-flag { margin-left: auto; }
+  footer a { color: inherit; }
+  footer a:hover { color: var(--ink); }
 
   @media (max-width: 880px) {
     header { padding: 18px 22px 12px; flex-wrap: wrap; gap: 6px 18px; }
-    .tagline { display: none; }
     .sheet { margin: 22px 14px 0; }
     footer { margin: 14px 14px 30px; }
     .m-head, section.m { padding-left: 22px; padding-right: 22px; }
@@ -148,10 +102,9 @@
 
 <header>
   <span class="wordmark"><a href="spec-reader/">AI Character Index</a></span>
-  <span class="tagline">A public record of declared AI character</span>
   <nav aria-label="site navigation">
     <a href="spec-reader/">Spec reader</a>
-    <a class="active" href="methodology.html">Methodology</a>
+    <a class="active" href="methodology.html">Use the tool</a>
     <button class="mode" id="mode" aria-label="switch surface">☾</button>
   </nav>
 </header>
@@ -159,382 +112,78 @@
 <div class="sheet">
 
   <div class="m-head">
-    <div class="m-title">Methodology</div>
-    <p class="m-sub">This page describes the pipeline as it is actually executed -- the same
-    versioned procedure files that run each sweep, transcribed, not an idealized method.
-    Where the method has gaps, they are stated.</p>
+    <div class="m-title">Use the tool</div>
+    <p class="m-sub">The spec reader you are browsing is an open tool, and this site is its shipped
+    example. Everything needed to run it yourself -- on your own behaviours, your own documents --
+    lives in <a href="https://github.com/AndresCotton/ai-character-index" target="_blank"
+    rel="noopener">the GitHub repository</a>. This page is the short version of its README.</p>
   </div>
 
   <section class="m">
-    <h2>What the index measures</h2>
-    <p>For each behaviour, three strata, each on a 0&#8211;4 scale:</p>
-    <ul>
-      <li><b>Coverage</b> -- what each lab's own specification declares about the behaviour, cited verbatim
-          (<a href="#coverage">how we assess it</a>).</li>
-      <li><b>Instruments</b> -- what public evaluations of the behaviour exist. A fact about the field, not about any lab.</li>
-      <li><b>Adherence</b> -- what those evaluations report per lab, as historical per-paper snapshots.</li>
-    </ul>
-    <p>The unit of the index is the <b>behaviour</b> (e.g. &sect;&thinsp;1 No sycophancy). Each behaviour is
-    operationalized as <b>facets</b>: concrete eval questions with a setup, a metric, and a pass condition.
-    Evidence attaches at the facet level; a behaviour with no eval-covered facets is an evidence gap, which
-    is itself an index finding.</p>
-    <p>Evidence enters through a <b>behaviour sweep</b>: a staged pipeline run one behaviour at a time.
-    Every stage produces a committed artifact and stops at a <b>gate</b> -- a checklist a human verifies
-    and signs before the next stage may start.</p>
-  </section>
-
-  <section class="m" id="coverage">
-    <h2>How we assess coverage</h2>
-    <p>Coverage answers one question, per behaviour and per lab: <b>what does the lab's own
-    specification declare about this behaviour, and in what depth?</b> It is scored from the public
-    documents alone and is not focused on what models actually do (adherence measures that).</p>
-    <p>The full report per behaviour -- citations, verdict, depth score, rationale -- will be
-    published in the following weeks.</p>
-
-    <div class="subhead">The evidence &middot; pinned verbatim citations</div>
-    <p>The ground truth is the latest published version of each specification, mirrored into the
-    repository from the labs' own sources -- currently <code>constitution@2026-01-20</code> and
-    <code>model-spec@2025-12-18</code>.</p>
-    <p>Relevant passages are found by an LLM panel: three frontier judges &mdash; one from OpenAI's
-    line, one from Anthropic's line, and a third-party judge &mdash; score every passage of both
-    mirrors against the behaviour, whole-spec at a time.</p>
-    <p>The coverage published so far predates the panel and was found by a fixed term list, published
-    in full: the behaviour's own words, synonyms and antonym-phrasings, and each spec's register for
-    the same idea -- 48 terms for &sect;&thinsp;3, with short ambiguous terms word-bounded. Every term
-    was run over both mirrors and every result recorded, empty results included, so the published
-    table shows everywhere the search looked. The whole section enclosing each hit was then read,
-    because a spec often states the actual rule a paragraph away from the word that matched.</p>
-    <p>Every passage that bears on the behaviour is then extracted as an exact, unabridged quote
-    under a locator that pins the spec version, section path, paragraph, and sentence range:</p>
-    <div class="cite-sample">
-      <code>constitution@2026-01-20 &rsaquo; Being helpful &rsaquo; What constitutes genuine helpfulness &rsaquo; &para;9 s1</code>
-      <div class="q">&ldquo;Concern for user wellbeing means that Claude should avoid being sycophantic
-      or trying to foster excessive engagement or reliance on itself if this isn&rsquo;t in the
-      person&rsquo;s genuine interest.&rdquo;</div>
-      <div class="role">role: the constitution&rsquo;s only verbatim use of &ldquo;sycophantic&rdquo; &middot; core passage</div>
-    </div>
-    <ul>
-      <li><b>Every excerpt carries a role</b> -- one line stating what the passage contributes to the
-          behaviour's construct.</li>
-      <li><b>Passages are core or related.</b> Core passages state the behaviour's own construct.
-          Related passages sit at its boundary -- a neighbouring norm, a related mechanism -- and are
-          kept and marked, with the reason, because they tell an eval designer where the construct
-          ends.</li>
-      <li>On this evidence, each spec receives a <b>depth score</b>, 0&#8211;4, on the rubric
-          below.</li>
-    </ul>
-
-    <div class="subhead">The depth rubric</div>
-    <div class="rubric-ledger">
-      <div class="rl-row"><span class="run">○○○○</span><span class="rl-anchor"><b>0</b>absent</span>
-        <span class="rl-bar">No passage bears on the behaviour.</span></div>
-      <div class="rl-row"><span class="run">●○○○</span><span class="rl-anchor"><b>1</b>named</span>
-        <span class="rl-bar">The behaviour appears -- a word or clause, typically inside a list or a
-        passage about something else -- but the spec says nothing further about it.</span></div>
-      <div class="rl-row"><span class="run">●●○○</span><span class="rl-anchor"><b>2</b>discussed</span>
-        <span class="rl-bar">The spec addresses the behaviour in its own right -- what the norm is, why
-        it matters -- but only in terms too general to grade a response against.</span></div>
-      <div class="rl-row"><span class="run">●●●○</span><span class="rl-anchor"><b>3</b>prescribed</span>
-        <span class="rl-bar">The spec states concrete do/don't rules or procedures for the behaviour,
-        specific enough that a grader can quote the spec's own sentences as pass criteria.</span></div>
-      <div class="rl-row"><span class="run">●●●●</span><span class="rl-anchor"><b>4</b>demonstrated</span>
-        <span class="rl-bar">Prescribed, plus worked examples: concrete scenarios where the spec shows
-        the sanctioned response, usable as an answer key for borderline cases.</span></div>
-    </div>
-
-    <p>Two boundaries do most of the work:</p>
-    <ul>
-      <li><b>2 vs 3 is the grading test:</b> could an eval score a transcript by quoting the spec, or
-          would the grader have to invent the standard? If invent, it is a 2. A passage that praises
-          honesty in general is a 2; a rule a grader can hold a transcript against is a 3.</li>
-      <li><b>3 vs 4 is the worked-example test:</b> a worked example is a concrete scenario for which
-          the spec states the sanctioned response, specific enough for an eval item to adapt. Format is
-          irrelevant: the Model Spec's request/response blocks and the constitution's inline prose
-          cases -- the nurse/medication case and its five deployment-context variants, the Aria persona
-          rulings, the graded operator-instruction triple -- qualify equally, so a spec's principled
-          prose style is not itself a cap on depth. Two things do not count: an example that
-          instantiates a neighbouring construct rather than the behaviour's own (none of the Model
-          Spec's honesty examples test a report of the assistant's <i>own actions</i>, so
-          &sect;&thinsp;3 stays at 3 despite them), and a lone illustration attached to a broader
-          parent norm.</li>
-    </ul>
-
-    <div class="subhead">How a score is assigned &middot; Example: No sycophancy</div>
-    <p class="aside">The rubric is applied as a ladder: each bar must be cleared before the next is
-    tested, and the score is the last bar cleared. Below, the published depth scores for
-    &sect;&thinsp;1 -- <i>the model should not shift its factual claims or assessments to please the
-    user</i> -- re-derived step by step from the passages the sweep extracted. Every quote is verbatim;
-    all mapped passages can be read in place in the <a href="spec-reader/">spec reader</a>.</p>
-
-    <div class="demo">
-      <div class="demo-grid">
-        <div class="demo-lab">Claude constitution <code>constitution@2026-01-20</code></div>
-        <div class="demo-lab c2">OpenAI Model Spec <code>model-spec@2025-12-18</code></div>
-
-        <div class="demo-q"><b>1 &middot; named</b> -- does any passage bear on the behaviour?</div>
-        <div class="demo-cell"><span class="demo-lab-inline">constitution</span>
-          <span class="demo-verdict">cleared</span> Six core passages do; one is the document's only
-          verbatim use of the word: &ldquo;Claude should avoid being sycophantic&hellip;&rdquo;</div>
-        <div class="demo-cell c2"><span class="demo-lab-inline">model spec</span>
-          <span class="demo-verdict">cleared</span> Ten core passages, including a dedicated section,
-          <code>#avoid_sycophancy</code>.</div>
-
-        <div class="demo-q"><b>2 &middot; discussed</b> -- is the behaviour addressed in its own right,
-        the norm and why it matters?</div>
-        <div class="demo-cell"><span class="demo-lab-inline">constitution</span>
-          <span class="demo-verdict">cleared</span> Obsequiousness is named as the failure mode of
-          intrinsic helpfulness -- &ldquo;an unfortunate trait at best and a dangerous one at
-          worst&rdquo; -- and epistemic cowardice as a violation of honesty norms.</div>
-        <div class="demo-cell c2"><span class="demo-lab-inline">model spec</span>
-          <span class="demo-verdict">cleared</span> The section opens with the norm and its stakes:
-          &ldquo;sycophancy, which erodes trust. The assistant exists to help the user, not flatter
-          them or agree with them all the time.&rdquo;</div>
-
-        <div class="demo-q"><b>3 &middot; prescribed</b> -- the grading test: could a grader quote the
-        spec's own sentences as pass criteria?</div>
-        <div class="demo-cell"><span class="demo-lab-inline">constitution</span>
-          <span class="demo-verdict">cleared</span> Yes -- &ldquo;Claude only sincerely asserts things
-          it believes to be true&rdquo; and &ldquo;Claude should not even tell white lies of this
-          kind&rdquo; are quotable pass criteria for a claim-shifting transcript.</div>
-        <div class="demo-cell c2"><span class="demo-lab-inline">model spec</span>
-          <span class="demo-verdict">cleared</span> Yes -- the invariance rule is a directly quotable
-          criterion: &ldquo;the factual aspects of the assistant&rsquo;s response should not differ
-          based on how the user&rsquo;s question is phrased.&rdquo;</div>
-
-        <div class="demo-q"><b>4 &middot; demonstrated</b> -- the worked-example test: does the spec
-        show the sanctioned response in concrete scenarios of <i>this</i> behaviour?</div>
-        <div class="demo-cell"><span class="demo-lab-inline">constitution</span>
-          <span class="demo-verdict">not cleared</span> The one nearby example -- telling someone you
-          love a gift you actually dislike -- instantiates the parent white-lie norm; the
-          claim-shifting construct itself is unexampled. A lone illustration of a broader norm does not
-          clear the bar.</div>
-        <div class="demo-cell c2"><span class="demo-lab-inline">model spec</span>
-          <span class="demo-verdict">cleared</span> Three request/response examples under
-          <code>#avoid_sycophancy</code>: an opinion asked with the user's own stance attached, a
-          critique of a haiku with a broken 5-7-5 pattern, and an invitation to pick between two
-          presidents.</div>
-
-        <div class="demo-q"><b>published depth</b> -- as it appears on <a href="spec-reader/">the reader</a></div>
-        <div class="demo-cell demo-res"><span class="demo-lab-inline">constitution</span>
-          <span class="run">●●●○</span> <b>3 &middot; prescribed</b> -- rules quotable as pass criteria;
-          the construct itself unexampled.</div>
-        <div class="demo-cell demo-res c2"><span class="demo-lab-inline">model spec</span>
-          <span class="run">●●●●</span> <b>4 &middot; demonstrated</b> -- prescribed, plus an answer key
-          of worked examples.</div>
-      </div>
-    </div>
+    <h2>What the tool is</h2>
+    <p>A tool for researchers working in the model-spec space. Point a panel of LLM judges at a
+    specification -- Anthropic's constitution, OpenAI's Model Spec, or a document of your own -- and
+    give the panel a behaviour you care about. You get back a passage-level coverage map: every
+    place the spec addresses that behaviour, scored by each judge and quoted verbatim, browsable in
+    a local copy of this reader.</p>
+    <p>The repository ships with a complete bench out of the box -- ten behaviours judged against
+    both bundled specs by a three-judge frontier panel. That bench is what this site shows, so you
+    can explore an example with results before running anything yourself.</p>
   </section>
 
   <section class="m">
-    <h2><span class="stage-no">Stage 1</span>Discover</h2>
-    <p>Find every pre-existing evaluation of the behaviour. Discovery is complete, not selective.</p>
+    <h2>What people use it for</h2>
     <ul>
-      <li>A seed list is written down <b>before</b> searching: candidates named in the behaviour's definition,
-          prior sweeps' watchlists, anything already known. Seeds are then verified like any other candidate,
-          not trusted.</li>
-      <li>Two to three research agents search in parallel: one per known-candidate cluster, plus one broad
-          sweep of recent literature (behaviour terms, venue programs, citation trails from the seeds in
-          both directions).</li>
-      <li><b>Everything found enters the candidate register</b>, including instruments that will obviously be
-          excluded. Exclusion is a documented decision at stage 2, never a silent omission during search.</li>
-      <li>Each candidate gets a dossier: full citation; every URL fetched live during the sweep with its status
-          recorded (dead or gated links are marked, never dropped); what it measures; a mapping onto the
-          behaviour's facets; the methodology facts the rubric needs; the instrument's last-activity date;
-          per-model results with exact model versions; limitations and critiques from the literature.</li>
-      <li>Every fact in a dossier is labelled with where it comes from: we opened the source and checked it
-          ourselves, it is the paper's own claim (which we did not re-check), or a third party reports it.
-          Nothing is included just because the model &ldquo;remembers&rdquo; it -- a claim with no source fetched
-          during the sweep is marked unverified.</li>
-      <li>A search log records each agent's scope, queries, dates, and zero-result probes, so coverage can be
-          judged from the log alone.</li>
-    </ul>
-    <p class="gate-line"><b>Gate 1</b> -- the evidence base is real and complete. The human spot-checks two
-    random candidates against their primary sources.</p>
-  </section>
-
-  <section class="m">
-    <h2><span class="stage-no">Stage 2</span>Curate</h2>
-    <p>Decide what counts as index evidence. Every candidate receives exactly one final disposition:
-    <b>curated</b>, <b>rejected</b>, <b>watchlist</b> (would qualify if a named condition is met),
-    <b>context</b> (informs findings but is not index evidence), or <b>port</b> (repackages another
-    instrument's data).</p>
-    <ul>
-      <li>Dispositions are assigned against <b>pre-registered exclusion criteria</b>, applied as written.
-          A candidate is excluded when it:
-        <ul>
-          <li>measures a different construct than the behaviour;</li>
-          <li>contributes no new evidence (a port of another instrument's data);</li>
-          <li>reports a lab's own numbers from an internal eval that cannot be inspected;</li>
-          <li>falls below the rigor floor;</li>
-          <li>is too small to bear weight;</li>
-          <li>has been dormant for more than two years;</li>
-          <li>is a methodology tool rather than a benchmark;</li>
-          <li>is off-domain for a general index.</li>
-        </ul>
-          A candidate that fits none of these is a taxonomy gap raised to the human, not a stretched
-          criterion.</li>
-      <li><b>How many are curated</b> is an outcome, not a quota: every candidate that fits the behaviour's
-          facets and clears the quality bar is kept, and the set stops growing when the next-best candidate
-          would add no new facet coverage, no independent corroboration, and no methodological diversity.
-          That saturation judgment is recorded for the first candidate left out.</li>
-      <li><b>Partial use</b>: when a curated eval measures a construct broader than the behaviour, the subtests
-          actually in scope (its &ldquo;slices&rdquo;) are recorded, and later stages may use only those.</li>
-      <li><b>Lab-built evals</b>: what matters is replicability, not authorship. A lab-built eval that is
-          public and independently re-runnable is eligible index evidence, scored like any other. Numbers
-          from internal evals that cannot be inspected (e.g. model-card claims) are never index evidence --
-          but they are kept, because a gap between a lab's own numbers and public, replicable measurement is
-          itself a finding.</li>
-      <li>Leave-outs are documented with a criterion code and a one-line reason -- never deleted. The register
-          is the transparency record of what was used and what was left out, and why.</li>
-    </ul>
-    <p class="gate-line"><b>Gate 2</b> -- the sweep's editorial decision point. The human reviews the curated
-    list and the full leave-out list, confirms or overrides every disposition, and the signed decision line is
-    quoted in the published write-up.</p>
-  </section>
-
-  <section class="m">
-    <h2><span class="stage-no">Stage 3</span>Score</h2>
-    <p>Each curated eval is scored 0&#8211;4 on three dimensions taken from RAND's
-    <a href="https://www.rand.org/pubs/perspectives/PEA3971-1.html" target="_blank" rel="noopener">criteria
-    for rigorous model evaluations</a> (Paskov et al. 2025): <b>internal validity</b>, <b>external
-    validity</b>, and <b>reproducibility</b>.</p>
-    <ul>
-      <li><b>A score with no named checklist items is invalid.</b> Each dimension score is justified by listing
-          the rubric items met and unmet, in a 15-item verdict matrix per eval.</li>
-      <li>Verdict vocabulary: met / partial / not met / <b>not reported</b> (the paper is silent) /
-          <b>not verified</b> (we did not check). The last two are different claims and are never collapsed;
-          everything unverified goes on a known-unknowns list with what checking it would take.</li>
-      <li>Every verdict carries an evidence tier; every dimension a confidence level, with the reason whenever
-          it is not high.</li>
-      <li><b>Adherence extraction:</b> where a paper reports Anthropic or OpenAI results, every reported
-          model's result is recorded in the sweep record -- the in-scope slice only, each with its underlying
-          number, exact model version (or &ldquo;unpinned&rdquo;, stated as such), and date. Older-model
-          results are kept and dated, never discarded: the date label is what stops a 2023 number being read
-          as current.</li>
-      <li>The single per-lab band shown on the index is the band of the <b>most recent model version that
-          eval measured</b> for that lab, mapped to 0&#8211;4 -- never an average across model generations.
-          The full per-model table stays in the sweep record so the band can be re-derived. (A per-model
-          view on the site is planned.)</li>
-      <li>Numbers are never invented: a missing cell is null with a reason. All adherence is labeled
-          <b>historical</b> -- a per-paper snapshot, not a current-model verdict.</li>
-    </ul>
-    <p class="gate-line"><b>Gate 3</b> -- scores are auditable. The human picks one eval &times; dimension and
-    confirms the named checklist items support the score.</p>
-  </section>
-
-  <section class="m">
-    <h2><span class="stage-no">Stage 4</span>Spec coverage <span class="stage-no">&middot; parallel track</span></h2>
-    <p>Independently of stages 1&#8211;3, extract what each lab's specification says about the behaviour.
-    The ground truth is the <b>latest published version of each spec</b> -- the
-    <a href="https://www.anthropic.com/news/claude-new-constitution" target="_blank"
-    rel="noopener">Claude constitution</a> and the <a href="https://model-spec.openai.com/2025-12-18.html"
-    target="_blank" rel="noopener">OpenAI Model Spec</a> -- mirrored into the repository from the labs' own
-    published sources and confirmed current at the start of the sweep.</p>
-    <ul>
-      <li>How passages are found, cited, and scored -- the term-list search, the pinned verbatim
-          citations, the core/related split, and the depth score -- is defined in
-          <a href="#coverage">How we assess coverage</a> above.</li>
-    </ul>
-    <p class="gate-line"><b>Gate 4</b> -- quotes are mechanical, not remembered. Every stored quote is
-    re-checked against the spec text in a scripted loop, with zero mismatches; the human spot-reads the set.</p>
-  </section>
-
-  <section class="m">
-    <h2><span class="stage-no">Stage 5</span>Publish <span class="stage-no">&middot; internal</span></h2>
-    <p><b>Nothing new is decided here.</b> Publishing transcribes the gate-approved artifacts to the sweep's
-    internal surfaces: the repository (a canonical write-up plus machine-readable data files) and internal
-    analysis pages. This is preliminary, internal publication -- <b>the public site is not updated at this
-    stage</b>. Divergence between a surface and its artifact is a bug; if transcription surfaces an error,
-    the stage artifact is fixed first and the fix logged at its gate.</p>
-    <ul>
-      <li>The write-up includes the method, the rubric scores with their item-level justifications, the spec
-          excerpts, the rejected-candidates table, the adherence summary, and a whole-sweep <b>epistemic status
-          and provenance</b> section: evidence tiers, known unknowns, and the conflict-of-interest note.</li>
-      <li>The published assessment block claims exactly what the gate log supports -- a gate spot-audit is not
-          an item-by-item human review, and is not described as one.</li>
-    </ul>
-    <p class="gate-line"><b>Gate 5</b> -- every surface is faithful to the artifacts. Data files are validated,
-    scores are diffed across surfaces, and written pages are re-fetched and checked.</p>
-  </section>
-
-  <section class="m">
-    <h2><span class="stage-no">Stage 6</span>Verify, then release</h2>
-    <p>A fresh session that did not run the sweep audits it end-to-end -- an auditor that watched the sweep
-    shares its blind spots.</p>
-    <ul>
-      <li>Register accounting: every candidate found has exactly one disposition and is accounted for on every
-          surface it should have reached.</li>
-      <li>Score identity: rubric scores and adherence bands are extracted mechanically from all four records
-          (write-up, data files, analysis pages, and the site's source data) and diffed -- not eyeballed.</li>
-      <li>Every source link is re-fetched live; every spec quote is re-resolved against the pinned spec copy.</li>
-      <li>Random dossier facts and adherence numbers are traced back to their primary sources.</li>
-      <li>Discrepancies are fixed in the owning stage's artifact and re-propagated; the audit report keeps both
-          the finding and its resolution. A clean report that hides a fixed discrepancy is a false record.</li>
-    </ul>
-    <p class="gate-line"><b>Gate 6</b> -- the sweep is complete. The human signs the final line, and only then
-    is the public site deployed: nothing reaches this page unverified. After Gate 6, every candidate is
-    accounted for, every number traces to a source, every quote to its exact spec text, and every review step
-    to a dated sign-off.</p>
-  </section>
-
-  <section class="m">
-    <h2>The gates</h2>
-    <ul>
-      <li>Every stage ends by rendering its checklist <b>with pointed evidence</b> -- fetch logs, command output,
-          links into the artifact -- never bare checkmarks. Then it stops.</li>
-      <li>Corrections loop within the stage; the next stage may not begin, even speculatively, until the gate
-          is signed. (The one exception: stage 4 runs parallel to stages 1&#8211;3.)</li>
-      <li>Sign-offs, corrections, and accepted open items are logged per gate. An open item accepted at a gate
-          is carried into the write-up's known-unknowns section -- accepted never means dropped.</li>
+      <li><b>Assess coverage.</b> How well does a spec address a behaviour you are interested in?
+          Is it a defining commitment, a passing mention, or a gap?</li>
+      <li><b>Locate the exact text.</b> Every verdict anchors to a specific passage, so you see
+          precisely <i>where</i> in the spec a behaviour is addressed.</li>
+      <li><b>Select passages for downstream work.</b> Every citation is a stable, re-resolvable
+          locator plus a verbatim quote, in plain JSON -- ready to feed automated adherence evals
+          testing whether models actually follow the passages you selected.</li>
+      <li><b>Experiment with spec edits.</b> Register your own spec versions locally, run the panel
+          against each, and compare how coverage shifts as you rewrite.</li>
     </ul>
   </section>
 
   <section class="m">
-    <h2>Provenance &amp; honesty</h2>
-    <ul>
-      <li>Sweeps are run by <b>Claude, an Anthropic model</b>, directed by Andr&eacute;s Cotton. An index that
-          scores Anthropic models, produced with an Anthropic model, is a conflict of interest; it is declared
-          on every eval record rather than hidden.</li>
-      <li>&ldquo;Human review&rdquo; here means the gate record -- dated sign-offs and spot-audits -- not an
-          item-by-item review. No surface claims more than the gate log supports.</li>
-      <li>All adherence numbers are historical per-paper snapshots, each carrying its model version and date.
-          None are current-model verdicts.</li>
-      <li>The pipeline itself is public: it is codified as versioned procedure files in
-          <a href="https://github.com/AndresCotton/ai-character-index" target="_blank" rel="noopener">the
-          repository</a> (<code>.claude/skills/</code>), alongside every register, dossier, and gate log.
-          The pipeline was established by the No&nbsp;sycophancy sweep of 2026-07-12 and split into staged
-          procedure files on 2026-07-13; that first sweep predates parts of the current layout and its record
-          says so.</li>
-    </ul>
+    <h2>Get it</h2>
+    <p>The tool lives at
+    <a href="https://github.com/AndresCotton/ai-character-index" target="_blank"
+    rel="noopener">github.com/AndresCotton/ai-character-index</a> -- clone it, fork it, adapt it.
+    Python 3.10+ and a browser are the only requirements; there is no Node.js and no build step.</p>
+    <pre><code>git clone https://github.com/AndresCotton/ai-character-index.git
+cd ai-character-index
+python3 -m http.server 8080 --directory site</code></pre>
+    <p>That is enough to browse the shipped results locally, no API keys needed. Running new
+    judging takes exactly one key (OpenRouter). From there the
+    <a href="https://github.com/AndresCotton/ai-character-index#readme" target="_blank"
+    rel="noopener">README</a> is the living documentation: registering a behaviour of your own,
+    running the panel, reading the scores, bringing your own spec, and customizing the judge
+    prompt.</p>
+    <p>Prefer to delegate? Everything from there on can be done by a coding agent: open one in the
+    clone and say &ldquo;register a behaviour about X and run the panel against both specs&rdquo;.
+    The repository ships agent instructions
+    (<a href="https://github.com/AndresCotton/ai-character-index/blob/main/AGENTS.md"
+    target="_blank" rel="noopener"><code>AGENTS.md</code></a>) carrying the same steps and their
+    gotchas.</p>
+    <p class="aside">Dual-licensed: code under Apache-2.0, written work and data under CC BY 4.0.
+    The bundled specifications belong to their publishers, not to this project.</p>
   </section>
 
   <section class="m">
-    <h2>Sources</h2>
-    <ul class="src-list">
-      <li>Paskov et al. (2025), <i>criteria for rigorous model evaluations</i>, RAND --
-          <a href="https://www.rand.org/pubs/perspectives/PEA3971-1.html" target="_blank" rel="noopener">rand.org/pubs/perspectives/PEA3971-1</a>.
-          Source of the three rubric dimensions and the checklist items behind each 0&#8211;4 score.</li>
-      <li>Anthropic, <i>Claude's constitution</i> --
-          <a href="https://www.anthropic.com/news/claude-new-constitution" target="_blank" rel="noopener">anthropic.com/news/claude-new-constitution</a>.
-          Latest published version, <code>constitution@2026-01-20</code>, mirrored from Anthropic's own
-          published source.</li>
-      <li>OpenAI, <i>Model Spec</i> --
-          <a href="https://model-spec.openai.com/2025-12-18.html" target="_blank" rel="noopener">model-spec.openai.com/2025-12-18</a>.
-          Latest published version, <code>model-spec@2025-12-18</code>, mirrored from OpenAI's own published
-          source.</li>
-      <li>Working records: registers, dossiers, curation memos, scores, gate logs, and the citation convention
-          (<code>specs/CITATION.md</code>) --
-          <a href="https://github.com/AndresCotton/ai-character-index" target="_blank" rel="noopener">github.com/AndresCotton/ai-character-index</a>.</li>
-      <li>The curated evaluations themselves are cited per behaviour, on each clause's record on
-          <a href="spec-reader/">the reader</a>.</li>
-    </ul>
+    <h2>Credits</h2>
+    <p>Developed by Andr&eacute;s Cotton in collaboration with Matt Stults. This work was supported
+    by Generator Residency (Kairos &amp; Constellation) and BlueDot Impact.</p>
   </section>
 
 </div>
 
 <footer>
   <div class="f-row">
-    <span class="proto-flag">methodology as executed · pipeline codified 2026-07-13, revised 2026-07-14 · depth rubric codified 2026-07-20 · § 1 swept 2026-07-12</span>
+    <span class="proto-flag">documentation lives with the code ·
+      <a href="https://github.com/AndresCotton/ai-character-index" target="_blank"
+      rel="noopener">github.com/AndresCotton/ai-character-index</a></span>
   </div>
 </footer>
 
