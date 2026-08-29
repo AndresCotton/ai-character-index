@@ -34,6 +34,6 @@ graph LR
 ## As-is observations
 - PLAN.md §5 promises four workflows (`ci.yml`, `deploy.yml`, `notion-sync.yml`, `spec-watch.yml`); `ci.yml` and `deploy.yml` exist, `notion-sync.yml` and `spec-watch.yml` do not.
 - `engine/notion-sync/` contains only `.gitkeep`: the Notion sync engine promised by PLAN.md §1.2/§6 Phase 3 has no code.
-- `engine/spec-watch/pull-latest.sh` exists and is used, but manually — sweep records log it being run (`research/sweeps/*/4-spec-coverage.md`, `behaviours-for-adria/*/4-spec-coverage.md`), and `docs/onboarding-spec-coverage.md` lists it as the "Mirror refresher". No workflow invokes it.
+- `engine/spec-watch/pull-latest.sh` exists and is used, but manually — sweep records log it being run (`research/sweeps/*/4-spec-coverage.md`), and `docs/onboarding-spec-coverage.md` lists it as the "Mirror refresher". No workflow invokes it.
 - `data/schema/` holds a JSON Schema per canonical `data/*.json` file (plus the coverage sidecar schema), enforced by `engine/validate_data.py` — locally and in CI (`ci.yml`'s offline job runs the gate), meeting the PLAN.md §2/§5 promise to validate `data/*.json` against schemas on each PR.
 - There is no per-PR preview deploy; production deploys fire only post-merge.

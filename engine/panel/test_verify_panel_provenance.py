@@ -98,9 +98,11 @@ class TestEndToEnd(unittest.TestCase):
         # assembly (provenance.runDate re-stamped) and had to be restored byte-identical;
         # any rebuild or byte-level tamper of the committed file trips here. If a change
         # is deliberate, update this hash AND the runlog-v5.md / runDate record together.
+        # Hash updated 2026-08-24: role fractions now carry the cell's true maximum
+        # (score N/9 on v5 cells, was the impossible N/6); runDate unchanged (2026-08-17).
         sha = hashlib.sha256(v.DEFAULT_PAYLOAD.read_bytes()).hexdigest()
         self.assertEqual(
-            sha, "da629368d7bc5fa6ba259745b139ce505dea5e0074b92336bcd8769752cacb39",
+            sha, "f20879b019b8461be8c1fe47e6e7605259371b3dc1810d12470817c434ff1ef5",
             "committed site/llm-panel-review/data/behaviours.json changed bytes")
 
     def test_unreadable_panel_config_fails_not_traceback(self):

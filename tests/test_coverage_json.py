@@ -1,8 +1,8 @@
-"""Gate test: every citation in the published ledgers re-resolves byte-for-byte.
+"""Gate test: every citation in the published reader ledger re-resolves
+byte-for-byte.
 
-Covers both data/coverage.json (the published reader) and
-data/reader-test-coverage.json (the reader-test bench), whose citations cite
-the same specs through the same locator format.
+Covers data/coverage.json (the published reader); the reader-test bench
+payload's quotes are re-resolved by tests/test_reader_v5_payload.py.
 
 The publish --check gate (test_publish_check.py) only covers behaviours
 with a coverage artifact (`spec-coverage.md` or its structured sidecar
@@ -29,7 +29,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 COVERAGE = ROOT / "data" / "coverage.json"
-READER_TEST_COVERAGE = ROOT / "data" / "reader-test-coverage.json"
 
 sys.path.insert(0, str(ROOT / "engine" / "spec-cite"))
 import cite  # noqa: E402
@@ -78,37 +77,6 @@ class CoverageJsonResolutionTest(unittest.TestCase):
                         f"resolver output",
                     )
 
-
-class ReaderTestCoverageJsonResolutionTest(unittest.TestCase):
-    """The bench's ledger gets the same net, one in-process resolution per citation."""
-
-    def test_every_published_quote_re_resolves(self):
-        data = json.loads(READER_TEST_COVERAGE.read_text(encoding="utf-8"))
-        self.assertTrue(data["coverage"], "reader-test-coverage.json is empty")
-        # The PR description pins this count: the net must cover every quote.
-        self.assertEqual(
-            sum(len(record["citations"]) for record in data["coverage"]), 294,
-        )
-        specs_cache = {}
-        for record in data["coverage"]:
-            for citation in record["citations"]:
-                locator = citation["locator"]
-                with self.subTest(locator=locator):
-                    try:
-                        resolved = resolve_in_process(specs_cache, locator)
-                    except SystemExit as e:
-                        self.fail(f"locator failed to resolve: {e}")
-                    expected = (
-                        resolved.splitlines()[0]
-                        if citation.get("example_block")
-                        else resolved
-                    )
-                    self.assertEqual(
-                        citation["quote"], expected,
-                        f"behaviour {record['behaviour_id']} "
-                        f"({record['lab_id']}): stored quote does not match "
-                        f"resolver output",
-                    )
 
 
 if __name__ == "__main__":

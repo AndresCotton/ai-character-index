@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// Verify the reader test bench (site/spec-reader-test/) against its own behaviour set
-// in site/spec-reader-test/data/behaviours.json and the spec text it shares with the
-// published reader. Every behaviour x spec view must anchor exactly its published passage
-// count, with no unresolved-anchor warnings and no console errors; with an empty behaviour
+// Verify the reader test bench (site/spec-reader-test/) against its payload --
+// the v5 9-point panel run pre-filtered to the panel's band boundary
+// (site/llm-panel-review/data/behaviours-v5-reader.json, the same file the page
+// fetches) -- and the spec text it shares with the published reader. Every
+// behaviour x spec view must anchor exactly its published passage count, with no
+// unresolved-anchor warnings and no console errors; with an empty behaviour
 // set, both specs must render in full with nothing highlighted.
 // Usage: node engine/verify-reader-test.mjs   (requires Chrome installed)
 
@@ -37,7 +39,7 @@ await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
 const base = `http://127.0.0.1:${server.address().port}/spec-reader-test/`;
 
 const behaviours = JSON.parse(
-  await readFile(join(SITE, "spec-reader-test/data/behaviours.json"), "utf8"),
+  await readFile(join(SITE, "llm-panel-review/data/behaviours-v5-reader.json"), "utf8"),
 ).behaviours;
 const documents = JSON.parse(
   await readFile(join(SITE, "spec-reader/data/documents.json"), "utf8"),
@@ -46,11 +48,11 @@ const documents = JSON.parse(
 /* The two payloads above are built by different scripts and can legally diverge.
  * The bench set carries no document list of its own, so the list comes from the
  * published reader -- which grows a document the moment a user registers a spec
- * (build-spec-reader-data.py --user-manifest=), while the bench behaviours are
- * rebuilt only from data/reader-test-coverage.json and still cover the bundled
- * pair. A document the bench says nothing about anchors nothing: assert that,
- * rather than dereferencing a coverage record that was never written. On the
- * committed two-document tree every document has a record, so this is a no-op. */
+ * (build-spec-reader-data.py --user-manifest=), while the bench behaviours still
+ * cover the bundled pair. A document the bench says nothing about anchors nothing:
+ * assert that, rather than dereferencing a coverage record that was never written.
+ * On the committed two-document tree every document has a record, so this is a
+ * no-op. */
 const coveredPassages = (behaviour, id) => behaviour.coverage[id]?.passages ?? [];
 
 const browser = await chromium.launch({ channel: "chrome", headless: true });
@@ -170,6 +172,20 @@ if (behaviours.length === 0) {
         { passages, behaviour: behaviour.name },
         `${behaviour.slug} · ${document.id}`,
       );
+      // Tint/role agreement, continuously: every Related-tinted passage must
+      // carry the "Related ·" role prefix and every solid passage must not.
+      const tint = await page.evaluate(() => {
+        const ps = [...document.querySelectorAll("[data-passage-id]")];
+        let bad = 0;
+        for (const el of ps) {
+          const adj = el.classList.contains("adjacent");
+          const role = el.querySelector(".passage-reason-role")?.textContent ?? "";
+          if (adj !== role.includes("Related \u00b7")) bad++;
+        }
+        return { n: ps.length, bad };
+      });
+      report(tint.bad === 0, `${behaviour.slug} · ${document.id} · tint/role agreement`,
+        `${tint.n} passages`);
     }
     await expectView(
       `${base}?behavior=${behaviour.slug}&compare=1`,

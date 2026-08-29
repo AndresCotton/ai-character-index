@@ -24,9 +24,9 @@ session's conversation. An auditor that watched the sweep shares its blind spots
 2. **Payload identity.** The behaviour's entries in
    `site/spec-reader/data/documents.json` match `data/coverage.json` exactly
    (verdict, depth, passage set). If the behaviour feeds the panel surface, its row
-   in `site/llm-panel-review/data/behaviours.json` matches
-   `data/reader-test-coverage.json`. Extract mechanically (jq for the JSON) and
-   diff -- do not eyeball.
+   in `site/llm-panel-review/data/behaviours.json` matches the committed runlog's
+   verdicts (cell rows come from `data/panel-cell-curation.json`). Extract
+   mechanically (jq for the JSON) and check against the runlog -- do not eyeball.
 3. **Local render.** `node engine/verify-spec-reader.mjs` passes (and
    `engine/verify-reader-test.mjs` if the bench is affected): every passage anchors,
    no unresolved-anchor warnings, no console errors. The verifiers serve the

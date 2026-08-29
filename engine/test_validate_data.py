@@ -230,39 +230,30 @@ class TestLabsSchema(MutationMixin, unittest.TestCase):
         self.assert_invalid(mutate, "headquarters")
 
 
-class TestReaderTestCoverageSchema(MutationMixin, unittest.TestCase):
-    """data/reader-test-coverage.json: the bench's behaviour + coverage ledger."""
+class TestPanelCellCurationSchema(MutationMixin, unittest.TestCase):
+    """data/panel-cell-curation.json: the per-lab cell summaries the panel
+    builder ships beside its passages."""
 
-    DATA_FILE = "reader-test-coverage.json"
-    SCHEMA_FILE = "reader-test-coverage.schema.json"
+    DATA_FILE = "panel-cell-curation.json"
+    SCHEMA_FILE = "panel-cell-curation.schema.json"
 
     def test_valid_as_committed(self):
         self.assert_valid()
 
     def test_bad_slug_fails(self):
         def mutate(d):
-            d["behaviours"][0]["slug"] = "Not A Slug"
+            d["cells"][0]["slug"] = "Not A Slug"
         self.assert_invalid(mutate, "slug")
 
-    def test_unknown_record_key_fails(self):
-        # Bench coverage records are closed, same policy as data/coverage.json.
+    def test_unknown_cell_key_fails(self):
+        # Cells are closed, same policy as data/coverage.json records.
         def mutate(d):
-            d["coverage"][0]["severity"] = "high"
+            d["cells"][0]["severity"] = "high"
         self.assert_invalid(mutate, "severity")
 
-    def test_null_verified_against_version_is_allowed(self):
-        # Most bench records predate the field; the two that have it carry null.
+    def test_null_verdict_allowed(self):
         def mutate(d):
-            d["coverage"][0]["verified_against_version"] = None
-        self.assert_valid(mutate)
-
-    def test_empty_citations_allowed_for_absence_findings(self):
-        # The bench models "the spec says nothing about this behaviour" as a
-        # record whose citations are empty, never a missing record (see
-        # engine/build-reader-test-data.py). The published coverage.json keeps
-        # the >=1 rule; only the bench relaxes it.
-        def mutate(d):
-            d["coverage"][0]["citations"] = []
+            d["cells"][0]["verdict"] = None
         self.assert_valid(mutate)
 
 
@@ -349,14 +340,14 @@ class TestCrossFileRules(unittest.TestCase):
             f"no registry-skip error; got: {errors}",
         )
 
-    def test_unknown_behaviour_id_in_reader_test_fails(self):
+    def test_unknown_slug_in_curation_fails(self):
         def mutate(d):
-            d["coverage"][0]["behaviour_id"] = 999
-        self.rewrite("reader-test-coverage.json", mutate)
+            d["cells"][0]["slug"] = "no-such-slug"
+        self.rewrite("panel-cell-curation.json", mutate)
         errors = vd.validate_all(self.tmp)
         self.assertTrue(
-            any("behaviour_id" in e and "999" in e for e in errors),
-            f"no unknown-behaviour error; got: {errors}",
+            any("slug" in e and "no-such-slug" in e for e in errors),
+            f"no unknown-slug error; got: {errors}",
         )
 
     def test_unknown_lab_id_fails(self):
@@ -379,16 +370,16 @@ class TestCrossFileRules(unittest.TestCase):
             f"no registry-skip error; got: {errors}",
         )
 
-    def test_empty_reader_test_behaviours_fails_loudly(self):
-        # Same rule for the bench's own registry: an empty behaviours list
-        # disables the behaviour_id membership check and must fail the gate.
+    def test_curation_slug_checks_skip_loudly_without_registry(self):
+        # An empty registry disables the curation slug membership check and
+        # must fail the gate instead of silently skipping it.
         def mutate(d):
-            d["behaviours"] = []
-        self.rewrite("reader-test-coverage.json", mutate)
+            d.clear()
+        self.rewrite("behaviours.json", mutate)
         errors = vd.validate_all(self.tmp)
         self.assertTrue(
-            any("behaviour_id checks skipped" in e for e in errors),
-            f"no behaviours-skip error; got: {errors}",
+            any("slug checks skipped" in e for e in errors),
+            f"no slug-checks-skip error; got: {errors}",
         )
 
     def test_unsupported_keyword_in_schema_fails_loudly_on_stdlib(self):
@@ -427,16 +418,16 @@ class TestCrossFileRules(unittest.TestCase):
             f"no duplicate-record error; got: {errors}",
         )
 
-    def test_duplicate_record_in_reader_test_coverage_fails(self):
-        # The bench builder hard-crashes on a second record for the same
-        # behaviour x lab -- the gate must catch it before the builder sees it.
+    def test_duplicate_cell_in_curation_fails(self):
+        # The panel builder keys cells by (slug, lab) -- a duplicate cell must
+        # fail at the gate, not silently shadow the first.
         def mutate(d):
-            d["coverage"].append(dict(d["coverage"][0]))
-        self.rewrite("reader-test-coverage.json", mutate)
+            d["cells"].append(dict(d["cells"][0]))
+        self.rewrite("panel-cell-curation.json", mutate)
         errors = vd.validate_all(self.tmp)
         self.assertTrue(
-            any("reader-test-coverage.json" in e and "duplicate record" in e for e in errors),
-            f"no duplicate-record error; got: {errors}",
+            any("panel-cell-curation.json" in e and "duplicate cell" in e for e in errors),
+            f"no duplicate-cell error; got: {errors}",
         )
 
     def test_malformed_json_fails(self):

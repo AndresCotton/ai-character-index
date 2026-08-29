@@ -53,7 +53,6 @@ jobs:
           python3 engine/test_validate_data.py
           python3 engine/validate_data.py
           python3 engine/test_builders_fail_loud.py
-          python3 engine/test_build_reader_test_data.py
           python3 engine/test_builders_reproduce_payloads.py
 
       - name: Publish checks (every published behaviour)
@@ -64,9 +63,6 @@ jobs:
 
       - name: Registry drift gate
         run: python3 engine/generate_behaviour_constants.py --check
-
-      - name: Reader-test ledger vs sweep artifacts
-        run: python3 engine/generate-reader-test-ledger.py --check
 
       - name: app.js resolution harnesses
         run: |

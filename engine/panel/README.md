@@ -115,7 +115,12 @@ plus the display config `rubric: v5`, `panel: frontier_fast` are the shipped
 configuration). Without `--out=` the build lands in a new timestamped run file
 (see "Run outputs, manifest, pinning" above) -- what ordinary re-runs should
 do; `--out=behaviours.json` rebuilds the shipped payload in place, whose
-`runDate` a plain rebuild re-stamps with today's date.
+`runDate` a plain rebuild re-stamps with today's date (byte-identity rebuilds
+pin `--run-date=`). The score cut honours `display.threshold` (1 = keep
+everything scored, matching every shipped payload), so a defaults build
+reproduces the shipped payload; `--threshold=`/`--solid-threshold=` override
+both for derived builds (the bench payload is cut at 4/6, the 3-judge band
+boundary).
 
 A NEW panel run must write a new runlog, and a regenerated payload needs its
 own committed log + passing check -- provenance travels with the data.

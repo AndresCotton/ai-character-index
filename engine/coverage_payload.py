@@ -2,15 +2,10 @@
 """Shared coverage-payload builder for the spec readers.
 
 coverage_payload() converts one coverage record (the shape stored in
-data/coverage.json and data/reader-test-coverage.json) into the
-per-behaviour coverage object the readers render. Imported by both payload
-builders:
-
-  * build-spec-reader-data.py -- passes the document id as scope_id
-  * build-reader-test-data.py -- passes the lab id as scope_id
-
-Both ids name the same lab namespace ("anthropic", "openai"), so one
-implementation serves both builders.
+data/coverage.json) into the per-behaviour coverage object the readers
+render. Imported by build-spec-reader-data.py, which passes the document id
+(the lab namespace: "anthropic", "openai") as scope_id; the panel builder
+shapes its own passages directly.
 """
 
 from __future__ import annotations

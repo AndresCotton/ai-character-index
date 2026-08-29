@@ -170,9 +170,8 @@ def main(argv=None) -> None:
                 and item["lab_id"] == document["id"]
             ]
             if len(matches) != 1:
-                # Same contract as engine/build-reader-test-data.py: anything
-                # but exactly one record per (behaviour, document) fails
-                # loudly, naming the behaviour and document.
+                # Anything but exactly one record per (behaviour, document)
+                # fails loudly, naming the behaviour and document.
                 raise SystemExit(
                     f"behaviour {behaviour['id']} ({behaviour['slug']}): expected exactly one "
                     f"{document['id']} coverage record, found {len(matches)}"

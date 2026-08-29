@@ -5,21 +5,27 @@ Implements the MVP display rules from panel-config.json `display`:
   - only the listed behaviours appear in the sidebar;
   - each passage gets score = sum of each panel model's verdict
     (defining=3, core=2, related=1, unrelated=0);
-  - a passage is emitted as a citation when score >= 1 AND it carries at least
-    min(2, panel-size) votes (keeps_citation drops a lone stray vote on a
-    multi-judge panel); the page re-filters at render time via tier bands;
+  - a passage is emitted as a citation when score >= display.threshold AND it
+    carries at least min(2, panel-size) votes (keeps_citation drops a lone
+    stray vote on a multi-judge panel); the page re-filters at render time
+    via tier bands. The cut honours display.threshold (the committed config
+    carries 1 = keep everything scored, which matches every shipped payload,
+    so a defaults build reproduces them); --threshold= overrides it for
+    derived payloads (e.g. a pre-filtered reader shape cut at the panel's
+    band boundary);
+  - the citation `adjacent` flag is score < display.solid_threshold
+    (--solid-threshold= overrides it for derived payloads);
   - the citation `role` (shown when the reader clicks "?") lists each model's decision.
 
 Behaviour identity (name/definition/category) comes from the behaviour
 registry (data/behaviours.json), the source of truth for behaviour identity.
-For the bundled reader-test set the registry matches
-data/reader-test-coverage.json field-for-field (pinned by
-tests/test_behaviour_registry.py), so sourcing from the registry is
-byte-identical for the shipped data; the registry additionally lets set:user
-behaviours (the clone/fork seam) flow into the payload -- display them with
---behaviours=<slug>, judge them under their slug as the runlog behaviour key.
-reader-test-coverage.json still supplies the curated per-lab
-verdict/depth/verifiedDate rows, carried through untouched.
+For the bundled reader-test set the registry matches the shipped bench data
+field-for-field (pinned by tests/test_behaviour_registry.py), so sourcing from
+the registry is byte-identical for the shipped data; the registry additionally
+lets set:user behaviours (the clone/fork seam) flow into the payload --
+display them with --behaviours=<slug>, judge them under their slug as the
+runlog behaviour key. data/panel-cell-curation.json supplies the curated
+per-lab verdict/depth/verifiedDate cell rows, carried through untouched.
 
   python3 build_site_data.py --runlog=<runlog> --rubric=v5 --panel=frontier_fast
   (the shipped data: --runlog=runlog-v5.jsonl committed in engine/panel/, rubric v5,
@@ -40,6 +46,10 @@ outside the data dir.
   --registry=PATH      read the behaviour registry from PATH (default data/behaviours.json)
   --run-date=YYYY-MM-DD  pin provenance.runDate (default: today) so a rebuild can
                          reproduce a committed payload byte-for-byte.
+  --threshold=N        override display.threshold for this build (score cut for
+                       keeps_citation; committed config untouched)
+  --solid-threshold=N  override display.solid_threshold for this build (the
+                       adjacent flag cut; committed config untouched)
 """
 import collections
 import importlib.util
@@ -65,6 +75,16 @@ DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 DATA_DIR = ROOT / "site" / "llm-panel-review" / "data"
 MANIFEST_NAME = "manifest.json"
 FALLBACK_NAME = "behaviours.json"
+# Committed payloads with a documented rebuild path; the byte-identity tests
+# (engine/panel/test_verify_panel_provenance.py, tests/test_custom_spec_
+# decoupling.py, tests/test_reader_v5_payload.py) are the guard against a
+# careless overwrite.
+REBUILDABLE_NAMES = {
+    FALLBACK_NAME,
+    "behaviours-v4a.json", "behaviours-v4a-ds.json",
+    "behaviours-v5.json", "behaviours-v5-1.json",
+    "behaviours-v5-reader.json",
+}
 # The same character set app.js admits for ?data= -- a run name doubles as a URL param.
 # re.ASCII: JavaScript's \w is ASCII [A-Za-z0-9_], but Python's \w is Unicode by
 # default and would admit accented/non-Latin names the page's DATA_NAME rejects.
@@ -204,8 +224,11 @@ def check_out_name(name):
     # The data dir also holds committed calibration payloads (behaviours-v5.json and
     # friends). They match the gitignore pattern for run outputs, so git would not
     # flag an overwrite -- only this check stands between --out= and a tracked file.
-    # behaviours.json is exempt: rebuilding the shipped fallback is a documented use.
-    if name != FALLBACK_NAME:
+    # Committed payloads with a documented rebuild path are exempt (the
+    # byte-identity tests are the guard against a careless overwrite): the
+    # shipped fallback, the calibration/full-bench variants, and the bench
+    # payload.
+    if name not in REBUILDABLE_NAMES:
         try:
             tracked = subprocess.run(
                 ["git", "ls-files", "--error-unmatch", str(DATA_DIR / name)],
@@ -267,9 +290,10 @@ def unknown_slug_message(unknown_keys, registry_path):
             f"({registry_path}) -- every runlog key must be a slug")
 
 
-def keeps_citation(score, n_votes, panel_size):
-    """Pure: stray-vote guard -- scales to panel size so a 1-judge panel is legal."""
-    return score >= 1 and n_votes >= min(2, panel_size)
+def keeps_citation(score, n_votes, panel_size, threshold=1):
+    """Pure: stray-vote guard -- scales to panel size so a 1-judge panel is legal.
+    The score cut honours display.threshold (default 1: keep everything scored)."""
+    return score >= threshold and n_votes >= min(2, panel_size)
 
 
 def clean_quote(text):
@@ -360,11 +384,29 @@ def main(argv=None):
         elif a.startswith("--out="):            # alternate FILENAME in site data dir (iteration builds)
             out_name = a.split("=", 1)[1]
             check_out_name(out_name)            # loud error before any build work
+        elif a.startswith("--threshold="):      # score cut override (derived payloads; config untouched)
+            raw = a.split("=", 1)[1]
+            try:
+                DISPLAY["threshold"] = max(0, int(raw)) if int(raw) >= 0 else None
+            except ValueError:
+                DISPLAY["threshold"] = None
+            if DISPLAY["threshold"] is None:
+                sys.exit(f"--threshold must be a non-negative integer, got {raw!r}")
+        elif a.startswith("--solid-threshold="):   # adjacent-flag cut override (config untouched)
+            raw = a.split("=", 1)[1]
+            try:
+                value = int(raw)
+            except ValueError:
+                value = None
+            if value is None or value < 0:
+                sys.exit(f"--solid-threshold must be a non-negative integer, got {raw!r}")
+            DISPLAY["solid_threshold"] = value
         else:
             # Unknown args were ignored, so `--help` ran a full build and wrote a
             # payload + manifest. Asking for help must not mutate the repo.
             sys.exit(f"unknown argument {a!r} -- valid: --runlog= --rubric= --panel= "
-                     "--behaviours= --registry= --run-date= --out=")
+                     "--behaviours= --registry= --run-date= --out= "
+                     "--threshold= --solid-threshold=")
     panel = resolve_panel(config, DISPLAY["panel"])
     registry = json.loads(registry_path.read_text())
     votes = collections.defaultdict(dict)
@@ -400,21 +442,37 @@ def main(argv=None):
         for loc, sec, t in h.passages(s):
             text[loc] = t
 
-    src = json.loads((ROOT / "data" / "reader-test-coverage.json").read_text())
+    src = json.loads((ROOT / "data" / "panel-cell-curation.json").read_text())
     keep = DISPLAY["behaviours"]
     behaviours = display_behaviours(keep, registry, registry_path)
-    # curated per-lab rows, keyed (slug, lab) -- ids are per-set and would
-    # collide across sets, so the join uses the slug
-    rtc_id_to_slug = {b["id"]: b["slug"] for b in src["behaviours"]}
-    by_slug_lab = {(rtc_id_to_slug[e["behaviour_id"]], e["lab_id"]): e
-                   for e in src["coverage"] if e["behaviour_id"] in rtc_id_to_slug}
+    # curated per-lab cell rows, keyed (slug, lab)
+    by_slug_lab = {(e["slug"], e["lab_id"]): e for e in src["cells"]}
+
+    # every bundled reader-test behaviour x lab needs a curation cell (user-set
+    # behaviours carry no curated verdict by design and are exempt)
+    missing_cells = sorted(
+        (b["slug"], lab)
+        for b in behaviours
+        for lab in LAB.values()
+        if registry.get(b["slug"], {}).get("set") == "reader-test"
+        and (b["slug"], lab) not in by_slug_lab
+    )
+    if missing_cells:
+        sys.exit(
+            f"panel-cell-curation.json is missing cells for displayed behaviours: "
+            f"{missing_cells} -- every reader-test behaviour x lab needs a cell"
+        )
 
     out_behaviours = []
     for b in behaviours:
         cov = {}
         for spec_name, lab in spec_coverage_key.items():
             src_entry = by_slug_lab.get((b["slug"], lab), {})
-            cits = []
+            # post-substitution verdicts per passage in this cell; the role's
+            # denominator is the cell's true maximum (maxVerdict x votes), the
+            # same rule site/llm-panel-review/app.js applies at render -- so the
+            # baked fraction is what the page shows, never an impossible one.
+            cell_mv = []
             for (beh, loc), mv in votes.items():
                 slug_matches = (behaviour_slug(beh, registry) == b["slug"]
                                 or b["slug"] in SLUGS_EXTRA.get(beh, []))
@@ -424,8 +482,12 @@ def main(argv=None):
                     mv = {m: v for m, v in mv.items() if m != "opus"}   # opus is fable's SUBSTITUTE, never an extra seat
                 if "kimi" in mv and "kimi-k2" in mv:
                     mv = {m: v for m, v in mv.items() if m != "kimi-k2"}   # k2.6 is kimi's stand-in; k3 wins when present
+                cell_mv.append(((beh, loc), mv))
+            max_verdict = max([2] + [v for _, mv in cell_mv for v in mv.values()])
+            cits = []
+            for (beh, loc), mv in cell_mv:
                 score = sum(mv.values())
-                if not keeps_citation(score, len(mv), len(panel)):   # emit all scored; page re-filters by tier bands
+                if not keeps_citation(score, len(mv), len(panel), DISPLAY["threshold"]):   # the score cut honours display.threshold; the page re-filters by tier bands
                     continue
                 SYM = {3: "\u2713\u2713", 2: "\u2713", 1: "~", 0: "\u2717"}   # defining = doubled core tick, no star
                 WORD = {3: "defining", 2: "core", 1: "related", 0: "not relevant"}
@@ -435,7 +497,7 @@ def main(argv=None):
                 cits.append({
                     "id": f"{lab}-{b['slug']}-panel-{len(cits)+1}",
                     "locator": loc, "quote": quote, "exampleBlock": is_example,
-                    "role": f"Model determined relevance (score {score}/{2*len(mv)}):\n{decisions}",
+                    "role": f"Model determined relevance (score {score}/{max_verdict * len(mv)}):\n{decisions}",
                     "adjacent": score < DISPLAY["solid_threshold"],
                     "verdicts": dict(sorted(mv.items())), "score": score,
                 })

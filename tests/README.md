@@ -55,6 +55,11 @@ One test file per subject under test:
   citation_format, verified_against_version, duplicate labs, unknown lab,
   sidecar-beats-markdown precedence) has a mutation guard on a scratch
   copy of the behaviour-1 sweep.
+- `test_reader_v5_payload.py` -- pins the bench payload: 363 citations (not the
+  unfiltered 3,630 nor the retired bench's 294), the score/votes cuts,
+  adjacent-vs-band agreement against `tierBand` extracted from app.js (three
+  enumerated ragged exceptions), quote re-resolution, and a golden
+  byte-identical rebuild.
 - `test_coverage_json.py` -- re-resolves **every** locator in
   `data/coverage.json` against `cite.py`, whether or not the behaviour has
   any artifact. Resolution is in-process (one spec load per spec), so this
@@ -64,8 +69,8 @@ One test file per subject under test:
   (`GROUPS` in `site/spec-reader/app.js`, `BEHAVIOURS` in
   `engine/build-spec-reader-data.py`, the panel slug lists) must equal
   `engine/generate_behaviour_constants.py`'s rendering of it. Also pins the
-  registry against the published ledgers it mirrors (`data/coverage.json`
-  names, `data/reader-test-coverage.json` behaviours) and proves the gate
+  registry against the published ledger it mirrors (`data/coverage.json`
+  names) and proves the gate
   has teeth by mutating scratch copies (--check must fail). After an
   intentional registry change, run the generator and commit both sides.
 

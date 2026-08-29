@@ -80,13 +80,5 @@ class TestBuildersReproduceCommittedPayloads(unittest.TestCase):
             ROOT / "site" / "spec-reader" / "data" / "documents.json",
         )
 
-    def test_reader_test_payload_reproduces(self):
-        self._assert_reproduces(
-            ROOT / "engine" / "build-reader-test-data.py",
-            "build_reader_test_data",
-            ROOT / "site" / "spec-reader-test" / "data" / "behaviours.json",
-        )
-
-
 if __name__ == "__main__":
     unittest.main()

@@ -1149,14 +1149,73 @@ class TestMainSmoke(unittest.TestCase):
         self.assertIn("0 citations", blob)
         self.assertIn("rubric", blob)          # and must say why
 
-    def test_out_name_refuses_a_tracked_payload(self):
-        # --out=behaviours-v5.json would have silently overwritten a committed
-        # calibration payload; only the manifest was guarded.
-        with self.assertRaises(SystemExit) as cm:
-            bs.check_out_name("behaviours-v5.json")
-        self.assertIn("tracked", str(cm.exception))
-        bs.check_out_name("my-scratch.json")   # untracked names still fine
-        bs.check_out_name("behaviours.json")   # the documented fallback rebuild
+    def test_out_name_guard_and_rebuildable_exceptions(self):
+        # A tracked payload that is NOT in REBUILDABLE_NAMES must still be
+        # refused (the byte-identity tests are the only reason the listed
+        # committed payloads are exempt); the manifest always is.
+        saved = bs.REBUILDABLE_NAMES
+        try:
+            bs.REBUILDABLE_NAMES = {bs.FALLBACK_NAME}
+            with self.assertRaises(SystemExit) as cm:
+                bs.check_out_name("behaviours-v5.json")
+            self.assertIn("tracked", str(cm.exception))
+        finally:
+            bs.REBUILDABLE_NAMES = saved
+        bs.check_out_name("my-scratch.json")        # untracked names still fine
+        bs.check_out_name("behaviours.json")        # documented fallback rebuild
+        bs.check_out_name("behaviours-v5-reader.json")  # documented bench rebuild
+        with self.assertRaises(SystemExit):
+            bs.check_out_name("manifest.json")
+
+    def test_threshold_flags_parse_loud(self):
+        # --threshold= / --solid-threshold= must reject bad values with a named
+        # message, like every other builder error path.
+        for bad in ("--threshold=abc", "--threshold=-1", "--solid-threshold=x"):
+            r = subprocess.run([sys.executable, str(HERE / "build_site_data.py"), bad],
+                               capture_output=True, text=True, cwd=str(HERE.parents[1]))
+            self.assertNotEqual(r.returncode, 0, bad)
+            self.assertIn("must be a non-negative integer", r.stdout + r.stderr)
+
+    def test_keeps_citation_honours_threshold(self):
+        # The behaviour change: the score cut honours the threshold argument
+        # (the committed config's stale 3 drops a single-judge core citation
+        # that the historical effective cut 1 kept).
+        self.assertTrue(bs.keeps_citation(2, 1, 1, threshold=1))
+        self.assertFalse(bs.keeps_citation(2, 1, 1, threshold=3))
+        self.assertTrue(bs.keeps_citation(3, 1, 1, threshold=3))
+        # the stray-vote guard still applies on top
+        self.assertFalse(bs.keeps_citation(3, 1, 3, threshold=1))
+
+    def test_missing_curation_cell_fails_loud(self):
+        # A reader-test behaviour x lab without a curation cell must exit with
+        # a named error, not emit a null-verdict cell. Scratch repo: real specs
+        # (symlinked) + real runlog, mutated curation.
+        import os, shutil, tempfile
+        scratch = Path(tempfile.mkdtemp(prefix="curation-guard-"))
+        self.addCleanup(shutil.rmtree, scratch, ignore_errors=True)
+        shutil.copytree(HERE.parents[1] / "data", scratch / "data")
+        os.symlink(HERE.parents[1] / "specs", scratch / "specs")
+        cur = json.loads((scratch / "data" / "panel-cell-curation.json").read_text())
+        cur["cells"] = [c for c in cur["cells"]
+                        if not (c["slug"] == "helpfulness" and c["lab_id"] == "openai")]
+        (scratch / "data" / "panel-cell-curation.json").write_text(json.dumps(cur))
+        sp = importlib.util.spec_from_file_location("bs_guard", HERE / "build_site_data.py")
+        bg = importlib.util.module_from_spec(sp)
+        sp.loader.exec_module(bg)
+        bg.ROOT = scratch
+        bg.DATA_DIR = scratch / "site" / "llm-panel-review" / "data"
+        (bg.DATA_DIR).mkdir(parents=True, exist_ok=True)
+        saved = sys.argv
+        sys.argv = ["build_site_data.py", "--threshold=4", "--solid-threshold=6",
+                    "--run-date=2026-08-17", "--out=probe.json"]
+        try:
+            with self.assertRaises(SystemExit) as cm:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    bg.main()
+        finally:
+            sys.argv = saved
+        self.assertIn("helpfulness", str(cm.exception))
+        self.assertIn("openai", str(cm.exception))
 
     def test_unknown_panel_name_exits_instead_of_building_empty(self):
         # B1: `.get(name) or [name]` turned a typo'd panel into a one-seat panel

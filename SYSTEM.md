@@ -25,15 +25,14 @@ graph TB
   reg["data/behaviours.json (registry)"] --> gbc["engine/generate_behaviour_constants.py (drift-gated)"]
   reg -->|behaviour metadata| bsd
   gbc -->|derived constants| bsr
-  rtc["data/reader-test-coverage.json (hand-transcribed)"] --> bsd
-  rtc --> brt["engine/build-reader-test-data.py"]
+  cur["data/panel-cell-curation.json (cell curation)"] --> bsd
   cov --> bsr["engine/build-spec-reader-data.py"]
   um -.->|user docs| bsr
   specs -->|"full text inlined"| bsr
   bsr --> reader["site/spec-reader/"]
-  brt --> bench["site/spec-reader-test/"]
+  bsd -->|"behaviours-v5-reader.json (band-boundary build)"| bench["site/spec-reader-test/"]
   bsd --> panelview["site/llm-panel-review/ (unlinked)"]
-  adria["behaviours-for-adria/ (reviewer batch)"] -->|"hand transcription"| rtc
+  arch["archive/general-welfare-strict-reading/ (preserved judgment)"]
   proto["site/index.html (inline hand-maintained data)"]
   meth["site/methodology.html (static page)"]
   reader & bench & panelview & proto & meth ==>|"deploy.yml on site/** changes"| cf["Cloudflare Pages"]
@@ -49,7 +48,7 @@ graph TB
 | `data/` | Canonical machine-readable data: behaviour registry, coverage ledgers, labs, schema/ | [data/OVERVIEW.md](data/OVERVIEW.md) |
 | `specs/` | Version-pinned lab-spec mirrors + locator grammar | [specs/OVERVIEW.md](specs/OVERVIEW.md) |
 | `research/` | Canonical behaviour list + per-behaviour sweep records | [research/OVERVIEW.md](research/OVERVIEW.md) |
-| `behaviours-for-adria/` | Independent reviewer-batch coverage set (test bench, plus 3 rows feeding the panel surface) | [behaviours-for-adria/OVERVIEW.md](behaviours-for-adria/OVERVIEW.md) |
+| `archive/` | Preserved analytical artifact: the cross-spec strict-reading judgment (self-describing README inside) | — |
 | `methodology/` | Depth rubric, public site copy, method-exploration findings | [methodology/OVERVIEW.md](methodology/OVERVIEW.md) |
 | `site/` | Five static surfaces, no build step | [site/OVERVIEW.md](site/OVERVIEW.md) |
 | `.github/` | One deploy workflow + Issues-page contact link | [.github/OVERVIEW.md](.github/OVERVIEW.md) |
@@ -73,10 +72,10 @@ graph TB
 2. **`cite.py` is the foundation** of every chain; docs call it the trickiest code in the repo. Its bundled + user-manifest contracts are now pinned by tests and corpus goldens.
 3. **Behaviour metadata is registry-driven** (`data/behaviours.json` → derived constants, drift-gated): `engine/generate_behaviour_constants.py` regenerates the reader builder's `BEHAVIOURS` list too, which currently enumerates ids 1–3 because those are the covered behaviours — expected sequencing, not hardcoding. Residual fragmentation: the disjoint per-file id spaces persist (documented in the registry's per-set semantics).
 4. **Documentation describes a system that half-exists**: PLAN.md promises Notion sync, four workflows, Astro, schemas; reality has one workflow, vanilla JS, and an empty `notion-sync/` — and this doc set now records the gap file-by-file.
-5. **Hand-maintained surfaces**: `index.html` inline data (diverged from its prototype source) and hand-transcribed `reader-test-coverage.json`.
+5. **Hand-maintained surfaces**: `index.html` inline data (diverged from its prototype source). The reader-test bench payload is a derived build (`build_site_data.py --threshold=4 --solid-threshold=6` on the committed v5 run); its cell curation lives in `data/panel-cell-curation.json`.
 6. **Provenance is now committed and verified**: behaviour 1 publishes from a reconstructed sidecar; the shipped panel runlog is committed and byte-identity-verified. Residual: the substitution note in the payload is still a hand-edited string, and single-judge runs degenerate the tier cutoffs (display model assumes ≥2 judges).
 7. **No Python packaging**: importlib/sys.path wiring persists (config is now lazy/injectable; dead code and the stale config comment are removed).
-8. **Orphans and residue**: `llm-panel-review/` unlinked from all navs; `spec-watch`'s fetch still produces 0-byte release archives (the committed empty artifacts are gone; the fetch needs fixing); sweep records referencing the rubric at a stale path (annotated with its current `methodology/` location). Root agent-context now exists (`AGENTS.md`, added with the stack-reconciliation docs) pointing at the agent-neutral procedures under `.claude/skills/`.
+8. **Orphans and residue**: `llm-panel-review/` unlinked from all navs; `spec-watch` no longer fetches the dated release archives (nothing consumes them; they exceeded the contents API's inline limit) and aborts loud when upstream versions diverge from cite.py's registry; sweep records referencing the rubric at a stale path (annotated with its current `methodology/` location). Root agent-context now exists (`AGENTS.md`, added with the stack-reconciliation docs) pointing at the agent-neutral procedures under `.claude/skills/`.
 
 ## Reading order for a cold-start agent
 

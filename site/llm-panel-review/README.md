@@ -23,8 +23,11 @@ client-side from each citation's raw per-model verdicts.
 
 ## Regenerating the data
 `data/behaviours.json` is built by `engine/panel/build_site_data.py` from a verdict
-runlog (see `engine/panel/README.md`). Behaviour names/definitions pass through from
-`data/reader-test-coverage.json` unmodified.
+runlog (see `engine/panel/README.md`). Behaviour names/definitions are
+registry-driven (`data/behaviours.json`); the cell verdict/depth/verifiedDate
+rows come from `data/panel-cell-curation.json`. The sibling
+`behaviours-v5-reader.json` is the same builder's band-boundary build for the
+reader test bench.
 
 ## Which payload the page loads
 Resolution order, no selection UI:
