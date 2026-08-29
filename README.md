@@ -207,7 +207,6 @@ python3 engine/validate_data.py                  # schema-check data/, incl. you
 | [`data/behaviours.json`](data/behaviours.json)         | The behaviour registry -- where your behaviours go                                                                         |
 | [`site/`](site/)                                       | The local reader surfaces                                                                                                  |
 
-HEAD
 The remaining directories (`research/`, `methodology/`, `design/`, and friends) are the project's own editorial records and maintenance; none of them are needed to use the tool.
 
 ## Licence and citation
